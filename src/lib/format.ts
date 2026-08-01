@@ -21,6 +21,16 @@ export function formatTrillion(value: number | null): string {
   return `${value.toFixed(1)}조`
 }
 
+/** 시가총액: 조 단위 값을 억 단위 숫자로 (예: 195.5 → "1,955,000") */
+export function formatMarketCapEok(trillion: number): string {
+  return Math.round(trillion * 1e4).toLocaleString('ko-KR')
+}
+
+/** 거래대금: 원 단위 값을 백만 단위 숫자로 (예: 3,305,120,000 → "3,305") */
+export function formatTradingValueMillion(won: number): string {
+  return Math.round(won / 1e6).toLocaleString('ko-KR')
+}
+
 export function formatPercent(value: number | null, digits = 2): string {
   if (value === null) return '-'
   return `${value.toFixed(digits)}%`

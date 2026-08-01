@@ -11,7 +11,12 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { stockListRows, type StockListRow } from '@/data/stockList'
-import { changeColorClass, formatChange, formatPrice } from '@/lib/format'
+import {
+  changeColorClass,
+  formatChange,
+  formatMarketCapEok,
+  formatPrice,
+} from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
@@ -42,7 +47,7 @@ const COLUMNS: TableColumn<SortKey>[] = [
   { key: 'w1', label: '1주', align: 'right' },
   { key: 'm1', label: '1개월', align: 'right' },
   { key: 'm3', label: '3개월', align: 'right' },
-  { key: 'marketCap', label: '시가총액', align: 'right' },
+  { key: 'marketCap', label: '시가총액 (억)', align: 'right' },
   { key: 'per', label: 'PER', align: 'right' },
   { key: 'pbr', label: 'PBR', align: 'right' },
   { key: 'roe', label: 'ROE', align: 'right' },
@@ -139,8 +144,8 @@ export default function StockDbPage() {
                     {formatChange(row[key])}
                   </span>
                 ))}
-                <span className="text-right text-xs text-foreground">
-                  {row.marketCap.toFixed(1)}조
+                <span className="text-right font-mono text-xs text-foreground">
+                  {formatMarketCapEok(row.marketCap)}
                 </span>
                 <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
                   {row.per.toFixed(2)}

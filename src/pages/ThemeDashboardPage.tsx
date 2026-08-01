@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { NewsSection } from '@/components/theme/NewsSection'
 import { Treemap } from '@/components/theme/Treemap'
+import { FilterChip } from '@/components/ui/filter-chip'
 import { getThemeNews } from '@/data/news'
 import { selectTreemapThemes, getThemeById } from '@/data/themes'
 import { changeColorClass, formatChange, formatPrice } from '@/lib/format'
@@ -38,19 +40,13 @@ export default function ThemeDashboardPage() {
             표시 테마 수
           </span>
           {THEME_COUNTS.map((count) => (
-            <button
+            <FilterChip
               key={count}
-              type="button"
+              active={themeCount === count}
               onClick={() => setThemeCount(count)}
-              className={cn(
-                'cursor-pointer rounded-full border px-3 py-[7px] text-xs font-medium leading-none',
-                themeCount === count
-                  ? 'border-foreground bg-foreground text-white'
-                  : 'border-border bg-transparent text-[#5b616e]',
-              )}
             >
               {count}개
-            </button>
+            </FilterChip>
           ))}
         </div>
       </div>
@@ -124,29 +120,11 @@ export default function ThemeDashboardPage() {
         </section>
 
         {/* 관련 뉴스 */}
-        <section className="flex flex-col rounded-3xl border border-border bg-muted p-5">
-          <h2 className="mb-[9px] flex min-h-[30px] items-center text-lg font-medium tracking-[-0.5px] text-foreground">
-            {selected.name} 관련 뉴스
-          </h2>
-          <div className="border-b border-border pb-1.5 text-[11px] text-muted-foreground">
-            최신순 · {news.length}건
-          </div>
-          <div className="mt-1.5 flex h-[max(280px,31.667vw)] flex-col gap-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {news.map((item) => (
-              <a
-                key={item.id}
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                className="flex flex-col gap-1.5 rounded-xl border border-border bg-background p-[9px] transition-colors hover:border-[#a8acb3]"
-              >
-                <span className="text-sm font-medium leading-[1.45] text-foreground [text-wrap:pretty]">
-                  {item.title}
-                </span>
-                <span className="text-[11px] text-muted-foreground">{item.meta}</span>
-              </a>
-            ))}
-          </div>
-        </section>
+        <NewsSection
+          title={`${selected.name} 관련 뉴스`}
+          items={news}
+          listClassName="h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        />
       </div>
 
       <p className="mt-5 text-[11px] text-muted-foreground">

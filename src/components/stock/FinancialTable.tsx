@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { FilterChip } from '@/components/ui/filter-chip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { annualFinancials } from '@/data/financials'
 import type { AnnualFinancials } from '@/data/types'
@@ -107,20 +108,13 @@ export function FinancialTable() {
         {MODES.map((option) => (
           <HoverCard key={option.key} openDelay={120} closeDelay={80}>
             <HoverCardTrigger asChild>
-              <button
-                type="button"
-                aria-pressed={mode === option.key}
+              <FilterChip
+                active={mode === option.key}
                 // 선택된 버튼을 다시 누르면 해제
                 onClick={() => setMode((prev) => (prev === option.key ? 'none' : option.key))}
-                className={cn(
-                  'cursor-pointer rounded-full border px-3 py-[7px] text-xs font-medium leading-none',
-                  mode === option.key
-                    ? 'border-foreground bg-foreground text-white'
-                    : 'border-border bg-transparent text-[#5b616e]',
-                )}
               >
                 {option.label}
-              </button>
+              </FilterChip>
             </HoverCardTrigger>
             <HoverCardContent
               align="start"

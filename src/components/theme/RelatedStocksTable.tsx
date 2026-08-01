@@ -2,9 +2,16 @@ import { useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockIdentity } from '@/components/table/StockIdentity'
+import { FilterChip } from '@/components/ui/filter-chip'
 import type { Market } from '@/data/stockMeta'
 import type { ThemeStock } from '@/data/types'
-import { changeColorClass, formatChange, formatPrice } from '@/lib/format'
+import {
+  changeColorClass,
+  formatChange,
+  formatMarketCapEok,
+  formatPrice,
+  formatTradingValueMillion,
+} from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
@@ -20,8 +27,8 @@ const COLUMNS: TableColumn<SortKey>[] = [
   { key: 'name', label: '종목명', align: 'left', className: 'pl-[9px]' },
   { key: 'price', label: '현재가', align: 'right' },
   { key: 'change', label: '등락률', align: 'right' },
-  { key: 'tradingValue', label: '거래대금 (원)', align: 'right' },
-  { key: 'marketCap', label: '시가총액', align: 'right' },
+  { key: 'tradingValue', label: '거래대금 (백만)', align: 'right' },
+  { key: 'marketCap', label: '시가총액 (억)', align: 'right' },
   { key: null, label: '테마 포함 사유', align: 'left', className: 'pl-3' },
 ]
 
@@ -62,23 +69,15 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
       <div className="mb-[9px] flex items-center justify-between gap-4">
         <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">관련 종목</h2>
         <div className="flex gap-1.5">
-          {MARKETS.map((market) => {
-            const isOn = selected === market
-            return (
-              <button
-                key={market}
-                type="button"
-                aria-pressed={isOn}
-                onClick={() => toggleMarket(market)}
-                className={cn(
-                  'cursor-pointer rounded-full px-3.5 py-2 text-xs font-semibold leading-none',
-                  isOn ? 'bg-foreground text-white' : 'bg-surface-inset text-[#5b616e]',
-                )}
-              >
-                {market}
-              </button>
-            )
-          })}
+          {MARKETS.map((market) => (
+            <FilterChip
+              key={market}
+              active={selected === market}
+              onClick={() => toggleMarket(market)}
+            >
+              {market}
+            </FilterChip>
+          ))}
         </div>
       </div>
 
@@ -122,10 +121,10 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
                 {formatChange(stock.change)}
               </span>
               <span className="text-right font-mono text-xs text-[#5b616e]">
-                {formatPrice(stock.tradingValue)}
+                {formatTradingValueMillion(stock.tradingValue)}
               </span>
               <span className="text-right font-mono text-xs text-[#5b616e]">
-                {stock.marketCap.toFixed(1)}조
+                {formatMarketCapEok(stock.marketCap)}
               </span>
               <span className="pl-3 text-xs leading-[1.55] text-[#5b616e] [text-wrap:pretty]">
                 {stock.reason}

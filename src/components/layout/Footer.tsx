@@ -32,25 +32,27 @@ export function Footer() {
   return (
     <footer className="bg-background pb-12 pt-24 text-[#5b616e]">
       <div className="page-container">
-        <div className="mb-8 text-[22px] leading-tight text-primary">Finngraph</div>
+        <div className="flex flex-col gap-12 sm:flex-row sm:items-start sm:justify-between">
+          <div className="text-[22px] leading-tight text-primary">Finngraph</div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6">
-          {FOOTER_COLUMNS.map((column) => (
-            <div key={column.title} className="flex flex-col gap-3">
-              <div className="text-base font-semibold text-foreground">
-                {column.title}
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-16">
+            {FOOTER_COLUMNS.map((column) => (
+              <div key={column.title} className="flex flex-col gap-3">
+                <div className="text-base font-semibold text-foreground">
+                  {column.title}
+                </div>
+                {column.links.map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    className="text-sm hover:text-primary-pressed hover:underline"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
-              {column.links.map((link) => (
-                <Link
-                  key={link.label}
-                  to={link.to}
-                  className="text-sm hover:text-primary-pressed hover:underline"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <div className="mt-24 border-t border-border pt-6 text-[13px] text-muted-foreground">

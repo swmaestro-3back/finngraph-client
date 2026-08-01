@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CandleChart } from '@/components/theme/CandleChart'
+import { NewsSection } from '@/components/theme/NewsSection'
 import { RelatedStocksTable } from '@/components/theme/RelatedStocksTable'
+import { FilterChip } from '@/components/ui/filter-chip'
 import { generateCandles, type CandlePeriod } from '@/data/candles'
 import { getThemeNews } from '@/data/news'
 import { getThemeById, themes } from '@/data/themes'
@@ -83,19 +85,13 @@ export default function ThemeDetailPage() {
       {/* 차트 기간 전환 */}
       <div className="mb-3 flex justify-end gap-1.5">
         {PERIODS.map((p) => (
-          <button
+          <FilterChip
             key={p.key}
-            type="button"
+            active={period === p.key}
             onClick={() => setPeriod(p.key)}
-            className={cn(
-              'cursor-pointer rounded-full px-3.5 py-2 text-xs font-semibold leading-none',
-              period === p.key
-                ? 'bg-foreground text-white'
-                : 'bg-surface-inset text-[#5b616e]',
-            )}
           >
             {p.label}
-          </button>
+          </FilterChip>
         ))}
       </div>
 
@@ -124,26 +120,7 @@ export default function ThemeDetailPage() {
       <RelatedStocksTable stocks={detailStocks} />
 
       {/* 관련 뉴스 */}
-      <section className="mt-4 rounded-3xl border border-border bg-muted p-5">
-        <h2 className="mb-[9px] text-lg font-medium tracking-[-0.4px] text-foreground">
-          {theme.name} 관련 뉴스
-        </h2>
-        <div className="flex flex-col gap-1.5">
-          {news.map((item) => (
-            <a
-              key={item.id}
-              href="#"
-              onClick={(e) => e.preventDefault()}
-              className="flex flex-col gap-1 rounded-xl border border-border bg-background px-[9px] py-2.5 transition-colors hover:border-[#a8acb3]"
-            >
-              <span className="text-[13px] font-medium leading-[1.45] text-foreground [text-wrap:pretty]">
-                {item.title}
-              </span>
-              <span className="text-[11px] text-muted-foreground">{item.meta}</span>
-            </a>
-          ))}
-        </div>
-      </section>
+      <NewsSection title={`${theme.name} 관련 뉴스`} items={news} className="mt-4" />
 
       <p className="mt-5 text-[11px] text-muted-foreground">
         표시된 시세·차트·뉴스는 데모용 예시 데이터입니다. 투자 판단의 근거로 사용할 수

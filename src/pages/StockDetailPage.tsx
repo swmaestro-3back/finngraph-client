@@ -11,6 +11,7 @@ import {
   RevenueChart,
 } from '@/components/stock/AnnualCharts'
 import { FinancialTable } from '@/components/stock/FinancialTable'
+import { FilterChip } from '@/components/ui/filter-chip'
 import { IssueTimeline } from '@/components/stock/IssueTimeline'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { generateCandles, CANDLE_COUNTS, type CandlePeriod } from '@/data/candles'
@@ -116,19 +117,13 @@ export default function StockDetailPage() {
         </div>
         <div className="flex gap-1.5">
           {PERIODS.map((p) => (
-            <button
+            <FilterChip
               key={p.key}
-              type="button"
+              active={period === p.key}
               onClick={() => setPeriod(p.key)}
-              className={cn(
-                'cursor-pointer rounded-full px-3.5 py-2 text-xs font-semibold leading-none',
-                period === p.key
-                  ? 'bg-foreground text-white'
-                  : 'bg-surface-inset text-[#5b616e]',
-              )}
             >
               {p.label}
-            </button>
+            </FilterChip>
           ))}
         </div>
       </div>
