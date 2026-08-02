@@ -16,11 +16,6 @@ export const T = {
   ink: '#0a0b0d',
   /** --muted-foreground */
   muted: '#7c828a',
-  /** 화살표 마커 등 가장 옅은 회색 */
-  mutedSoft: '#a8acb3',
   /** --primary */
   primary: '#0052ff',
 } as const
-
-/** 하이라이트/선택 상태의 간선 색 — 모든 간선을 동일 색(브랜드 블루)으로 통일 */
-export const EDGE_HIGHLIGHT = T.primary

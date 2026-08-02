@@ -6,6 +6,7 @@ import { FilterPanel } from '@/components/graph/FilterPanel'
 import { DetailPanel } from '@/components/graph/DetailPanel'
 import { Legend } from '@/components/graph/Legend'
 import { Toolbar } from '@/components/graph/Toolbar'
+import { HopSelector, type Hop } from '@/components/graph/HopSelector'
 import {
   SidebarProvider,
   Sidebar,
@@ -39,6 +40,8 @@ export function GraphView() {
   const [selectedPredicates, setSelectedPredicates] = useState<Set<Predicate>>(
     new Set(ALL_PREDICATES),
   )
+  /** 노드 선택 시 몇 홉까지 펼쳐 볼지 — 선택을 바꿔도 사용자가 고른 깊이는 유지한다 */
+  const [hop, setHop] = useState<Hop>(1)
 
   const nodeById = useMemo(() => {
     const map = new Map<string, GraphNode>()
@@ -49,9 +52,9 @@ export function GraphView() {
   const highlight = useMemo<GraphHighlight | null>(() => {
     if (!selection) return null
     return selection.kind === 'node'
-      ? { kind: 'nodes', ids: [selection.node.id] }
+      ? { kind: 'nodes', ids: [selection.node.id], hops: hop }
       : { kind: 'link', id: selection.link.id }
-  }, [selection])
+  }, [selection, hop])
 
   const selectNode = useCallback((node: GraphNode) => setSelection({ kind: 'node', node }), [])
 
@@ -111,6 +114,7 @@ export function GraphView() {
     clearSelection()
     setSelectedTypes(new Set(ALL_ENTITY_TYPES))
     setSelectedPredicates(new Set(ALL_PREDICATES))
+    setHop(1)
   }
 
   if (loading) {
@@ -181,6 +185,9 @@ export function GraphView() {
               selectedPredicates={selectedPredicates}
             />
             <Legend visibleTypes={selectedTypes} />
+            {selection?.kind === 'node' && (
+              <HopSelector value={hop} onChange={setHop} isMobile={isMobile} />
+            )}
             <Toolbar
               onZoomIn={() => graphRef.current?.zoomIn()}
               onZoomOut={() => graphRef.current?.zoomOut()}

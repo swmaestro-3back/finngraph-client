@@ -53,7 +53,7 @@ export function labelMaxWidth(radius: number): number {
 
 /** 언급량 → 간선 굵기 */
 export function edgeWidth(link: GraphLink): number {
-  return Math.max(1, Math.min(1 + link.mentioned_count * 0.18, 5))
+  return Math.max(0.8, Math.min(0.8 + link.mentioned_count * 0.13, 3.5))
 }
 
 /** 노드별 연결 차수 */

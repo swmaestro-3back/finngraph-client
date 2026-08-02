@@ -2,9 +2,9 @@ import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 
 import * as d3 from 'd3'
 import {
   endId,
+  ALL_ENTITY_TYPES,
   NODE_COLORS,
   NODE_TEXT_COLORS,
-  PREDICATE_LABELS,
   ENTITY_LABELS,
   type GraphNode,
   type GraphLink,
@@ -26,7 +26,7 @@ import {
 import { GraphTooltip } from '@/components/graph/GraphTooltip'
 import { hideTooltip, moveTooltip, showTooltip } from '@/lib/graphTooltip'
 import { useCanvasSize, type CanvasSize } from '@/lib/useCanvasSize'
-import { T, EDGE_HIGHLIGHT } from '@/lib/graphTheme'
+import { T } from '@/lib/graphTheme'
 
 export interface GraphCanvasRef {
   zoomIn: () => void
@@ -35,7 +35,10 @@ export interface GraphCanvasRef {
 }
 
 /** 캔버스에서 강조할 대상 — 부모(선택 상태)가 유일한 출처다 */
-export type GraphHighlight = { kind: 'nodes'; ids: string[] } | { kind: 'link'; id: string }
+export type GraphHighlight =
+  /** hops: 대상에서 몇 단계까지 따라가 강조할지 (기본 1) */
+  | { kind: 'nodes'; ids: string[]; hops?: number }
+  | { kind: 'link'; id: string }
 
 interface Props {
   data: GraphData
@@ -162,21 +165,42 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     const radius = createRadiusScale(nodes, degree)
     const maxRadius = nodes.length ? Math.max(...nodes.map(radius)) : NODE_RADIUS.min
 
-    // arrow marker
+    // arrow markers — 화살촉은 간선 색을 따라가야 하므로 출발 엔티티 종류별로 하나씩 만든다
     const defs = svg.append('defs')
-    defs
-      .append('marker')
-      .attr('id', 'arrow')
-      .attr('viewBox', '0 -5 10 10')
-      // 간선을 이미 노드 둘레에서 잘랐으므로 화살촉 끝(x=7)을 선 끝에 맞춘다
-      .attr('refX', 7)
-      .attr('refY', 0)
-      .attr('markerWidth', 6)
-      .attr('markerHeight', 6)
-      .attr('orient', 'auto')
-      .append('path')
-      .attr('d', 'M0,-3L7,0L0,3')
-      .attr('fill', T.mutedSoft)
+    const addArrowMarker = (id: string, fill: string) => {
+      defs
+        .append('marker')
+        .attr('id', id)
+        .attr('viewBox', `0 ${-ARROW_LENGTH / 2} ${ARROW_LENGTH} ${ARROW_LENGTH}`)
+        // userSpaceOnUse — 기본값(strokeWidth)은 화살촉이 선 굵기에 비례해 커져
+        // 굵은 간선에서 과하게 커지고 끝 위치도 굵기마다 달라진다.
+        .attr('markerUnits', 'userSpaceOnUse')
+        // 간선을 이미 노드 둘레에서 잘랐으므로 화살촉 끝을 선 끝에 정확히 맞춘다
+        .attr('refX', ARROW_LENGTH)
+        .attr('refY', 0)
+        .attr('markerWidth', ARROW_LENGTH)
+        .attr('markerHeight', ARROW_LENGTH)
+        .attr('orient', 'auto')
+        .append('path')
+        .attr('d', `M0,${-ARROW_HALF_WIDTH}L${ARROW_LENGTH},0L0,${ARROW_HALF_WIDTH}`)
+        .attr('fill', fill)
+        // 선의 stroke-opacity는 마커에 상속되지 않아 직접 맞춰준다
+        .attr('fill-opacity', EDGE_OPACITY)
+    }
+    ALL_ENTITY_TYPES.forEach((type) => addArrowMarker(arrowId(type), NODE_COLORS[type]))
+    addArrowMarker(ARROW_OFF_ID, T.hairlineSoft)
+
+    // 간선의 색은 출발(부모) 엔티티를 따른다 — 어느 엔티티에서 뻗어 나온 관계인지 색으로 읽힌다
+    const typeOf = new Map(nodes.map((n) => [n.id, n.type]))
+    const sourceType = (l: GraphLink) => typeOf.get(endId(l.source))
+    const linkColor = (l: GraphLink) => {
+      const type = sourceType(l)
+      return type ? NODE_COLORS[type] : T.hairline
+    }
+    const linkArrow = (l: GraphLink) => {
+      const type = sourceType(l)
+      return `url(#${type ? arrowId(type) : ARROW_OFF_ID})`
+    }
 
     const g = svg.append('g')
     const zoom = d3
@@ -198,10 +222,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .selectAll<SVGLineElement, GraphLink>('line')
       .data(links)
       .join('line')
-      .attr('stroke', T.hairline)
-      .attr('stroke-opacity', 0.85)
+      .attr('stroke', linkColor)
+      .attr('stroke-opacity', EDGE_OPACITY)
       .attr('stroke-width', edgeWidth)
-      .attr('marker-end', 'url(#arrow)')
+      .attr('marker-end', linkArrow)
       .attr('pointer-events', 'none')
 
     // === LINK HIT AREAS (transparent, wide, clickable) ===
@@ -214,19 +238,41 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('stroke-width', (l) => Math.max(14, edgeWidth(l) + 12))
       .attr('cursor', 'pointer')
 
-    // === LINK LABELS (predicate; hidden by default) ===
+    // === LINK LABELS (predicate) ===
+    // 간선 중간에 "끼워 넣는다" — 배경판이 선을 끊고 그 자리에 관계 타입이 들어간다.
+    // 각 라벨은 tick마다 간선 중점으로 옮기고 간선 방향으로 회전시킨다.
     const linkLabel = g
       .append('g')
-      .selectAll<SVGTextElement, GraphLink>('text')
+      .selectAll<SVGGElement, GraphLink>('g')
       .data(links)
-      .join('text')
-      .text((d) => PREDICATE_LABELS[d.type] || d.type)
-      .attr('font-size', 10)
-      .attr('fill', EDGE_HIGHLIGHT)
+      .join('g')
+      .attr('pointer-events', 'none')
+
+    const linkLabelPlate = linkLabel.append('rect').attr('fill', T.canvas).attr('rx', 2)
+
+    const linkLabelText = linkLabel
+      .append('text')
+      .text((d) => d.type)
+      .attr('font-size', LINK_LABEL_FONT_SIZE)
+      .attr('font-weight', 500)
+      .attr('letter-spacing', 0.2)
+      .attr('fill', T.muted)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('pointer-events', 'none')
-      .attr('visibility', 'hidden')
+
+    // 서술어마다 길이가 달라 배경판은 실제 렌더 폭을 재서 맞춘다
+    const plates = linkLabelPlate.nodes()
+    const plateWidth = new Map<string, number>()
+    linkLabelText.each(function (d, i) {
+      const box = this.getBBox()
+      const width = box.width + LINK_LABEL_PAD.x * 2
+      plateWidth.set(d.id, width)
+      d3.select(plates[i])
+        .attr('x', box.x - LINK_LABEL_PAD.x)
+        .attr('y', box.y - LINK_LABEL_PAD.y)
+        .attr('width', width)
+        .attr('height', box.height + LINK_LABEL_PAD.y * 2)
+    })
 
     // === NODES ===
     const node = g
@@ -262,9 +308,14 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     function paint(spec: HighlightSpec | null) {
       if (!spec) {
         node.attr('opacity', 1).attr('stroke', T.canvas).attr('stroke-width', 1.5)
-        link.attr('stroke', T.hairline).attr('stroke-opacity', 0.85).attr('stroke-width', edgeWidth)
+        link
+          .attr('stroke', linkColor)
+          .attr('stroke-opacity', EDGE_OPACITY)
+          .attr('stroke-width', edgeWidth)
+          .attr('marker-end', linkArrow)
         label.attr('opacity', 0.85)
-        linkLabel.attr('visibility', 'hidden')
+        linkLabel.attr('opacity', 1)
+        linkLabelText.attr('fill', T.muted)
         return
       }
 
@@ -280,24 +331,35 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
           focus.has(d.id) ? spec.focusStrokeWidth : neighbors.has(d.id) ? 2 : 0.5,
         )
       link
-        .attr('stroke', (l) => (isLinkOn(l) ? EDGE_HIGHLIGHT : T.hairlineSoft))
+        // 강조된 간선도 제 색(출발 엔티티 색)을 유지한다 — 강조는 굵기·투명도로 준다
+        .attr('stroke', (l) => (isLinkOn(l) ? linkColor(l) : T.hairlineSoft))
         .attr('stroke-opacity', (l) => (isLinkOn(l) ? spec.linkOnOpacity : spec.linkOffOpacity))
         .attr('stroke-width', (l) =>
           isLinkOn(l) ? edgeWidth(l) + spec.linkWidthBump : edgeWidth(l) * 0.5,
         )
+        .attr('marker-end', (l) => (isLinkOn(l) ? linkArrow(l) : `url(#${ARROW_OFF_ID})`))
       label.attr('opacity', (d) => (isRelevant(d.id) ? 1 : 0.08))
-      linkLabel.attr('visibility', (l) => (isLinkOn(l) ? 'visible' : 'hidden'))
+      linkLabel.attr('opacity', (l) => (isLinkOn(l) ? 1 : 0.1))
+      linkLabelText.attr('fill', (l) => (isLinkOn(l) ? T.ink : T.muted))
     }
 
-    /** 노드 강조 — 대상 + 이웃을 남기고 나머지를 흐린다 */
-    function nodesSpec(ids: string[]): HighlightSpec {
+    /** 노드 강조 — 대상에서 hops단계 안에 드는 노드·간선만 남기고 나머지를 흐린다 */
+    function nodesSpec(ids: string[], hops: number): HighlightSpec {
       const focus = new Set(ids)
+      const distance = bfsDistances(ids, adjacency, hops)
       const neighbors = new Set<string>()
-      focus.forEach((id) => adjacency.get(id)?.forEach((n) => neighbors.add(n)))
+      distance.forEach((d, id) => {
+        if (d > 0) neighbors.add(id)
+      })
       return {
         focus,
         neighbors,
-        isLinkOn: (l) => focus.has(endId(l.source)) || focus.has(endId(l.target)),
+        // 마지막 홉 노드끼리 이어진 간선은 탐색에 쓰이지 않았으므로 켜지 않는다
+        isLinkOn: (l) => {
+          const from = distance.get(endId(l.source))
+          const to = distance.get(endId(l.target))
+          return from != null && to != null && Math.min(from, to) < hops
+        },
         focusStrokeWidth: 4,
         linkOnOpacity: 0.9,
         linkOffOpacity: 0.3,
@@ -321,7 +383,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     }
 
     const applyHighlight = (h: GraphHighlight | null) =>
-      paint(h == null ? null : h.kind === 'link' ? linkSpec(h.id) : nodesSpec(h.ids))
+      paint(h == null ? null : h.kind === 'link' ? linkSpec(h.id) : nodesSpec(h.ids, h.hops ?? 1))
 
     d3StateRef.current = { nodes, applyHighlight }
     // 필터 변경 등으로 그래프를 다시 그렸을 때도 현재 선택 강조를 유지한다
@@ -351,8 +413,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
           tooltip,
           event,
           `${endId(d.source).replace(/^n:/, '')} → ${endId(d.target).replace(/^n:/, '')}`,
-          (PREDICATE_LABELS[d.type] || d.type) + (d.item ? ` · ${d.item.text}` : ''),
-          EDGE_HIGHLIGHT,
+          d.type + (d.item ? ` · ${d.item.text}` : ''),
+          linkColor(d),
         )
       })
       .on('mousemove', (event: MouseEvent) => moveTooltip(tooltip, event))
@@ -444,8 +506,12 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
           .attr('x2', (d) => seg(d).x2)
           .attr('y2', (d) => seg(d).y2)
         linkLabel
-          .attr('x', (d) => (seg(d).x1 + seg(d).x2) / 2)
-          .attr('y', (d) => (seg(d).y1 + seg(d).y2) / 2)
+          .attr('transform', (d) => labelTransform(seg(d)))
+          // 배경판이 간선보다 길면 양 끝 노드를 덮는다 — 그런 간선에서는 라벨을 접는다
+          // (관계 타입은 호버 툴팁·상세 패널에서 계속 확인할 수 있다)
+          .attr('display', (d) =>
+            segmentLength(seg(d)) >= (plateWidth.get(d.id) ?? 0) ? null : 'none',
+          )
         node.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
         label.attr('x', (d) => d.x!).attr('y', (d) => d.y!)
 
@@ -567,6 +633,67 @@ interface Segment {
 
 /** 화살촉이 노드에 닿지 않도록 두는 여유 */
 const ARROW_GAP = 3
+
+/** 화살촉 크기 — 선 굵기와 무관한 고정 크기(userSpaceOnUse) */
+const ARROW_LENGTH = 6
+const ARROW_HALF_WIDTH = 2.5
+
+/** 간선(과 화살촉)의 기본 불투명도 */
+const EDGE_OPACITY = 0.85
+
+/** 출발 엔티티 종류별 화살촉 마커 id */
+const arrowId = (type: EntityType) => `arrow-${type}`
+/** 필터·강조로 흐려진 간선용 화살촉 */
+const ARROW_OFF_ID = 'arrow-off'
+
+/** 간선 위 관계 타입 라벨 */
+const LINK_LABEL_FONT_SIZE = 9
+/** 라벨 배경판이 간선을 끊어 보이게 하는 여백 */
+const LINK_LABEL_PAD = { x: 4, y: 1.5 }
+
+/**
+ * 시작 노드들에서 maxHops 이내로 닿는 노드의 홉 수를 잰다 (시작 노드는 0).
+ * 닿지 않는 노드는 아예 담지 않아, 결과에 없으면 "범위 밖"이다.
+ */
+function bfsDistances(
+  startIds: string[],
+  adjacency: Map<string, Set<string>>,
+  maxHops: number,
+): Map<string, number> {
+  const distance = new Map<string, number>()
+  startIds.forEach((id) => distance.set(id, 0))
+
+  let frontier = startIds
+  for (let hop = 1; hop <= maxHops && frontier.length > 0; hop++) {
+    const next: string[] = []
+    frontier.forEach((id) => {
+      adjacency.get(id)?.forEach((neighbor) => {
+        if (distance.has(neighbor)) return
+        distance.set(neighbor, hop)
+        next.push(neighbor)
+      })
+    })
+    frontier = next
+  }
+  return distance
+}
+
+function segmentLength(seg: Segment): number {
+  return Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1)
+}
+
+/**
+ * 라벨을 간선 중점에 놓고 간선 방향으로 눕힌다.
+ * 각도가 뒤집힌 구간(|angle| > 90°)에서는 글자가 거꾸로 서므로 180° 돌려 읽히게 한다.
+ */
+function labelTransform(seg: Segment): string {
+  const mx = (seg.x1 + seg.x2) / 2
+  const my = (seg.y1 + seg.y2) / 2
+  let angle = (Math.atan2(seg.y2 - seg.y1, seg.x2 - seg.x1) * 180) / Math.PI
+  if (angle > 90) angle -= 180
+  else if (angle < -90) angle += 180
+  return `translate(${mx},${my}) rotate(${angle})`
+}
 
 /** 간선을 두 노드의 원 둘레 사이 구간으로 자른다 */
 function trimToNodeEdges(link: GraphLink, radius: (node: GraphNode) => number): Segment {
