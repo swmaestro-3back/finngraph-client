@@ -10,6 +10,13 @@
 - **d3 / d3-hierarchy** — 트리맵 레이아웃, 지식그래프 캔버스 렌더링
 - 디자인 토큰·스펙: `design-specs/` (레이아웃, 테마 대시보드/상세, 종목 상세)
 
+## 디자인 시스템
+
+Coinbase Design System 사용
+
+- [getdesign.md — Coinbase](https://getdesign.md/coinbase/design-md)
+- [VoltAgent/awesome-design-md — Coinbase DESIGN.md](https://github.com/VoltAgent/awesome-design-md/blob/main/design-md/coinbase/DESIGN.md)
+
 ## 페이지 (라우트)
 
 `src/App.tsx`의 `<Routes>`에 정의된 6개 페이지. 목록(DB)은 복수형, 상세는 단수형+파라미터 규칙을 따른다.
