@@ -54,7 +54,8 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
   const { nodes, maxUp, maxDown } = useMemo(() => {
     type TreeDatum = { children?: ThemeItem[] } & Partial<ThemeItem>
     const root = hierarchy<TreeDatum>({ children: items })
-      .sum((d) => d.tradingValue ?? 0)
+      // 셀 크기 = 등락률 절대값 (상승/하락 폭이 클수록 큰 셀)
+      .sum((d) => (d.change != null ? Math.abs(d.change) : 0))
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
 
     const layout = treemap<TreeDatum>().tile(treemapSquarify).size([BASE_W, BASE_H])

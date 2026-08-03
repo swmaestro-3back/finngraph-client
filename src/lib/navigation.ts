@@ -9,7 +9,7 @@ export interface BackTarget {
 
 /** 경로 → 뒤로가기 버튼에 쓸 라벨 (모르는 경로면 null) */
 export function pathLabel(pathname: string): string | null {
-  if (pathname === '/') return '테마 히트맵'
+  if (pathname === '/') return '테마 트리맵'
   if (pathname === '/themes') return '테마 DB'
   if (pathname === '/stocks') return '주식 DB'
   if (pathname === '/graph') return '기업 그래프'

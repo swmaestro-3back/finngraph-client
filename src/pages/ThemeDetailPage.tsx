@@ -24,8 +24,8 @@ const BASE_INDEX = 27691
 export default function ThemeDetailPage() {
   const { themeId } = useParams()
   const theme = getThemeById(themeId ?? '') ?? themes[13]
-  // 진입 경로가 없으면(직접 URL 접근·새로고침) 테마 히트맵으로
-  const back = useBackTarget({ to: '/', label: '테마 히트맵' })
+  // 진입 경로가 없으면(직접 URL 접근·새로고침) 테마 트리맵으로
+  const back = useBackTarget({ to: '/', label: '테마 트리맵' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
 
   const indexValue = useMemo(
