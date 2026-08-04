@@ -5,8 +5,17 @@ export function formatChange(value: number): string {
   return '0.00%'
 }
 
+/**
+ * 콤마 구분 정수 금액 — 단위 환산이 끝난 값에 사용한다.
+ * (시가총액은 억, 거래대금은 백만 단위로 `@/data/stockMeta`에서 이미 환산되어 넘어온다)
+ */
+export function formatAmount(value: number): string {
+  return Math.round(value).toLocaleString('ko-KR')
+}
+
+/** 현재가(원) */
 export function formatPrice(value: number): string {
-  return value.toLocaleString('ko-KR')
+  return formatAmount(value)
 }
 
 export function changeColorClass(value: number): string {
@@ -19,16 +28,6 @@ export function changeColorClass(value: number): string {
 export function formatTrillion(value: number | null): string {
   if (value === null) return '-'
   return `${value.toFixed(1)}조`
-}
-
-/** 시가총액: 조 단위 값을 억 단위 숫자로 (예: 195.5 → "1,955,000") */
-export function formatMarketCapEok(trillion: number): string {
-  return Math.round(trillion * 1e4).toLocaleString('ko-KR')
-}
-
-/** 거래대금: 원 단위 값을 백만 단위 숫자로 (예: 3,305,120,000 → "3,305") */
-export function formatTradingValueMillion(won: number): string {
-  return Math.round(won / 1e6).toLocaleString('ko-KR')
 }
 
 export function formatPercent(value: number | null, digits = 2): string {

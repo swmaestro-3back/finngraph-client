@@ -11,12 +11,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { stockListRows, type StockListRow } from '@/data/stockList'
-import {
-  changeColorClass,
-  formatChange,
-  formatMarketCapEok,
-  formatPrice,
-} from '@/lib/format'
+import { changeColorClass, formatAmount, formatChange, formatPrice } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
@@ -145,7 +140,7 @@ export default function StockDbPage() {
                   </span>
                 ))}
                 <span className="text-right font-mono text-xs text-foreground">
-                  {formatMarketCapEok(row.marketCap)}
+                  {formatAmount(row.marketCap)}
                 </span>
                 <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
                   {row.per.toFixed(2)}

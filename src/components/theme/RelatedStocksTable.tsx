@@ -5,13 +5,7 @@ import { StockIdentity } from '@/components/table/StockIdentity'
 import { FilterChip } from '@/components/ui/filter-chip'
 import type { Market } from '@/data/stockMeta'
 import type { ThemeStock } from '@/data/types'
-import {
-  changeColorClass,
-  formatChange,
-  formatMarketCapEok,
-  formatPrice,
-  formatTradingValueMillion,
-} from '@/lib/format'
+import { changeColorClass, formatAmount, formatChange, formatPrice } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
@@ -121,10 +115,10 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
                 {formatChange(stock.change)}
               </span>
               <span className="text-right font-mono text-xs text-[#5b616e]">
-                {formatTradingValueMillion(stock.tradingValue)}
+                {formatAmount(stock.tradingValue)}
               </span>
               <span className="text-right font-mono text-xs text-[#5b616e]">
-                {formatMarketCapEok(stock.marketCap)}
+                {formatAmount(stock.marketCap)}
               </span>
               <span className="pl-3 text-xs leading-[1.55] text-[#5b616e] [text-wrap:pretty]">
                 {stock.reason}

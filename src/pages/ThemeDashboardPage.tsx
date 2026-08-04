@@ -1,18 +1,18 @@
 import { useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
 import { NewsSection } from '@/components/theme/NewsSection'
+import { StockSection } from '@/components/theme/StockSection'
 import { Treemap } from '@/components/theme/Treemap'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { getThemeNews } from '@/data/news'
 import { selectTreemapThemes, getThemeById } from '@/data/themes'
-import { changeColorClass, formatChange, formatPrice } from '@/lib/format'
-import { fromState } from '@/lib/navigation'
-import { cn } from '@/lib/utils'
 
 const THEME_COUNTS = [20, 30, 40]
 
+/** 종목 리스트·뉴스 카드가 같은 높이를 쓰도록 공유하는 스크롤 영역 클래스 */
+const LIST_CLASS =
+  'h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+
 export default function ThemeDashboardPage() {
-  const { pathname } = useLocation()
   const [themeCount, setThemeCount] = useState(20)
   const [selectedId, setSelectedId] = useState('철강')
 
@@ -57,73 +57,13 @@ export default function ThemeDashboardPage() {
       {/* 하단 2컬럼 */}
       <div className="mt-5 grid items-stretch gap-4 lg:grid-cols-[1.08fr_0.92fr]">
         {/* 선택 테마 종목 리스트 */}
-        <section className="rounded-3xl border border-border bg-background p-5">
-          <div className="mb-[9px] flex min-h-[30px] items-center justify-between">
-            <div className="flex items-baseline gap-[9px]">
-              <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">
-                {selected.name}
-              </h2>
-              <span
-                className={cn(
-                  'font-mono text-base font-medium tracking-[-0.5px]',
-                  changeColorClass(selected.change),
-                )}
-              >
-                {formatChange(selected.change)}
-              </span>
-            </div>
-            <Link
-              to={`/theme/${selected.id}`}
-              state={fromState(pathname)}
-              className="text-xs font-semibold leading-none text-primary"
-            >
-              테마 상세 →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-[1fr_116px_84px] gap-3 border-b border-border pb-1.5 text-[11px] text-muted-foreground">
-            <span>
-              종목명 · {selected.stocks.length}개 종목
-            </span>
-            <span className="text-right">현재가</span>
-            <span className="text-right">등락률</span>
-          </div>
-
-          <div className="h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {selected.stocks.map((stock) => (
-              <Link
-                key={stock.code}
-                to={`/stock/${stock.code}`}
-                state={fromState(pathname)}
-                className="grid min-h-[38px] grid-cols-[1fr_116px_84px] items-center gap-3 border-b border-surface-inset py-1 hover:bg-muted"
-              >
-                <span className="flex items-center gap-[9px] overflow-hidden">
-                  <span className="truncate text-sm font-semibold text-foreground">
-                    {stock.name}
-                  </span>
-                  <span className="font-mono text-[11px] text-[#a8acb3]">{stock.code}</span>
-                </span>
-                <span className="text-right font-mono text-sm font-medium text-foreground">
-                  {formatPrice(stock.price)}
-                </span>
-                <span
-                  className={cn(
-                    'text-right font-mono text-xs font-medium',
-                    changeColorClass(stock.change),
-                  )}
-                >
-                  {formatChange(stock.change)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <StockSection theme={selected} listClassName={LIST_CLASS} />
 
         {/* 관련 뉴스 */}
         <NewsSection
           title={`${selected.name} 관련 뉴스`}
           items={news}
-          listClassName="h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          listClassName={LIST_CLASS}
         />
       </div>
 
