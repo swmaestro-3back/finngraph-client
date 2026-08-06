@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 import { themes } from '@/data/themes'
 import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
@@ -97,12 +98,9 @@ export function NavBar() {
           ))}
         </nav>
 
-        <button
-          type="button"
-          className="h-9 shrink-0 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors duration-100 active:bg-primary-pressed"
-        >
+        <Button className="h-9 shrink-0 rounded-full px-5 font-semibold active:bg-primary-pressed">
           로그인
-        </button>
+        </Button>
       </div>
     </header>
   )

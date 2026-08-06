@@ -43,7 +43,7 @@ const ROWS: RowDef[] = [
   { label: '주당배당금', value: (f) => formatWon(f.dps), metric: (f) => f.dps, direction: 'up-good' },
 ]
 
-type HighlightMode = 'none' | 'trend' | 'positive'
+type HighlightMode = 'none' | 'trend' | 'improving'
 
 /** 선택된 버튼을 다시 누르면 'none'(표시 안 함)으로 돌아간다 */
 const MODES: {
@@ -53,15 +53,15 @@ const MODES: {
 }[] = [
   {
     key: 'trend',
-    label: '상승/하락 추세',
+    label: '개선/악화',
     legend: [
       { swatchClass: 'bg-stock-up/25', text: `${MIN_TREND_RUN}회 연속 개선` },
       { swatchClass: 'bg-stock-down/25', text: `${MIN_TREND_RUN}회 연속 악화` },
     ],
   },
   {
-    key: 'positive',
-    label: '긍정 지표만',
+    key: 'improving',
+    label: '개선만',
     legend: [
       { swatchClass: 'bg-trend-positive/25', text: `${MIN_TREND_RUN}회 연속 개선` },
     ],
@@ -71,7 +71,7 @@ const MODES: {
 /** 모드별 셀 색 — 배경은 opacity 10~12%로 연하게, 숫자에만 색 포인트 */
 function toneClass(mode: HighlightMode, tone: TrendTone | null): string | undefined {
   if (mode === 'none' || tone === null) return undefined
-  if (mode === 'positive') {
+  if (mode === 'improving') {
     return tone === 'improving' ? 'bg-trend-positive/12 text-trend-positive' : undefined
   }
   return tone === 'improving'

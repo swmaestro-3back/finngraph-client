@@ -6,14 +6,29 @@ import { cn } from '@/lib/utils'
 const UP = '#cf202f'
 const DOWN = '#0052ff'
 
+// 커서를 따라다니는 툴팁의 기본 위치 = 포인터 오른쪽 대각선 위. 가장자리에선 반대편으로 뒤집는다.
+const TOOLTIP_OFFSET = 14
+const TOOLTIP_W = 168
+// 위쪽 가장자리 뒤집기 판정용 근사 높이 (내용이 고정이라 대략 일정)
+const TOOLTIP_H = 140
+
 interface CandleChartProps {
   candles: Candle[]
+}
+
+/** 커서 위치 + 어느 캔들 위인지 + 가장자리 뒤집기 여부 */
+interface HoverState {
+  index: number
+  x: number
+  y: number
+  flipX: boolean
+  flipY: boolean
 }
 
 /** 캔들 300px + 거래량 90px + 날짜 라벨 + hover 툴팁 (design-specs/theme-detail.md §1.4) */
 export function CandleChart({ candles }: CandleChartProps) {
   const areaRef = useRef<HTMLDivElement>(null)
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
+  const [hover, setHover] = useState<HoverState | null>(null)
 
   const { min, max, maxVolume } = useMemo(() => {
     const lows = candles.map((c) => c.low)
@@ -37,12 +52,23 @@ export function CandleChart({ candles }: CandleChartProps) {
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = areaRef.current?.getBoundingClientRect()
     if (!rect) return
-    const ratio = (e.clientX - rect.left) / rect.width
-    const index = Math.min(candles.length - 1, Math.max(0, Math.floor(ratio * candles.length)))
-    setHoverIndex(index)
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const index = Math.min(
+      candles.length - 1,
+      Math.max(0, Math.floor((x / rect.width) * candles.length)),
+    )
+    setHover({
+      index,
+      x,
+      y,
+      // 오른쪽/위쪽 끝에서 툴팁이 잘리면 반대편으로 뒤집는다
+      flipX: x + TOOLTIP_OFFSET + TOOLTIP_W > rect.width,
+      flipY: y - TOOLTIP_OFFSET - TOOLTIP_H < 0,
+    })
   }
 
-  const hovered = hoverIndex !== null ? candles[hoverIndex] : null
+  const hovered = hover ? candles[hover.index] : null
   const hoveredChange = hovered ? ((hovered.close - hovered.open) / hovered.open) * 100 : 0
 
   return (
@@ -52,7 +78,7 @@ export function CandleChart({ candles }: CandleChartProps) {
         ref={areaRef}
         className="relative mr-16 h-[max(200px,20.833vw)]"
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverIndex(null)}
+        onMouseLeave={() => setHover(null)}
       >
         {gridLevels.map((level) => (
           <div
@@ -89,25 +115,30 @@ export function CandleChart({ candles }: CandleChartProps) {
                   top: `${bodyTop}%`,
                   height: `${Math.max(bodyBottom - bodyTop, 0.3)}%`,
                   backgroundColor: color,
-                  opacity: hoverIndex === null || hoverIndex === i ? 1 : 0.75,
+                  opacity: !hover || hover.index === i ? 1 : 0.75,
                 }}
               />
             </div>
           )
         })}
 
-        {/* 크로스헤어 + 툴팁 */}
-        {hovered && hoverIndex !== null && (
+        {/* 크로스헤어(캔들에 스냅) + 커서를 따라다니는 툴팁 */}
+        {hovered && hover && (
           <>
             <div
               className="pointer-events-none absolute top-0 bottom-0 w-px bg-[#a8acb3]"
-              style={{ left: `${hoverIndex * slot + slot / 2}%` }}
+              style={{ left: `${hover.index * slot + slot / 2}%` }}
             />
             <div
-              className={cn(
-                'pointer-events-none absolute top-2 z-10 w-[168px] rounded-xl border border-border bg-background p-3 shadow-[0_4px_12px_rgba(0,0,0,0.06)]',
-                hoverIndex < candles.length / 2 ? 'right-2' : 'left-2',
-              )}
+              className="pointer-events-none absolute z-10 w-[168px] rounded-xl border border-border bg-background p-3 shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+              style={{
+                left: hover.x,
+                top: hover.y,
+                // 기본: 포인터 오른쪽 대각선 위로 살짝 띄움 / 가장자리에선 반대편으로
+                transform: `translate(${
+                  hover.flipX ? `calc(-100% - ${TOOLTIP_OFFSET}px)` : `${TOOLTIP_OFFSET}px`
+                }, ${hover.flipY ? `${TOOLTIP_OFFSET}px` : `calc(-100% - ${TOOLTIP_OFFSET}px)`})`,
+              }}
             >
               <div className="mb-1.5 flex items-baseline justify-between">
                 <span className="font-mono text-xs font-medium text-foreground">

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ChartColumn, ChevronUp, Newspaper, Table2, Users } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { CandleChart } from '@/components/theme/CandleChart'
+import { CandleChart } from '@/components/chart/CandleChart'
 import {
   CapitalStructureChart,
   DebtRatioChart,

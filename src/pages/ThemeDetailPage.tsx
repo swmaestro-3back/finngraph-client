@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { CandleChart } from '@/components/theme/CandleChart'
+import { CandleChart } from '@/components/chart/CandleChart'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { RelatedStocksTable } from '@/components/theme/RelatedStocksTable'
 import { FilterChip } from '@/components/ui/filter-chip'
