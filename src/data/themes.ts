@@ -1,7 +1,3 @@
-// 테마/종목 데이터 — data/judal.json(테마 317개, 종목 4,928개) 기반 생성
-// price·change·tradingValue는 코드/테마 해시로 만든 더미값 (실제 시세 아님)
-// tradingValue 단위: 억원 (4.2조 = 42000)
-
 export interface ThemeStockItem {
   name: string
   code: string

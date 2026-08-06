@@ -7,7 +7,7 @@ import type {
   EdgeItem,
 } from '@/data/graphTypes'
 import { LABEL_TO_TYPE, ALL_ENTITY_TYPES, ALL_PREDICATES } from '@/data/graphTypes'
-import raw from '../../data/samsung-graph.json'
+import raw from '@/data/samsung-graph.json'
 
 /**
  * data/samsung-graph.json (뉴스 분석으로 추출한 삼중항 관계)을
