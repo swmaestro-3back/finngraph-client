@@ -1,0 +1,19 @@
+import type { AnnualFinancials } from '@/data/types'
+
+// 삼성전자 스타일 연간 재무 더미데이터 (디자인 스크린샷 기준, 단위: 조원 / 원 / % / 배)
+export const annualFinancials: AnnualFinancials[] = [
+  { year: 2013, revenue: 228.7, operatingProfit: 36.8, netIncome: 30.5, operatingMargin: 16.08, roe: 20.31, debtRatio: 42.7, totalAssets: null, separateAssets: null, totalEquity: 150.0, totalDebt: 64.1, eps: null, per: null, pbr: null, dps: 14300, payoutRatio: null },
+  { year: 2014, revenue: 206.2, operatingProfit: 25.0, netIncome: 23.4, operatingMargin: 12.14, roe: 13.92, debtRatio: 37.08, totalAssets: null, separateAssets: null, totalEquity: 168.1, totalDebt: 62.3, eps: null, per: null, pbr: null, dps: 20000, payoutRatio: null },
+  { year: 2015, revenue: 200.7, operatingProfit: 26.4, netIncome: 19.1, operatingMargin: 13.16, roe: 10.64, debtRatio: 35.25, totalAssets: null, separateAssets: null, totalEquity: 179.1, totalDebt: 63.1, eps: null, per: null, pbr: null, dps: 21000, payoutRatio: null },
+  { year: 2016, revenue: 201.9, operatingProfit: 29.2, netIncome: 22.7, operatingMargin: 14.49, roe: 11.78, debtRatio: 35.87, totalAssets: null, separateAssets: null, totalEquity: 193.0, totalDebt: 69.2, eps: null, per: null, pbr: null, dps: 28500, payoutRatio: null },
+  { year: 2017, revenue: 239.6, operatingProfit: 53.6, netIncome: 42.2, operatingMargin: 22.39, roe: 19.67, debtRatio: 40.68, totalAssets: null, separateAssets: null, totalEquity: 214.5, totalDebt: 87.3, eps: null, per: null, pbr: null, dps: 42500, payoutRatio: null },
+  { year: 2018, revenue: 243.8, operatingProfit: 58.9, netIncome: 44.3, operatingMargin: 24.16, roe: 17.9, debtRatio: 36.97, totalAssets: null, separateAssets: null, totalEquity: 247.8, totalDebt: 91.6, eps: null, per: null, pbr: null, dps: 1416, payoutRatio: null },
+  { year: 2019, revenue: 230.4, operatingProfit: 27.8, netIncome: 21.7, operatingMargin: 12.05, roe: 8.27, debtRatio: 34.12, totalAssets: null, separateAssets: null, totalEquity: 262.9, totalDebt: 89.7, eps: null, per: null, pbr: null, dps: 1416, payoutRatio: null },
+  { year: 2020, revenue: 236.8, operatingProfit: 36.0, netIncome: 26.4, operatingMargin: 15.2, roe: 9.57, debtRatio: 37.07, totalAssets: null, separateAssets: null, totalEquity: 275.9, totalDebt: 102.3, eps: null, per: null, pbr: null, dps: 2994, payoutRatio: null },
+  { year: 2021, revenue: 279.6, operatingProfit: 51.6, netIncome: 39.9, operatingMargin: 18.47, roe: 13.09, debtRatio: 39.92, totalAssets: null, separateAssets: null, totalEquity: 304.9, totalDebt: 121.7, eps: null, per: null, pbr: null, dps: 1444, payoutRatio: null },
+  { year: 2022, revenue: 302.2, operatingProfit: 43.4, netIncome: 55.7, operatingMargin: 14.35, roe: 15.69, debtRatio: 26.41, totalAssets: null, separateAssets: null, totalEquity: 354.7, totalDebt: 93.7, eps: 8057, per: null, pbr: null, dps: 1444, payoutRatio: 17.9 },
+  { year: 2023, revenue: 258.9, operatingProfit: 6.6, netIncome: 15.5, operatingMargin: 2.54, roe: 4.26, debtRatio: 25.36, totalAssets: 455.9, separateAssets: 296.9, totalEquity: 363.7, totalDebt: 92.2, eps: 2131, per: 36.84, pbr: 1.51, dps: 1444, payoutRatio: 67.8 },
+  { year: 2024, revenue: 300.9, operatingProfit: 32.7, netIncome: 34.5, operatingMargin: 10.88, roe: 8.57, debtRatio: 27.93, totalAssets: 514.5, separateAssets: 325.0, totalEquity: 402.2, totalDebt: 112.3, eps: 4950, per: 10.75, pbr: 0.92, dps: 1446, payoutRatio: 29.2 },
+  { year: 2025, revenue: 333.6, operatingProfit: 43.6, netIncome: 45.2, operatingMargin: 13.07, roe: 10.36, debtRatio: 29.94, totalAssets: 566.9, separateAssets: 358.9, totalEquity: 436.3, totalDebt: 130.6, eps: 6605, per: 18.27, pbr: 1.87, dps: 1668, payoutRatio: 25.3 },
+  { year: 2026, estimated: true, revenue: 503.0, operatingProfit: 179.8, netIncome: 151.9, operatingMargin: 35.74, roe: 30.15, debtRatio: null, totalAssets: null, separateAssets: null, totalEquity: null, totalDebt: null, eps: 22080, per: 9.06, pbr: 2.35, dps: 1763, payoutRatio: 8.0 },
+]

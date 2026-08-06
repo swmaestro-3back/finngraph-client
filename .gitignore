@@ -107,5 +107,5 @@ repomix-output.*
 .netlify
 *.md
 
-data/
+/data/
 design-specs/
