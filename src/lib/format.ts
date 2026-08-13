@@ -44,3 +44,14 @@ export function formatMultiple(value: number | null): string {
   if (value === null) return '-'
   return `${value.toFixed(2)}배`
 }
+
+/** 상대 시각 — 하루 안이면 "3시간 전", 일주일 안이면 "5일 전", 그보다 오래면 "7월 22일" */
+export function formatRelativeTime(iso: string): string {
+  const then = new Date(iso)
+  const minutes = Math.floor((Date.now() - then.getTime()) / 60000)
+  if (minutes < 1) return '방금'
+  if (minutes < 60) return `${minutes}분 전`
+  if (minutes < 60 * 24) return `${Math.floor(minutes / 60)}시간 전`
+  if (minutes < 60 * 24 * 7) return `${Math.floor(minutes / (60 * 24))}일 전`
+  return `${then.getMonth() + 1}월 ${then.getDate()}일`
+}
