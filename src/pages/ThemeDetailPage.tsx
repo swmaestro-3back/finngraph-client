@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CandleChart } from '@/components/chart/CandleChart'
+import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { RelatedStocksTable } from '@/components/theme/RelatedStocksTable'
 import { FilterChip } from '@/components/ui/filter-chip'
@@ -27,6 +28,7 @@ export default function ThemeDetailPage() {
   // 진입 경로가 없으면(직접 URL 접근·새로고침) 테마 트리맵으로
   const back = useBackTarget({ to: '/', label: '테마 트리맵' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
+  const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const indexValue = useMemo(
     () => Math.round(BASE_INDEX * (1 + theme.change / 20)),
@@ -37,10 +39,7 @@ export default function ThemeDetailPage() {
     [theme, period, indexValue],
   )
   const detailStocks = useMemo(() => getThemeDetailStocks(theme.id), [theme.id])
-  const news = useMemo(
-    () => getThemeNews(theme.id, theme.name, theme.stocks[0]?.name ?? ''),
-    [theme],
-  )
+  const news = useMemo(() => getThemeNews(theme.id), [theme])
 
   const rangeLow = Math.min(...candles.map((c) => c.low))
   const rangeHigh = Math.max(...candles.map((c) => c.high))
@@ -120,7 +119,17 @@ export default function ThemeDetailPage() {
       <RelatedStocksTable stocks={detailStocks} />
 
       {/* 관련 뉴스 */}
-      <NewsSection title={`${theme.name} 관련 뉴스`} items={news} className="mt-4" />
+      <NewsSection
+        title={`${theme.name} 관련 뉴스`}
+        items={news}
+        className="mt-4"
+        onItemClick={(item) => setOpenNewsId(item.id)}
+      />
+
+      <NewsDetailModal
+        newsId={openNewsId}
+        onOpenChange={(open) => !open && setOpenNewsId(null)}
+      />
 
       <p className="mt-5 text-[11px] text-muted-foreground">
         표시된 시세·차트·뉴스는 데모용 예시 데이터입니다. 투자 판단의 근거로 사용할 수

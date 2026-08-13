@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { StockSection } from '@/components/theme/StockSection'
 import { Treemap } from '@/components/theme/Treemap'
@@ -15,13 +16,11 @@ const LIST_CLASS =
 export default function ThemeDashboardPage() {
   const [themeCount, setThemeCount] = useState(20)
   const [selectedId, setSelectedId] = useState('철강')
+  const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const treemapThemes = useMemo(() => selectTreemapThemes(themeCount), [themeCount])
   const selected = getThemeById(selectedId) ?? treemapThemes[0]
-  const news = useMemo(
-    () => getThemeNews(selected.id, selected.name, selected.stocks[0]?.name ?? ''),
-    [selected],
-  )
+  const news = useMemo(() => getThemeNews(selected.id), [selected])
 
   return (
     <div className="page-container pb-12 pt-7">
@@ -64,8 +63,14 @@ export default function ThemeDashboardPage() {
           title={`${selected.name} 관련 뉴스`}
           items={news}
           listClassName={LIST_CLASS}
+          onItemClick={(item) => setOpenNewsId(item.id)}
         />
       </div>
+
+      <NewsDetailModal
+        newsId={openNewsId}
+        onOpenChange={(open) => !open && setOpenNewsId(null)}
+      />
 
       <p className="mt-5 text-[11px] text-muted-foreground">
         표시된 시세·등락률·뉴스는 데모용 예시 데이터입니다. 투자 판단의 근거로 사용할 수
