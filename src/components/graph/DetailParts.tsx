@@ -3,13 +3,24 @@ import { NODE_COLORS, type EntityType, type GraphNode } from '@/data/graphTypes'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-/** 상세 패널의 소제목 + 본문 묶음 */
-export function Section({ title, children }: { title: string; children: ReactNode }) {
+/** 상세 패널의 소제목 + 본문 묶음. meta는 소제목 오른쪽 끝에 붙는 부가 정보 */
+export function Section({
+  title,
+  meta,
+  children,
+}: {
+  title: string
+  meta?: ReactNode
+  children: ReactNode
+}) {
   return (
     <div className="mb-4">
-      <h4 className="mb-1.5 text-[11px] font-semibold tracking-[0.4px] text-muted-foreground uppercase">
-        {title}
-      </h4>
+      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+        <h4 className="text-[11px] font-semibold tracking-[0.4px] text-muted-foreground uppercase">
+          {title}
+        </h4>
+        {meta && <span className="text-[11px] text-muted-foreground">{meta}</span>}
+      </div>
       {children}
     </div>
   )
