@@ -2,7 +2,7 @@ import { getMarket, getMarketCap, getTradingValue, hashString } from '@/data/sto
 import type { ThemeStock } from '@/data/types'
 import { getThemeById } from '@/data/themes'
 
-/** 시장·시가총액은 코드/주가에서 결정적으로 파생 (주식 DB와 동일 규칙) */
+/** 시장·시가총액은 코드/주가에서 결정적으로 파생 (주식 목록과 동일 규칙) */
 type BaseStock = Omit<ThemeStock, 'market' | 'marketCap'>
 
 function withMeta(stock: BaseStock): ThemeStock {

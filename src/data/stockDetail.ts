@@ -35,7 +35,7 @@ export function getStatTiles(stock: StockInfo, foreignRatio: number): StatTile[]
   const dividendYield = (DPS_2026E / stock.price) * 100
 
   return [
-    // 주식 DB·테마 상세와 같은 값이 나오도록 공유 규칙 사용
+    // 주식 목록·테마 상세와 같은 값이 나오도록 공유 규칙 사용
     { label: '시가총액', value: `${formatAmount(getMarketCap(stock.code, stock.price))}억` },
     { label: 'PER', value: `${per.toFixed(2)}배` },
     { label: 'PBR', value: '2.35' },

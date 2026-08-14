@@ -1,7 +1,7 @@
 import type { Market } from '@/data/stockMeta'
 import { cn } from '@/lib/utils'
 
-// 종목 식별 셀 (종목명 · 코드 · 시장 라벨) — 주식 DB / 테마 상세 관련 종목이 공유
+// 종목 식별 셀 (종목명 · 코드 · 시장 라벨) — 주식 목록 / 테마 상세 관련 종목이 공유
 // 종목명 + 코드 + 시장 라벨 한 줄
 interface StockIdentityProps {
   name: string

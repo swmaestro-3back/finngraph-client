@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
   { label: '테마 트리맵', to: '/' },
-  { label: '테마 DB', to: '/themes' },
-  { label: '주식 DB', to: '/stocks' },
+  { label: '테마 목록', to: '/themes' },
+  { label: '주식 목록', to: '/stocks' },
   { label: '기업 그래프', to: '/graph' },
 ]
 
@@ -43,7 +43,7 @@ export function NavBar() {
 
   const isActive = (to: string) => {
     if (to === '/') return pathname === '/'
-    // DB 탭은 각 상세 페이지(/theme/:id, /stock/:code)에서도 활성 유지
+    // 목록 탭은 각 상세 페이지(/theme/:id, /stock/:code)에서도 활성 유지
     if (to === '/themes') return pathname === '/themes' || pathname.startsWith('/theme/')
     if (to === '/stocks') return pathname === '/stocks' || pathname.startsWith('/stock/')
     return pathname.startsWith(to.split('/').slice(0, 2).join('/'))

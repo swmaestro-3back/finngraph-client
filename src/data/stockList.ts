@@ -1,4 +1,4 @@
-// 주식 DB 리스트 — 전체 테마의 종목을 코드 기준으로 중복 제거해 구성
+// 주식 목록 — 전체 테마의 종목을 코드 기준으로 중복 제거해 구성
 // 시가총액은 주식 상세 스탯 타일과 동일한 발행주식수 공식 사용(코드 해시), 나머지 지표는 결정적 해시 생성
 
 import { getMarket, getMarketCap, hashString, type Market } from '@/data/stockMeta'

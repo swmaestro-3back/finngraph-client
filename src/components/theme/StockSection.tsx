@@ -26,7 +26,7 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
   const { pathname } = useLocation()
 
   // 등락률 내림차순 — 상승률이 큰 종목이 위로
-  // 시가총액·거래대금은 테마 상세·주식 DB와 같은 결정적 규칙으로 파생
+  // 시가총액·거래대금은 테마 상세·주식 목록과 같은 결정적 규칙으로 파생
   const stocks = useMemo(
     () =>
       [...theme.stocks]

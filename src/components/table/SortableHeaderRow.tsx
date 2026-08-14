@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-// 정렬 가능한 테이블 컬럼 헤더 행 — 테마 DB / 주식 DB / 테마 상세 관련 종목이 공유
+// 정렬 가능한 테이블 컬럼 헤더 행 — 테마 목록 / 주식 목록 / 테마 상세 관련 종목이 공유
 // key가 null인 컬럼은 정렬 대상이 아니라 라벨만 표시한다.
 export interface TableColumn<K extends string> {
   key: K | null

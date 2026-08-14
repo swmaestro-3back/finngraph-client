@@ -65,7 +65,7 @@ const ALL_ROWS: ThemeRow[] = themes.map((theme) => {
   }
 })
 
-export default function ThemeDbPage() {
+export default function ThemeListPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [page, setPage] = useState(1)
@@ -93,7 +93,7 @@ export default function ThemeDbPage() {
       <div className="mb-3 flex items-end justify-between gap-4">
         <div className="flex items-baseline gap-[9px]">
           <h1 className="text-[32px] font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
-            테마 DB
+            테마 목록
           </h1>
           <span className="text-[13px] text-muted-foreground">
             전체 {ALL_ROWS.length}개 테마 · 2026-07-31 기준
@@ -101,7 +101,7 @@ export default function ThemeDbPage() {
         </div>
       </div>
 
-      {/* 테마 리스트 카드 */}
+      {/* 테마 목록 카드 */}
       <div className="overflow-hidden rounded-2xl border border-border bg-background">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="min-w-[880px]">

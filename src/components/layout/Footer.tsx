@@ -5,8 +5,8 @@ const FOOTER_COLUMNS = [
     title: '데이터',
     links: [
       { label: '테마 트리맵', to: '/' },
-      { label: '테마 DB', to: '/themes' },
-      { label: '주식 DB', to: '/stocks' },
+      { label: '테마 목록', to: '/themes' },
+      { label: '주식 목록', to: '/stocks' },
       { label: '기업 그래프', to: '/graph' },
     ],
   },
