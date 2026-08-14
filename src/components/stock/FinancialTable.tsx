@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { annualFinancials } from '@/data/financials'
@@ -79,7 +79,7 @@ function toneClass(mode: HighlightMode, tone: TrendTone | null): string | undefi
     : 'bg-stock-down/10 text-stock-down'
 }
 
-export function FinancialTable() {
+export const FinancialTable = memo(function FinancialTable() {
   const [mode, setMode] = useState<HighlightMode>('none')
 
   // 행별 연속 추세 구간 (데이터·지표 성격이 고정이라 한 번만 계산)
@@ -193,4 +193,4 @@ export function FinancialTable() {
       </div>
     </div>
   )
-}
+})

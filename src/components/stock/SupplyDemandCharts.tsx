@@ -1,23 +1,26 @@
+import { memo } from 'react'
 import {
   Bar,
   Cell,
   ComposedChart,
   Line,
   ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
   CartesianGrid,
 } from 'recharts'
 import type { SupplyPoint } from '@/data/stockDetail'
+import { DOWN, UP } from '@/lib/chartAxis'
+import { syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/lib/chartSync'
 import { cn } from '@/lib/utils'
 
 // 투자자별 수급 4카드 (design-specs/stock-detail.md §1-6)
-const UP = '#cf202f'
-const DOWN = '#0052ff'
 const PRIMARY = '#0052ff'
 
 const axisTick = { fontSize: 9, fill: '#7c828a', fontFamily: 'JetBrains Mono Variable, monospace' }
+
+// 4카드가 같은 거래일 축을 쓴다 — 한 곳을 짚으면 나머지도 같은 날을 가리킨다
+const SYNC_ID = 'supply-demand'
 
 /** 호버한 지점의 값을 앱 톤(둥근 테두리·mono 숫자·등락 색)으로 띄우는 recharts 커스텀 툴팁 */
 interface SupplyTooltipProps {
@@ -78,17 +81,22 @@ function SupplyCard({
   )
 }
 
-function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint) {
+function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: SyncedIndex) {
   return (
-    <ComposedChart data={points} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+    <ComposedChart
+      data={points}
+      margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+      syncId={SYNC_ID}
+      onClick={sync.onChartClick}
+    >
       <CartesianGrid vertical={false} stroke="#eaeef4" strokeDasharray="3 3" />
       <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: '#dee5ee' }} interval={8} />
       <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}만`} width={38} />
-      <Tooltip
-        isAnimationActive={false}
-        cursor={{ fill: 'rgba(10,11,13,0.04)' }}
-        content={<SupplyTooltip kind="net" />}
-      />
+      {syncMarks(sync, {
+        kind: 'bar',
+        xForIndex: (i) => points[i].label,
+        content: <SupplyTooltip kind="net" />,
+      })}
       <Bar isAnimationActive={false} dataKey={key} barSize={5}>
         {points.map((p, i) => (
           <Cell key={i} fill={(p[key] as number) >= 0 ? UP : DOWN} fillOpacity={0.85} />
@@ -102,7 +110,15 @@ function cumulative(points: SupplyPoint[], key: keyof SupplyPoint): number {
   return points.reduce((sum, p) => sum + (p[key] as number), 0)
 }
 
-export function SupplyDemandCharts({ points }: { points: SupplyPoint[] }) {
+// recharts 4카드는 페이지에서 가장 무거운 트리다 — points가 같으면 다시 그리지 않는다
+export const SupplyDemandCharts = memo(function SupplyDemandCharts({
+  points,
+}: {
+  points: SupplyPoint[]
+}) {
+  // 4카드가 하나의 거래일 축을 공유한다 — 한 곳을 짚으면 나머지도 같은 날을 가리킨다
+  const sync = useSyncedIndex()
+  const pinnedDay = sync.pinnedIndex === null ? null : points[sync.pinnedIndex].label
   const latestRatio = points[points.length - 1].foreignRatio
   const nets: { title: string; key: keyof SupplyPoint }[] = [
     { title: '외국인 순매수량', key: 'foreignNet' },
@@ -111,34 +127,47 @@ export function SupplyDemandCharts({ points }: { points: SupplyPoint[] }) {
   ]
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <SupplyCard title="외국인 보유율" meta={`${latestRatio.toFixed(2)}%`}>
-        <ComposedChart data={points} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-          <CartesianGrid vertical={false} stroke="#eaeef4" strokeDasharray="3 3" />
-          <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: '#dee5ee' }} interval={8} />
-          <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v.toFixed(1)}%`} domain={['dataMin - 0.5', 'dataMax + 0.5']} width={44} />
-          <Tooltip
-            isAnimationActive={false}
-            cursor={{ stroke: '#a8acb3', strokeWidth: 1 }}
-            content={<SupplyTooltip kind="ratio" />}
-          />
-          <Line isAnimationActive={false} type="monotone" dataKey="foreignRatio" stroke={PRIMARY} strokeWidth={2} dot={false} />
-        </ComposedChart>
-      </SupplyCard>
+    <div>
+      <SyncPinHeader
+        hint="한 차트를 짚으면 네 지표가 같은 날을 가리킵니다. 누르면 그 날이 고정됩니다."
+        pinnedLabel={pinnedDay}
+        onClear={sync.clear}
+      />
 
-      {nets.map(({ title, key }) => {
-        const cum = cumulative(points, key)
-        return (
-          <SupplyCard
-            key={key}
-            title={title}
-            meta={`누적 ${cum >= 0 ? '+' : '−'}${Math.abs(cum).toLocaleString('ko-KR')}만주`}
-            metaColorClass={cum >= 0 ? 'text-stock-up' : 'text-stock-down'}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SupplyCard title="외국인 보유율" meta={`${latestRatio.toFixed(2)}%`}>
+          <ComposedChart
+            data={points}
+            margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+            syncId={SYNC_ID}
+            onClick={sync.onChartClick}
           >
-            {netBarChart(points, key)}
-          </SupplyCard>
-        )
-      })}
+            <CartesianGrid vertical={false} stroke="#eaeef4" strokeDasharray="3 3" />
+            <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: '#dee5ee' }} interval={8} />
+            <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v.toFixed(1)}%`} domain={['dataMin - 0.5', 'dataMax + 0.5']} width={44} />
+            {syncMarks(sync, {
+              kind: 'line',
+              xForIndex: (i) => points[i].label,
+              content: <SupplyTooltip kind="ratio" />,
+            })}
+            <Line isAnimationActive={false} type="monotone" dataKey="foreignRatio" stroke={PRIMARY} strokeWidth={2} dot={false} />
+          </ComposedChart>
+        </SupplyCard>
+
+        {nets.map(({ title, key }) => {
+          const cum = cumulative(points, key)
+          return (
+            <SupplyCard
+              key={key}
+              title={title}
+              meta={`누적 ${cum >= 0 ? '+' : '−'}${Math.abs(cum).toLocaleString('ko-KR')}만주`}
+              metaColorClass={cum >= 0 ? 'text-stock-up' : 'text-stock-down'}
+            >
+              {netBarChart(points, key, sync)}
+            </SupplyCard>
+          )
+        })}
+      </div>
     </div>
   )
-}
+})
