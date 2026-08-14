@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CandleChart } from '@/components/chart/CandleChart'
+import { ChartCard } from '@/components/chart/ChartCard'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { RelatedStocksTable } from '@/components/theme/RelatedStocksTable'
@@ -95,25 +96,14 @@ export default function ThemeDetailPage() {
       </div>
 
       {/* 테마 지수 차트 카드 */}
-      <section className="rounded-3xl border border-border bg-background p-5">
-        <div className="mb-[9px] flex items-baseline gap-3">
-          <h2 className="text-[13px] font-semibold text-foreground">
-            테마 지수 {periodLabel}
-          </h2>
-          <span
-            className={cn(
-              'font-mono text-[13px] font-medium',
-              changeColorClass(periodChange),
-            )}
-          >
-            {formatChange(periodChange)}
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            구간 {formatPrice(rangeLow)} ~ {formatPrice(rangeHigh)}
-          </span>
-        </div>
+      <ChartCard
+        title={`테마 지수 ${periodLabel}`}
+        change={periodChange}
+        rangeLow={rangeLow}
+        rangeHigh={rangeHigh}
+      >
         <CandleChart candles={candles} />
-      </section>
+      </ChartCard>
 
       {/* 관련 종목 */}
       <RelatedStocksTable stocks={detailStocks} />
