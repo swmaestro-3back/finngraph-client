@@ -1,6 +1,6 @@
 # finngraph-client
 
-Web client for the finngraph served by the  `finngraph-backend-api-server` and `finngraph-kg-api` repository.
+Finngraph web front-end application built with React 19, TypeScript, and shadcn/ui adhering to Coinbase Design System principles.
 
 ## Tech Stack
 
@@ -47,7 +47,7 @@ finngraph-client/
 │   │   ├── graph/              # GraphView / GraphCanvas, Toolbar, SearchBar, FilterPanel,
 │   │   │                       #   HopSelector, Legend, Node / EdgeDetail, Tooltip
 │   │   ├── chart/              # CandleChart
-│   │   ├── table/              # SortableHeaderRow, StockIdentity — shared DB table parts
+│   │   ├── table/              # SortableHeaderRow, StockIdentity — shared list table parts
 │   │   └── ui/                 # shadcn/ui primitives
 │   ├── data/                   # Mock data layer (see below)
 │   ├── lib/                    # Pure utilities & hooks
@@ -69,9 +69,9 @@ stable across reloads without a backend.
 | File | Contents |
 | --- | --- |
 | `themes.ts` | Base theme & stock data (price, change, trading value) |
-| `themePerformance.ts` | Period returns for the theme DB |
+| `themePerformance.ts` | Period returns for the theme list |
 | `themeDetailStocks.ts` | Constituent stocks on the theme detail page |
-| `stockList.ts` / `stockMeta.ts` | Stock DB rows and shared metadata (market cap, valuation) |
+| `stockList.ts` / `stockMeta.ts` | Stock list rows and shared metadata (market cap, valuation) |
 | `stockDetail.ts` | Stat tiles, supply & demand, issue timeline |
 | `financials.ts` | Annual financial statements |
 | `candles.ts` | Candle / volume generator (daily, weekly, monthly) |
@@ -90,7 +90,7 @@ to the components stays the same.
 | `format.ts` | Change rate, price, market cap, relative time formatting |
 | `navigation.ts` | Back-navigation based on the route the detail page was entered from |
 | `trend.ts` | Consecutive trend detection for financial metrics |
-| `useTableSort.ts` | Sorting state for DB tables |
+| `useTableSort.ts` | Sorting state for list tables |
 | `useCanvasSize.ts` | Canvas resize observer |
 | `useGraphData.ts` / `useNewsGraph.ts` | Data entrypoints for the corporate graph and news subgraph |
 | `graphLayout.ts` | Pure graph layout math (no DOM) |
