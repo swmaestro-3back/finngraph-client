@@ -23,9 +23,9 @@ interface Props {
   onOpenChange: (open: boolean) => void
 }
 
-/** 뉴스 상세 모달 — 요약, 기사에서 추출된 관계 그래프, 관련 종목, 비슷한 뉴스 */
+/** 뉴스 상세 모달 — 요약, 기사에서 추출된 관계 그래프, 관련 종목, 유사한 뉴스 */
 export function NewsDetailModal({ newsId, onOpenChange }: Props) {
-  // 비슷한 뉴스를 누르면 모달을 쌓지 않고 내용만 바꾼다
+  // 유사한 뉴스를 누르면 모달을 쌓지 않고 내용만 바꾼다
   const [currentId, setCurrentId] = useState<string | null>(newsId)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -109,7 +109,7 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
 
           {similarItems.length > 0 && (
             <NewsSection
-              title="비슷한 뉴스"
+              title="유사한 뉴스"
               items={similarItems}
               onItemClick={(item) => setCurrentId(item.id)}
             />
