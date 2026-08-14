@@ -32,16 +32,36 @@ function hashString(input: string): number {
   return Math.abs(h)
 }
 
-/** 기준일 2026-07-31에서 역산한 날짜 라벨 */
-function dateLabel(index: number, count: number, period: CandlePeriod): string {
+/** 축 위 한 칸 — 캔들과 이슈 레인이 같은 날짜 도메인을 쓰도록 공유한다 */
+export interface CandleDate {
+  /** 축에 찍히는 짧은 라벨 */
+  label: string
+  /** 전체 날짜 "2026.07.31" — 패널 제목·정렬용 */
+  date: string
+}
+
+/** 기준일 2026-07-31에서 역산한 날짜 */
+function candleDate(index: number, count: number, period: CandlePeriod): CandleDate {
   const base = new Date(2026, 6, 31)
   const stepDays = period === 'D' ? 1 : period === 'W' ? 7 : 30
   const d = new Date(base)
   d.setDate(base.getDate() - (count - 1 - index) * stepDays)
-  if (period === 'M') {
-    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  return {
+    label: period === 'M' ? `${y}.${m}` : `${d.getMonth() + 1}/${d.getDate()}`,
+    date: `${y}.${m}.${String(d.getDate()).padStart(2, '0')}`,
   }
-  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+/**
+ * 기간별 날짜 축 전체.
+ * 이슈 레인은 캔들과 같은 축에 그려지므로 날짜를 따로 만들지 않고 이걸 소비한다
+ * (주봉 한 칸 = 그 주, 월봉 한 칸 = 그 달).
+ */
+export function candleDates(period: CandlePeriod): CandleDate[] {
+  const count = CANDLE_COUNTS[period]
+  return Array.from({ length: count }, (_, i) => candleDate(i, count, period))
 }
 
 /** 테마/종목별 결정적 캔들 시리즈. 마지막 종가가 endPrice로 수렴 */
@@ -52,6 +72,8 @@ export function generateCandles(
   totalChangePct: number,
 ): Candle[] {
   const count = CANDLE_COUNTS[period]
+  // 캔들 라벨도 candleDates()를 거친다 — 이슈 레인과 같은 축이라는 게 구조적으로 보장된다
+  const dates = candleDates(period)
   const rand = mulberry32(hashString(`${seedKey}-${period}`))
   const drift = totalChangePct / 100 / count
   const vol = period === 'D' ? 0.012 : period === 'W' ? 0.024 : 0.04
@@ -74,7 +96,7 @@ export function generateCandles(
       low: Math.round(lo),
       close: Math.round(close),
       volume: Math.round(80 + rand() * 920),
-      label: dateLabel(i, count, period),
+      label: dates[i].label,
     }
   })
 }

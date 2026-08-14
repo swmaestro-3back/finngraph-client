@@ -1,5 +1,8 @@
 // 주식 상세 페이지 더미데이터 (design-specs/stock-detail.md)
 
+import type { CandleDate } from '@/data/candles'
+import { toNewsItem, type NewsItem } from '@/data/news'
+import { listNews } from '@/data/newsDetail'
 import { getMarketCap, hashString } from '@/data/stockMeta'
 import { formatAmount } from '@/lib/format'
 
@@ -92,67 +95,62 @@ export function generateSupplyDemand(code: string): SupplyPoint[] {
   return points
 }
 
-// 이슈 타임라인 (§1-4): 일별 호재/악재 뉴스
-export interface IssueNews {
-  kind: '호재' | '악재'
-  title: string
-  press: string
-  time: string
+// 이슈 타임라인 (§1-4): 캔들과 같은 축 위의 호재/악재 뉴스
+// (docs/superpowers/specs/2026-08-14-issue-timeline-design.md)
+
+export type IssueKind = '호재' | '악재'
+
+/** 뉴스 한 줄 + 그 뉴스의 성격 — id가 있으므로 뉴스 상세 모달로 그대로 이어진다 */
+export interface IssueNews extends NewsItem {
+  kind: IssueKind
 }
 
+/** 축 한 칸 = 하루(일봉) / 한 주(주봉) / 한 달(월봉) */
 export interface IssueDay {
+  /** 캔들과 동일한 축 라벨 */
+  label: string
+  /** 패널 제목용 전체 날짜 */
   date: string
   good: number
   bad: number
   items: IssueNews[]
 }
 
-const GOOD_TITLES = [
-  'HBM4 공급 계약 체결 임박 보도',
-  '분기 영업이익 컨센서스 상회 전망',
-  '외국계 증권사 목표주가 상향',
-  '신규 팹 증설 투자 발표',
-  'AI 서버 수요 급증에 수혜 전망',
-  '주요 고객사와 장기 공급 계약',
-]
+/**
+ * 뉴스의 호재/악재 판정 — **가정된 값이다**.
+ * 목업 뉴스 테이블(NewsDetail)에 감성 필드가 없어 id 해시로 결정적으로 부여한다.
+ * 백엔드가 감성을 내려주면 이 함수만 그 값을 읽도록 바꾸면 된다.
+ */
+function issueKind(newsId: string): IssueKind {
+  return hashString(`sentiment-${newsId}`) % 5 < 3 ? '호재' : '악재'
+}
 
-const BAD_TITLES = [
-  '메모리 현물가 단기 조정 우려',
-  '경쟁사 증설로 공급 과잉 우려 제기',
-  '환율 변동에 따른 수익성 부담',
-  '일부 라인 가동률 하락 보도',
-  '단기 급등에 따른 차익실현 매물',
-]
-
-const PRESS_POOL = ['한국경제', '매일경제', '연합뉴스', '머니투데이', '이데일리', '서울경제', '전자신문']
-
-export function generateIssueTimeline(code: string, count: number): IssueDay[] {
+/**
+ * 종목의 이슈 타임라인 — 축 날짜를 그대로 받아 그 칸에 실제 뉴스를 결정적으로 배분한다.
+ * 캔들과 버킷 개수·라벨이 정의상 같아지므로 두 차트가 세로로 정렬된다.
+ */
+export function generateIssueTimeline(code: string, dates: CandleDate[]): IssueDay[] {
+  const all = listNews()
   const rand = mulberry32(hashString(`issue-${code}`))
-  const base = new Date(2026, 6, 31)
-  const days: IssueDay[] = []
-  for (let i = 0; i < count; i++) {
-    const d = new Date(base)
-    d.setDate(base.getDate() - (count - 1 - i))
-    const total = Math.floor(rand() * 6)
-    const good = Math.round(rand() * total)
-    const bad = total - good
-    const items: IssueNews[] = []
+  let cursor = hashString(code) % Math.max(all.length, 1)
+
+  return dates.map(({ label, date }) => {
+    const total = all.length === 0 ? 0 : Math.floor(rand() * 6)
+    // 호재를 위로 모아 패널에서도 막대와 같은 순서로 읽힌다
+    const goodItems: IssueNews[] = []
+    const badItems: IssueNews[] = []
     for (let j = 0; j < total; j++) {
-      const isGood = j < good
-      const pool = isGood ? GOOD_TITLES : BAD_TITLES
-      items.push({
-        kind: isGood ? '호재' : '악재',
-        title: pool[Math.floor(rand() * pool.length)],
-        press: PRESS_POOL[Math.floor(rand() * PRESS_POOL.length)],
-        time: `${String(9 + Math.floor(rand() * 7)).padStart(2, '0')}:${String(Math.floor(rand() * 60)).padStart(2, '0')}`,
-      })
+      const news = all[cursor % all.length]
+      cursor++
+      const item = { ...toNewsItem(news), kind: issueKind(news.id) }
+      ;(item.kind === '호재' ? goodItems : badItems).push(item)
     }
-    days.push({
-      date: `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`,
-      good,
-      bad,
-      items,
-    })
-  }
-  return days
+    return {
+      label,
+      date,
+      good: goodItems.length,
+      bad: badItems.length,
+      items: [...goodItems, ...badItems],
+    }
+  })
 }

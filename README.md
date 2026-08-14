@@ -42,7 +42,8 @@ finngraph-client/
 │   ├── components/
 │   │   ├── layout/             # NavBar, Footer, SiteLayout
 │   │   ├── theme/              # Treemap, StockSection, RelatedStocksTable, NewsSection
-│   │   ├── stock/              # AnnualCharts, FinancialTable, IssueTimeline, SupplyDemandCharts
+│   │   ├── stock/              # AnnualCharts, FinancialTable, IssueLane, IssueNewsPanel,
+│   │   │                       #   SupplyDemandCharts
 │   │   ├── news/               # NewsDetailModal, NewsGraphSection, NewsRelationList, entity chips
 │   │   ├── graph/              # GraphView / GraphCanvas, Toolbar, SearchBar, FilterPanel,
 │   │   │                       #   HopSelector, Legend, Node / EdgeDetail, Tooltip

@@ -1,20 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChartColumn, ChevronUp, Newspaper, Table2, Users } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { CandleChart } from '@/components/chart/CandleChart'
-import {
-  CapitalStructureChart,
-  DebtRatioChart,
-  EpsDividendChart,
-  MarginRoeChart,
-  PbrPerChart,
-  RevenueChart,
-} from '@/components/stock/AnnualCharts'
+import { AnnualCharts } from '@/components/stock/AnnualCharts'
 import { FinancialTable } from '@/components/stock/FinancialTable'
-import { FilterChip } from '@/components/ui/filter-chip'
-import { IssueTimeline } from '@/components/stock/IssueTimeline'
+import { NewsDetailModal } from '@/components/news/NewsDetailModal'
+import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
+import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
-import { generateCandles, CANDLE_COUNTS, type CandlePeriod } from '@/data/candles'
+import { candleDates, generateCandles, type CandlePeriod } from '@/data/candles'
 import {
   DEFAULT_STOCK,
   generateIssueTimeline,
@@ -25,12 +18,6 @@ import { themes } from '@/data/themes'
 import { changeColorClass, formatChange, formatPrice } from '@/lib/format'
 import { fromState, useBackTarget } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
-
-const PERIODS: { key: CandlePeriod; label: string; chartLabel: string }[] = [
-  { key: 'D', label: '1일', chartLabel: '일봉' },
-  { key: 'W', label: '1주', chartLabel: '주봉' },
-  { key: 'M', label: '1달', chartLabel: '월봉' },
-]
 
 function findStock(code: string | undefined) {
   if (!code) return DEFAULT_STOCK
@@ -58,6 +45,9 @@ export default function StockDetailPage() {
   const back = useBackTarget({ to: `/theme/${stock.themeId}`, label: '테마 상세' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [annualOpen, setAnnualOpen] = useState(true)
+  // hover는 PriceIssueCard가 쥔다 — 페이지는 뉴스 패널과 공유하는 클릭 선택만 관리한다
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const candles = useMemo(
     () => generateCandles(`stock-${stock.code}`, period, stock.price, stock.change),
@@ -69,15 +59,17 @@ export default function StockDetailPage() {
     [stock, supply],
   )
   const issues = useMemo(
-    () => generateIssueTimeline(stock.code, CANDLE_COUNTS[period]),
+    () => generateIssueTimeline(stock.code, candleDates(period)),
     [stock.code, period],
   )
 
-  const rangeLow = Math.min(...candles.map((c) => c.low))
-  const rangeHigh = Math.max(...candles.map((c) => c.high))
-  const periodChange =
-    ((candles[candles.length - 1].close - candles[0].open) / candles[0].open) * 100
-  const chartLabel = PERIODS.find((p) => p.key === period)?.chartLabel
+  // 기간을 바꾸면 인덱스의 의미가 달라진다 — 선택을 들고 가지 않는다
+  useEffect(() => {
+    setSelectedIndex(null)
+  }, [period, stock.code])
+
+  // memo된 자식들에게 내려가는 콜백 — 참조가 흔들리면 memo가 무력해진다
+  const clearSelection = useCallback(() => setSelectedIndex(null), [])
 
   return (
     <div className="page-container pb-12 pt-7">
@@ -97,58 +89,23 @@ export default function StockDetailPage() {
       </div>
 
       {/* 종목 헤더 */}
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-wrap items-baseline gap-[9px]">
-          <h1 className="text-[32px] font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
-            {stock.name}
-          </h1>
-          <span className="font-mono text-[13px] text-muted-foreground">{stock.code}</span>
-          <span className="font-mono text-[22px] font-medium tracking-[-0.5px] text-foreground">
-            {formatPrice(stock.price)}
-          </span>
-          <span
-            className={cn(
-              'font-mono text-base font-medium',
-              changeColorClass(stock.change),
-            )}
-          >
-            {formatChange(stock.change)}
-          </span>
-        </div>
-        <div className="flex gap-1.5">
-          {PERIODS.map((p) => (
-            <FilterChip
-              key={p.key}
-              active={period === p.key}
-              onClick={() => setPeriod(p.key)}
-            >
-              {p.label}
-            </FilterChip>
-          ))}
-        </div>
+      <div className="mb-3 flex flex-wrap items-baseline gap-[9px]">
+        <h1 className="text-[32px] font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
+          {stock.name}
+        </h1>
+        <span className="font-mono text-[13px] text-muted-foreground">{stock.code}</span>
+        <span className="font-mono text-[22px] font-medium tracking-[-0.5px] text-foreground">
+          {formatPrice(stock.price)}
+        </span>
+        <span
+          className={cn('font-mono text-base font-medium', changeColorClass(stock.change))}
+        >
+          {formatChange(stock.change)}
+        </span>
       </div>
 
-      {/* 주가 차트 카드 */}
-      <section className="rounded-3xl border border-border bg-background p-5">
-        <div className="mb-[9px] flex items-baseline gap-3">
-          <h2 className="text-[13px] font-semibold text-foreground">주가 {chartLabel}</h2>
-          <span
-            className={cn(
-              'font-mono text-[13px] font-medium',
-              changeColorClass(periodChange),
-            )}
-          >
-            {formatChange(periodChange)}
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            구간 {formatPrice(rangeLow)} ~ {formatPrice(rangeHigh)}
-          </span>
-        </div>
-        <CandleChart candles={candles} />
-      </section>
-
-      {/* 요약 스탯 8타일 */}
-      <div className="mt-4 grid grid-cols-2 gap-[9px] md:grid-cols-4">
+      {/* 요약 스탯 8타일 — 차트보다 먼저, 종목의 몸집을 먼저 읽고 움직임을 본다 */}
+      <div className="mb-4 grid grid-cols-2 gap-[9px] md:grid-cols-4">
         {statTiles.map((tile) => (
           <div key={tile.label} className="rounded-xl bg-muted px-3 py-[9px]">
             <div className="text-[11px] text-muted-foreground">{tile.label}</div>
@@ -159,6 +116,18 @@ export default function StockDetailPage() {
         ))}
       </div>
 
+      {/* 주가 차트 카드 — 기간 전환은 카드 헤더 오른쪽에 붙는다.
+          축이 바뀌면 key로 리마운트해 카드 내부의 hover·키보드 포커스가 함께 리셋된다 */}
+      <PriceIssueCard
+        key={`${stock.code}-${period}`}
+        candles={candles}
+        issues={issues}
+        period={period}
+        onPeriodChange={setPeriod}
+        selectedIndex={selectedIndex}
+        onSelect={setSelectedIndex}
+      />
+
       {/* 이슈 타임라인 */}
       <div className="mb-[9px] mt-7 flex items-center gap-2">
         <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
@@ -166,9 +135,17 @@ export default function StockDetailPage() {
         </h2>
         <Newspaper className="size-3.5 text-[#8b99af]" />
       </div>
-      <section className="rounded-3xl border border-border bg-background p-5">
-        <IssueTimeline days={issues} />
-      </section>
+      <IssueNewsPanel
+        days={issues}
+        selectedIndex={selectedIndex}
+        onSelectNews={setOpenNewsId}
+        onClearSelection={clearSelection}
+      />
+
+      <NewsDetailModal
+        newsId={openNewsId}
+        onOpenChange={(open) => !open && setOpenNewsId(null)}
+      />
 
       {/* 투자자별 수급 */}
       <div className="mb-[9px] mt-7 flex items-center gap-2">
@@ -196,16 +173,7 @@ export default function StockDetailPage() {
           />
         </button>
       </div>
-      {annualOpen && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <RevenueChart />
-          <MarginRoeChart />
-          <EpsDividendChart />
-          <PbrPerChart />
-          <CapitalStructureChart />
-          <DebtRatioChart />
-        </div>
-      )}
+      {annualOpen && <AnnualCharts />}
 
       {/* 재무 지표 요약 */}
       <div className="mb-[9px] mt-7 flex items-center gap-2">
