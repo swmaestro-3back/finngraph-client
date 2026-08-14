@@ -59,73 +59,89 @@ function toType(label: string): EntityType {
   return LABEL_TO_TYPE[label] ?? 'company'
 }
 
-function buildGraph(): GraphData {
-  const nodeMap = new Map<string, GraphNode>()
+const nodeMap = new Map<string, GraphNode>()
 
-  const ensureNode = (text: string, label: string) => {
-    const id = nodeId(text)
-    if (!nodeMap.has(id)) {
-      nodeMap.set(id, {
-        id,
-        label: text,
-        type: toType(label),
-        data: {},
-      })
-    }
-    return nodeMap.get(id)!
+function ensureNode(text: string, label: string): GraphNode {
+  const id = nodeId(text)
+  if (!nodeMap.has(id)) {
+    nodeMap.set(id, { id, label: text, type: toType(label), data: {} })
   }
-
-  // 1) 선언된 엔티티(설명/별칭 포함)로 노드 시드
-  data.entities.forEach((e) => {
-    const node = ensureNode(e.text, e.label)
-    node.data.description = e.description
-    node.data.aliases = e.aliases
-  })
-
-  // 2) 관계에서 노드 보강 + 링크 생성
-  const links: GraphLink[] = data.relations.map((r, i) => {
-    ensureNode(r.subject.text, r.subject.label)
-    ensureNode(r.object.text, r.object.label)
-
-    let item: EdgeItem | null = null
-    if (r.item) {
-      item = { text: r.item.text, type: toType(r.item.label) }
-    }
-
-    const mc = r.mentioned_count ?? 1
-    return {
-      id: r.news_id ? `${r.news_id}#${i}` : `rel-${i}`,
-      source: nodeId(r.subject.text),
-      target: nodeId(r.object.text),
-      type: r.predicate as Predicate,
-      item,
-      mentioned_count: mc,
-      news_id: r.news_id,
-      news_title: r.news_title,
-      news_url: r.news_url,
-      source_sentence: r.source_sentence ?? '',
-      timestamp: r.timestamp ?? '',
-      is_negated: r.is_negated ?? false,
-      tense: (r.tense as GraphLink['tense']) ?? 'past_or_present_fact',
-      value: mc,
-    }
-  })
-
-  const nodes = [...nodeMap.values()]
-
-  return {
-    nodes,
-    links,
-    metadata: {
-      center: data.center,
-      entity_types: ALL_ENTITY_TYPES,
-      predicate_types: ALL_PREDICATES,
-      stats: {
-        total_nodes: nodes.length,
-        total_edges: links.length,
-      },
-    },
-  }
+  return nodeMap.get(id)!
 }
 
-export const MOCK_GRAPH: GraphData = buildGraph()
+// 선언된 엔티티(설명/별칭 포함)로 노드 시드
+data.entities.forEach((e) => {
+  const node = ensureNode(e.text, e.label)
+  node.data.description = e.description
+  node.data.aliases = e.aliases
+})
+
+/**
+ * 관계 하나 = 링크 하나. 같은 삼중항이 여러 기사에 나오면 링크도 그만큼 생긴다.
+ * 기사별 근거 문장·언급 횟수가 살아 있어야 뉴스 서브그래프를 그릴 수 있다.
+ */
+export const NEWS_LINKS: GraphLink[] = data.relations.map((r, i) => {
+  ensureNode(r.subject.text, r.subject.label)
+  ensureNode(r.object.text, r.object.label)
+
+  let item: EdgeItem | null = null
+  if (r.item) {
+    item = { text: r.item.text, type: toType(r.item.label) }
+  }
+
+  const mc = r.mentioned_count ?? 1
+  return {
+    id: r.news_id ? `${r.news_id}#${i}` : `rel-${i}`,
+    source: nodeId(r.subject.text),
+    target: nodeId(r.object.text),
+    type: r.predicate as Predicate,
+    item,
+    mentioned_count: mc,
+    news_id: r.news_id,
+    news_title: r.news_title,
+    news_url: r.news_url,
+    source_sentence: r.source_sentence ?? '',
+    timestamp: r.timestamp ?? '',
+    is_negated: r.is_negated ?? false,
+    tense: (r.tense as GraphLink['tense']) ?? 'past_or_present_fact',
+    value: mc,
+  }
+})
+
+/**
+ * 전체 그래프용 링크 — 같은 (주어·서술어·목적어)를 하나로 합친다.
+ * 합치지 않으면 여러 기사가 반복 언급한 관계가 겹쳐 그려진다.
+ * 언급 횟수는 합산하고, 나머지 필드는 가장 많이 언급한 기사 것을 대표로 쓴다.
+ */
+function mergeLinks(links: GraphLink[]): GraphLink[] {
+  const byTriple = new Map<string, GraphLink[]>()
+  links.forEach((link) => {
+    const key = `${link.source}|${link.type}|${link.target}`
+    const group = byTriple.get(key)
+    if (group) group.push(link)
+    else byTriple.set(key, [link])
+  })
+
+  return [...byTriple.values()].map((group) => {
+    const total = group.reduce((sum, l) => sum + l.mentioned_count, 0)
+    const top = group.reduce((a, b) => (b.mentioned_count > a.mentioned_count ? b : a))
+    return { ...top, mentioned_count: total, value: total }
+  })
+}
+
+const nodes = [...nodeMap.values()]
+const links = mergeLinks(NEWS_LINKS)
+
+export const MOCK_GRAPH: GraphData = {
+  nodes,
+  links,
+  metadata: {
+    center: data.center,
+    entity_types: ALL_ENTITY_TYPES,
+    predicate_types: ALL_PREDICATES,
+    stats: {
+      total_nodes: nodes.length,
+      total_edges: links.length,
+    },
+  },
+}

@@ -4,7 +4,7 @@
 // 백엔드가 준비되면 listNews/getNewsGraph 내부만 fetch 결과로 바꾸면 된다.
 
 import raw from '@/data/samsung-graph.json'
-import { MOCK_GRAPH } from '@/data/graph'
+import { MOCK_GRAPH, NEWS_LINKS } from '@/data/graph'
 import {
   endId,
   type EntityType,
@@ -12,7 +12,6 @@ import {
   type GraphLink,
   type GraphNode,
 } from '@/data/graphTypes'
-import { buildAdjacency } from '@/lib/graphLayout'
 
 /** 뉴스 테이블 한 행 — 백엔드가 주는 전부 */
 export interface NewsDetail {
@@ -37,7 +36,7 @@ export interface NewsGraph {
   news: NewsDetail
   /** 기사에 직접 등장한 관계 */
   relations: NewsRelation[]
-  /** 등장 엔티티 + hops단계 확장까지 담은 캔버스용 데이터 */
+  /** 기사에 등장한 엔티티와 관계만 담은 캔버스용 데이터 */
   graph: GraphData
 }
 
@@ -60,9 +59,9 @@ const NEWS: NewsDetail[] = ((raw as { news?: RawNews[] }).news ?? []).map((n) =>
 const newsById = new Map(NEWS.map((n) => [n.id, n]))
 const nodeById = new Map(MOCK_GRAPH.nodes.map((n) => [n.id, n]))
 
-/** news_id → 그 기사에서 추출된 관계들 */
+/** news_id → 그 기사에서 추출된 관계들 (합쳐지기 전 원본 링크를 쓴다) */
 const relationsByNews = new Map<string, NewsRelation[]>()
-MOCK_GRAPH.links.forEach((link) => {
+NEWS_LINKS.forEach((link) => {
   if (!link.news_id) return
   const source = nodeById.get(endId(link.source))
   const target = nodeById.get(endId(link.target))
@@ -118,33 +117,17 @@ export function getNews(newsId: string): NewsDetail | null {
 
 /**
  * 뉴스 하나와 그 서브그래프.
- * 기사에 등장한 엔티티를 시드로 전체 그래프에서 hops단계까지 넓혀 캔버스용 GraphData를 만든다.
+ * 기사에서 추출된 관계와 그 관계의 양 끝 엔티티만 담는다 — 이웃으로 넓히지 않는다.
  */
-export function getNewsGraph(newsId: string, hops = 2): NewsGraph | null {
+export function getNewsGraph(newsId: string): NewsGraph | null {
   const news = newsById.get(newsId)
   if (!news) return null
 
   const relations = relationsByNews.get(newsId) ?? []
-  const adjacency = buildAdjacency(MOCK_GRAPH.links)
 
   const keep = seedIds(newsId)
-  let frontier = [...keep]
-  for (let hop = 0; hop < hops && frontier.length > 0; hop++) {
-    const next: string[] = []
-    frontier.forEach((id) => {
-      adjacency.get(id)?.forEach((neighbor) => {
-        if (keep.has(neighbor)) return
-        keep.add(neighbor)
-        next.push(neighbor)
-      })
-    })
-    frontier = next
-  }
-
   const nodes = MOCK_GRAPH.nodes.filter((n) => keep.has(n.id))
-  const links = MOCK_GRAPH.links.filter(
-    (l) => keep.has(endId(l.source)) && keep.has(endId(l.target)),
-  )
+  const links = relations.map((r) => r.link)
 
   // 중심은 이 기사에서 가장 많이 언급된 관계의 주어로 잡는다
   const center = relations.reduce<NewsRelation | null>(
@@ -199,7 +182,7 @@ export function newsEntities(relations: NewsRelation[]): NewsEntity[] {
   return [...byLabel.values()]
 }
 
-/** 공유 엔티티가 많은 순으로 비슷한 뉴스를 고른다 (동수면 언급 횟수 합) */
+/** 공유 엔티티가 많은 순으로 유사한 뉴스를 고른다 (동수면 언급 횟수 합) */
 export function getSimilarNews(newsId: string, limit = 5): NewsDetail[] {
   const base = seedIds(newsId)
   if (base.size === 0) return []
