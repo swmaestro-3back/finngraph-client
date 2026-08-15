@@ -7,7 +7,12 @@ import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
-import { candleDates, generateCandles, type CandlePeriod } from '@/data/candles'
+import {
+  CANDLE_COUNTS,
+  candleDates,
+  generateCandles,
+  type CandlePeriod,
+} from '@/data/candles'
 import {
   DEFAULT_STOCK,
   generateIssueTimeline,
@@ -45,8 +50,10 @@ export default function StockDetailPage() {
   const back = useBackTarget({ to: `/theme/${stock.themeId}`, label: '테마 상세' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [annualOpen, setAnnualOpen] = useState(true)
-  // hover는 PriceIssueCard가 쥔다 — 페이지는 뉴스 패널과 공유하는 클릭 선택만 관리한다
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  // hover는 PriceIssueCard가 쥔다 — 페이지는 뉴스 패널과 공유하는 클릭 선택만 관리한다.
+  // 기본 선택은 가장 최근 칸(일봉=최근 일자, 주봉=현재 주차, 월봉=현재 월) —
+  // 전체 기간은 "전체 보기"로만 진입한다
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(CANDLE_COUNTS.D - 1)
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const candles = useMemo(
@@ -63,9 +70,9 @@ export default function StockDetailPage() {
     [stock.code, period],
   )
 
-  // 기간을 바꾸면 인덱스의 의미가 달라진다 — 선택을 들고 가지 않는다
+  // 기간을 바꾸면 인덱스의 의미가 달라진다 — 해당 축의 가장 최근 칸으로 되돌린다
   useEffect(() => {
-    setSelectedIndex(null)
+    setSelectedIndex(CANDLE_COUNTS[period] - 1)
   }, [period, stock.code])
 
   // memo된 자식들에게 내려가는 콜백 — 참조가 흔들리면 memo가 무력해진다
