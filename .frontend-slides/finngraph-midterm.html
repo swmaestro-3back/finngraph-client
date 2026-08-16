@@ -36,6 +36,7 @@
   --surface-dark:#0A0B0D;
   --positive:#05B169;       /* semantic-up (텍스트 전용) */
   --negative:#CF202F;       /* semantic-down (텍스트 전용) */
+  --warning:#D98C00;        /* semantic-warn — 로드맵 마일스톤 등 극히 제한적으로 */
 
   /* 1920×1080 스테이지 기준 타이포 스케일 */
   --h1:196px; --h2:48px; --h3:34px;
@@ -247,34 +248,36 @@ h2 b{color:var(--primary);font-weight:700;}
 }
 .pb-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.05fr;gap:64px;margin-top:30px;}
 .pb-body--vs{grid-template-columns:1fr 84px 1fr;gap:0;}
-.pb-panel{border:1.5px solid var(--border);border-radius:20px;padding:30px 36px 26px;
-  display:flex;flex-direction:column;min-height:0;}
+/* 패널 3분할 : 상단 텍스트 슬롯 / 중앙 콘텐츠 / 하단 텍스트 슬롯.
+   두 텍스트 슬롯은 --pb-slot 높이로 고정되어, 문구 유무와 관계없이
+   모든 패널의 중앙 콘텐츠 영역 높이가 정확히 일치한다. */
+.pb-panel{--pb-slot:74px;
+  border:1.5px solid var(--border);border-radius:20px;padding:30px 36px 26px;
+  display:grid;grid-template-rows:var(--pb-slot) minmax(0,1fr) var(--pb-slot);
+  gap:14px;min-height:0;}
 .pb-panel--problem{background:var(--card-bg);}
 .pb-panel--solution{background:var(--bg);}
-.pb-panel__title{font-size:20px;font-weight:700;letter-spacing:.03em;color:var(--pb-ink-500);
-  word-break:keep-all;line-height:1.4;}
-.pb-panel--solution .pb-panel__title{color:var(--pb-brand-700);}
-.pb-panel__title--ask{font-size:24px;letter-spacing:-.01em;color:var(--pb-ink-700);}
-.pb-panel__caption{margin-top:auto;padding-top:16px;font-size:20px;color:var(--pb-ink-500);
-  word-break:keep-all;}
-.pb-panel__caption--strong{color:var(--pb-ink-700);font-weight:600;}
-.pb-fig{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;margin-top:12px;}
+.pb-panel__head,.pb-panel__foot{display:flex;align-items:center;justify-content:center;
+  text-align:center;font-size:30px;font-weight:700;letter-spacing:-.01em;line-height:1.35;
+  color:var(--pb-ink-700);word-break:keep-all;overflow:hidden;}
+.pb-panel--solution .pb-panel__head{color:var(--pb-brand-700);}
+.pb-panel__body{min-height:0;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.pb-fig{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;}
 .pb-fig svg{width:100%;height:100%;}
 /* 기사 카드 (슬라이드 2·3 좌측) */
-.pb-articles{flex:1;display:flex;flex-direction:column;justify-content:center;margin-top:8px;}
+.pb-articles{flex:1;display:flex;flex-direction:column;justify-content:center;}
 .pb-article{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:20px 26px;}
 .pb-article .am{font-size:17px;color:var(--pb-ink-400);}
 .pb-article .at{margin-top:7px;font-size:25px;font-weight:700;color:var(--pb-ink-900);letter-spacing:-.01em;}
 .pb-article mark{background:var(--pb-ink-200);color:var(--pb-ink-900);padding:0 6px;border-radius:4px;}
-.pb-gap{display:flex;align-items:center;justify-content:center;height:32px;}
+.pb-gap{display:flex;align-items:center;justify-content:center;height:26px;flex:none;}
 /* 팩트 카드 (슬라이드 1 우측) */
-.pb-facts{display:flex;flex-direction:column;gap:13px;margin-top:14px;}
+.pb-facts{display:flex;flex-direction:column;gap:13px;}
 .pb-fact{background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--pb-brand-600);
   border-radius:12px;padding:15px 20px;}
 .pb-fact .f{font-size:21px;font-weight:600;color:var(--pb-ink-900);}
 .pb-fact .m{margin-top:4px;font-size:17px;color:var(--pb-ink-500);font-variant-numeric:tabular-nums;}
-.pb-conclusion{font-size:21px;font-weight:600;color:var(--pb-ink-600);}
-/* 지식그래프 범례 */
+/* 지식그래프 범례 — 중앙 콘텐츠 영역 하단 */
 .pb-legend{display:flex;gap:26px;justify-content:center;margin-top:10px;}
 .pb-legend span{display:flex;align-items:center;gap:8px;font-size:17px;color:var(--pb-ink-500);}
 .pb-legend i{width:11px;height:11px;border-radius:50%;}
@@ -377,7 +380,7 @@ h2 b{color:var(--primary);font-weight:700;}
 .road-months{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:18px;}
 .road-months div{font-size:20px;color:var(--light);text-align:center;}
 .road-months div.now{color:var(--primary);font-weight:700;}
-.track{position:relative;height:252px;}
+.track{position:relative;height:304px;}
 .track .gridline{position:absolute;top:0;bottom:0;width:1px;background:var(--border);}
 .bar{position:absolute;height:44px;border-radius:6px;display:flex;align-items:center;
   padding:0 24px;font-size:21px;font-weight:600;}
@@ -387,7 +390,12 @@ h2 b{color:var(--primary);font-weight:700;}
 .nowline span{position:absolute;bottom:-44px;left:50%;transform:translateX(-50%);
   background:var(--primary);color:var(--bg);font-size:17px;font-weight:600;
   padding:6px 16px;border-radius:100px;white-space:nowrap;}
-.miles{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:82px;}
+/* 마일스톤 마커 변형 — 기획심의(옐로) / 최종평가(블루, 점선) */
+.nowline.mk-warn{background:var(--warning);}
+.nowline.mk-warn span{background:var(--warning);}
+.nowline.mk-soft{background:repeating-linear-gradient(to bottom,var(--primary) 0 8px,transparent 8px 16px);}
+.nowline.mk-soft span{background:var(--bg);color:var(--primary);border:1.5px solid var(--primary);padding:4.5px 14.5px;}
+.miles{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:70px;}
 .mile{background:var(--card-bg);border:1.5px solid var(--border);border-radius:14px;padding:32px 38px;}
 .mile .st{font-size:19px;font-weight:600;letter-spacing:.06em;}
 .mile.a .st{color:var(--positive);}
@@ -470,7 +478,7 @@ body.editing .edit-bar{display:flex;}
 <div class="deck-viewport">
 <main class="deck-stage" id="deckStage">
 
-<!-- 커버-->
+<!-- 커버 -->
 <section class="slide cover active visible">
   <div class="cover-deco"></div>
   <div class="dots" style="right:150px;bottom:250px;">
@@ -499,7 +507,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!--목차-->
+<!-- 목차 -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
@@ -515,7 +523,7 @@ body.editing .edit-bar{display:flex;}
           <ul>
             <li><i>01</i><b>문제 인식<em>Problem Statement</em></b></li>
             <li><i>02</i><b>서비스 정의<em>Solution Overview</em></b></li>
-            <li><i>03</i><b>타겟 고객<em>Target Audience</em></b></li>
+            <li><i>03</i><b>핵심 타겟층<em>Target Audience</em></b></li>
             <li><i>04</i><b>핵심 기능<em>Core Features</em></b></li>
             <li><i>05</i><b>사용자 흐름<em>User Flow</em></b></li>
             <li><i>06</i><b>핵심 화면<em>Key UI/UX</em></b></li>
@@ -555,7 +563,7 @@ body.editing .edit-bar{display:flex;}
       <div class="section-en reveal r2">Service Concept</div>
       <div class="section-q reveal r3">Pain Point와 해결책이 명확한가</div>
       <div class="section-list reveal r4">
-        <div>문제 인식</div><div>서비스 정의</div><div>타겟 고객</div>
+        <div>문제 인식</div><div>서비스 정의</div><div>핵심 타겟층</div>
         <div>핵심 기능</div><div>사용자 흐름</div><div>핵심 화면</div>
       </div>
     </div>
@@ -596,11 +604,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     04a · 문제 01 — 정보 홍수의 시대 (problem_slides_prd.md §2)
-     멘트: 정보는 넘쳐나는데 뭘 받아들여야 할지 모르겠다 →
-     우리는 판단에 필요한 팩트만 정제한다.
-     ========================================================= -->
+<!-- 문제 1 -->
 <section class="slide" aria-label="문제 01 — 정보 홍수의 시대">
   <div class="pad">
     <div class="slide-header">
@@ -611,7 +615,8 @@ body.editing .edit-bar{display:flex;}
     <h2 class="reveal r2"><b>문제 01</b> · 정보 홍수의 시대</h2>
     <div class="pb-body">
       <div class="pb-panel pb-panel--problem reveal r3">
-        <div class="pb-panel__title pb-panel__title--ask">정보는 넘쳐나는데, 어떠한 정보를 받아들여야 하지?</div>
+        <div class="pb-panel__head">정보는 넘쳐나는데, 어떠한 정보를 받아들여야 하지?</div>
+        <div class="pb-panel__body">
         <div class="pb-fig">
           <svg viewBox="0 0 560 480" role="img">
             <title>뉴스, 증권사 리포트, 유튜브 세 정보 소스가 삼각형을 이루며 가운데 투자자에게 정보를 쏟아내는 다이어그램. 각 소스에 무관한 정보, 편향성, 신뢰성 부족이라는 문제가 붙어 있다.</title>
@@ -675,11 +680,14 @@ body.editing .edit-bar{display:flex;}
             </g>
           </svg>
         </div>
+        </div>
+        <div class="pb-panel__foot"></div>
       </div>
       <div class="pb-panel pb-panel--solution reveal r4">
-        <div class="pb-panel__title">판단에 필요한 팩트만 정제</div>
+        <div class="pb-panel__head">"소음"을 줄이고 "핵심"만 볼 수 있도록</div>
+        <div class="pb-panel__body">
         <!-- 필터 시각화 : 원문 24개 → 필터 바 → 3개 -->
-        <svg viewBox="0 0 420 150" aria-hidden="true" style="width:100%;height:180px;margin-top:14px;flex:none;">
+        <svg viewBox="0 0 420 150" aria-hidden="true" style="width:100%;height:180px;min-height:0;">
           <defs>
             <marker id="s-p1-flow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
               <path d="M0 0 L9 4.5 L0 9 Z" fill="var(--pb-brand-600)"/>
@@ -696,7 +704,7 @@ body.editing .edit-bar{display:flex;}
             <circle cx="400" cy="10" r="2.5"/><circle cx="60" cy="40" r="2.5"/><circle cx="340" cy="42" r="2.5"/>
           </g>
           <rect x="60" y="58" width="300" height="34" rx="17" fill="var(--pb-brand-100)" stroke="var(--pb-brand-600)"/>
-          <text x="210" y="75" font-size="15" font-weight="600" fill="var(--pb-brand-700)" text-anchor="middle" dominant-baseline="central">LLM 관련성 · 신뢰도 필터</text>
+          <text x="210" y="75" font-size="15" font-weight="600" fill="var(--pb-brand-700)" text-anchor="middle" dominant-baseline="central">LLM 연관성 · 중복 제거 필터</text>
           <g fill="var(--pb-brand-600)">
             <circle cx="186" cy="112" r="3.5"/><circle cx="210" cy="112" r="3.5"/><circle cx="234" cy="112" r="3.5"/>
           </g>
@@ -705,23 +713,24 @@ body.editing .edit-bar{display:flex;}
         <!-- 팩트 카드 3장 : 슬라이드 2의 기사 3건과 같은 소재 -->
         <div class="pb-facts">
           <div class="pb-fact">
-            <div class="f">기업 A, 340억 규모 수주 계약 체결</div>
+            <div class="f">기업 A, 3조원 규모 수주 계약 체결</div>
             <div class="m">OO일보 · 2026.08.12 · 관련도 상</div>
           </div>
           <div class="pb-fact">
-            <div class="f">기업 A</div>
-            <div class="m">OO데일리 · 2026.08.10 · 관련도 하</div>
+            <div class="f">기업 A, 차세대 배터리 핵심 소재 양산 성공</div>
+            <div class="m">OO데일리 · 2026.08.10 · 관련도 중</div>
           </div>
           <div class="pb-fact">
-            <div class="f">중국 의존 낮춘 A 기업, 3분기 흑자 예상</div>
+            <div class="f">기업 A, 글로벌 파트너사 기업 B와 공동 개발 착수</div>
             <div class="m">OO신문 · 2026.08.08 · 관련도 상</div>
           </div>
           <div class="pb-fact">
-            <div class="f">러시아 당국 천연가스 수출 제한... C 산업 공급 차질 우려</div>
+            <div class="f">중국 당국 원자재 수출 제한... A 기업 공급망 차질 우려</div>
             <div class="m">OO경제 · 2026.08.05 · 관련도 중</div>
           </div>
         </div>
-        <div class="pb-panel__caption pb-conclusion">"소음"을 줄이고 "핵심"만 볼 수 있도록</div>
+        </div>
+        <div class="pb-panel__foot">실질적으로 연관된 정보만 선별</div>
       </div>
     </div>
   </div>
@@ -737,11 +746,12 @@ body.editing .edit-bar{display:flex;}
     <h2><b>문제 02</b> · 단편적인 정보 제공</h2>
     <div class="pb-body">
       <div class="pb-panel pb-panel--problem">
-        <div class="pb-panel__title">정보가 있어도 시야가 좁다</div>
+        <div class="pb-panel__head">정보가 있어도 시야가 좁다</div>
+        <div class="pb-panel__body">
         <div class="pb-articles">
           <div class="pb-article">
-            <div class="am">2026.08.12 · 경제신문</div>
-            <div class="at"><mark>기업 A</mark>, 340억 규모 수주</div>
+            <div class="am">2026.08.12 · OO일보</div>
+            <div class="at"><mark>기업 A</mark>, 3조원 규모 수주 계약 체결</div>
           </div>
           <div class="pb-gap" aria-hidden="true">
             <svg width="90" height="24" viewBox="0 0 90 24">
@@ -751,8 +761,8 @@ body.editing .edit-bar{display:flex;}
             </svg>
           </div>
           <div class="pb-article">
-            <div class="am">2026.08.08 · 경제신문</div>
-            <div class="at"><mark>기업 A</mark>, 3분기 매출 증가</div>
+            <div class="am">2026.08.10 · OO데일리</div>
+            <div class="at"><mark>기업 A</mark>, 차세대 배터리 핵심 소재 양산 성공</div>
           </div>
           <div class="pb-gap" aria-hidden="true">
             <svg width="90" height="24" viewBox="0 0 90 24">
@@ -762,14 +772,27 @@ body.editing .edit-bar{display:flex;}
             </svg>
           </div>
           <div class="pb-article">
-            <div class="am">2026.08.12 · 증권뉴스</div>
-            <div class="at"><mark>기업 A</mark>, 기대감에 장중 급상승</div>
+            <div class="am">2026.08.08 · OO신문</div>
+            <div class="at"><mark>기업 A</mark>, 글로벌 파트너사 <mark>기업 B</mark>와 공동 개발 착수</div>
+          </div>
+          <div class="pb-gap" aria-hidden="true">
+            <svg width="90" height="24" viewBox="0 0 90 24">
+              <line x1="6" y1="12" x2="30" y2="12" stroke="var(--pb-ink-300)" stroke-width="1.5" stroke-dasharray="3 4"/>
+              <line x1="60" y1="12" x2="84" y2="12" stroke="var(--pb-ink-300)" stroke-width="1.5" stroke-dasharray="3 4"/>
+              <text x="45" y="12" font-size="14" fill="var(--pb-ink-400)" text-anchor="middle" dominant-baseline="central">?</text>
+            </svg>
+          </div>
+          <div class="pb-article">
+            <div class="am">2026.08.05 · OO경제</div>
+            <div class="at">중국 당국 원자재 수출 제한... <mark>A 기업</mark> 공급망 차질 우려</div>
           </div>
         </div>
-        <div class="pb-panel__caption">세 기사를 다 읽어도, 남는 이름은 “기업 A” 하나</div>
+        </div>
+        <div class="pb-panel__foot"></div>
       </div>
       <div class="pb-panel pb-panel--solution">
-        <div class="pb-panel__title">투자자들의 시야를 넓혀 BlindSide를 제거</div>
+        <div class="pb-panel__head"></div>
+        <div class="pb-panel__body">
         <div class="pb-fig">
           <svg viewBox="0 0 560 500" role="img">
             <title>기업 A를 중심으로 한 지식그래프. 중심의 기업 A만 보이고, 주변 6개 노드와 그 연결 정보는 검은 원으로 가려져 있다.</title>
@@ -873,24 +896,14 @@ body.editing .edit-bar{display:flex;}
             </g>
           </svg>
         </div>
-        <div class="pb-legend">
-          <span><i style="background:var(--pb-corp)"></i>기업</span>
-          <span><i style="background:var(--pb-product)"></i>제품</span>
-          <span><i style="background:var(--pb-material)"></i>원자재</span>
-          <span><i style="background:var(--pb-country)"></i>국가</span>
         </div>
-        <div class="pb-panel__caption pb-panel__caption--strong" style="visibility:hidden;">기사 하나에서, 2차·3차 수혜주까지</div>
+        <div class="pb-panel__foot">네 기사를 다 읽어도, 남는 이름은 “기업 A” 하나</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- =========================================================
-     04c · 문제 02 — 단편적인 정보 제공 ② 리빌 (§4)
-     멘트: (한 장 넘김) …이만큼이 있습니다. 2차, 3차 수혜주까지.
-     ※ 04b의 복제본 — .pb-blind 그룹 제거, 엣지 opacity 1,
-       marker id만 s-p3-arrow로 교체, 우측 캡션 노출. 그 외 1px도 다르지 않음.
-     ========================================================= -->
+<!-- 문제 2 -->
 <section class="slide" aria-label="문제 02 — 단편적인 정보 제공 (전체 공개)">
   <div class="pad">
     <div class="slide-header">
@@ -901,11 +914,12 @@ body.editing .edit-bar{display:flex;}
     <h2><b>문제 02</b> · 단편적인 정보 제공</h2>
     <div class="pb-body">
       <div class="pb-panel pb-panel--problem">
-        <div class="pb-panel__title">정보가 있어도 시야가 좁다</div>
+        <div class="pb-panel__head">정보가 있어도 시야가 좁다</div>
+        <div class="pb-panel__body">
         <div class="pb-articles">
           <div class="pb-article">
-            <div class="am">2026.08.12 · 경제신문</div>
-            <div class="at"><mark>기업 A</mark>, 340억 규모 수주</div>
+            <div class="am">2026.08.12 · OO일보</div>
+            <div class="at"><mark>기업 A</mark>, 3조원 규모 수주 계약 체결</div>
           </div>
           <div class="pb-gap" aria-hidden="true">
             <svg width="90" height="24" viewBox="0 0 90 24">
@@ -915,8 +929,8 @@ body.editing .edit-bar{display:flex;}
             </svg>
           </div>
           <div class="pb-article">
-            <div class="am">2026.08.08 · 경제신문</div>
-            <div class="at"><mark>기업 A</mark>, 3분기 매출 증가</div>
+            <div class="am">2026.08.10 · OO데일리</div>
+            <div class="at"><mark>기업 A</mark>, 차세대 배터리 핵심 소재 양산 성공</div>
           </div>
           <div class="pb-gap" aria-hidden="true">
             <svg width="90" height="24" viewBox="0 0 90 24">
@@ -926,14 +940,27 @@ body.editing .edit-bar{display:flex;}
             </svg>
           </div>
           <div class="pb-article">
-            <div class="am">2026.08.12 · 증권뉴스</div>
-            <div class="at"><mark>기업 A</mark>, 기대감에 장중 급상승</div>
+            <div class="am">2026.08.08 · OO신문</div>
+            <div class="at"><mark>기업 A</mark>, 글로벌 파트너사 <mark>기업 B</mark>와 공동 개발 착수</div>
+          </div>
+          <div class="pb-gap" aria-hidden="true">
+            <svg width="90" height="24" viewBox="0 0 90 24">
+              <line x1="6" y1="12" x2="30" y2="12" stroke="var(--pb-ink-300)" stroke-width="1.5" stroke-dasharray="3 4"/>
+              <line x1="60" y1="12" x2="84" y2="12" stroke="var(--pb-ink-300)" stroke-width="1.5" stroke-dasharray="3 4"/>
+              <text x="45" y="12" font-size="14" fill="var(--pb-ink-400)" text-anchor="middle" dominant-baseline="central">?</text>
+            </svg>
+          </div>
+          <div class="pb-article">
+            <div class="am">2026.08.05 · OO경제</div>
+            <div class="at">중국 당국 원자재 수출 제한... <mark>A 기업</mark> 공급망 차질 우려</div>
           </div>
         </div>
-        <div class="pb-panel__caption">세 기사를 다 읽어도, 남는 이름은 “기업 A” 하나</div>
+        </div>
+        <div class="pb-panel__foot"></div>
       </div>
       <div class="pb-panel pb-panel--solution">
-        <div class="pb-panel__title">투자자들의 시야를 넓혀 BlindSide를 제거</div>
+        <div class="pb-panel__head">투자자들의 시야를 넓혀 BlindSide를 제거</div>
+        <div class="pb-panel__body">
         <div class="pb-fig">
           <svg viewBox="0 0 560 500" role="img">
             <title>기업 A를 중심으로 제품 A, 원자재 A, 국가 A가 1홉, 제품 B와 2차 수혜주인 기업 B가 2홉, 3차 수혜주인 기업 C가 3홉 거리에 연결된 지식그래프.</title>
@@ -1010,19 +1037,14 @@ body.editing .edit-bar{display:flex;}
             </g>
           </svg>
         </div>
-        <div class="pb-legend">
-          <span><i style="background:var(--pb-corp)"></i>기업</span>
-          <span><i style="background:var(--pb-product)"></i>제품</span>
-          <span><i style="background:var(--pb-material)"></i>원자재</span>
-          <span><i style="background:var(--pb-country)"></i>국가</span>
         </div>
-        <div class="pb-panel__caption pb-panel__caption--strong">기사 하나에서, 2차·3차 수혜주까지</div>
+        <div class="pb-panel__foot">기사 하나에서, 2차·3차 수혜주까지</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 문제 03 맥락상실 -->
+<!-- 문제 3 -->
 <section class="slide" aria-label="문제 03 — 맥락 상실">
   <div class="pad">
     <div class="slide-header">
@@ -1033,7 +1055,8 @@ body.editing .edit-bar{display:flex;}
     <h2 class="reveal r2"><b>문제 03</b> · 문서는 찾지만 연결짓지 못한다</h2>
     <div class="pb-body pb-body--vs">
       <div class="pb-panel pb-panel--problem reveal r3">
-        <div class="pb-panel__title">VectorDB 기반 RAG</div>
+        <div class="pb-panel__head">기존 VectorRAG의 한계</div>
+        <div class="pb-panel__body">
         <div class="pb-fig">
           <svg viewBox="0 0 460 400" role="img">
             <title>왼쪽은 서로 연결되지 않은 문서 조각들. 키워드가 유사한 조각 두 개만 유사도 점수와 함께 찾아냈을 뿐, 조각 사이에는 아무 연결선이 없다.</title>
@@ -1082,11 +1105,13 @@ body.editing .edit-bar{display:flex;}
             </g>
           </svg>
         </div>
-        <div class="pb-panel__caption">검색은 되지만, 관계는 모른다</div>
+        </div>
+        <div class="pb-panel__foot">검색은 되지만, 관계는 모른다</div>
       </div>
       <div class="pb-vs reveal r4" aria-hidden="true"><i></i><b>VS</b><i></i></div>
       <div class="pb-panel pb-panel--solution reveal r5">
-        <div class="pb-panel__title">지식그래프 기반 탐색</div>
+        <div class="pb-panel__head">지식 그래프를 통한 HybridRAG로 해결</div>
+        <div class="pb-panel__body">
         <div class="pb-fig">
           <svg viewBox="0 0 460 400" role="img">
             <title>오른쪽은 왼쪽과 같은 문서 조각들이지만, 조각 사이에 관계 간선이 놓여 있다. 유사도로 찾은 두 조각에서 간선을 타고 1 Hop·2 Hop 떨어진 조각까지 함께 딸려 나온다.</title>
@@ -1172,7 +1197,8 @@ body.editing .edit-bar{display:flex;}
           <span><i style="background:var(--pb-warn)"></i>유사도로 찾은 문서</span>
           <span><i style="background:var(--pb-brand-600)"></i>관계를 타고 딸려온 문서</span>
         </div>
-        <div class="pb-panel__caption pb-panel__caption--strong">검색 이후 관계 정보를 통한 컨텍스트 확장이 가능</div>
+        </div>
+        <div class="pb-panel__foot">검색 이후 관계 정보를 통한 컨텍스트 확장이 가능</div>
       </div>
     </div>
   </div>
@@ -1355,7 +1381,7 @@ body.editing .edit-bar{display:flex;}
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
       <div class="tag reveal r1">03 / 06</div>
     </div>
-    <div class="page-title reveal r2"><b>타겟 고객</b><span>Target Audience</span></div>
+    <div class="page-title reveal r2"><b>핵심 타겟층</b><span>Target Audience</span></div>
     <h2 class="reveal r2">단기 수익보다는, <b>‘투자의 근거’</b>가 필요한 사람들</h2>
     <div class="body">
       <div class="grid2 grid2--fill">
@@ -1464,14 +1490,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     08 · 사용자 흐름 (User Flow)
-     멘트: 핵심 가치는 지식그래프와 이슈 타임라인이지만 이건 사용자가 능동적으로
-     파고들어야 가치를 느끼는 기능입니다. B2C에서 체류시간과 리텐션을 확보하려면
-     일단 클릭하게 만들 진입 장치가 필요했습니다. 그래서 당일 급등락 테마를
-     진입점으로 배치했습니다. 기존 증권앱에서 익숙한 UX라 부담 없이 클릭하게 되고,
-     거기서 이슈 타임라인으로, 지식그래프로 이어집니다.
-     ========================================================= -->
+<!-- 유저 플로우 -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
@@ -1514,14 +1533,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     09 · 핵심 화면 (Key UI/UX)
-     멘트: 테마 대시보드는 진입 훅이 담긴 화면입니다. 관심 종목을 클릭하면
-     종목 상세 페이지로 이동하고 여기에 이슈 타임라인 컴포넌트가 들어있습니다.
-     특정 뉴스를 클릭하면 뉴스 상세 페이지에서 3줄 요약과 출처, 관련성 판단
-     근거를 확인할 수 있습니다. 마지막으로 지식그래프 페이지에서 Hop 탐색과
-     경로 탐색을 합니다.
-     ========================================================= -->
+<!-- 핵심화면 UI/UX -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
@@ -1582,9 +1594,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     10 · PART 2 섹션 구분
-     ========================================================= -->
+<!-- PART 2 -->
 <section class="slide">
   <div class="cover-deco"></div>
   <div class="pad">
@@ -1622,12 +1632,15 @@ body.editing .edit-bar{display:flex;}
           <div class="gridline" style="left:71.42%"></div>
           <div class="gridline" style="left:85.71%"></div>
           <!-- 5개 작업을 각자의 라인에 배치 (라인 간격 52px) -->
-          <div class="bar done" style="left:0;width:50%;top:0;">ETL 파이프라인 구축</div>
-          <div class="bar done" style="left:28.57%;width:21.43%;top:52px;">프론트엔드 설계</div>
-          <div class="bar todo" style="left:50%;width:28.57%;top:104px;">백엔드 API</div>
-          <div class="bar todo" style="left:50%;width:28.57%;top:156px;">AI Engineering</div>
-          <div class="bar todo" style="left:78.57%;width:21.43%;top:208px;">서비스 출시 및 사용자 모집</div>
+          <div class="bar done" style="left:0;width:14.28%;top:0;">기획 및 PoC 검증</div>
+          <div class="bar done" style="left:14.28%;width:35.72%;top:52px;">ETL 파이프라인 구축</div>
+          <div class="bar done" style="left:28.57%;width:21.43%;top:104px;">프론트엔드 설계</div>
+          <div class="bar todo" style="left:50%;width:28.57%;top:156px;">백엔드 API</div>
+          <div class="bar todo" style="left:50%;width:28.57%;top:208px;">AI Engineering</div>
+          <div class="bar todo" style="left:78.57%;width:21.43%;top:260px;">서비스 출시 및 사용자 모집</div>
+          <div class="nowline mk-warn" style="left:14.28%;"><span>기획심의</span></div>
           <div class="nowline" style="left:50%;"><span>현재 · 중간평가</span></div>
+          <div class="nowline mk-soft" style="left:92.86%;"><span>최종평가</span></div>
         </div>
         <div class="miles">
           <div class="mile a">
@@ -1646,11 +1659,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     12 · 파이프라인 설계안 (Data / Tech Architecture)
-     멘트: (작성 예정)
-     ※ 다이어그램은 추후 .slot 자리에 삽입 예정
-     ========================================================= -->
+<!-- 파이프라인 설계안 -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
@@ -1661,11 +1670,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     13 · 서비스 시연 (Live Demo)
-     멘트: (작성 예정)
-     ※ 시연 화면/영상은 추후 .slot 자리에 삽입 예정
-     ========================================================= -->
+<!-- 서비스 시연 -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
@@ -1676,9 +1681,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     14 · PART 3 섹션 구분
-     ========================================================= -->
+<!-- PART 3 -->
 <section class="slide">
   <div class="cover-deco"></div>
   <div class="pad">
@@ -1694,13 +1697,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     15 · 비즈니스 모델 (Business Model)
-     멘트: 핵심 아이디어는 '탐색 깊이가 곧 가치'라는 겁니다. 파고들수록 더 많은
-     인사이트를 주는 구조이기 때문에 Hop 수를 기준으로 3단계 구독제를 설계했습니다.
-     Free에서도 1 Hop 관계망과 이슈 타임라인은 체험할 수 있어 핵심 개념 자체는
-     무료로 느낄 수 있고, 더 깊이 파고들 때 유료로 전환됩니다.
-     ========================================================= -->
+<!-- 비즈니스 모델 -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
@@ -1739,13 +1736,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     16 · 추후 개발 및 확장 계획 (Future Plan)
-     멘트: 첫째 백엔드. 구축한 파이프라인 데이터를 서빙할 지식그래프·뉴스 API
-     서버를 개발하고, 설계가 끝난 프론트엔드와 연동합니다. 둘째 AI Engineering.
-     뉴스 필터링 모델 고도화, 삼중항 추출 파이프라인의 실서비스 연동,
-     VectorRAG와 GraphRAG를 결합한 HybridRAG 구현입니다.
-     ========================================================= -->
+<!-- 추후 개발 및 확장 계획 -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
@@ -1779,11 +1770,7 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- =========================================================
-     17 · 클로징
-     멘트: 최종발표까지 Finngraph를 완성된 형태로 보여드릴 수 있다고 자신 있게
-     말씀드립니다. 이상으로 저희 팀 쓰리백의 중간보고를 마치겠습니다. 감사합니다.
-     ========================================================= -->
+<!-- 마무리 -->
 <section class="slide">
   <div class="circles"><i></i><i></i></div>
   <div class="pad">
