@@ -288,6 +288,37 @@ h2 b{color:var(--primary);font-weight:700;}
   display:flex;align-items:center;justify-content:center;flex:none;
   font-size:19px;font-weight:700;letter-spacing:.08em;color:var(--pb-ink-400);margin:12px 0;}
 
+/* ===========================================
+   핵심 기능 상세 3연작
+   문제정의 4연작의 .pb-panel 골격(상단 슬롯 / 중앙 콘텐츠 / 하단 슬롯)을
+   그대로 재사용합니다 — 좌우 패널의 중앙 영역 높이가 항상 일치합니다.
+   =========================================== */
+/* 좌측에 화면 캡처가 들어가는 배치 : 캡처 쪽에 폭을 조금 더 준다 */
+.pb-body--shot{grid-template-columns:1.15fr 1fr;gap:48px;}
+/* 좌우 모두 캡처인 배치 (기능 03) */
+.pb-body--even{grid-template-columns:1fr 1fr;gap:48px;}
+
+/* 캡처 자리표시 슬롯 — 실제 스크린샷이 준비되면
+   이 div를 <img src="..." alt="..."> 로 통째로 교체하면 됩니다. */
+.ft-shot{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;
+  align-items:center;justify-content:center;
+  background:var(--card-bg);border:1.5px dashed var(--border);border-radius:14px;
+  font-size:23px;font-weight:600;color:var(--light);letter-spacing:.02em;}
+.ft-shot em{font-style:normal;font-size:18px;font-weight:500;color:var(--pb-ink-400);}
+
+/* 설명 항목 리스트 — 번호 배지 + 소제목 + 본문 */
+.ft-list{display:flex;flex-direction:column;justify-content:center;gap:14px;}
+.ft-item{display:flex;gap:18px;align-items:flex-start;
+  background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--pb-brand-600);
+  border-radius:12px;padding:20px 24px;}
+.ft-item i{flex:none;width:34px;height:34px;border-radius:50%;background:var(--pb-brand-100);
+  color:var(--pb-brand-700);font-style:normal;font-size:16px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.ft-item .tx{min-width:0;}
+.ft-item b{display:block;font-size:23px;font-weight:700;color:var(--pb-ink-900);letter-spacing:-.015em;}
+.ft-item span{display:block;margin-top:7px;font-size:21px;color:var(--muted);
+  line-height:1.55;word-break:keep-all;}
+
 /* 프로젝트 소개 — 문제 → 해법 대응 (3행 페어) */
 .map-head{display:grid;grid-template-columns:1fr 96px 1.5fr;margin-bottom:18px;}
 .map-head .h{font-size:19px;font-weight:600;color:var(--primary);letter-spacing:.06em;}
@@ -1198,7 +1229,7 @@ body.editing .edit-bar{display:flex;}
           <span><i style="background:var(--pb-brand-600)"></i>관계를 타고 딸려온 문서</span>
         </div>
         </div>
-        <div class="pb-panel__foot">검색 이후 관계 정보를 통한 컨텍스트 확장이 가능</div>
+        <div class="pb-panel__foot">관계 정보를 통한 컨텍스트 확장이 가능</div>
       </div>
     </div>
   </div>
@@ -1476,15 +1507,147 @@ body.editing .edit-bar{display:flex;}
           <p>노이즈를 걷어낸, 진짜 관련있는 뉴스만.<br><br>LLM으로 편향·무관 뉴스를 필터링하고 거래일별 긍정·부정 건수로 집계. 주가 캔들차트와 같은 시간축을 공유해 주가 변동의 원인을 바로 대조.</p>
         </div>
         <div class="card reveal r4">
-          <div class="num">02 · 단편적 정보</div>
+          <div class="num">02 · 맥락 상실</div>
+          <h3>뉴스 분석</h3>
+          <p>기사 한 건에서, 그 너머의 맥락까지.<br><br>3줄 요약과 원문 출처를 제공하고, 언급된 엔티티에서 1~3 Hop 떨어진 관계까지 확장. 유사한 관계가 추출된 뉴스도 함께 제시.</p>
+        </div>
+        <div class="card reveal r5">
+          <div class="num">03 · 단편적 정보</div>
           <h3>지식그래프 탐색</h3>
           <p>종목을 넘어, 관계 속에서 보는 기업.<br><br>기업·국가·제품·원자재 간 관계망을 1~3 Hop으로 단계적 확장. 두 종목을 지정하면 사이를 잇는 경로까지 탐색. 연결의 경로 자체가 정보.</p>
         </div>
-        <div class="card reveal r5">
-          <div class="num">03 · 맥락 상실</div>
-          <h3>기업동향분석</h3>
-          <p>근거와 함께 보는 현재와 전망.<br><br>지식그래프 속 관계망과 관련 이슈를 종합해 기업의 현재 상황과 미래 전망을 근거와 함께 제시. VectorRAG와 GraphRAG를 결합한 HybridRAG.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 핵심 기능 01 — 이슈 타임라인 -->
+<section class="slide" aria-label="기능 01 — 이슈 타임라인">
+  <div class="pad">
+    <div class="slide-header">
+      <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
+      <div class="tag reveal r1">04 / 06</div>
+    </div>
+    <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
+    <h2 class="reveal r2"><b>기능 01</b> · 이슈 타임라인</h2>
+    <div class="pb-body pb-body--shot">
+      <div class="pb-panel pb-panel--solution reveal r3">
+        <div class="pb-panel__head">종목 상세 · 이슈 타임라인</div>
+        <div class="pb-panel__body">
+          <!-- 실제 스크린샷으로 교체할 자리 -->
+          <div class="ft-shot">이슈 타임라인 화면<em>스크린샷이 들어갈 자리</em></div>
         </div>
+        <div class="pb-panel__foot"></div>
+      </div>
+      <div class="pb-panel pb-panel--problem reveal r4">
+        <div class="pb-panel__head">주가와 함께 보는 핵심 뉴스</div>
+        <div class="pb-panel__body">
+          <div class="ft-list">
+            <div class="ft-item">
+              <i>01</i>
+              <div class="tx">
+                <b>감성 집계</b>
+                <span>필터링된 뉴스를 거래일별로 집계하여 긍정 · 부정 건수를 막대 그래프로 표시</span>
+              </div>
+            </div>
+            <div class="ft-item">
+              <i>02</i>
+              <div class="tx">
+                <b>시간축 동기화</b>
+                <span>주가 캔들 차트와 동일한 시간축을 공유하여, 특정 시점의 주가 변동이 어떠한 뉴스에서 비롯되었는지 직접 대조하며 확인할 수 있도록 지원</span>
+              </div>
+            </div>
+            <div class="ft-item">
+              <i>03</i>
+              <div class="tx">
+                <b>통합된 하나의 뷰</b>
+                <span>뉴스 따로 주가 따로가 아닌, 동일한 UI 컴포넌트에서 시장의 흐름과 연결지어 볼 수 있도록</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pb-panel__foot"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 핵심 기능 02 — 뉴스 분석 -->
+<section class="slide" aria-label="기능 02 — 뉴스 분석">
+  <div class="pad">
+    <div class="slide-header">
+      <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
+      <div class="tag reveal r1">04 / 06</div>
+    </div>
+    <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
+    <h2 class="reveal r2"><b>기능 02</b> · 뉴스 분석</h2>
+    <div class="pb-body pb-body--shot">
+      <div class="pb-panel pb-panel--solution reveal r3">
+        <div class="pb-panel__head">뉴스 상세 페이지</div>
+        <div class="pb-panel__body">
+          <!-- 실제 스크린샷으로 교체할 자리 -->
+          <div class="ft-shot">뉴스 분석 화면<em>스크린샷이 들어갈 자리</em></div>
+        </div>
+        <div class="pb-panel__foot"></div>
+      </div>
+      <div class="pb-panel pb-panel--problem reveal r4">
+        <div class="pb-panel__head">기사 한 건에서, 그 너머의 맥락까지</div>
+        <div class="pb-panel__body">
+          <div class="ft-list">
+            <div class="ft-item">
+              <i>01</i>
+              <div class="tx">
+                <b>요약 · 출처 · 원문</b>
+                <span>3줄 요약과 원문 링크 제공</span>
+              </div>
+            </div>
+            <div class="ft-item">
+              <i>02</i>
+              <div class="tx">
+                <b>확장된 컨텍스트</b>
+                <span>언급된 엔티티와 연관된 1~3 Hop 엔티티까지 제공</span>
+              </div>
+            </div>
+            <div class="ft-item">
+              <i>03</i>
+              <div class="tx">
+                <b>유사 뉴스 제공</b>
+                <span>유사한 관계들이 추출된 뉴스 목록 제공</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pb-panel__foot"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 핵심 기능 03 — 지식그래프 탐색 -->
+<section class="slide" aria-label="기능 03 — 지식그래프 탐색">
+  <div class="pad">
+    <div class="slide-header">
+      <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
+      <div class="tag reveal r1">04 / 06</div>
+    </div>
+    <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
+    <h2 class="reveal r2"><b>기능 03</b> · 기업 그래프 탐색</h2>
+    <div class="pb-body pb-body--even">
+      <div class="pb-panel pb-panel--solution reveal r3">
+        <div class="pb-panel__head">N-Hop 기반 탐색</div>
+        <div class="pb-panel__body">
+          <!-- 실제 스크린샷으로 교체할 자리 -->
+          <div class="ft-shot">N-Hop 탐색 화면<em>스크린샷이 들어갈 자리</em></div>
+        </div>
+        <div class="pb-panel__foot">한 기업에서 시작해 1~3 Hop까지 단계적 확장<br>종목을 넘어, 관계 속에서 보는 기업</div>
+      </div>
+      <div class="pb-panel pb-panel--solution reveal r4">
+        <div class="pb-panel__head">경로 탐색</div>
+        <div class="pb-panel__body">
+          <!-- 실제 스크린샷으로 교체할 자리 -->
+          <div class="ft-shot">경로 탐색 화면<em>스크린샷이 들어갈 자리</em></div>
+        </div>
+        <div class="pb-panel__foot">두 종목 사이를 잇는 경로와 그 근거를 제시</div>
       </div>
     </div>
   </div>
@@ -1515,17 +1678,17 @@ body.editing .edit-bar{display:flex;}
         <div class="step reveal r5">
           <div class="c">03</div>
           <div class="t">이슈 타임라인</div>
-          <div class="d">주가와 뉴스를 같은 시간축에서 대조</div>
+          <div class="d">핵심 뉴스를 주가와 동일한 시간선에서 이해</div>
         </div>
         <div class="step reveal r6">
           <div class="c">04</div>
-          <div class="t">지식그래프 탐색</div>
-          <div class="d">N-Hop 관계 확장과 경로 탐색</div>
+          <div class="t">뉴스 분석</div>
+          <div class="d">확장된 컨텍스트 내에서 뉴스 이해</div>
         </div>
         <div class="step reveal r7">
           <div class="c">05</div>
-          <div class="t">기업동향분석</div>
-          <div class="d">근거와 함께 종합된 현재와 전망 확인</div>
+          <div class="t">지식그래프 탐색</div>
+          <div class="d">N-Hop 관계 확장과 경로 탐색</div>
         </div>
       </div>
       <div class="common reveal r7" style="margin-top:64px;">테마 화면은 부가기능이 아니라, 사용자를 핵심 기능 3개까지 <b style="color:var(--primary)">라우팅해주는 관문</b>입니다.</div>
