@@ -305,6 +305,9 @@ h2 b{color:var(--primary);font-weight:700;}
   background:var(--card-bg);border:1.5px dashed var(--border);border-radius:14px;
   font-size:23px;font-weight:600;color:var(--light);letter-spacing:.02em;}
 .ft-shot em{font-style:normal;font-size:18px;font-weight:500;color:var(--pb-ink-400);}
+/* 실제 캡처가 들어간 자리 — 화면 전체가 잘리지 않게 contain */
+.ft-img{flex:1;min-height:0;width:100%;object-fit:contain;object-position:center;
+  border:1.5px solid var(--border);border-radius:14px;background:var(--card-bg);}
 
 /* 설명 항목 리스트 — 번호 배지 + 소제목 + 본문 */
 .ft-list{display:flex;flex-direction:column;justify-content:center;gap:14px;}
@@ -364,20 +367,30 @@ h2 b{color:var(--primary);font-weight:700;}
 .common b{color:var(--primary);font-weight:700;}
 
 /* User Flow — 스텝 타임라인 */
-.flow{display:flex;align-items:flex-start;gap:0;position:relative;}
+.flow{display:flex;align-items:flex-start;gap:0;position:relative;margin-top:34px;}
 .step{flex:1;text-align:center;position:relative;padding:0 8px;}
-.step .c{width:76px;height:76px;border-radius:50%;background:var(--primary);color:var(--bg);
+/* 각 스텝 상단 화면 캡처 — 원과 같은 열에 정렬 */
+.step .shot{height:280px;margin:0 auto 92px;border:1.5px solid var(--border);border-radius:12px;
+  background:var(--card-bg);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.step .shot img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;}
+.step .dot{position:relative;}
+/* 지식그래프 노드와 동일한 표현 — 뚜렷한 테두리 + 흐린 내부 */
+.step .c{width:76px;height:76px;border-radius:50%;
+  background:color-mix(in srgb, var(--step-color,var(--primary)) 10%, white);
+  border:2.5px solid var(--step-color,var(--primary));color:var(--step-color,var(--primary));
   font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;}
-.step:nth-child(2) .c{opacity:.88}.step:nth-child(3) .c{opacity:.76}
-.step:nth-child(4) .c{opacity:.64}.step:nth-child(5) .c{opacity:.52}
+/* 01·02 = 이슈(레드), 03·04·05 = 기업(블루) — 지식그래프 노드 색과 동일 */
+.step:nth-child(1),.step:nth-child(2){--step-color:var(--pb-issue);}
+.step:nth-child(3),.step:nth-child(4),.step:nth-child(5){--step-color:var(--pb-corp);}
 .step .t{font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.35;}
 .step .d{margin-top:12px;font-size:20px;color:var(--muted);line-height:1.55;}
-.step::after{content:"";position:absolute;top:38px;left:calc(50% + 54px);width:calc(100% - 108px);
+.step::after{content:"";position:absolute;top:410px;left:calc(50% + 54px);width:calc(100% - 108px);
   height:1.5px;background:var(--border);}
 .step:last-child::after{display:none;}
-.step.hook .c{box-shadow:0 0 0 10px var(--accent-light);}
-.hook-tag{position:absolute;top:-46px;left:50%;transform:translateX(-50%);
-  background:var(--primary);color:var(--bg);font-size:17px;font-weight:600;
+/* HOOK 강조 — 노드 바깥의 옅은 링(지식그래프 원점 표현과 동일) */
+.step.hook .c{box-shadow:0 0 0 7px var(--bg), 0 0 0 8.5px color-mix(in srgb, var(--step-color) 35%, white);}
+.hook-tag{position:absolute;top:-62px;left:50%;transform:translateX(-50%);
+  background:var(--step-color,var(--primary));color:var(--bg);font-size:17px;font-weight:600;
   padding:7px 20px;border-radius:100px;letter-spacing:.06em;}
 
 /* 핵심 페이지 4개 — CSS 목업 */
@@ -646,7 +659,7 @@ body.editing .edit-bar{display:flex;}
     <h2 class="reveal r2"><b>문제 01</b> · 정보 홍수의 시대</h2>
     <div class="pb-body">
       <div class="pb-panel pb-panel--problem reveal r3">
-        <div class="pb-panel__head">정보는 넘쳐나는데, 어떠한 정보를 받아들여야 하지?</div>
+        <div class="pb-panel__head">단기간에 처리하기 힘든 양의 콘텐츠들</div>
         <div class="pb-panel__body">
         <div class="pb-fig">
           <svg viewBox="0 0 560 480" role="img">
@@ -712,7 +725,7 @@ body.editing .edit-bar{display:flex;}
           </svg>
         </div>
         </div>
-        <div class="pb-panel__foot"></div>
+        <div class="pb-panel__foot">정보는 넘쳐나는데, 어떠한 정보를 받아들여야 하지?</div>
       </div>
       <div class="pb-panel pb-panel--solution reveal r4">
         <div class="pb-panel__head">"소음"을 줄이고 "핵심"만 볼 수 있도록</div>
@@ -990,7 +1003,7 @@ body.editing .edit-bar{display:flex;}
         <div class="pb-panel__foot"></div>
       </div>
       <div class="pb-panel pb-panel--solution">
-        <div class="pb-panel__head">투자자들의 시야를 넓혀 BlindSide를 제거</div>
+        <div class="pb-panel__head">기존의 사각지대를 제거 → 시야를 넓혀준다</div>
         <div class="pb-panel__body">
         <div class="pb-fig">
           <svg viewBox="0 0 560 500" role="img">
@@ -1534,8 +1547,7 @@ body.editing .edit-bar{display:flex;}
       <div class="pb-panel pb-panel--solution reveal r3">
         <div class="pb-panel__head">종목 상세 · 이슈 타임라인</div>
         <div class="pb-panel__body">
-          <!-- 실제 스크린샷으로 교체할 자리 -->
-          <div class="ft-shot">이슈 타임라인 화면<em>스크린샷이 들어갈 자리</em></div>
+          <img class="ft-img" src="images/03-issue-timeline.png" alt="이슈 타임라인 화면">
         </div>
         <div class="pb-panel__foot"></div>
       </div>
@@ -1585,8 +1597,7 @@ body.editing .edit-bar{display:flex;}
       <div class="pb-panel pb-panel--solution reveal r3">
         <div class="pb-panel__head">뉴스 상세 페이지</div>
         <div class="pb-panel__body">
-          <!-- 실제 스크린샷으로 교체할 자리 -->
-          <div class="ft-shot">뉴스 분석 화면<em>스크린샷이 들어갈 자리</em></div>
+          <img class="ft-img" src="images/04-news-detail.png" alt="뉴스 분석 화면">
         </div>
         <div class="pb-panel__foot"></div>
       </div>
@@ -1636,8 +1647,7 @@ body.editing .edit-bar{display:flex;}
       <div class="pb-panel pb-panel--solution reveal r3">
         <div class="pb-panel__head">N-Hop 기반 탐색</div>
         <div class="pb-panel__body">
-          <!-- 실제 스크린샷으로 교체할 자리 -->
-          <div class="ft-shot">N-Hop 탐색 화면<em>스크린샷이 들어갈 자리</em></div>
+          <img class="ft-img" src="images/07-graph-nhop3.png" alt="N-Hop 탐색 화면">
         </div>
         <div class="pb-panel__foot">한 기업에서 시작해 1~3 Hop까지 단계적 확장<br>종목을 넘어, 관계 속에서 보는 기업</div>
       </div>
@@ -1665,33 +1675,43 @@ body.editing .edit-bar{display:flex;}
     <div class="body">
       <div class="flow">
         <div class="step hook reveal r3">
-          <div class="hook-tag">HOOK</div>
-          <div class="c">01</div>
-          <div class="t">당일 급등락 테마</div>
+          <div class="shot"><img src="images/01-theme-treemap.png" alt="테마 트리맵 화면"></div>
+          <div class="dot">
+            <div class="hook-tag">HOOK 1</div>
+            <div class="c">01</div>
+          </div>
+          <div class="t">테마 트리맵</div>
+          <div class="d">당일 테마 등락률 시각화</div>
           <div class="d">익숙한 UX로 부담 없이<br>클릭하게 만드는 진입 장치</div>
         </div>
-        <div class="step reveal r4">
-          <div class="c">02</div>
+        <div class="step hook reveal r4">
+          <div class="shot"><img src="images/02-theme-detail.png" alt="관심 테마 · 종목 화면"></div>
+          <div class="dot">
+            <div class="hook-tag">HOOK 2</div>
+            <div class="c">02</div>
+          </div>
           <div class="t">관심 테마 · 종목</div>
           <div class="d">테마에서 개별 종목 상세로<br>자연스럽게 이동</div>
         </div>
         <div class="step reveal r5">
-          <div class="c">03</div>
+          <div class="shot"><img src="images/03-issue-timeline.png" alt="이슈 타임라인 화면"></div>
+          <div class="dot"><div class="c">03</div></div>
           <div class="t">이슈 타임라인</div>
-          <div class="d">핵심 뉴스를 주가와 동일한 시간선에서 이해</div>
+          <div class="d">핵심 뉴스를 주가와 함께<br>동일한 시간선에서 이해</div>
         </div>
         <div class="step reveal r6">
-          <div class="c">04</div>
+          <div class="shot"><img src="images/04-news-detail.png" alt="뉴스 분석 화면"></div>
+          <div class="dot"><div class="c">04</div></div>
           <div class="t">뉴스 분석</div>
-          <div class="d">확장된 컨텍스트 내에서 뉴스 이해</div>
+          <div class="d">뉴스를 확장된 컨텍스트에서</div>
         </div>
         <div class="step reveal r7">
-          <div class="c">05</div>
+          <div class="shot"><img src="images/06-graph.png" alt="지식그래프 탐색 화면"></div>
+          <div class="dot"><div class="c">05</div></div>
           <div class="t">지식그래프 탐색</div>
           <div class="d">N-Hop 관계 확장과 경로 탐색</div>
         </div>
       </div>
-      <div class="common reveal r7" style="margin-top:64px;">테마 화면은 부가기능이 아니라, 사용자를 핵심 기능 3개까지 <b style="color:var(--primary)">라우팅해주는 관문</b>입니다.</div>
     </div>
   </div>
 </section>
