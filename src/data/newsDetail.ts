@@ -12,6 +12,7 @@ import {
   type GraphLink,
   type GraphNode,
 } from '@/data/graphTypes'
+import { expandGraph } from '@/lib/graphTraversal'
 
 /** 뉴스 테이블 한 행 — 백엔드가 주는 전부 */
 export interface NewsDetail {
@@ -36,8 +37,10 @@ export interface NewsGraph {
   news: NewsDetail
   /** 기사에 직접 등장한 관계 */
   relations: NewsRelation[]
-  /** 기사에 등장한 엔티티와 관계만 담은 캔버스용 데이터 */
+  /** 캔버스용 데이터 — 기사에 등장한 엔티티와 관계, 홉 확장을 요청했으면 그 이웃까지 */
   graph: GraphData
+  /** 기사에 등장한 엔티티 id — 확장된 그래프에서 "기사에서 온 것"을 가려낸다 */
+  seedIds: string[]
 }
 
 interface RawNews {
@@ -117,9 +120,12 @@ export function getNews(newsId: string): NewsDetail | null {
 
 /**
  * 뉴스 하나와 그 서브그래프.
- * 기사에서 추출된 관계와 그 관계의 양 끝 엔티티만 담는다 — 이웃으로 넓히지 않는다.
+ *
+ * 기본(hops = 0)은 기사에서 추출된 관계와 그 양 끝 엔티티뿐이다.
+ * hops를 주면 그 엔티티들을 시드로 전체 그래프를 그만큼 따라가 넓힌다 —
+ * 기사를 읽다가 "이 기업 주변엔 또 뭐가 있지"를 이어서 볼 수 있게.
  */
-export function getNewsGraph(newsId: string): NewsGraph | null {
+export function getNewsGraph(newsId: string, hops = 0): NewsGraph | null {
   const news = newsById.get(newsId)
   if (!news) return null
 
@@ -135,19 +141,22 @@ export function getNewsGraph(newsId: string): NewsGraph | null {
     null,
   )?.source.label
 
+  const seed: GraphData = {
+    nodes,
+    links,
+    metadata: {
+      center,
+      entity_types: MOCK_GRAPH.metadata.entity_types,
+      predicate_types: MOCK_GRAPH.metadata.predicate_types,
+      stats: { total_nodes: nodes.length, total_edges: links.length },
+    },
+  }
+
   return {
     news,
     relations,
-    graph: {
-      nodes,
-      links,
-      metadata: {
-        center,
-        entity_types: MOCK_GRAPH.metadata.entity_types,
-        predicate_types: MOCK_GRAPH.metadata.predicate_types,
-        stats: { total_nodes: nodes.length, total_edges: links.length },
-      },
-    },
+    graph: expandGraph(MOCK_GRAPH, seed, hops),
+    seedIds: nodes.map((n) => n.id),
   }
 }
 

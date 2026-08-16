@@ -23,6 +23,7 @@ import {
   seedPositions,
   NODE_RADIUS,
 } from '@/lib/graphLayout'
+import { bfsDistances } from '@/lib/graphTraversal'
 import { GraphTooltip } from '@/components/graph/GraphTooltip'
 import { hideTooltip, moveTooltip, showTooltip } from '@/lib/graphTooltip'
 import { useCanvasSize, type CanvasSize } from '@/lib/useCanvasSize'
@@ -36,8 +37,13 @@ export interface GraphCanvasRef {
 
 /** 캔버스에서 강조할 대상 — 부모(선택 상태)가 유일한 출처다 */
 export type GraphHighlight =
-  /** hops: 대상에서 몇 단계까지 따라가 강조할지 (기본 1) */
-  | { kind: 'nodes'; ids: string[]; hops?: number }
+  /**
+   * hops: 대상에서 몇 단계까지 따라가 강조할지 (기본 1). 0이면 대상 노드와 그들 사이 관계만.
+   * camera: 강조 대상으로 카메라를 옮기고 그 노드들을 제자리에 고정할지 (기본 true).
+   *   상시 켜 두는 배경 강조에는 false를 준다 — 그렇지 않으면 화면이 계속 끌려다니고
+   *   레이아웃이 잦아든 뒤의 "전체 보기" 자동 맞춤도 일어나지 않는다.
+   */
+  | { kind: 'nodes'; ids: string[]; hops?: number; camera?: boolean }
   | { kind: 'link'; id: string }
 
 interface Props {
@@ -354,11 +360,13 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       return {
         focus,
         neighbors,
-        // 마지막 홉 노드끼리 이어진 간선은 탐색에 쓰이지 않았으므로 켜지 않는다
+        // 마지막 홉 노드끼리 이어진 간선은 탐색에 쓰이지 않았으므로 켜지 않는다.
+        // 다만 대상끼리 이어진 간선은 언제나 켠다 — hops가 0일 때 남는 것이 이것뿐이다.
         isLinkOn: (l) => {
           const from = distance.get(endId(l.source))
           const to = distance.get(endId(l.target))
-          return from != null && to != null && Math.min(from, to) < hops
+          if (from == null || to == null) return false
+          return Math.min(from, to) < hops || (from === 0 && to === 0)
         },
         focusStrokeWidth: 4,
         linkOnOpacity: 0.9,
@@ -519,7 +527,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         // 사용자가 이미 확대/이동했거나 특정 요소를 선택한 상태면 건드리지 않는다.
         if (fitted || simulation.alpha() > 0.05) return
         fitted = true
-        if (userMovedRef.current || highlightRef.current) return
+        if (userMovedRef.current || movesCamera(highlightRef.current)) return
         fitToView(500)
       })
 
@@ -563,7 +571,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       fixedIdsRef.current = []
     }
 
-    if (!highlight) {
+    if (!movesCamera(highlight)) {
       releaseFixed()
       return
     }
@@ -651,31 +659,10 @@ const LINK_LABEL_FONT_SIZE = 9
 /** 라벨 배경판이 간선을 끊어 보이게 하는 여백 */
 const LINK_LABEL_PAD = { x: 4, y: 1.5 }
 
-/**
- * 시작 노드들에서 maxHops 이내로 닿는 노드의 홉 수를 잰다 (시작 노드는 0).
- * 닿지 않는 노드는 아예 담지 않아, 결과에 없으면 "범위 밖"이다.
- */
-function bfsDistances(
-  startIds: string[],
-  adjacency: Map<string, Set<string>>,
-  maxHops: number,
-): Map<string, number> {
-  const distance = new Map<string, number>()
-  startIds.forEach((id) => distance.set(id, 0))
-
-  let frontier = startIds
-  for (let hop = 1; hop <= maxHops && frontier.length > 0; hop++) {
-    const next: string[] = []
-    frontier.forEach((id) => {
-      adjacency.get(id)?.forEach((neighbor) => {
-        if (distance.has(neighbor)) return
-        distance.set(neighbor, hop)
-        next.push(neighbor)
-      })
-    })
-    frontier = next
-  }
-  return distance
+/** 이 강조가 카메라를 가져가는가 — 배경 강조(camera:false)와 해제는 화면을 건드리지 않는다 */
+function movesCamera(highlight: GraphHighlight | null): highlight is GraphHighlight {
+  if (!highlight) return false
+  return highlight.kind === 'link' || highlight.camera !== false
 }
 
 function segmentLength(seg: Segment): number {

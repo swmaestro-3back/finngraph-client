@@ -1,9 +1,10 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 
-/** 선택 노드에서 펼쳐 볼 수 있는 홉 수 */
-const HOP_OPTIONS = [1, 2, 3] as const
-export type Hop = (typeof HOP_OPTIONS)[number]
+/** 원점에서 몇 홉까지 볼지 — 1은 원점의 바로 이웃까지다 */
+export type Hop = 1 | 2 | 3
+
+const HOP_VALUES: Hop[] = [1, 2, 3]
 
 interface Props {
   value: Hop
@@ -13,8 +14,8 @@ interface Props {
 }
 
 /**
- * 선택한 노드에서 몇 홉까지 펼쳐 볼지 고르는 세그먼트 컨트롤.
- * 노드를 선택했을 때만 의미가 있으므로 렌더 여부는 부모(GraphView)가 정한다.
+ * 몇 홉까지 볼지 고르는 세그먼트 컨트롤.
+ * 원점이 무엇인지(선택 노드 / 기사)와 렌더 여부는 부모가 정한다.
  */
 export function HopSelector({ value, onChange, isMobile = false }: Props) {
   return (
@@ -40,7 +41,7 @@ export function HopSelector({ value, onChange, isMobile = false }: Props) {
         aria-label="탐색 홉 수"
         className="gap-0.5"
       >
-        {HOP_OPTIONS.map((hop) => (
+        {HOP_VALUES.map((hop) => (
           <ToggleGroupItem
             key={hop}
             value={String(hop)}

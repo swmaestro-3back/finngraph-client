@@ -4,6 +4,7 @@ import {
   type GraphCanvasRef,
   type GraphHighlight,
 } from '@/components/graph/GraphCanvas'
+import { HopSelector, type Hop } from '@/components/graph/HopSelector'
 import { Legend } from '@/components/graph/Legend'
 import { Toolbar } from '@/components/graph/Toolbar'
 import { NewsRelationList } from '@/components/news/NewsRelationList'
@@ -25,9 +26,15 @@ const ALL_PREDICATE_SET = new Set(ALL_PREDICATES)
 const GRAPH_HEIGHT = 420
 
 interface Props {
+  /** 현재 홉만큼 펼쳐진 그래프 */
   graph: GraphData
   /** 기사에 직접 등장한 관계 */
   relations: NewsRelation[]
+  /** 기사에 등장한 엔티티 id — 펼친 뒤에도 기사에서 온 것을 진하게 남긴다 */
+  seedIds: string[]
+  /** 기사를 원점으로 센 홉 — 1홉이 기사에 나온 엔티티다 */
+  hop: Hop
+  onHopChange: (hop: Hop) => void
   /** 헤더 엔티티 칩에서 호버 중인 노드 — 외부에서 들어오는 강조 */
   hoveredNodeId: string | null
 }
@@ -35,7 +42,14 @@ interface Props {
 type Selection = { kind: 'link' | 'node'; id: string }
 
 /** 기사 속 관계 — 좌측 그래프 캔버스와 우측 관계 목록이 서로를 강조한다 */
-export function NewsGraphSection({ graph, relations, hoveredNodeId }: Props) {
+export function NewsGraphSection({
+  graph,
+  relations,
+  seedIds,
+  hop,
+  onHopChange,
+  hoveredNodeId,
+}: Props) {
   const isMobile = useIsMobile()
   const canvasRef = useRef<GraphCanvasRef>(null)
   const [selected, setSelected] = useState<Selection | null>(null)
@@ -47,11 +61,16 @@ export function NewsGraphSection({ graph, relations, hoveredNodeId }: Props) {
       : hoveredNodeId
         ? { kind: 'node', id: hoveredNodeId }
         : selected
-    if (!target) return null
-    return target.kind === 'link'
-      ? { kind: 'link', id: target.id }
-      : { kind: 'nodes', ids: [target.id], hops: 1 }
-  }, [hoveredLinkId, hoveredNodeId, selected])
+    if (target) {
+      return target.kind === 'link'
+        ? { kind: 'link', id: target.id }
+        : { kind: 'nodes', ids: [target.id], hops: 1 }
+    }
+    // 고른 게 없을 때 — 펼친 상태라면 기사에서 온 엔티티·관계를 진하게 남겨 맥락을 지킨다.
+    // 카메라는 넘기지 않는다 (배경 강조라 화면을 가져가면 안 된다).
+    if (hop === 1) return null
+    return { kind: 'nodes', ids: seedIds, hops: 0, camera: false }
+  }, [hoveredLinkId, hoveredNodeId, selected, hop, seedIds])
 
   // GraphCanvas의 메인 이펙트 의존성이라 참조가 바뀌면 그래프를 처음부터 다시 그린다
   const handleNodeClick = useCallback(
@@ -95,6 +114,7 @@ export function NewsGraphSection({ graph, relations, hoveredNodeId }: Props) {
           selectedPredicates={ALL_PREDICATE_SET}
         />
         <Legend visibleTypes={ALL_TYPES} />
+        <HopSelector value={hop} onChange={onHopChange} isMobile={isMobile} />
         <Toolbar
           onZoomIn={() => canvasRef.current?.zoomIn()}
           onZoomOut={() => canvasRef.current?.zoomOut()}

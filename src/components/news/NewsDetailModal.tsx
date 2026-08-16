@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Section } from '@/components/graph/DetailParts'
+import type { Hop } from '@/components/graph/HopSelector'
 import { NewsEntityChips } from '@/components/news/NewsEntityChips'
 import { NewsGraphSection } from '@/components/news/NewsGraphSection'
 import { RelatedStocks } from '@/components/news/RelatedStocks'
@@ -28,19 +29,22 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
   // 유사한 뉴스를 누르면 모달을 쌓지 않고 내용만 바꾼다
   const [currentId, setCurrentId] = useState<string | null>(newsId)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+  /** 기사를 원점으로 몇 홉까지 볼지 — 1이면 기사에 나온 엔티티까지 */
+  const [hop, setHop] = useState<Hop>(1)
   const bodyRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (newsId) setCurrentId(newsId)
   }, [newsId])
 
-  // 다른 뉴스로 갈아탈 때 앞 기사에서 보던 위치·강조가 남지 않도록 되돌린다
+  // 다른 뉴스로 갈아탈 때 앞 기사에서 보던 위치·강조·펼침이 남지 않도록 되돌린다
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: 0 })
     setHoveredNodeId(null)
+    setHop(1)
   }, [currentId])
 
-  const { data, similar } = useNewsGraph(currentId)
+  const { data, similar } = useNewsGraph(currentId, hop)
 
   const entities = useMemo(() => (data ? newsEntities(data.relations) : []), [data])
   const companyNames = useMemo(
@@ -53,7 +57,7 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
   const open = newsId !== null && data !== null
   if (!data) return null
 
-  const { news, relations, graph } = data
+  const { news, relations, graph, seedIds } = data
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -89,11 +93,18 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
 
           <Section
             title="기사 속 관계"
-            meta={`엔티티 ${graph.metadata.stats.total_nodes} · 관계 ${relations.length} · 2Hop`}
+            meta={
+              // 화면에 그려진 수 — 1홉이면 relations.length와 같다
+              `엔티티 ${graph.metadata.stats.total_nodes} · 관계 ${graph.metadata.stats.total_edges}` +
+              (hop > 1 ? ` · ${hop}Hop 확장` : '')
+            }
           >
             <NewsGraphSection
               graph={graph}
               relations={relations}
+              seedIds={seedIds}
+              hop={hop}
+              onHopChange={setHop}
               hoveredNodeId={hoveredNodeId}
             />
           </Section>
