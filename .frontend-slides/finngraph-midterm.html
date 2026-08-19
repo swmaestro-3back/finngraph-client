@@ -384,6 +384,21 @@ h2 b{color:var(--primary);font-weight:700;}
 .pair .p-txt b{display:block;}
 .pair .p-txt>span{display:block;margin-top:9px;font-size:22px;color:var(--muted);line-height:1.5;}
 
+/* 기획심의 반영 — 같은 pair 골격의 고밀도 변형 (4행 · 행마다 반영 항목 다수) */
+.pairs--dense{gap:12px;}
+.pairs--dense .pair{align-items:stretch;}
+.pairs--dense .p-left{padding:16px 26px;align-items:flex-start;flex-direction:column;justify-content:center;}
+.pairs--dense .p-left b{display:block;font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.02em;}
+.pairs--dense .p-left span{display:block;margin-top:8px;font-size:20px;color:var(--muted);line-height:1.5;}
+.pairs--dense .p-right{padding:16px 26px;flex-direction:column;justify-content:center;align-items:stretch;}
+.pairs--dense .p-right>b{font-size:26px;font-weight:700;color:var(--primary);letter-spacing:-.02em;}
+.pairs--dense .p-arrow{font-size:26px;}
+.pairs--dense ul{margin-top:10px;display:flex;flex-direction:column;gap:6px;list-style:none;}
+.pairs--dense li{position:relative;padding-left:16px;font-size:20px;line-height:1.5;color:var(--muted);}
+.pairs--dense li::before{content:"";position:absolute;left:0;top:.62em;
+  width:5px;height:5px;border-radius:50%;background:var(--pb-brand-300);}
+.pairs--dense .p-right li b{font-size:inherit;font-weight:700;color:var(--text);}
+
 /* 타겟층 — 페르소나 2열 */
 /* min-height 로 카드 높이를 잡아두고, 남는 공백은 lead/feat 위에서 반씩 나눠 갖는다 */
 .persona{background:var(--card-bg);border:1.5px solid var(--border);border-radius:14px;padding:36px 40px;
@@ -513,6 +528,32 @@ h2 b{color:var(--primary);font-weight:700;}
 .plans .v.txt{color:var(--text);font-weight:500;font-size:23px;}
 .plans .v.off{color:var(--light);font-weight:400;}
 .plans>div:nth-last-child(-n+4){border-bottom:0;}
+/* 경쟁사 분석 — .plans 의 6열 변형.
+   4열 기준 규칙(nth-child(4n+1) 행 머리글, 마지막 4칸 보더 제거)을 끄고
+   6열 기준으로 다시 겁니다. 아래 규칙 순서 = 덮어쓰기 순서입니다. */
+.plans--cmp{grid-template-columns:1.15fr .92fr 1.02fr .98fr .8fr 1.02fr;}
+.plans--cmp>div{padding:30px 16px;flex-direction:column;justify-content:center;
+  text-align:center;font-size:22px;line-height:1.4;}
+.plans--cmp em{display:block;margin-top:6px;font-style:normal;
+  font-size:17px;font-weight:400;color:var(--light);line-height:1.4;}
+
+.plans.plans--cmp>div:nth-child(4n+1){color:var(--muted);font-weight:400;background:var(--bg);}
+.plans.plans--cmp>div:nth-child(6n+1){color:var(--text);font-weight:600;background:var(--accent-light);}
+.plans.plans--cmp>div:nth-child(6n+1) em{font-size:18px;color:var(--muted);}
+.plans.plans--cmp>div.hd{background:var(--accent-light);color:var(--text);
+  font-weight:700;font-size:23px;line-height:1.3;}
+.plans.plans--cmp>div.v{color:var(--primary);font-weight:600;font-size:31px;}
+.plans.plans--cmp>div.v.txt{color:var(--text);font-weight:600;font-size:22px;}
+.plans.plans--cmp>div.v.off{color:var(--light);font-weight:400;}
+.plans.plans--cmp>div.v.mid{color:var(--pb-warn);font-weight:600;}
+/* 본 서비스 행 — 브랜드 틴트로 한 줄을 통째로 들어올린다 */
+.plans.plans--cmp>div.own{background:var(--accent-light);}
+.plans.plans--cmp>div.own.v,
+.plans.plans--cmp>div.own:nth-child(6n+1){color:var(--primary);}
+
+.plans.plans--cmp>div:nth-last-child(-n+4){border-bottom:1px solid var(--border);}
+.plans.plans--cmp>div:nth-last-child(-n+6){border-bottom:0;}
+
 .b2b{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:34px;}
 .b2b div{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:26px 32px;
   font-size:23px;color:var(--muted);}
@@ -640,11 +681,13 @@ body.editing .edit-bar{display:flex;}
         </div>
         <div class="toc-part reveal r5">
           <div class="pnum">PART 3</div>
-          <h3>사업화 전략 및 추후 계획</h3>
-          <div class="en">Business &amp; Future Plan</div>
+          <h3>시장 분석 및 사업화 전략</h3>
+          <div class="en">Market &amp; Business Strategy</div>
           <ul>
-            <li><i>01</i><b>비즈니스 모델<em>Business Model</em></b></li>
-            <li><i>02</i><b>추후 개발 및 확장 계획<em>Future Plan</em></b></li>
+            <li><i>01</i><b>시장 분석<em>Market Analysis</em></b></li>
+            <li><i>02</i><b>경쟁사 분석<em>Competitive Landscape</em></b></li>
+            <li><i>03</i><b>비즈니스 모델<em>Business Model</em></b></li>
+            <li><i>04</i><b>기획심의 주요 의견 반영<em>Review Feedback</em></b></li>
           </ul>
         </div>
       </div>
@@ -712,7 +755,7 @@ body.editing .edit-bar{display:flex;}
       <div class="tag reveal r1">01 / 06</div>
     </div>
     <div class="page-title reveal r2"><b>문제 인식</b><span>Problem Statement</span></div>
-    <h2 class="reveal r2"><b>문제 01</b> · 정보 홍수의 시대</h2>
+    <h2 class="reveal r2"><b>문제 01</b> · 정보 홍수의 시대 : 무분별한 정보의 증가</h2>
     <div class="pb-body">
       <div class="pb-panel pb-panel--problem reveal r3">
         <div class="pb-panel__head">단기간에 처리하기 힘든 양의 콘텐츠들</div>
@@ -1642,15 +1685,15 @@ body.editing .edit-bar{display:flex;}
             <div class="ft-item">
               <i>02</i>
               <div class="tx">
-                <b>시간축 동기화</b>
-                <span>주가 캔들 차트와 동일한 시간축을 공유하여, 특정 시점의 주가 변동이 어떠한 뉴스에서 비롯되었는지 직접 대조하며 확인할 수 있도록 지원</span>
+                <b>긍정·부정 분류</b>
+                <span>2가지 성격으로 분류하여 막대그래프 시각화</span>
               </div>
             </div>
             <div class="ft-item">
               <i>03</i>
               <div class="tx">
-                <b>통합된 하나의 뷰</b>
-                <span>뉴스 따로 주가 따로가 아닌, 동일한 UI 컴포넌트에서 시장의 흐름과 연결지어 볼 수 있도록</span>
+                <b>주가 차트와의 시간축 동기화</b>
+                <span>캔들 차트와 동일한 시간축을 공유</span>
               </div>
             </div>
           </div>
@@ -1845,13 +1888,13 @@ body.editing .edit-bar{display:flex;}
         <div class="miles">
           <div class="mile a">
             <div class="st">✓ 완료 · 중간평가</div>
-            <h3>ETL 파이프라인 + 프론트엔드 설계</h3>
-            <p>데이터를 안정적으로 수집·가공하는 파이프라인 구축 완료.<br>사용자에게 어떻게 보여줄지에 대한 프론트엔드 설계도 완료.</p>
+            <h3>ETL 파이프라인 + 프론트엔드</h3>
+            <p>데이터 수집 및 전처리 파이프라인 구축 완료<br>UI 및 UX 설계 완료</p>
           </div>
           <div class="mile b">
             <div class="st">→ 목표 · 최종발표</div>
-            <h3>백엔드 API + AI Engineering</h3>
-            <p>가장 무겁고 오래 걸리는 파이프라인을 이미 마쳤기에,<br>남은 두 파트는 그 위에 얹는 작업. 최종발표까지 완료 가능.</p>
+            <h3>백엔드 + AI Engineering</h3>
+            <p>백엔드 API 및 DB 연동 구축<br>GraphRAG 기반 센티멘트 생성 로직 구축</p>
           </div>
         </div>
       </div>
@@ -1908,12 +1951,129 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="body">
       <div class="section-num reveal r1">PART 3</div>
-      <div class="section-title reveal r2">사업화 전략 및 추후 계획</div>
-      <div class="section-en reveal r2">Business &amp; Future Plan</div>
-      <div class="section-q reveal r3">어떻게 사업화하고, 어떻게 완성할 것인가</div>
+      <div class="section-title reveal r2">시장 분석 및 사업화 전략</div>
+      <div class="section-en reveal r2">Market &amp; Business Strategy</div>
+      <div class="section-q reveal r3">시장은 어디에 있고, 어떻게 사업화할 것인가</div>
       <div class="section-list reveal r4">
-        <div>비즈니스 모델</div><div>추후 개발 및 확장 계획</div>
+        <div>시장 분석</div><div>경쟁사 분석</div><div>비즈니스 모델</div><div>기획심의 주요 의견 반영</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- 시장 분석 -->
+<section class="slide" aria-label="시장 분석">
+  <div class="pad">
+    <div class="slide-header">
+      <div class="eyebrow reveal r1">PART 3 · 시장 분석 및 사업화 전략</div>
+      <div class="tag reveal r1">01 / 04</div>
+    </div>
+    <div class="page-title reveal r2"><b>시장 분석</b><span>Market Analysis</span></div>
+    <h2 class="reveal r2">수요는 이미 최고 수준, <b>기술은 지금 성장 국면</b></h2>
+    <div class="body">
+      <div class="grid2 grid2--fill">
+        <div class="persona reveal r3">
+          <div class="persona__head">
+            <div>
+              <div class="who">MARKET 01</div>
+              <h3>시장 동향 및 규모</h3>
+            </div>
+            <!-- 투자 인구·예탁금이 함께 우상향하는 막대 그래프 -->
+            <span class="p-ico" aria-hidden="true">
+              <svg viewBox="0 0 120 72">
+                <path d="M10 6 V64 H114" fill="none" stroke="var(--pb-ink-300)" stroke-width="1.6" stroke-linecap="round"/>
+                <g fill="none" stroke="var(--pb-ink-300)" stroke-width="1.5">
+                  <rect x="22" y="46" width="15" height="18" rx="2"/>
+                  <rect x="45" y="36" width="15" height="28" rx="2"/>
+                  <rect x="68" y="26" width="15" height="38" rx="2"/>
+                </g>
+                <rect x="91" y="12" width="15" height="52" rx="2"
+                      fill="var(--pb-brand-100)" stroke="var(--pb-brand-600)" stroke-width="2.2"/>
+                <g fill="var(--pb-ink-300)">
+                  <circle cx="29.5" cy="39" r="3"/><circle cx="52.5" cy="29" r="3"/><circle cx="75.5" cy="19" r="3"/>
+                </g>
+                <circle cx="98.5" cy="5.5" r="3.4" fill="var(--pb-brand-600)"/>
+              </svg>
+            </span>
+          </div>
+          <p class="lead">개인 투자자의 <span style="color:var(--negative);font-weight:600;">주식 정보 수요가 폭증</span>하는 국면</p>
+          <p>국내 개인투자자는 코로나 이후와 2026년 반도체 호황을 거치며 약 <b style="color:var(--text);">1,542만 명</b>까지 급증 — 국민 3~4명 중 1명이 주식을 보유</p>
+          <p>투자자 예탁금(투자 대기자금)은 2025년 <b style="color:var(--text);">80조 원</b>대를 기록하며 사상 최고 수준을 지속</p>
+          <div class="feat">투자 인구·자금은 최고 수준에 도달했으나, 금융 정보의 과잉 생산으로 편향적·비연관 정보가 함께 늘며 <span>핵심 정보 선별</span>은 오히려 어려워짐</div>
+        </div>
+        <div class="persona reveal r4">
+          <div class="persona__head">
+            <div>
+              <div class="who">MARKET 02</div>
+              <h3>금융 데이터 · Fintech</h3>
+            </div>
+            <!-- 관계 기반 분석 기술 시장의 고성장 곡선 -->
+            <span class="p-ico" aria-hidden="true">
+              <svg viewBox="0 0 120 72">
+                <path d="M10 6 V64 H114" fill="none" stroke="var(--pb-ink-300)" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M18 58 C44 56 58 48 70 34" fill="none" stroke="var(--pb-ink-300)"
+                      stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M70 34 C80 22 88 16 104 12" fill="none" stroke="var(--pb-brand-600)"
+                      stroke-width="2.6" stroke-linecap="round"/>
+                <path d="M70 34 C82 32 92 30 108 29" fill="none" stroke="var(--pb-ink-300)"
+                      stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3.5"/>
+                <circle cx="70" cy="34" r="4" fill="#fff" stroke="var(--pb-ink-300)" stroke-width="1.6"/>
+                <circle cx="104" cy="12" r="6.5" fill="var(--pb-brand-100)"
+                        stroke="var(--pb-brand-600)" stroke-width="2.2"/>
+              </svg>
+            </span>
+          </div>
+          <p class="lead">금융 데이터·Fintech 시장의 <span style="color:var(--negative);font-weight:600;">뚜렷한 성장세</span></p>
+          <p>지식 그래프 시장은 2030년 약 <b style="color:var(--text);">69억 달러</b> 규모로, 연평균 <b style="color:var(--text);">36.6%</b> 성장 전망</p>
+          <p>뉴스·공시와 같은 비정형 데이터를 2차 가공하여 판매하는 데이터 시장도 두 자릿수 고성장을 지속</p>
+          <div class="feat"><span>지식 그래프·HybridRAG</span> 등 관계 기반 분석 기술이 성장하는 국면 — 본 서비스의 기술적 타당성과 시장 타이밍을 뒷받침</div>
+        </div>
+      </div>
+      <div class="common reveal r5">수요는 넘치지만 <b>정보 선별</b>은 어려운 시장, 그 해법이 되는 <b>관계 기반 분석 기술</b>은 마침 성장 국면</div>
+    </div>
+  </div>
+</section>
+
+<!-- 경쟁사 분석 -->
+<section class="slide" aria-label="경쟁사 분석">
+  <div class="pad">
+    <div class="slide-header">
+      <div class="eyebrow reveal r1">PART 3 · 시장 분석 및 사업화 전략</div>
+      <div class="tag reveal r1">02 / 04</div>
+    </div>
+    <div class="page-title reveal r2"><b>경쟁사 분석</b><span>Competitive Landscape</span></div>
+    <h2 class="reveal r2">기존 서비스가 비워둔 자리는 <b>관계와 맥락</b>이다</h2>
+    <div class="body">
+      <div class="plans plans--cmp reveal r4">
+        <div class="hd">구분</div>
+        <div class="hd">뉴스 필터링</div>
+        <div class="hd">지식 그래프<br>구축 및 시각화</div>
+        <div class="hd">HybridRAG 분석</div>
+        <div class="hd">경로 탐색</div>
+        <div class="hd">가격 · 접근성</div>
+
+        <div>네이버 · 토스 및<br>증권사 어플<em>국내 증권앱</em></div>
+        <div class="v mid">△<em>종목명 포함 여부 기준</em></div>
+        <div class="v off">✕</div>
+        <div class="v off">✕<em>뉴스 3줄 요약 수준</em></div>
+        <div class="v off">✕</div>
+        <div class="v txt">무료 · 개인 대상</div>
+
+        <div>딥서치<em>금융 정보 제공</em></div>
+        <div class="v mid">△<em>국내 증권앱들과 유사</em></div>
+        <div class="v mid">△<em>데이터 분석을 통한 키워드 마인드맵</em></div>
+        <div class="v mid">△<em>RAG 기반 요약</em></div>
+        <div class="v off">✕</div>
+        <div class="v txt">B2B · 기업 대상<em>개인 접근 어려움</em></div>
+
+        <div class="own">Finngraph<em>본 서비스</em></div>
+        <div class="v own">○</div>
+        <div class="v own">○</div>
+        <div class="v own">○</div>
+        <div class="v own">○</div>
+        <div class="v txt own">개인 대상</div>
+      </div>
+      <div class="common reveal r5">기존 서비스는 <b>키워드 단위의 필터링·요약</b>에 머무름 — 종목 간 <b>관계망 탐색</b>을 개인에게 제공하는 서비스는 부재</div>
     </div>
   </div>
 </section>
@@ -1922,8 +2082,8 @@ body.editing .edit-bar{display:flex;}
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
-      <div class="eyebrow reveal r1">PART 3 · 사업화 전략 및 추후 계획</div>
-      <div class="tag reveal r1">01 / 02</div>
+      <div class="eyebrow reveal r1">PART 3 · 시장 분석 및 사업화 전략</div>
+      <div class="tag reveal r1">03 / 04</div>
     </div>
     <div class="page-title reveal r2"><b>비즈니스 모델</b><span>Business Model</span></div>
     <h2 class="reveal r2">탐색 깊이가 곧 경쟁력이고, <b>가치이다</b></h2>
@@ -1973,36 +2133,81 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- 추후 개발 및 확장 계획 -->
-<section class="slide">
+<!-- 기획심의 주요 의견 반영 -->
+<section class="slide" aria-label="기획심의 주요 의견 반영">
   <div class="pad">
     <div class="slide-header">
-      <div class="eyebrow reveal r1">PART 3 · 사업화 전략 및 추후 계획</div>
-      <div class="tag reveal r1">02 / 02</div>
+      <div class="eyebrow reveal r1">PART 3 · 시장 분석 및 사업화 전략</div>
+      <div class="tag reveal r1">04 / 04</div>
     </div>
-    <div class="page-title reveal r2"><b>추후 개발 및 확장 계획</b><span>Future Plan</span></div>
-    <h2 class="reveal r2">남은 건 두 가지 — <b>백엔드, 그리고 AI Engineering</b></h2>
+    <div class="page-title reveal r2"><b>기획심의 주요 의견 반영</b><span>Review Feedback</span></div>
     <div class="body">
-      <div class="next">
-        <div class="next-col reveal r3">
-          <div class="k">TRACK 01</div>
-          <h3>백엔드</h3>
-          <ul>
-            <li>지식그래프·뉴스 API 서버 개발</li>
-            <li>프론트–백엔드 데이터 서빙 연동</li>
-          </ul>
+      <div class="map-head reveal r3">
+        <div class="h">기획심의 의견</div>
+        <div class="h"></div>
+        <div class="h">반영 결과</div>
+      </div>
+      <div class="pairs pairs--dense">
+        <div class="pair reveal r4">
+          <div class="p-left">
+            <b>B2B 시장의 한계</b>
+            <span>금융 데이터 API 시장 규모가 작고, 보수적인 금융업계에서 신생 데이터·API 업체의 진입 장벽이 높음</span>
+          </div>
+          <div class="p-arrow">→</div>
+          <div class="p-right">
+            <b>B2C를 주력 시장으로 전환</b>
+            <ul>
+              <li>핵심 사용자를 증권사·금융권 IT 엔지니어에서 <b>개인투자자</b>로 재정의</li>
+              <li>금융기관의 보수적인 조달 심사를 거치지 않고, 개인 결제로 직접 도달 가능한 구조 확보</li>
+              <li>지식 그래프 탐색 범위(Hop)와 경로 탐색을 기준으로 한 구독제 사업 모델</li>
+            </ul>
+          </div>
         </div>
-        <div class="next-col reveal r4">
-          <div class="k">TRACK 02</div>
-          <h3>AI Engineering</h3>
-          <ul>
-            <li>뉴스 필터링 모델 고도화</li>
-            <li>삼중항 추출 파이프라인 실서비스 연동</li>
-            <li>HybridRAG (VectorRAG + GraphRAG) 구현</li>
-          </ul>
+        <div class="pair reveal r4">
+          <div class="p-left">
+            <b>지식 그래프의 과도한 스코프</b>
+            <span>초기 타깃을 반도체·배터리·자동차 등 특정 섹터로 축소 권고</span>
+          </div>
+          <div class="p-arrow">→</div>
+          <div class="p-right">
+            <b>초기 대상을 2개 섹터로 한정</b>
+            <ul>
+              <li>그래프 구축·검증 대상을 <b>반도체·2차전지</b> 2개 섹터로 한정</li>
+              <li>기업·주가·뉴스 수집은 국내 전체 상장사로 유지하되, 삼중항 추출·그래프 적재만 2개 섹터 중심으로 수행</li>
+              <li>여타 섹터 확장은 후속 단계로 분리</li>
+            </ul>
+          </div>
+        </div>
+        <div class="pair reveal r5">
+          <div class="p-left">
+            <b>지식 그래프 구축·PoC</b>
+            <span>금융 데이터의 명확한 범위 정의 및 실현 가능성 검토 필요</span>
+          </div>
+          <div class="p-arrow">→</div>
+          <div class="p-right">
+            <b>온톨로지 범위 확정</b>
+            <ul>
+              <li>논문·방법론 검토 결과, 금융 시장 전체의 온톨로지화는 기간 내 실현 불가능으로 판단</li>
+              <li>거시경제(금리·채권·물가·고용)를 범위에서 제외하고, 대상을 <b>기업 중심 관계망</b>으로 축소</li>
+              <li>엔티티 <b>4종</b>(기업·국가·원자재·제품), 관계 서술어 <b>11종</b>으로 온톨로지 스키마 정의</li>
+            </ul>
+          </div>
+        </div>
+        <div class="pair reveal r5">
+          <div class="p-left">
+            <b>뉴스 저작권 리스크</b>
+            <span>뉴스 활용에 따르는 법적 리스크 검토 필요</span>
+          </div>
+          <div class="p-arrow">→</div>
+          <div class="p-right">
+            <b>원문 비노출 설계로 확정</b>
+            <ul>
+              <li>뉴스 원문를 노출하지 않고 <b>제목·요약·원문 링크</b>만 제공</li>
+              <li>저작권 침해에 해당하지 않는 3~4줄 이내 요약만 노출하고, 상세 내용은 원문 링크에서 확인하도록 설계</li>
+            </ul>
+          </div>
         </div>
       </div>
-      <div class="next-note reveal r5">두 작업 모두 <b style="color:var(--primary)">이미 갖춰진 데이터 파이프라인 위에서</b> 진행되는 작업입니다.</div>
     </div>
   </div>
 </section>
