@@ -63,9 +63,9 @@ export function NavBar() {
       <div className="flex h-full items-center gap-5 px-5">
         <Link
           to="/"
-          className="shrink-0 text-lg leading-tight tracking-[-0.4px] text-primary"
+          className="shrink-0 font-wordmark text-lg font-extrabold leading-tight tracking-[-0.05em] text-foreground"
         >
-          Finngraph
+          Finn<span className="text-primary">graph</span>
         </Link>
 
         <div className="hidden h-10 w-60 shrink-0 items-center gap-2 rounded-full bg-surface-inset px-5 md:flex">
