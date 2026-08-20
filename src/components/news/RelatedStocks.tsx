@@ -36,8 +36,8 @@ export function RelatedStocks({ companyNames, onNavigate }: Props) {
           onClick={onNavigate}
           className="flex items-center gap-2.5 rounded-xl border border-border px-3 py-2 hover:border-primary/40 hover:bg-surface-inset"
         >
-          <span className="text-[13px] font-semibold text-foreground">{stock.name}</span>
-          <span className="font-mono text-[13px] text-foreground">{formatPrice(stock.price)}</span>
+          <span className="text-body font-semibold text-foreground">{stock.name}</span>
+          <span className="font-mono text-body text-foreground">{formatPrice(stock.price)}</span>
           <span className={cn('font-mono text-xs font-medium', changeColorClass(stock.change))}>
             {formatChange(stock.change)}
           </span>

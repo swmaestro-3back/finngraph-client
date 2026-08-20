@@ -72,6 +72,7 @@ export function syncMarks(
       key="tooltip"
       isAnimationActive={false}
       cursor={
+        /* --foreground(#0a0b0d) 4% — recharts cursor는 객체 리터럴로만 받는다 */
         kind === 'bar' ? { fill: 'rgba(10,11,13,0.04)' } : { stroke: RULE, strokeWidth: 1 }
       }
       content={content}
@@ -100,7 +101,7 @@ export function SyncPinHeader({
   onClear: () => void
 }) {
   return (
-    <div className="mb-[9px] flex min-h-[18px] items-center justify-between text-[11px]">
+    <div className="mb-[9px] flex min-h-[18px] items-center justify-between text-caption">
       <span className="text-muted-foreground">{hint}</span>
       {pinnedLabel && (
         <button

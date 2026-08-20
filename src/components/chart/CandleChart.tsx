@@ -71,7 +71,7 @@ const CandleLayer = memo(function CandleLayer({
           className="absolute right-0 left-0 border-t border-surface-inset"
           style={{ top: `${level * 100}%` }}
         >
-          <span className="absolute top-[-7px] left-full pl-2 font-mono text-[10px] font-medium whitespace-nowrap text-muted-foreground">
+          <span className="absolute top-[-7px] left-full pl-2 font-mono text-micro font-medium whitespace-nowrap text-muted-foreground">
             {formatPrice(Math.round(max - range * level))}
           </span>
         </div>
@@ -227,7 +227,7 @@ export function CandleChart({
         {/* 커서를 따라다니는 툴팁 */}
         {hovered && hover && (
           <div
-            className="pointer-events-none absolute z-10 w-[168px] rounded-xl border border-border bg-background p-3 shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+            className="pointer-events-none absolute z-10 w-[168px] rounded-xl border border-border bg-background p-3 shadow-soft"
             style={{
               left: hover.x,
               top: hover.y,
@@ -243,7 +243,7 @@ export function CandleChart({
               </span>
               <span
                 className={cn(
-                  'font-mono text-[11px] font-medium',
+                  'font-mono text-caption font-medium',
                   changeColorClass(hoveredChange),
                 )}
               >
@@ -258,14 +258,14 @@ export function CandleChart({
                 ['종가', hovered.close],
               ] as const
             ).map(([label, value]) => (
-              <div key={label} className="flex justify-between text-[11px] leading-[1.6]">
+              <div key={label} className="flex justify-between text-caption leading-[1.6]">
                 <span className="text-muted-foreground">{label}</span>
                 <span className="font-mono font-medium text-foreground">
                   {formatPrice(value)}
                 </span>
               </div>
             ))}
-            <div className="flex justify-between text-[11px] leading-[1.6]">
+            <div className="flex justify-between text-caption leading-[1.6]">
               <span className="text-muted-foreground">거래량</span>
               <span className="font-mono font-medium text-foreground">
                 {formatPrice(hovered.volume)}만주
@@ -278,7 +278,7 @@ export function CandleChart({
       {/* 거래량 */}
       <div className={cn('mt-3 flex items-baseline justify-between', AXIS_GUTTER)}>
         <span className="text-xs font-semibold text-foreground">거래량</span>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-caption text-muted-foreground">
           최대 {formatPrice(maxVolume)}만주
         </span>
       </div>

@@ -40,7 +40,7 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
   )
 
   return (
-    <section className={cn('rounded-3xl border border-border bg-background p-5', className)}>
+    <section className={cn('card-surface p-5', className)}>
       <div className="mb-[9px] flex min-h-[30px] items-center justify-between">
         <div className="flex items-baseline gap-[9px]">
           <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">
@@ -64,12 +64,12 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
         </Link>
       </div>
 
-      <div className={cn(GRID, 'border-b border-border pb-1.5 text-[11px] text-muted-foreground')}>
+      <div className={cn(GRID, 'border-b border-border pb-1.5 text-caption text-muted-foreground')}>
         <span className="truncate">종목명 · {stocks.length}개 종목</span>
-        <span className="text-right">현재가</span>
-        <span className="text-right">시가총액 (억)</span>
-        <span className="text-right">거래대금 (백만)</span>
-        <span className="text-right">등락률</span>
+        <span className="whitespace-nowrap text-right">현재가</span>
+        <span className="whitespace-nowrap text-right">시가총액(억)</span>
+        <span className="whitespace-nowrap text-right">거래대금(백만)</span>
+        <span className="whitespace-nowrap text-right">등락률</span>
       </div>
 
       <div className={cn(listClassName)}>
@@ -88,17 +88,17 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
                 {stock.name}
               </span>
               {/* 수치 열을 넉넉히 잡은 만큼, 폭이 좁을 땐 코드를 접어 종목명 자리를 지킨다 */}
-              <span className="hidden font-mono text-[11px] text-[#a8acb3] xl:inline">
+              <span className="hidden font-mono text-caption text-foreground-tertiary xl:inline">
                 {stock.code}
               </span>
             </span>
             <span className="text-right font-mono text-sm font-medium text-foreground">
               {formatPrice(stock.price)}
             </span>
-            <span className="text-right font-mono text-xs text-[#5b616e]">
+            <span className="text-right font-mono text-xs text-foreground-secondary">
               {formatAmount(stock.marketCap)}
             </span>
-            <span className="text-right font-mono text-xs text-[#5b616e]">
+            <span className="text-right font-mono text-xs text-foreground-secondary">
               {formatAmount(stock.tradingValue)}
             </span>
             <span

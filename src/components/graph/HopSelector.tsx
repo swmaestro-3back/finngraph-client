@@ -21,12 +21,12 @@ export function HopSelector({ value, onChange, isMobile = false }: Props) {
   return (
     <div
       className={cn(
-        'absolute top-4 z-10 flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-[var(--shadow-soft)] backdrop-blur',
+        'absolute top-4 z-10 flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur',
         // 데스크톱에서는 우상단 툴바(확대·축소·초기화) 왼쪽에 붙인다
         isMobile ? 'right-4' : 'right-16',
       )}
     >
-      <span className="text-[11px] font-semibold tracking-[0.5px] text-muted-foreground uppercase">
+      <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground">
         Hop
       </span>
       <ToggleGroup

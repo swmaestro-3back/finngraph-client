@@ -47,7 +47,7 @@ export function EdgeDetail({ link, source, target }: Props) {
         <Section title="근거 문장">
           <div className="flex gap-2 rounded-xl bg-surface-inset p-3">
             <Quote className="mt-0.5 size-4 shrink-0 text-muted-foreground/70" strokeWidth={2} />
-            <p className="m-0 text-[13px] leading-relaxed text-foreground">{link.source_sentence}</p>
+            <p className="m-0 text-body leading-relaxed text-foreground">{link.source_sentence}</p>
           </div>
         </Section>
       )}
@@ -56,11 +56,11 @@ export function EdgeDetail({ link, source, target }: Props) {
         <Section title="출처 뉴스">
           <div className="rounded-xl border border-border px-3 py-2.5">
             {link.news_title && (
-              <div className="text-[13px] leading-snug font-semibold text-foreground">
+              <div className="text-body leading-snug font-semibold text-foreground">
                 {link.news_title}
               </div>
             )}
-            <div className="mt-1 flex gap-2.5 font-mono text-[11px] text-muted-foreground">
+            <div className="mt-1 flex gap-2.5 font-mono text-caption text-muted-foreground">
               {link.news_id && <span>{link.news_id}</span>}
               {link.timestamp && <span>{link.timestamp}</span>}
             </div>

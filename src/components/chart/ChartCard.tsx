@@ -28,14 +28,14 @@ export function ChartCard({
   children,
 }: ChartCardProps) {
   return (
-    <section className={cn('rounded-3xl border border-border bg-background p-5', className)}>
+    <section className={cn('card-surface p-5', className)}>
       <div className="mb-[9px] flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="flex flex-wrap items-baseline gap-3">
-          <h2 className="text-[13px] font-semibold text-foreground">{title}</h2>
-          <span className={cn('font-mono text-[13px] font-medium', changeColorClass(change))}>
+          <h2 className="text-body font-semibold text-foreground">{title}</h2>
+          <span className={cn('font-mono text-body font-medium', changeColorClass(change))}>
             {formatChange(change)}
           </span>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-caption text-muted-foreground">
             구간 {formatPrice(rangeLow)} ~ {formatPrice(rangeHigh)}
           </span>
         </div>

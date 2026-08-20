@@ -55,13 +55,13 @@ export default function ThemeDetailPage() {
         <Link to={back.to} className="text-xs font-semibold leading-none text-primary">
           ← {back.label}
         </Link>
-        <span className="text-[11px] text-[#a8acb3]">/</span>
-        <span className="text-[11px] text-muted-foreground">테마 상세</span>
+        <span className="text-caption text-foreground-tertiary">/</span>
+        <span className="text-caption text-muted-foreground">테마 상세</span>
       </div>
 
       {/* 타이틀 행 */}
       <div className="mb-3 flex items-baseline gap-[9px]">
-        <h1 className="text-[32px] font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
+        <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
           {theme.name}
         </h1>
         <span
@@ -78,7 +78,7 @@ export default function ThemeDetailPage() {
       </div>
 
       {/* 테마 설명 */}
-      <p className="mb-4 max-w-[820px] text-[13px] leading-[1.7] text-muted-foreground [text-wrap:pretty]">
+      <p className="mb-4 max-w-[820px] text-body leading-[1.7] text-muted-foreground [text-wrap:pretty]">
         {theme.description}
       </p>
 
@@ -121,7 +121,7 @@ export default function ThemeDetailPage() {
         onOpenChange={(open) => !open && setOpenNewsId(null)}
       />
 
-      <p className="mt-5 text-[11px] text-muted-foreground">
+      <p className="mt-5 text-caption text-muted-foreground">
         표시된 시세·차트·뉴스는 데모용 예시 데이터입니다. 투자 판단의 근거로 사용할 수
         없습니다.
       </p>

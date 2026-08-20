@@ -34,7 +34,7 @@ export function Toolbar({ onZoomIn, onZoomOut, onReset, isMobile = false }: Prop
                 size="icon-lg"
                 onClick={onClick}
                 aria-label={label}
-                className="bg-background/90 shadow-[var(--shadow-soft)] backdrop-blur hover:border-primary hover:text-primary"
+                className="bg-background/90 shadow-soft backdrop-blur hover:border-primary hover:text-primary"
               >
                 <Icon className="size-[18px]" strokeWidth={2} />
               </Button>

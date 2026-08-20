@@ -89,7 +89,7 @@ export function NewsGraphSection({
   if (relations.length === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-border bg-surface-inset text-[13px] text-muted-foreground"
+        className="flex items-center justify-center rounded-2xl border border-border bg-surface-inset text-body text-muted-foreground"
         style={{ height: GRAPH_HEIGHT }}
       >
         이 기사에서 추출된 관계가 없습니다.
@@ -127,7 +127,7 @@ export function NewsGraphSection({
       </div>
 
       <div className="flex min-h-0 flex-col md:h-[420px]">
-        <div className="mb-1.5 text-[11px] font-semibold tracking-[0.4px] text-muted-foreground uppercase">
+        <div className="mb-1.5 text-caption font-semibold tracking-[0.4px] text-muted-foreground">
           추출된 관계 {relations.length}건
         </div>
         <NewsRelationList

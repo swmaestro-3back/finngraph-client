@@ -108,12 +108,19 @@ export interface GraphData {
   };
 }
 
-/** 엔티티 종류별 색 (데이터 인코딩). 브랜드 블루를 중심 엔티티(기업)에 앵커링. */
+/**
+ * 엔티티 종류별 색 (데이터 인코딩). 브랜드 블루를 중심 엔티티(기업)에 앵커링.
+ * 캔버스 렌더라 var() 대신 리터럴 — 값은 index.css 토큰과 1:1로 동기화한다 (graphTheme.ts와 같은 계약).
+ */
 export const NODE_COLORS: Record<EntityType, string> = {
+  /** --primary */
   company: "#0052ff", // 브랜드 블루 — 기업
-  product: "#0e8074", // 틸 — 제품
+  /** --chart-1 */
+  product: "#1f897d", // 틸 — 제품
+  /** --chart-5 */
   commodity: "#f4b000", // 액센트 옐로 — 원자재
-  country: "#7c3aed", // 바이올렛 — 국가
+  /** --chart-3 */
+  country: "#874ef5", // 바이올렛 — 국가
 };
 
 /**

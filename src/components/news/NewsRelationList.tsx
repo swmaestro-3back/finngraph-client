@@ -47,7 +47,7 @@ export function NewsRelationList({ relations, activeId, onHover, onSelect }: Pro
           >
             <div className="flex flex-wrap items-center gap-1.5">
               <EntityChip label={source.label} type={source.type} />
-              <span className="text-[11px] font-semibold text-primary">
+              <span className="text-caption font-semibold text-primary">
                 {PREDICATE_LABELS[link.type]}
               </span>
               <ArrowRight className="size-3.5 text-muted-foreground" strokeWidth={2} />

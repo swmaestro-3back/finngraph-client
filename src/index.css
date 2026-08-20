@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/jetbrains-mono";
+/* 워드마크 전용 — dynamic subset이라 실사용 글리프(라틴 청크)만 로드된다 */
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -28,11 +30,15 @@
   --input: #dee1e6;
   --ring: #0052ff;
   --radius: 0.75rem;
-  --chart-1: #0e8074;
-  --chart-2: #94a3b8;
-  --chart-3: #7c3aed;
-  --chart-4: #f43f5e;
+  /* 차트 계열색 — 실측 팔레트(구 design-specs/stock-detail.md §0-4)를 정본으로 승격.
+     recharts는 var() 참조로, d3 캔버스(graphTypes.ts)는 리터럴+주석 계약으로 소비한다. */
+  --chart-1: #1f897d;
+  --chart-2: #8b99af;
+  --chart-3: #874ef5;
+  --chart-3-soft: #a27ef9;
+  --chart-4: #f6657a;
   --chart-5: #f4b000;
+  --chart-grid: #eaeef4;
   --sidebar: #f7f7f7;
   --sidebar-foreground: #0a0b0d;
   --sidebar-primary: #0052ff;
@@ -44,14 +50,21 @@
 
   /* 커스텀 토큰 */
   --primary-pressed: #003ecc;
-  --primary-disabled: #a8b8cc;
   --surface-inset: #eef0f3;
-  --surface-dark: #0a0b0d;
-  --surface-dark-card: #16181c;
-  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  /* 텍스트 회색 단계 — foreground(#0a0b0d) > secondary > muted-foreground(#7c828a) > tertiary */
+  --foreground-secondary: #5b616e;
+  --foreground-tertiary: #a8acb3;
+  /* 재무 테이블 수치 전용 잉크 — 밀집 숫자를 순흑보다 한 단계 눌러 읽힌다 */
+  --foreground-numeric: #2e394d;
+
+  /* 주황 강조 — 추정치(E) 배지·역대 최저 PBR 하이라이트 */
+  --accent-warm: #ae4400;
+  --accent-warm-bg: #fcf2bf;
 
   /* 시세 색 — 페이지 디자인 기준 (kr 컨벤션: 상승=red-500, 하락=blue-500) */
   --stock-up: #cf202f;
+  --stock-up-soft: #fdeaec;
   --stock-down: #0052ff;
 
   /* 재무 지표 연속 추세 강조 (긍정 지표만 표시 모드) */
@@ -61,6 +74,8 @@
 @theme inline {
   --font-sans: 'Inter Variable', 'Apple SD Gothic Neo', 'Pretendard', -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-heading: var(--font-sans);
+  /* 브랜드 워드마크 — 발표 자료(.frontend-slides)와 동일한 Pretendard 800 로고타입 */
+  --font-wordmark: 'Pretendard Variable', var(--font-sans);
   --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -72,9 +87,17 @@
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
+  --color-chart-3-soft: var(--chart-3-soft);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-chart-grid: var(--chart-grid);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-foreground-tertiary: var(--foreground-tertiary);
+  --color-foreground-numeric: var(--foreground-numeric);
+  --color-accent-warm: var(--accent-warm);
+  --color-accent-warm-bg: var(--accent-warm-bg);
+  --color-stock-up-soft: var(--stock-up-soft);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -105,7 +128,14 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --radius-pill: 100px;
+  /* 그림자는 이 한 단계만 쓴다 — shadow-soft 유틸리티로 소비 */
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.04);
+  /* 타이포 스케일 — arbitrary value(text-[11px] 등) 대신 이 토큰을 쓴다. 행간은 사용처에서 지정. */
+  --text-micro: 10px;
+  --text-caption: 11px;
+  --text-body: 13px;
+  --text-title: 22px;
+  --text-display: 32px;
 }
 
 @layer base {
@@ -129,4 +159,11 @@
   width: 100%;
   /* 1440px → 120px (본문 폭 1200px, 83.33vw) */
   padding-inline: 8.333vw;
+}
+
+/* 최상위 섹션 카드 공통 껍데기 — 패딩은 콘텐츠 밀도에 따라 사용처에서 지정한다 */
+@utility card-surface {
+  border-radius: var(--radius-3xl);
+  border: 1px solid var(--border);
+  background-color: var(--background);
 }

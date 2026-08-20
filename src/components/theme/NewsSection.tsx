@@ -27,7 +27,7 @@ export function NewsSection({
   return (
     <section
       className={cn(
-        'flex flex-col rounded-3xl border border-border bg-background p-5',
+        'flex flex-col card-surface p-5',
         className,
       )}
     >
@@ -35,7 +35,7 @@ export function NewsSection({
         {title}
       </h2>
 
-      <div className="grid grid-cols-[1fr_124px] gap-3 border-b border-border pb-1.5 text-[11px] text-muted-foreground">
+      <div className="grid grid-cols-[1fr_124px] gap-3 border-b border-border pb-1.5 text-caption text-muted-foreground">
         <span>최신순 · {items.length}건</span>
         <span className="text-right">출처 · 시간</span>
       </div>
@@ -45,19 +45,15 @@ export function NewsSection({
           const content = (
             <>
               <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
-              <span className="truncate text-right text-[11px] text-muted-foreground">
+              <span className="truncate text-right text-caption text-muted-foreground">
                 {item.meta}
               </span>
             </>
           )
-          return onItemClick ? (
-            <button key={item.id} type="button" onClick={() => onItemClick(item)} className={ROW}>
+          return (
+            <button key={item.id} type="button" onClick={() => onItemClick?.(item)} className={ROW}>
               {content}
             </button>
-          ) : (
-            <a key={item.id} href="#" onClick={(e) => e.preventDefault()} className={ROW}>
-              {content}
-            </a>
           )
         })}
       </div>

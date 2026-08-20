@@ -10,7 +10,7 @@ interface Props {
   visibleTypes: Set<EntityType>
 }
 
-const PANEL = 'rounded-xl border border-border bg-background/95 px-3.5 py-2.5 shadow-[var(--shadow-soft)] backdrop-blur'
+const PANEL = 'rounded-xl border border-border bg-background/95 px-3.5 py-2.5 shadow-soft backdrop-blur'
 
 export function Legend({ visibleTypes }: Props) {
   const isMobile = useIsMobile()
@@ -25,7 +25,7 @@ export function Legend({ visibleTypes }: Props) {
         className="inline-block size-2.5 shrink-0 rounded-full"
         style={{ background: NODE_COLORS[type] }}
       />
-      <span className="text-[11px] font-medium text-[#5b616e]">{ENTITY_LABELS[type]}</span>
+      <span className="text-caption font-medium text-foreground-secondary">{ENTITY_LABELS[type]}</span>
     </div>
   ))
 
@@ -56,7 +56,7 @@ export function Legend({ visibleTypes }: Props) {
         onClick={() => setExpanded((v) => !v)}
         aria-label={expanded ? '범례 닫기' : '범례 보기'}
         aria-expanded={expanded}
-        className="bg-background/95 shadow-[var(--shadow-soft)] backdrop-blur"
+        className="bg-background/95 shadow-soft backdrop-blur"
       >
         {expanded ? <X strokeWidth={2} /> : <List strokeWidth={2} />}
       </Button>

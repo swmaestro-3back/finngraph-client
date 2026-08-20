@@ -11,7 +11,7 @@ export function GraphTooltip({ ref }: { ref: RefObject<HTMLDivElement | null> })
     <div
       ref={ref}
       role="tooltip"
-      className="pointer-events-none fixed z-[1000] max-w-[280px] rounded-lg border border-border bg-background/95 px-3 py-2 text-xs text-foreground opacity-0 shadow-[var(--shadow-soft)] transition-opacity duration-100"
+      className="pointer-events-none fixed z-[1000] max-w-[280px] rounded-lg border border-border bg-background/95 px-3 py-2 text-xs text-foreground opacity-0 shadow-soft transition-opacity duration-100"
     />
   )
 }

@@ -11,6 +11,7 @@ import {
   type GraphData,
   type EntityType,
   type Predicate,
+  PREDICATE_LABELS,
 } from '@/data/graphTypes'
 import {
   buildAdjacency,
@@ -258,7 +259,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     const linkLabelText = linkLabel
       .append('text')
-      .text((d) => d.type)
+      .text((d) => PREDICATE_LABELS[d.type] ?? d.type)
       .attr('font-size', LINK_LABEL_FONT_SIZE)
       .attr('font-weight', 500)
       .attr('letter-spacing', 0.2)

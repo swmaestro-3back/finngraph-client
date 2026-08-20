@@ -92,17 +92,17 @@ export default function ThemeListPage() {
       {/* 타이틀 행 */}
       <div className="mb-3 flex items-end justify-between gap-4">
         <div className="flex items-baseline gap-[9px]">
-          <h1 className="text-[32px] font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
+          <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
             테마 목록
           </h1>
-          <span className="text-[13px] text-muted-foreground">
+          <span className="text-body text-muted-foreground">
             전체 {ALL_ROWS.length}개 테마 · 2026-07-31 기준
           </span>
         </div>
       </div>
 
       {/* 테마 목록 카드 */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-background">
+      <div className="card-surface overflow-hidden">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="min-w-[880px]">
             {/* 컬럼 헤더 */}
@@ -123,13 +123,13 @@ export default function ThemeListPage() {
                 className={cn(
                   GRID,
                   'w-full cursor-pointer border-b border-surface-inset px-4 py-[9px] text-left hover:bg-muted',
-                  index % 2 === 1 && 'bg-[rgba(0,0,0,0.016)]',
+                  index % 2 === 1 && 'bg-foreground/[0.016]',
                 )}
               >
-                <span className="font-mono text-[11px] leading-[1.4] text-[#a8acb3]">
+                <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">
                   {(page - 1) * PAGE_SIZE + index + 1}
                 </span>
-                <span className="overflow-hidden text-[13px] whitespace-nowrap text-ellipsis text-foreground">
+                <span className="overflow-hidden text-body whitespace-nowrap text-ellipsis text-foreground">
                   {row.name}
                 </span>
                 {(['change', 'w1', 'm1', 'm3'] as const).map((key) => (
@@ -149,7 +149,7 @@ export default function ThemeListPage() {
                 <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
                   {row.stockCount}종목
                 </span>
-                <span className="overflow-hidden text-[11px] whitespace-nowrap text-ellipsis text-muted-foreground">
+                <span className="overflow-hidden text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
                   {row.topStocks}
                 </span>
               </button>
@@ -202,7 +202,7 @@ export default function ThemeListPage() {
         </PaginationContent>
       </Pagination>
 
-      <p className="mt-5 text-[11px] text-muted-foreground">
+      <p className="mt-5 text-caption text-muted-foreground">
         표시된 시세·등락률·거래대금은 데모용 예시 데이터입니다. 투자 판단의 근거로 사용할 수
         없습니다.
       </p>

@@ -26,7 +26,7 @@ export function NodeDetail({ node, connectedNodes, onNodeSelect }: Props) {
       </h2>
 
       {node.data.description && (
-        <p className="mt-0 mb-4 text-[13px] leading-relaxed text-[#5b616e]">
+        <p className="mt-0 mb-4 text-body leading-relaxed text-foreground-secondary">
           {node.data.description}
         </p>
       )}
@@ -53,7 +53,7 @@ export function NodeDetail({ node, connectedNodes, onNodeSelect }: Props) {
               />
             ))}
             {rest > 0 && (
-              <span className="self-center text-[11px] text-muted-foreground">+{rest}</span>
+              <span className="self-center text-caption text-muted-foreground">+{rest}</span>
             )}
           </div>
         </Section>

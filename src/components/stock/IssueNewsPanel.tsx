@@ -40,7 +40,7 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
     selected ?? all
 
   return (
-    <section className="flex flex-col rounded-3xl border border-border bg-background p-5">
+    <section className="flex flex-col card-surface p-5">
       <div className="mb-[9px] flex min-h-[30px] flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">
           {selected ? selected.date : `${days[0].date} ~ ${days[days.length - 1].date}`}
@@ -49,14 +49,14 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
           <button
             type="button"
             onClick={onClearSelection}
-            className="cursor-pointer text-[11px] font-medium text-primary"
+            className="cursor-pointer text-caption font-medium text-primary"
           >
             전체 보기
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-[46px_1fr_124px] gap-3 border-b border-border pb-1.5 text-[11px] text-muted-foreground">
+      <div className="grid grid-cols-[46px_1fr_124px] gap-3 border-b border-border pb-1.5 text-caption text-muted-foreground">
         <span>성격</span>
         <span>
           {items.length}건 · 호재 {good} / 악재 {bad}
@@ -65,7 +65,7 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
       </div>
 
       {items.length === 0 ? (
-        <p className="py-6 text-center text-[13px] text-muted-foreground">
+        <p className="py-6 text-center text-body text-muted-foreground">
           이 기간에 수집된 뉴스가 없습니다. 다른 칸을 눌러 보세요.
         </p>
       ) : (
@@ -79,14 +79,14 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
             >
               <span
                 className={cn(
-                  'w-fit rounded-[4px] bg-muted px-1.5 py-[3px] text-[10px] font-semibold',
+                  'w-fit rounded-[4px] bg-muted px-1.5 py-[3px] text-micro font-semibold',
                   item.kind === '호재' ? 'text-stock-up' : 'text-stock-down',
                 )}
               >
                 {item.kind}
               </span>
               <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
-              <span className="truncate text-right text-[11px] text-muted-foreground">
+              <span className="truncate text-right text-caption text-muted-foreground">
                 {item.meta}
               </span>
             </button>
