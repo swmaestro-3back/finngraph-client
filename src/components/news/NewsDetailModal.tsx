@@ -64,7 +64,7 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
       <DialogContent className="grid h-[min(90vh,860px)] grid-rows-[auto_minmax(0,1fr)] gap-0 p-0 sm:max-w-[1080px]">
         {/* 헤더 — 스크롤해도 어떤 기사를 보고 있는지 유지된다 */}
         <div className="border-b border-border px-6 pt-5 pb-4">
-          <DialogDescription className="text-[11px]">
+          <DialogDescription className="text-caption">
             {pressOf(news.url)} · {formatRelativeTime(news.collectedAt)} 수집
           </DialogDescription>
 
@@ -86,7 +86,7 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
         {/* 본문 */}
         <div ref={bodyRef} className="overflow-y-auto px-6 py-5">
           <Section title="요약">
-            <p className="text-[13px] leading-[1.75] text-foreground [text-wrap:pretty]">
+            <p className="text-body leading-[1.75] text-foreground [text-wrap:pretty]">
               {news.summary}
             </p>
           </Section>

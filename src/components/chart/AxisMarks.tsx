@@ -39,7 +39,7 @@ export function DateTicks({ labels, className }: { labels: string[]; className?:
       {labels.map((label, k) => (
         <span
           key={k}
-          className="absolute font-mono text-[10px] font-medium text-muted-foreground"
+          className="absolute font-mono text-micro font-medium text-muted-foreground"
           style={{ left: `${DATE_TICK_POSITIONS[k]}%` }}
         >
           {label}

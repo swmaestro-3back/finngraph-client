@@ -15,9 +15,9 @@ import { syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/li
 import { cn } from '@/lib/utils'
 
 // 투자자별 수급 4카드 (design-specs/stock-detail.md §1-6)
-const PRIMARY = '#0052ff'
+const PRIMARY = 'var(--primary)'
 
-const axisTick = { fontSize: 9, fill: '#7c828a', fontFamily: 'JetBrains Mono Variable, monospace' }
+const axisTick = { fontSize: 9, fill: 'var(--muted-foreground)', fontFamily: 'JetBrains Mono Variable, monospace' }
 
 // 4카드가 같은 거래일 축을 쓴다 — 한 곳을 짚으면 나머지도 같은 날을 가리킨다
 const SYNC_ID = 'supply-demand'
@@ -39,8 +39,8 @@ function SupplyTooltip({ active, payload, label, kind }: SupplyTooltipProps) {
       ? `${value.toFixed(2)}%`
       : `${value >= 0 ? '+' : '−'}${Math.abs(value).toLocaleString('ko-KR')}만주`
   return (
-    <div className="pointer-events-none rounded-xl border border-border bg-background px-3 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-      <div className="mb-0.5 font-mono text-[10px] text-muted-foreground">{label}</div>
+    <div className="pointer-events-none rounded-xl border border-border bg-background px-3 py-2 shadow-soft">
+      <div className="mb-0.5 font-mono text-micro text-muted-foreground">{label}</div>
       <div
         className={cn(
           'font-mono text-xs font-medium',
@@ -65,9 +65,9 @@ function SupplyCard({
   children: React.ReactElement
 }) {
   return (
-    <div className="rounded-3xl border border-border bg-background p-5">
+    <div className="card-surface p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
+        <h3 className="text-body font-semibold text-foreground">{title}</h3>
         <span className={cn('font-mono text-xs font-medium text-foreground', metaColorClass)}>
           {meta}
         </span>
@@ -89,8 +89,8 @@ function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: Synced
       syncId={SYNC_ID}
       onClick={sync.onChartClick}
     >
-      <CartesianGrid vertical={false} stroke="#eaeef4" strokeDasharray="3 3" />
-      <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: '#dee5ee' }} interval={8} />
+      <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
+      <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={8} />
       <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}만`} width={38} />
       {syncMarks(sync, {
         kind: 'bar',
@@ -142,8 +142,8 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
             syncId={SYNC_ID}
             onClick={sync.onChartClick}
           >
-            <CartesianGrid vertical={false} stroke="#eaeef4" strokeDasharray="3 3" />
-            <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: '#dee5ee' }} interval={8} />
+            <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
+            <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={8} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v.toFixed(1)}%`} domain={['dataMin - 0.5', 'dataMax + 0.5']} width={44} />
             {syncMarks(sync, {
               kind: 'line',

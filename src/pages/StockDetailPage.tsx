@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChartColumn, ChevronUp, Newspaper, Table2, Users } from 'lucide-react'
+import { ChevronUp } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { AnnualCharts } from '@/components/stock/AnnualCharts'
 import { FinancialTable } from '@/components/stock/FinancialTable'
@@ -85,11 +85,11 @@ export default function StockDetailPage() {
         <Link to={back.to} className="text-xs font-semibold leading-none text-primary">
           ← {back.label}
         </Link>
-        <span className="text-[11px] text-[#a8acb3]">/</span>
+        <span className="text-caption text-foreground-tertiary">/</span>
         <Link
           to={`/theme/${stock.themeId}`}
           state={fromState(pathname)}
-          className="text-[11px] text-muted-foreground hover:text-primary hover:underline"
+          className="text-caption text-muted-foreground hover:text-primary hover:underline"
         >
           {stock.themeName}
         </Link>
@@ -97,11 +97,11 @@ export default function StockDetailPage() {
 
       {/* 종목 헤더 */}
       <div className="mb-3 flex flex-wrap items-baseline gap-[9px]">
-        <h1 className="text-[32px] font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
+        <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
           {stock.name}
         </h1>
-        <span className="font-mono text-[13px] text-muted-foreground">{stock.code}</span>
-        <span className="font-mono text-[22px] font-medium tracking-[-0.5px] text-foreground">
+        <span className="font-mono text-body text-muted-foreground">{stock.code}</span>
+        <span className="font-mono text-title font-medium tracking-[-0.5px] text-foreground">
           {formatPrice(stock.price)}
         </span>
         <span
@@ -115,7 +115,7 @@ export default function StockDetailPage() {
       <div className="mb-4 grid grid-cols-2 gap-[9px] md:grid-cols-4">
         {statTiles.map((tile) => (
           <div key={tile.label} className="rounded-xl bg-muted px-3 py-[9px]">
-            <div className="text-[11px] text-muted-foreground">{tile.label}</div>
+            <div className="text-caption text-muted-foreground">{tile.label}</div>
             <div className="font-mono text-sm font-medium leading-[1.3] text-foreground">
               {tile.value}
             </div>
@@ -140,7 +140,6 @@ export default function StockDetailPage() {
         <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
           이슈 타임라인
         </h2>
-        <Newspaper className="size-3.5 text-[#8b99af]" />
       </div>
       <IssueNewsPanel
         days={issues}
@@ -159,7 +158,6 @@ export default function StockDetailPage() {
         <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
           투자자별 수급
         </h2>
-        <Users className="size-3.5 text-[#8b99af]" />
       </div>
       <SupplyDemandCharts points={supply} />
 
@@ -167,7 +165,6 @@ export default function StockDetailPage() {
       <div className="mb-[9px] mt-7 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">연간 실적</h2>
-          <ChartColumn className="size-3.5 text-[#8b99af]" />
         </div>
         <button
           type="button"
@@ -187,11 +184,10 @@ export default function StockDetailPage() {
         <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
           재무 지표 요약
         </h2>
-        <Table2 className="size-3.5 text-[#8b99af]" />
       </div>
       <FinancialTable />
 
-      <p className="mt-5 text-[11px] text-muted-foreground">
+      <p className="mt-5 text-caption text-muted-foreground">
         표시된 시세·재무·수급 데이터는 데모용 예시입니다. 투자 판단의 근거로 사용할 수
         없습니다.
       </p>

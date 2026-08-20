@@ -151,15 +151,15 @@ export function GraphView() {
         </SidebarContent>
         <SidebarFooter className="p-4 pt-3">
           <div className="mt-6 rounded-xl border border-border bg-surface-inset p-3">
-            <div className="mb-1 text-[11px] font-semibold tracking-[0.5px] text-muted-foreground uppercase">
+            <div className="mb-1 text-caption font-semibold tracking-[0.5px] text-muted-foreground">
               통계
             </div>
-            <div className="text-[13px] font-medium text-foreground">
+            <div className="text-body font-medium text-foreground">
               노드 <span className="font-mono">{data.metadata.stats.total_nodes}</span> · 관계{' '}
               <span className="font-mono">{data.metadata.stats.total_edges}</span>
             </div>
             {data.metadata.center && (
-              <div className="mt-1 text-[11px] text-muted-foreground">
+              <div className="mt-1 text-caption text-muted-foreground">
                 중심: {data.metadata.center}
               </div>
             )}

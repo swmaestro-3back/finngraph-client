@@ -16,10 +16,10 @@ export function Section({
   return (
     <div className="mb-4">
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
-        <h4 className="text-[11px] font-semibold tracking-[0.4px] text-muted-foreground uppercase">
+        <h4 className="text-caption font-semibold tracking-[0.4px] text-muted-foreground">
           {title}
         </h4>
-        {meta && <span className="text-[11px] text-muted-foreground">{meta}</span>}
+        {meta && <span className="text-caption text-muted-foreground">{meta}</span>}
       </div>
       {children}
     </div>
@@ -61,7 +61,7 @@ export function EntityChip({
   )
   const className = cn(
     'h-auto max-w-full gap-1.5 rounded-full',
-    size === 'md' ? 'px-3 py-[5px] text-[13px] font-semibold text-foreground' : 'px-2.5 py-1 text-[11px]',
+    size === 'md' ? 'px-3 py-[5px] text-body font-semibold text-foreground' : 'px-2.5 py-1 text-caption',
     onClick && 'cursor-pointer hover:bg-surface-inset',
   )
 

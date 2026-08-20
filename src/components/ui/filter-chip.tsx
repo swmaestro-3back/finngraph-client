@@ -10,7 +10,7 @@ interface FilterChipProps extends Omit<ComponentProps<'button'>, 'type'> {
 }
 
 const ACTIVE_TONE = {
-  ink: 'border-foreground bg-foreground text-white',
+  ink: 'border-foreground bg-foreground text-background',
   primary: 'border-primary bg-primary text-primary-foreground',
 } as const
 
@@ -21,7 +21,7 @@ export function FilterChip({ active = false, tone = 'ink', className, ...props }
       aria-pressed={active}
       className={cn(
         'cursor-pointer rounded border px-3 py-[7px] text-xs font-medium leading-none',
-        active ? ACTIVE_TONE[tone] : 'border-border bg-transparent text-[#5b616e]',
+        active ? ACTIVE_TONE[tone] : 'border-border bg-transparent text-foreground-secondary',
         className,
       )}
       {...props}

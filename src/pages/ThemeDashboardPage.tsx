@@ -27,7 +27,7 @@ export default function ThemeDashboardPage() {
       {/* 헤더 행: 장마감 뱃지 + 타임스탬프 / 표시 테마 수 pill */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-[9px]">
-          <span className="flex h-7 items-center rounded-md bg-[#fdeaec] px-2.5 text-xs font-semibold whitespace-nowrap text-stock-up">
+          <span className="flex h-7 items-center rounded-md bg-stock-up-soft px-2.5 text-xs font-semibold whitespace-nowrap text-stock-up">
             장마감
           </span>
           <span className="font-mono text-base font-medium tracking-[-0.4px] whitespace-nowrap text-foreground">
@@ -35,7 +35,7 @@ export default function ThemeDashboardPage() {
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="mr-[3px] text-[11px] whitespace-nowrap text-muted-foreground">
+          <span className="mr-[3px] text-caption whitespace-nowrap text-muted-foreground">
             표시 테마 수
           </span>
           {THEME_COUNTS.map((count) => (
@@ -72,7 +72,7 @@ export default function ThemeDashboardPage() {
         onOpenChange={(open) => !open && setOpenNewsId(null)}
       />
 
-      <p className="mt-5 text-[11px] text-muted-foreground">
+      <p className="mt-5 text-caption text-muted-foreground">
         표시된 시세·등락률·뉴스는 데모용 예시 데이터입니다. 투자 판단의 근거로 사용할 수
         없습니다.
       </p>

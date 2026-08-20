@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockIdentity } from '@/components/table/StockIdentity'
@@ -59,7 +60,7 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
   const hasMore = sorted.length > VISIBLE_ROWS
 
   return (
-    <section className="mt-4 rounded-3xl border border-border bg-background p-5">
+    <section className="mt-4 card-surface p-5">
       <div className="mb-[9px] flex items-center justify-between gap-4">
         <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">관련 종목</h2>
         <div className="flex gap-1.5">
@@ -82,7 +83,7 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
             sortKey={sortKey}
             sortDesc={sortDesc}
             onSort={handleSort}
-            className={cn(GRID, 'rounded-lg bg-muted py-1.5 text-xs text-[#5b616e]')}
+            className={cn(GRID, 'rounded-lg bg-muted py-1.5 text-xs text-foreground-secondary')}
             cellClassName=""
             inactiveClassName=""
           />
@@ -103,24 +104,24 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
                 market={stock.market}
                 className="pl-[9px]"
               />
-              <span className="text-right font-mono text-[13px] font-medium text-foreground">
+              <span className="text-right font-mono text-body font-medium text-foreground">
                 {formatPrice(stock.price)}
               </span>
               <span
                 className={cn(
-                  'text-right font-mono text-[13px] font-medium',
+                  'text-right font-mono text-body font-medium',
                   changeColorClass(stock.change),
                 )}
               >
                 {formatChange(stock.change)}
               </span>
-              <span className="text-right font-mono text-xs text-[#5b616e]">
+              <span className="text-right font-mono text-xs text-foreground-secondary">
                 {formatAmount(stock.tradingValue)}
               </span>
-              <span className="text-right font-mono text-xs text-[#5b616e]">
+              <span className="text-right font-mono text-xs text-foreground-secondary">
                 {formatAmount(stock.marketCap)}
               </span>
-              <span className="pl-3 text-xs leading-[1.55] text-[#5b616e] [text-wrap:pretty]">
+              <span className="pl-3 text-xs leading-[1.55] text-foreground-secondary [text-wrap:pretty]">
                 {stock.reason}
               </span>
             </button>
@@ -133,9 +134,10 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
           <button
             type="button"
             onClick={() => setMoreOpen((open) => !open)}
-            className="cursor-pointer text-xs font-semibold text-[#5b616e]"
+            className="inline-flex cursor-pointer items-center gap-0.5 text-xs font-semibold text-foreground-secondary"
           >
-            {moreOpen ? '접기 ⌃' : '더보기 ⌄'}
+            {moreOpen ? '접기' : '더보기'}
+            <ChevronDown className={cn('size-3.5 transition-transform', moreOpen && 'rotate-180')} />
           </button>
         </div>
       )}

@@ -20,21 +20,21 @@ import {
 } from '@/lib/chartSync'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 
-// 스크린샷 실측 팔레트 (design-specs/stock-detail.md §0-4)
-const TEAL = '#1F897D'
-const GRAY = '#8B99AF'
-const PURPLE = '#874EF5'
-const LIGHT_PURPLE = '#A27EF9'
-const PINK = '#F6657A'
-const GRID = '#EAEEF4'
-const GRID_EDGE = '#DEE5EE'
+// 차트 계열색 — index.css의 --chart-* 토큰을 그대로 소비한다 (SVG 속성에서 var() 해석됨)
+const TEAL = 'var(--chart-1)'
+const GRAY = 'var(--chart-2)'
+const PURPLE = 'var(--chart-3)'
+const LIGHT_PURPLE = 'var(--chart-3-soft)'
+const PINK = 'var(--chart-4)'
+const GRID = 'var(--chart-grid)'
+const GRID_EDGE = 'var(--border)'
 
 const data = annualFinancials.map((f) => ({
   ...f,
   yearLabel: f.estimated ? `${f.year}E` : String(f.year),
 }))
 
-const axisTick = { fontSize: 10, fill: '#7c828a', fontFamily: 'JetBrains Mono Variable, monospace' }
+const axisTick = { fontSize: 10, fill: 'var(--muted-foreground)', fontFamily: 'JetBrains Mono Variable, monospace' }
 
 // 6개 카드가 같은 연도 축을 쓴다 — 한 곳을 짚으면 나머지도 같은 해를 가리킨다
 const SYNC_ID = 'annual-financials'
@@ -79,14 +79,14 @@ function AnnualTooltip({
   if (!active || rows.length === 0) return null
 
   return (
-    <div className="pointer-events-none min-w-[148px] rounded-xl border border-border bg-background px-3 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-      <div className="mb-1 font-mono text-[10px] text-muted-foreground">{label}</div>
+    <div className="pointer-events-none min-w-[148px] rounded-xl border border-border bg-background px-3 py-2 shadow-soft">
+      <div className="mb-1 font-mono text-micro text-muted-foreground">{label}</div>
       {rows.map((p) => {
         const metric = METRICS[String(p.dataKey)]
         return (
           <div
             key={String(p.dataKey)}
-            className="flex items-center justify-between gap-3 text-[11px] leading-[1.7]"
+            className="flex items-center justify-between gap-3 text-caption leading-[1.7]"
           >
             <span className="flex items-center gap-1.5 text-muted-foreground">
               <span
@@ -138,12 +138,12 @@ function MetricCard({
   children: React.ReactElement
 }) {
   return (
-    <div className="rounded-3xl border border-[#dee5ee] bg-background p-5">
+    <div className="card-surface p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-[13px] font-semibold leading-[1.3] text-foreground">{title}</h3>
+        <h3 className="text-body font-semibold leading-[1.3] text-foreground">{title}</h3>
         <div className="flex items-center gap-[9px]">
           {legend.map((item) => (
-            <span key={item.label} className="flex items-center gap-1 text-[11px] text-[#5b616e]">
+            <span key={item.label} className="flex items-center gap-1 text-caption text-foreground-secondary">
               <span
                 className="inline-block size-2 rounded-[2px]"
                 style={{ backgroundColor: item.color }}
@@ -154,11 +154,11 @@ function MetricCard({
         </div>
       </div>
       {(axisCaptionLeft || axisCaptionRight) && (
-        <div className="mb-1 flex items-center justify-between text-[10px] leading-none">
-          <span style={{ color: axisCaptionLeft?.color ?? '#7c828a' }}>
+        <div className="mb-1 flex items-center justify-between text-micro leading-none">
+          <span style={{ color: axisCaptionLeft?.color ?? 'var(--muted-foreground)' }}>
             {axisCaptionLeft?.text}
           </span>
-          <span style={{ color: axisCaptionRight?.color ?? '#7c828a' }}>
+          <span style={{ color: axisCaptionRight?.color ?? 'var(--muted-foreground)' }}>
             {axisCaptionRight?.text}
           </span>
         </div>

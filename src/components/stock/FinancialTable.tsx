@@ -95,14 +95,14 @@ export const FinancialTable = memo(function FinancialTable() {
   )
 
   return (
-    <div className="rounded-3xl border border-[#dee5ee] bg-background px-5 pb-5 pt-3">
+    <div className="card-surface px-5 pb-5 pt-3">
       {/* 색상 강조 옵션 */}
       <div
         role="group"
         aria-label="색상 강조 옵션"
         className="mb-2.5 flex flex-wrap items-center justify-end gap-1.5"
       >
-        <span className="mr-[3px] text-[11px] whitespace-nowrap text-muted-foreground">
+        <span className="mr-[3px] text-caption whitespace-nowrap text-muted-foreground">
           색상 강조
         </span>
         {MODES.map((option) => (
@@ -123,7 +123,7 @@ export const FinancialTable = memo(function FinancialTable() {
               {option.legend.map((item) => (
                 <span
                   key={item.text}
-                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                  className="flex items-center gap-1.5 text-caption text-muted-foreground"
                 >
                   <span className={cn('size-2.5 shrink-0 rounded-[3px]', item.swatchClass)} />
                   {item.text}
@@ -137,16 +137,16 @@ export const FinancialTable = memo(function FinancialTable() {
       <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="min-w-[1080px]">
           {/* 헤더 행 */}
-          <div className="grid grid-cols-[84px_repeat(14,minmax(44px,1fr))] gap-1 rounded-t-lg border-b border-[#dee5ee] bg-[#eff3f8] px-1 py-2">
-            <span className="pl-1 text-[11px] text-[#5b616e]">항목</span>
+          <div className="grid grid-cols-[84px_repeat(14,minmax(44px,1fr))] gap-1 rounded-t-lg border-b border-border bg-surface-inset px-1 py-2">
+            <span className="pl-1 text-caption text-foreground-secondary">항목</span>
             {annualFinancials.map((f) => (
               <span
                 key={f.year}
-                className="flex items-center justify-end gap-1 pr-1 text-right font-mono text-[11px] font-medium text-[#121626]"
+                className="flex items-center justify-end gap-1 pr-1 text-right font-mono text-caption font-medium text-foreground"
               >
                 {f.year}
                 {f.estimated && (
-                  <span className="inline-flex size-[14px] items-center justify-center rounded-[4px] bg-[#fcf2bf] text-[9px] font-semibold text-[#ae4400]">
+                  <span className="inline-flex size-[14px] items-center justify-center rounded-[4px] bg-accent-warm-bg text-[9px] font-semibold text-accent-warm">
                     E
                   </span>
                 )}
@@ -158,11 +158,11 @@ export const FinancialTable = memo(function FinancialTable() {
             <div
               key={row.label}
               className={cn(
-                'grid grid-cols-[84px_repeat(14,minmax(44px,1fr))] items-center gap-1 rounded-md border-b border-[#eef2f7] px-1 py-[7px] hover:bg-[#f0f4f9]',
-                rowIndex % 2 === 0 && 'bg-[#f7f9fb]',
+                'grid grid-cols-[84px_repeat(14,minmax(44px,1fr))] items-center gap-1 rounded-md border-b border-secondary px-1 py-[7px] hover:bg-surface-inset',
+                rowIndex % 2 === 0 && 'bg-muted',
               )}
             >
-              <span className="pl-1 text-[11px] font-semibold leading-[1.4] text-foreground">
+              <span className="pl-1 text-caption font-semibold leading-[1.4] text-foreground">
                 {row.label}
               </span>
               {annualFinancials.map((f, colIndex) => {
@@ -173,12 +173,12 @@ export const FinancialTable = memo(function FinancialTable() {
                   <span
                     key={f.year}
                     className={cn(
-                      'rounded-[4px] py-[3px] pr-1 text-right font-mono text-[11px] font-medium leading-[1.4]',
+                      'rounded-[4px] py-[3px] pr-1 text-right font-mono text-caption font-medium leading-[1.4]',
                       text === '-'
-                        ? 'text-[#83868e]'
+                        ? 'text-muted-foreground'
                         : highlighted
-                          ? 'font-semibold text-[#ae4400]'
-                          : 'text-[#2e394d]',
+                          ? 'font-semibold text-accent-warm'
+                          : 'text-foreground-numeric',
                       // 추세 톤이 있으면 배경 + 숫자 색을 덮어쓴다
                       tone && `${tone} font-semibold`,
                     )}

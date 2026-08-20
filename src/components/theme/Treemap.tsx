@@ -95,6 +95,7 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
         const dir = theme.change >= 0 ? 'up' : 'down'
         const t = Math.abs(theme.change) / (dir === 'up' ? maxUp : maxDown)
         const { bg, k } = mixColor(dir, t)
+        // 연한 셀 위에서는 STOPS 계열의 최심색 근처로 눌러 대비를 확보한다 (연속 스케일 전용, 토큰 아님)
         const textColor = k > 0.42 ? '#ffffff' : dir === 'up' ? '#7a0f18' : '#0b2a6b'
         const isSelected = theme.id === selectedId
 
@@ -120,7 +121,7 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
               color: textColor,
               gap: small ? 0 : 2,
               padding: '4px 6px',
-              boxShadow: isSelected ? 'inset 0 0 0 3px #0a0b0d' : undefined,
+              boxShadow: isSelected ? 'inset 0 0 0 3px var(--foreground)' : undefined,
             }}
           >
             <span

@@ -13,10 +13,10 @@ interface StockIdentityProps {
 export function StockIdentity({ name, code, market, className }: StockIdentityProps) {
   return (
     <span className={cn('flex min-w-0 items-center gap-2 overflow-hidden', className)}>
-      <span className="overflow-hidden text-[13px] whitespace-nowrap text-ellipsis text-foreground">
+      <span className="overflow-hidden text-body whitespace-nowrap text-ellipsis text-foreground">
         {name}
       </span>
-      <span className="font-mono text-[10px] leading-[1.4] text-[#a8acb3]">{code}</span>
+      <span className="font-mono text-micro leading-[1.4] text-foreground-tertiary">{code}</span>
       <span
         className={cn(
           'shrink-0 rounded px-1.5 py-0.5 text-[9px] tracking-[0.4px] text-muted-foreground',

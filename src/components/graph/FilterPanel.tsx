@@ -43,7 +43,7 @@ export function FilterPanel({
 
   return (
     <div className="px-1">
-      <h3 className="mb-2 text-[13px] font-semibold tracking-[-0.2px] text-foreground">
+      <h3 className="mb-2 text-body font-semibold tracking-[-0.2px] text-foreground">
         엔티티 종류
       </h3>
       <div className="flex flex-col gap-0.5">
@@ -60,10 +60,10 @@ export function FilterPanel({
                 className="size-2.5 shrink-0 rounded-full"
                 style={{ background: NODE_COLORS[type] }}
               />
-              <span className={cn('text-[13px]', on ? 'text-foreground' : 'text-muted-foreground')}>
+              <span className={cn('text-body', on ? 'text-foreground' : 'text-muted-foreground')}>
                 {ENTITY_LABELS[type]}
               </span>
-              <span className="ml-auto rounded-full bg-surface-inset px-2 py-px font-mono text-[11px] text-muted-foreground">
+              <span className="ml-auto rounded-full bg-surface-inset px-2 py-px font-mono text-caption text-muted-foreground">
                 {typeCounts[type] ?? 0}
               </span>
             </label>
@@ -72,7 +72,7 @@ export function FilterPanel({
       </div>
 
       <div className="mt-5 mb-2 flex items-center justify-between">
-        <h3 className="text-[13px] font-semibold tracking-[-0.2px] text-foreground">관계</h3>
+        <h3 className="text-body font-semibold tracking-[-0.2px] text-foreground">관계</h3>
         <Button
           variant="link"
           size="xs"
@@ -96,7 +96,7 @@ export function FilterPanel({
               className={cn('inline-flex items-center gap-1.5 rounded-full', count === 0 && 'opacity-45')}
             >
               {PREDICATE_LABELS[predicate]}
-              <span className={cn('font-mono text-[10px]', on ? 'text-primary-foreground/85' : 'text-muted-foreground')}>
+              <span className={cn('font-mono text-micro', on ? 'text-primary-foreground/85' : 'text-muted-foreground')}>
                 {count}
               </span>
             </FilterChip>

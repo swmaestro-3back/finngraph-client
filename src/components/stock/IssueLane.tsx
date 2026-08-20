@@ -92,7 +92,7 @@ export function IssueLane({
     <div className={AXIS_GUTTER}>
       <div className="mb-1.5 flex items-baseline justify-between">
         <span className="text-xs font-semibold text-foreground">이슈</span>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-caption text-muted-foreground">
           위 호재 · 아래 악재 · 막대를 누르면 아래에 그 구간 뉴스가 열립니다
         </span>
       </div>

@@ -94,7 +94,7 @@ export function SearchBar({ onSelectResult, nodes }: Props) {
         <div
           id={LISTBOX_ID}
           role="listbox"
-          className="absolute top-[calc(100%+4px)] right-0 left-0 z-100 max-h-80 overflow-y-auto rounded-xl border border-border bg-background shadow-[var(--shadow-soft)]"
+          className="absolute top-[calc(100%+4px)] right-0 left-0 z-100 max-h-80 overflow-y-auto rounded-xl border border-border bg-background shadow-soft"
         >
           {results.map((n, i) => (
             <div
@@ -115,8 +115,8 @@ export function SearchBar({ onSelectResult, nodes }: Props) {
                 className="size-2.5 shrink-0 rounded-full"
                 style={{ background: NODE_COLORS[n.type] }}
               />
-              <span className="text-[13px] font-semibold text-foreground">{n.label}</span>
-              <span className="ml-auto text-[11px] text-muted-foreground">
+              <span className="text-body font-semibold text-foreground">{n.label}</span>
+              <span className="ml-auto text-caption text-muted-foreground">
                 {ENTITY_LABELS[n.type]}
               </span>
             </div>
