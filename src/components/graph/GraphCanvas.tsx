@@ -210,11 +210,18 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     }
 
     const g = svg.append('g')
+    let zoomK = 1
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 8])
       .on('zoom', (event) => {
         g.attr('transform', event.transform)
+        // 서술어 라벨은 가까이 봐야 읽히므로 줌 레벨로 켜고 끈다(LOD).
+        // 하이라이트 중엔 paint()가 관련 라벨만 남기므로 건드리지 않는다.
+        zoomK = event.transform.k
+        if (!highlightRef.current) {
+          linkLabel.attr('opacity', zoomK >= LINK_LABEL_MIN_ZOOM ? 1 : 0)
+        }
         // sourceEvent가 있으면 휠/드래그 등 사용자 제스처
         if (event.sourceEvent) userMovedRef.current = true
       })
@@ -254,6 +261,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .data(links)
       .join('g')
       .attr('pointer-events', 'none')
+      // 초기(전체 보기) 배율에선 숨김 — 줌인 또는 하이라이트로 드러난다
+      .attr('opacity', 0)
 
     const linkLabelPlate = linkLabel.append('rect').attr('fill', T.canvas).attr('rx', 2)
 
@@ -294,21 +303,26 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('cursor', 'pointer')
 
     // === NODE LABELS (원 안쪽) ===
+    // 이름이 원에 안 들어가면 폰트를 9px까지 줄이고, 그래도 안 되면 두 줄로 감싼다.
+    // 넘치는 줄만 말줄임 — 라벨은 항상 원 안에 머문다 (전체 이름은 툴팁·상세 패널에서).
+    const labelFontSize = new Map<string, number>()
     const label = g
       .append('g')
       .selectAll<SVGTextElement, GraphNode>('text')
       .data(nodes)
       .join('text')
-      .attr('font-size', (d) => nodeFontSize(radius(d)))
       .attr('font-weight', 600)
       .attr('fill', (d) => NODE_TEXT_COLORS[d.type])
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('pointer-events', 'none')
-      // 실제 렌더 폭을 재서 원 안에 들어갈 만큼만 남긴다 (전체 이름은 툴팁·상세 패널에서)
       .each(function (d) {
-        fitLabel(this, d.label, labelMaxWidth(radius(d)))
+        labelFontSize.set(
+          d.id,
+          layoutNodeLabel(this, d.label, labelMaxWidth(radius(d)), nodeFontSize(radius(d))),
+        )
       })
+      .attr('font-size', (d) => labelFontSize.get(d.id)!)
 
     // ===== 하이라이트 =====
     // 노드 강조·간선 강조·해제가 전부 이 한 경로를 지난다.
@@ -321,7 +335,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
           .attr('stroke-width', edgeWidth)
           .attr('marker-end', linkArrow)
         label.attr('opacity', 0.85)
-        linkLabel.attr('opacity', 1)
+        linkLabel.attr('opacity', zoomK >= LINK_LABEL_MIN_ZOOM ? 1 : 0)
         linkLabelText.attr('fill', T.muted)
         return
       }
@@ -522,7 +536,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
             segmentLength(seg(d)) >= (plateWidth.get(d.id) ?? 0) ? null : 'none',
           )
         node.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
-        label.attr('x', (d) => d.x!).attr('y', (d) => d.y!)
+        // 두 줄 라벨의 tspan(x=0 기준)이 함께 움직이도록 좌표는 transform으로 옮긴다
+        label.attr('transform', (d) => `translate(${d.x!},${d.y!})`)
 
         // 레이아웃이 잦아들면 그래프 전체가 보이도록 카메라를 한 번 맞춘다.
         // 사용자가 이미 확대/이동했거나 특정 요소를 선택한 상태면 건드리지 않는다.
@@ -649,6 +664,8 @@ const ARROW_HALF_WIDTH = 2.5
 
 /** 간선(과 화살촉)의 기본 불투명도 */
 const EDGE_OPACITY = 0.85
+/** 서술어 라벨이 보이기 시작하는 줌 배율 — 초기 전체 보기(fit 상한 1.2)에선 숨긴다 */
+const LINK_LABEL_MIN_ZOOM = 1.25
 
 /** 출발 엔티티 종류별 화살촉 마커 id */
 const arrowId = (type: EntityType) => `arrow-${type}`
@@ -706,22 +723,62 @@ function trimToNodeEdges(link: GraphLink, radius: (node: GraphNode) => number): 
   }
 }
 
-/**
- * 원 안에 들어갈 만큼만 라벨을 남기고 나머지는 말줄임한다.
- * 한글·영문·숫자의 글자 폭이 달라 글자 수로는 맞출 수 없어 실제 렌더 폭으로 줄인다.
- */
-function fitLabel(el: SVGTextElement, label: string, maxWidth: number) {
-  el.textContent = label
-  if (el.getComputedTextLength() <= maxWidth) return
-
-  let text = label
-  while (text.length > 1) {
-    text = text.slice(0, -1)
-    el.textContent = `${text}…`
-    if (el.getComputedTextLength() <= maxWidth) return
+/** 두 줄 분할점 — 공백이 있으면 중앙에서 가장 가까운 공백, 없으면 글자 수 절반 */
+function splitIndex(label: string): number {
+  const mid = label.length / 2
+  let best = -1
+  for (let i = 1; i < label.length - 1; i++) {
+    if (label[i] === ' ' && (best === -1 || Math.abs(i - mid) < Math.abs(best - mid))) best = i
   }
-  // 한 글자에 말줄임표까지도 안 들어가면 첫 글자만
-  el.textContent = label.slice(0, 1)
+  return best === -1 ? Math.ceil(mid) : best
+}
+
+/**
+ * 노드 이름을 원 안에 배치한다 — 한 줄(폰트 9px까지 축소) → 두 줄 → 말줄임 순서로 시도.
+ * 한글·영문 폭이 달라 글자 수가 아니라 실제 렌더 폭으로 판정한다.
+ * 좌표는 tick에서 transform으로 옮기므로 tspan은 x=0 기준. 사용한 폰트 크기를 돌려준다.
+ */
+function layoutNodeLabel(
+  el: SVGTextElement,
+  label: string,
+  maxWidth: number,
+  startSize: number,
+): number {
+  const widthAt = (text: string, size: number) => {
+    el.setAttribute('font-size', String(size))
+    el.textContent = text
+    return el.getComputedTextLength()
+  }
+
+  // 1) 한 줄 — 폰트를 줄여 본다 (nodeFontSize 최소치가 9 미만일 수 있어 하한을 함께 낮춘다)
+  const minSize = Math.min(9, startSize)
+  for (let size = startSize; size >= minSize; size--) {
+    if (widthAt(label, size) <= maxWidth) return size
+  }
+
+  // 2) 두 줄 분할, 그래도 넘치는 줄만 말줄임
+  const fitLine = (line: string): string => {
+    if (widthAt(line, minSize) <= maxWidth) return line
+    let text = line
+    while (text.length > 1) {
+      text = text.slice(0, -1)
+      if (widthAt(`${text}…`, minSize) <= maxWidth) return `${text}…`
+    }
+    return line.slice(0, 1)
+  }
+  const at = splitIndex(label)
+  const lines = [fitLine(label.slice(0, at).trim()), fitLine(label.slice(at).trim())]
+
+  el.textContent = ''
+  const SVG_NS = 'http://www.w3.org/2000/svg'
+  lines.forEach((line, i) => {
+    const tspan = document.createElementNS(SVG_NS, 'tspan')
+    tspan.setAttribute('x', '0')
+    tspan.setAttribute('dy', i === 0 ? '-0.55em' : '1.1em')
+    tspan.textContent = line
+    el.append(tspan)
+  })
+  return minSize
 }
 
 /** 간선 id로 양 끝 노드 id를 찾는다 */
