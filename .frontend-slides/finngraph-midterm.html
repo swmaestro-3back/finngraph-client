@@ -665,13 +665,18 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
   width:5px;height:5px;border-radius:50%;background:var(--pb-brand-300);}
 .chat .ans .src{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
   font-size:17px;color:var(--light);}
-/* 발견 블록 — 본문에 이름이 없는데 관계를 타고 찾아낸 기업.
-   슬라이드 26의 .ent-chips span.miss 와 같은 semantic-down 계열로 묶는다. */
-.chat .find{margin-top:14px;padding-top:13px;border-top:1px solid var(--border);}
-.chat .find-h{font-size:18px;font-weight:700;color:var(--pb-alert);margin-bottom:9px;}
-.chat .find-i{display:flex;gap:11px;align-items:baseline;padding:5px 0;}
-.chat .find-i b{flex:none;font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
-.chat .find-i span{font-size:17px;color:var(--muted);line-height:1.45;word-break:keep-all;}
+/* 종목 선택 블록 — 관계망이 "같이 볼 만한 기업"을 먼저 제안하는 단계.
+   리포트 결과가 아니라 범위를 고르는 자리라는 점이 임팩트 분석과의 경계다. */
+.chat .pick{background:var(--bg);border:1px solid var(--border);border-radius:16px;
+  padding:15px 20px 13px;}
+.chat .pick-h{font-size:17px;font-weight:700;color:var(--pb-brand-700);margin-bottom:10px;}
+.chat .pick-i{display:flex;gap:12px;align-items:center;padding:5px 0;}
+.chat .pick-i em{flex:none;width:20px;height:20px;border-radius:5px;font-style:normal;
+  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--pb-ink-300);color:transparent;}
+.chat .pick-i.on em{background:var(--pb-brand-600);border-color:var(--pb-brand-600);color:#fff;}
+.chat .pick-i b{flex:none;font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.chat .pick-i span{font-size:16px;color:var(--light);line-height:1.4;word-break:keep-all;}
 
 /* ===========================================
    핵심 기술 검증 (PART 3)
@@ -1781,7 +1786,7 @@ body.editing .edit-bar{display:flex;}
         <div class="card card--soon reveal r6">
           <div class="num">04 · 근거 수집<span class="soon-pill">개발 예정</span></div>
           <h3>AI 리서치</h3>
-          <p><b>판단은 하지 않는다. 판단할 거리를 찾아준다</b>.<br><br>종목과 기간을 지정하면 주가·수급·재무·뉴스·관계망을 정해진 형식으로 수집. 본문에 이름이 없는 연관 기업까지 근거 문장과 함께 제시.</p>
+          <p><b>판단은 하지 않는다. 판단할 거리를 찾아준다</b>.<br><br>종목과 기간을 지정하면 관계망이 <b>같이 볼 만한 기업</b>을 먼저 제안하고, 선택한 종목의 시세·수급·재무·이벤트·관계망을 고정 형식으로 수집. 직접 모으면 약 90분.</p>
         </div>
       </div>
     </div>
@@ -1932,19 +1937,20 @@ body.editing .edit-bar{display:flex;}
         <div class="pb-panel__body">
           <div class="chat">
             <div class="ask">삼성전자 · 2026.03 – 08 리서치</div>
-            <div class="steps"><i>수집</i> 주가 268거래일 · 수급 · 분기재무 · 관계 경로 110개</div>
+            <div class="pick">
+              <div class="pick-h">관계망 기준 · 같이 볼 만한 기업</div>
+              <div class="pick-i on"><em>✓</em><b>두산테스나</b><span>웨이퍼 테스트 공급</span></div>
+              <div class="pick-i on"><em>✓</em><b>디바이스</b><span>웨이퍼 세정장비 공급</span></div>
+              <div class="pick-i"><em>✓</em><b>동진쎄미켐</b><span>포토레지스트 공급</span></div>
+            </div>
+            <div class="steps"><i>수집</i> 3개 종목 × 5개 소스 · 고정 형식</div>
             <div class="ans">
-              <div class="rt">삼성전자 · 2026.03 – 2026.08</div>
+              <div class="rt">삼성전자 외 2종목 · 2026.03 – 2026.08</div>
               <ul>
-                <li>주가 · 수급 · 밸류에이션 변화</li>
-                <li>기간 내 이벤트 · 분기 실적 · 동종 비교</li>
+                <li>시세 · 수급 · 밸류에이션 변화</li>
+                <li>분기 실적 · 기간 내 이벤트 타임라인</li>
+                <li>공급망 관계망 · 선택 종목 간 비교</li>
               </ul>
-              <div class="find">
-                <div class="find-h">본문에 이름이 없는 연관 기업 3곳</div>
-                <div class="find-i"><b>두산테스나</b><span>매출 95%가 삼성전자 파운드리·시스템LSI에서 발생</span></div>
-                <div class="find-i"><b>디바이스</b><span>삼성전자와 297억원 규모 웨이퍼 세정장비 공급계약</span></div>
-                <div class="find-i"><b>동진쎄미켐</b><span>삼성전자 핵심 소재 업체군으로 분류</span></div>
-              </div>
               <div class="src">매수·매도 추천 ✕ &nbsp;·&nbsp; 주가 예측 ✕ &nbsp;·&nbsp; 없는 사실 생성 ✕</div>
             </div>
           </div>
@@ -1952,7 +1958,7 @@ body.editing .edit-bar{display:flex;}
         <div class="pb-panel__foot"></div>
       </div>
       <div class="pb-panel pb-panel--problem reveal r4">
-        <div class="pb-panel__head">흩어진 데이터를 한 번에, 못 찾던 것까지</div>
+        <div class="pb-panel__head">무엇을 볼지 제안하고, 한 장으로 모은다</div>
         <div class="pb-panel__body">
           <div class="ft-list">
             <div class="ft-item">
@@ -1965,20 +1971,20 @@ body.editing .edit-bar{display:flex;}
             <div class="ft-item">
               <i>02</i>
               <div class="tx">
-                <b>흩어진 데이터를 고정 형식으로 수집</b>
-                <span>주가·수급·밸류에이션·분기재무·이벤트·동종비교 — 직접 모으면 약 90분</span>
+                <b>같이 볼 기업을 관계망이 먼저 제안</b>
+                <span>공급망·고객사를 타고 함께 살펴볼 종목을 추천 — 무엇을 봐야 할지 모를 때의 출발점</span>
               </div>
             </div>
             <div class="ft-item">
               <i>03</i>
               <div class="tx">
-                <b>본문에 없는 연관 기업까지</b>
-                <span>관계망을 타고 찾아 근거 문장과 함께 제시 — 시간을 더 써도 혼자서는 도달할 수 없는 항목</span>
+                <b>흩어진 데이터를 고정 형식으로 수집</b>
+                <span>시세·수급·밸류·분기재무·이벤트·관계망을 한 문서로 — 직접 모으면 약 90분</span>
               </div>
             </div>
           </div>
         </div>
-        <div class="pb-panel__foot">임팩트 분석이 기사를 읽다 만나는 것이라면,<br>AI 리서치는 찾아 나서는 것</div>
+        <div class="pb-panel__foot">임팩트 분석이 기사에서 출발한다면,<br>AI 리서치는 종목 · 기간에서 출발한다</div>
       </div>
     </div>
   </div>
@@ -2171,10 +2177,10 @@ body.editing .edit-bar{display:flex;}
       <div class="plans plans--cmp reveal r4">
         <div class="hd">구분</div>
         <div class="hd">뉴스 필터링</div>
-        <div class="hd">기업별<br>임팩트 판정<span class="soon-pill">개발 예정</span></div>
+        <div class="hd">기업별 임팩트 판정<br>미언급 기업 포함<span class="soon-pill">개발 예정</span></div>
         <div class="hd">지식 그래프<br>구축 및 시각화</div>
         <div class="hd">경로 탐색</div>
-        <div class="hd">미언급 기업<br>발굴<span class="soon-pill">개발 예정</span></div>
+        <div class="hd">기간 단위<br>통합 리포트<span class="soon-pill">개발 예정</span></div>
         <div class="hd">가격 · 접근성</div>
 
         <div>네이버 · 토스 및<br>증권사 어플<em>국내 증권앱</em></div>
@@ -2317,7 +2323,7 @@ body.editing .edit-bar{display:flex;}
             <h3>백엔드 + AI Engineering</h3>
             <p>백엔드 API 및 DB 연동 구축<br>
                <b style="color:var(--text);font-weight:600;">임팩트 분석</b> — GraphRAG 기반 기업별 긍·부정 판정 로직<br>
-               <b style="color:var(--text);font-weight:600;">AI 리서치</b> — 근거 수집 및 연관 기업 발굴</p>
+               <b style="color:var(--text);font-weight:600;">AI 리서치</b> — 종목·기간 기준 다중 소스 통합 수집</p>
           </div>
         </div>
       </div>
