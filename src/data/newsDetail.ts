@@ -169,7 +169,7 @@ export interface NewsEntity {
 
 const nodeByLabel = new Map(MOCK_GRAPH.nodes.map((n) => [n.label, n]))
 
-/** 기사에 등장한 엔티티 — 주어·목적어 다음에 삼중항의 중간 항목(제품·원자재)을 붙인다 */
+/** 기사에 등장한 엔티티 — 주어·목적어 다음에 트리플의 중간 항목(제품·원자재)을 붙인다 */
 export function newsEntities(relations: NewsRelation[]): NewsEntity[] {
   const byLabel = new Map<string, NewsEntity>()
   const add = (entity: NewsEntity) => {

@@ -667,7 +667,7 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
   font-size:17px;color:var(--light);}
 
 /* ===========================================
-   핵심 기술 검증 (PART 3)
+   핵심 기술 개발 성과 (PART 3)
    문제정의 4연작의 .pb-panel 골격을 그대로 씁니다.
    =========================================== */
 /* 3분할 : 기사 → 추출 결과 → 실제 주가 */
@@ -699,6 +699,24 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
   word-break:keep-all;}
 .vf-note b{color:var(--primary);font-weight:700;}
 .vf-note em{font-style:normal;color:var(--negative);font-weight:700;}
+
+/* ===========================================
+   설계 반복 4컷 — 도식 캡처를 2x2 사각형으로 배치
+   =========================================== */
+.quad{flex:1;min-height:0;margin-top:30px;display:grid;
+  grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:22px;}
+.quad-cell{min-width:0;min-height:0;display:flex;flex-direction:column;gap:10px;
+  background:var(--card-bg);border:1.5px solid var(--border);border-radius:16px;
+  padding:16px 18px 14px;}
+.quad-cell__head{flex:none;display:flex;align-items:center;gap:10px;
+  font-size:20px;font-weight:700;color:var(--pb-ink-900);letter-spacing:-.015em;}
+.quad-cell__head i{flex:none;width:28px;height:28px;border-radius:50%;
+  background:var(--pb-brand-100);color:var(--pb-brand-700);
+  font-style:normal;font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;}
+.quad-cell__head em{font-style:normal;font-size:17px;font-weight:500;color:var(--muted);
+  letter-spacing:-.01em;}
+.quad-cell img{flex:1;min-height:0;width:100%;object-fit:contain;object-position:center;}
 
 /* ===========================================
    PERSISTENT CHROME (스테이지 밖 고정)
@@ -807,7 +825,7 @@ body.editing .edit-bar{display:flex;}
           <ul>
             <li><i>01</i><b>개발 로드맵<em>Roadmap</em></b></li>
             <li><i>02</i><b>파이프라인 설계<em>Data Engineering Pipeline</em></b></li>
-            <li><i>03</i><b>핵심 기술 검증<em>Technology Validation</em></b></li>
+            <li><i>03</i><b>핵심 기술 개발 성과<em>Technology Development</em></b></li>
             <li><i>04</i><b>서비스 시연<em>Live Demo</em></b></li>
             <li><i>05</i><b>기획심의 주요 의견 반영<em>Review Feedback</em></b></li>
           </ul>
@@ -2255,7 +2273,7 @@ body.editing .edit-bar{display:flex;}
       <div class="section-en reveal r2">Technical Progress</div>
       <div class="section-q reveal r3">프로젝트를 잘 진행하고 있는가</div>
       <div class="section-list reveal r4">
-        <div>개발 로드맵</div><div>파이프라인 설계</div><div>핵심 기술 검증</div>
+        <div>개발 로드맵</div><div>파이프라인 설계</div><div>핵심 기술 개발 성과</div>
         <div>서비스 시연</div><div>기획심의 주요 의견 반영</div>
       </div>
     </div>
@@ -2345,21 +2363,51 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
+<!-- 트리플 추출 파이프라인 설계 반복 (4컷) -->
+<section class="slide" aria-label="파이프라인 설계 — 트리플 추출 설계 반복">
+  <div class="pad">
+    <div class="slide-header">
+      <div class="eyebrow reveal r1">PART 3 · 진행 상황</div>
+      <div class="tag reveal r1">02 / 05</div>
+    </div>
+    <div class="page-title reveal r2"><b>파이프라인 설계</b><span>Triple Extraction, Iterated</span></div>
+    <h2 class="reveal r2">트리플 추출 파이프라인의 <b>네 번의 설계 반복</b></h2>
+    <div class="quad">
+      <div class="quad-cell reveal r3">
+        <div class="quad-cell__head"><i>1</i>초기 설계<em>Chunking · Morphology · NER 병렬</em></div>
+        <img src="images/12-triple-etl-1.png" alt="1차 설계 — Cleaning 이후 Chunking·Morphology·NER을 병렬로 두고 SRL과 FPDF로 트리플을 추출하는 흐름">
+      </div>
+      <div class="quad-cell reveal r3">
+        <div class="quad-cell__head"><i>2</i>검증 반영<em>Ablation · Morphology 제거 결정</em></div>
+        <img src="images/12-triple-etl-2.png" alt="2차 설계 — Ablation 테스트 결과 Morphology 노드를 제거하고 FPDF 3단 필터와 DAO 적재를 정리한 흐름">
+      </div>
+      <div class="quad-cell reveal r4">
+        <div class="quad-cell__head"><i>3</i>단순화<em>flashtext 사전 기반 보강</em></div>
+        <img src="images/12-triple-etl-3.png" alt="3차 설계 — 문장 분리 후 NER과 flashtext 사전으로 엔티티를 보강하고 SRL·FPDF를 직렬로 배치한 흐름">
+      </div>
+      <div class="quad-cell reveal r4">
+        <div class="quad-cell__head"><i>4</i>현재 구조<em>Predicate Extractor · Triple Builder</em></div>
+        <img src="images/12-triple-etl-4.png" alt="4차 설계 — Normalizer, Predicate Extractor, NER·사전 기반 Entity Resolution, Triple Builder, Triple Evaluator로 구성된 현재 파이프라인">
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===========================================
-     핵심 기술 검증 01 — 뉴스 필터링
+     핵심 기술 개발 성과 01 — 뉴스 필터링
      [캡처 반영 완료]
        images/10-before-1.png, 10-before-2.png : 비교 대상 앱의 종목 뉴스 목록 (같은 종목·같은 시각)
        images/11-after.png                       : 같은 조건의 Finngraph 이슈 타임라인
      하단 vf-note 의 건수(OO건)는 캡처 기준 실측값으로 채워야 한다.
      =========================================== -->
-<section class="slide vf-compact" aria-label="기술 검증 01 — 뉴스 필터링">
+<section class="slide vf-compact" aria-label="기술 개발 01 — 뉴스 필터링">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 3 · 진행 상황</div>
       <div class="tag reveal r1">03 / 05</div>
     </div>
-    <div class="page-title reveal r2"><b>핵심 기술 검증</b><span>Technology Validation</span></div>
-    <h2 class="reveal r2"><b>기술 검증 01</b> · 뉴스 필터링</h2>
+    <div class="page-title reveal r2"><b>핵심 기술 개발 성과</b><span>Technology Development</span></div>
+    <h2 class="reveal r2"><b>기술 개발 01</b> · 뉴스 필터링</h2>
     <div class="pb-body pb-body--even">
       <div class="pb-panel pb-panel--problem reveal r3">
         <div class="pb-panel__head">기존 증권 앱 · 종목 뉴스</div>
@@ -2387,20 +2435,19 @@ body.editing .edit-bar{display:flex;}
 </section>
 
 <!-- ===========================================
-     핵심 기술 검증 02 — 삼중항 추출
-     [넣어야 할 캡처 2장]
-       images/12-graph-extracted.png : 이 기사에서 추출된 삼중항이 그려진 그래프 화면
-       images/13-price-reaction.png  : 두산테스나 · 하나머트리얼즈 주가 (2026.03.17 전후)
-     아래 두 개의 .ft-shot div 를 <img class="ft-img" ...> 로 교체하면 완성됩니다.
+     핵심 기술 개발 성과 02 — 트리플 추출
+     [캡처 반영 완료]
+       images/00-doosan-tesna.png / 00-hana-materials.png             : 추출된 트리플 관계 그래프
+       images/00-doosan-tesna-stock.png / 00-hana-materials-stock.png : 두 종목의 주가 차트
      =========================================== -->
-<section class="slide" aria-label="기술 검증 02 — 삼중항 추출">
+<section class="slide" aria-label="기술 개발 02 — 트리플 추출">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 3 · 진행 상황</div>
       <div class="tag reveal r1">03 / 05</div>
     </div>
-    <div class="page-title reveal r2"><b>핵심 기술 검증</b><span>Technology Validation</span></div>
-    <h2 class="reveal r2"><b>기술 검증 02</b> · 삼중항 추출 — 본문에 <span style="color:var(--negative);">없는 이름</span>을 찾아낸다</h2>
+    <div class="page-title reveal r2"><b>핵심 기술 개발 성과</b><span>Technology Development</span></div>
+    <h2 class="reveal r2"><b>기술 개발 02</b> · 트리플 추출 — 본문에 <span style="color:var(--negative);">없는 이름</span>을 찾아낸다</h2>
     <div class="pb-body pb-body--three">
       <!-- 01 기사 본문이 말한 것 -->
       <div class="pb-panel pb-panel--problem reveal r3">
@@ -2425,19 +2472,20 @@ body.editing .edit-bar{display:flex;}
       <div class="pb-panel pb-panel--solution reveal r4">
         <div class="pb-panel__head">그래프가 이어붙인 경로</div>
         <div class="pb-panel__body">
-          <!-- 캡처 교체 자리 -->
-          <div class="ft-shot">추출된 삼중항 · 관계 그래프 화면<em>엔비디아 → 그록3 → 삼성전자 → 협력사</em><code>images/12-graph-extracted.png</code></div>
+          <div class="shot-stack">
+            <img class="ft-img" src="images/00-doosan-tesna.png" alt="추출된 트리플 관계 그래프 — 엔비디아 → 삼성전자 → 웨이퍼테스트 → 두산테스나">
+            <img class="ft-img" src="images/00-hana-materials.png" alt="추출된 트리플 관계 그래프 — 엔비디아 → 삼성전자 → 하나머트리얼즈">
+          </div>
         </div>
-        <div class="pb-panel__foot">기사에서 뽑은 삼중항이 기존 그래프에 붙으며<br>본문에 없는 2개 종목까지 경로가 이어진다</div>
+        <div class="pb-panel__foot">기사에서 뽑은 트리플이 기존 그래프에 붙으며<br>본문에 없는 2개 종목까지 경로가 이어진다</div>
       </div>
       <!-- 03 그 뒤 실제 주가 -->
       <div class="pb-panel pb-panel--solution reveal r5">
         <div class="pb-panel__head">그 뒤, 실제 주가</div>
         <div class="pb-panel__body">
           <div class="shot-stack">
-            <!-- 캡처 교체 자리 -->
-            <div class="ft-shot">두산테스나 주가<code>images/13-price-reaction.png</code></div>
-            <div class="ft-shot">하나머트리얼즈 주가<code>images/14-price-reaction2.png</code></div>
+            <img class="ft-img" src="images/00-doosan-tesna-stock.png" alt="두산테스나 주가 차트 — 기사 게재일 이후 상승 구간 포함">
+            <img class="ft-img" src="images/00-hana-materials-stock.png" alt="하나머트리얼즈 주가 차트 — 기사 게재일 이후 상승 구간 포함">
           </div>
         </div>
         <div class="pb-panel__foot">기사 게재일(2026.03.17) 전후 등락</div>
@@ -2501,7 +2549,7 @@ body.editing .edit-bar{display:flex;}
             <b>초기 대상을 2개 섹터로 한정</b>
             <ul>
               <li>그래프 구축·검증 대상을 <b>반도체·2차전지</b> 2개 섹터로 한정</li>
-              <li>기업·주가·뉴스 수집은 국내 전체 상장사로 유지하되, 삼중항 추출·그래프 적재만 2개 섹터 중심으로 수행</li>
+              <li>기업·주가·뉴스 수집은 국내 전체 상장사로 유지하되, 트리플 추출·그래프 적재만 2개 섹터 중심으로 수행</li>
               <li>여타 섹터 확장은 후속 단계로 분리</li>
             </ul>
           </div>
