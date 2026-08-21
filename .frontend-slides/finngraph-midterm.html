@@ -299,6 +299,23 @@ h2 b{color:var(--primary);font-weight:700;}
 .pb-body--shot{grid-template-columns:1.15fr 1fr;gap:48px;}
 /* 좌우 모두 캡처인 배치 (기능 03) */
 .pb-body--even{grid-template-columns:1fr 1fr;gap:48px;}
+/* 캡처를 더 크게 쓰는 배치 (기능 02) — 좌측 폭을 키우고 설명은 좁힌다 */
+.pb-body--shot-wide{grid-template-columns:1.75fr 1fr;gap:38px;}
+/* 캡처 3장을 ㅁㅁ / ㅁ 로. 4열 그리드에서 각 칸이 2열을 차지하고
+   세 번째만 2열째에서 시작해 아래 가운데에 놓인다. */
+.ft-grid3{flex:1;min-height:0;display:grid;
+  grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:12px;}
+.ft-grid3>*{min-width:0;min-height:0;}
+.ft-grid3>*:nth-child(1){grid-column:1 / span 2;}
+.ft-grid3>*:nth-child(2){grid-column:3 / span 2;}
+.ft-grid3>*:nth-child(3){grid-column:2 / span 2;}
+/* 그리드 칸 안에서는 flex:1 이 아니라 칸을 꽉 채운다 */
+.ft-grid3 .ft-img,.ft-grid3 .ft-shot{flex:none;width:100%;height:100%;object-fit:contain;}
+/* 칸마다 어느 홉인지 표시 */
+.ft-cell{position:relative;display:flex;min-width:0;min-height:0;}
+.ft-cell>.ft-hop{position:absolute;left:10px;top:10px;z-index:1;
+  background:var(--pb-brand-600);color:#fff;border-radius:7px;
+  padding:4px 11px;font-size:16px;font-weight:700;letter-spacing:-.01em;}
 
 /* 캡처 자리표시 슬롯 — 실제 스크린샷이 준비되면
    이 div를 <img src="..." alt="..."> 로 통째로 교체하면 됩니다. */
@@ -1901,11 +1918,18 @@ body.editing .edit-bar{display:flex;}
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
     <h2 class="reveal r2"><b>기능 02</b> · 임팩트 분석 <span class="soon-pill" style="vertical-align:12px;">개발 예정</span></h2>
-    <div class="pb-body pb-body--shot">
+    <div class="pb-body pb-body--shot-wide">
       <div class="pb-panel pb-panel--solution reveal r3">
-        <div class="pb-panel__head">뉴스 상세 · 기업별 임팩트</div>
+        <div class="pb-panel__head">뉴스 상세 · 홉을 넓힐수록 드러나는 기업</div>
         <div class="pb-panel__body">
-          <img class="ft-img" src="images/04-news-detail.png" alt="임팩트 분석 화면">
+          <div class="ft-grid3">
+            <div class="ft-cell"><span class="ft-hop">HOP 1</span>
+              <div class="ft-shot">기사가 호명한 기업<em>엔티티 10 · 기업 9</em><code>images/15-hop1.png</code></div></div>
+            <div class="ft-cell"><span class="ft-hop">HOP 2</span>
+              <div class="ft-shot">두산테스나 · 하나머티리얼즈 등장<em>엔티티 27 · 기업 22</em><code>images/16-hop2.png</code></div></div>
+            <div class="ft-cell"><span class="ft-hop">HOP 3</span>
+              <div class="ft-shot">공급 품목까지 확장<em>엔티티 32 · 기업 23</em><code>images/17-hop3.png</code></div></div>
+          </div>
         </div>
         <div class="pb-panel__foot"></div>
       </div>
