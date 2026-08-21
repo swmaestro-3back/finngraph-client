@@ -438,6 +438,15 @@ h2 b{color:var(--primary);font-weight:700;}
 .mkt li::before{content:"";position:absolute;left:0;top:.62em;
   width:5px;height:5px;border-radius:50%;background:var(--pb-brand-300);}
 .mkt li b{color:var(--text);font-weight:700;}
+.mkt-src{margin-top:-2px;font-size:14px;color:var(--light);line-height:1.5;word-break:keep-all;}
+/* 시장 분석 슬라이드 전용 압축 — .persona/.mkt 는 공용이라 반드시 이 스코프에서만 줄인다 */
+section[aria-label="시장 분석"] .persona{padding:26px 40px;min-height:0;}
+section[aria-label="시장 분석"] .persona__head{margin-bottom:18px;}
+section[aria-label="시장 분석"] .persona .p-ico{width:162px;height:96px;}
+section[aria-label="시장 분석"] .mkt{gap:16px;}
+section[aria-label="시장 분석"] .mkt ul{margin-top:8px;}
+section[aria-label="시장 분석"] .mkt h4{font-size:25px;}
+section[aria-label="시장 분석"] .mkt li{font-size:20px;}
 
 /* TAM > SAM > SOM — 들여쓰기로 좁혀지는 퍼널 */
 .tam{display:flex;flex-direction:column;gap:20px;margin:auto 0;}
@@ -2073,7 +2082,7 @@ body.editing .edit-bar{display:flex;}
             <div>
               <h4>주식 정보 수요의 폭증</h4>
               <ul>
-                <li>국내 개인투자자는 코로나 이후 급증하여 약 <b>1,542만 명</b> — 국민 3~4명 중 1명이 주식 보유</li>
+                <li>국내 개인투자자는 코로나 이후 급증하여 약 <b>1,456만 명</b> — 국민 3~4명 중 1명이 주식 보유</li>
                 <li>투자자 예탁금(투자 대기자금)의 증가 — 2025년 <b>80조 원</b>대를 기록하며 사상 최고 수준을 지속</li>
                 <li>증권사 앱 이용자의 전방위 확대 — 2026년 1월 상위 6개사 <b>MTS 모두</b> 전년 동월 대비 MAU 증가</li>
               </ul>
@@ -2091,6 +2100,7 @@ body.editing .edit-bar{display:flex;}
                 <li>2030년 약 <b>69억 달러</b> 규모, 연평균 <b>36.6%</b> 성장 전망</li>
               </ul>
             </div>
+            <div class="mkt-src">출처 — 한국예탁결제원 · 금융투자협회 · 와이즈앱·리테일</div>
           </div>
         </div>
         <div class="persona reveal r4">
