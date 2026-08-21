@@ -482,8 +482,6 @@ h2 b{color:var(--primary);font-weight:700;}
 section[aria-label^="기능 01"] .pb-body{margin-top:16px;}
 section[aria-label^="기능 01"] .pb-panel{grid-template-rows:52px minmax(0,1fr);gap:10px;padding:22px 28px;}
 section[aria-label^="기능 01"] .pb-panel__foot{display:none;}
-/* 왼쪽(종목) 캡처 박스 높이를 오른쪽과 같게 축소 (뷰포트 252→239px ≒ 디자인 527px) */
-section[aria-label^="기능 01"] .ft-row .ft-img:first-child{flex:none;height:527px;}
 /* 시장 분석 슬라이드 전용 압축 — .persona/.mkt 는 공용이라 반드시 이 스코프에서만 줄인다 */
 section[aria-label="시장 분석"] .persona{padding:26px 40px;min-height:0;}
 section[aria-label="시장 분석"] .persona__head{margin-bottom:18px;}
@@ -1719,10 +1717,7 @@ body.editing .edit-bar{display:flex;}
       <div class="pb-panel pb-panel--solution reveal r3">
         <div class="pb-panel__head">종목 · 테마 이슈 타임라인</div>
         <div class="pb-panel__body">
-          <div class="ft-row">
-            <img class="ft-img" src="images/03-issue-timeline.png" alt="종목 상세 이슈 타임라인 화면">
-            <img class="ft-img" src="images/13-theme-issue-timeline.png" alt="테마 상세 이슈 타임라인 화면">
-          </div>
+          <img class="ft-img" src="images/03-issue-timeline.png" alt="종목 상세 이슈 타임라인 화면">
         </div>
         <div class="pb-panel__foot"></div>
       </div>
@@ -2201,23 +2196,23 @@ body.editing .edit-bar{display:flex;}
         <div class="hd">산정 근거 (가정)</div>
         <div class="hd">연간 추정</div>
 
-        <div>인건비<em>개발 3인 — 초기 최소 규모</em></div>
+        <div>인건비</div>
         <div>3인 × 연 3,800만 원 (4대 보험 포함)</div>
         <div class="num">약 1억 1,400만 원</div>
 
-        <div>뉴스 필터링 LLM 판정<em>정규식 통과 기사의 본문 단위 판정</em></div>
+        <div>뉴스 필터링 LLM 판정</div>
         <div>일 5,000건 × 경량 모델 ($1 / $5 per 1M tok)</div>
         <div class="num">약 770만 원</div>
 
-        <div>삼중항 추출 · 그래프 구축<em>관계 추출 · 온톨로지 매핑</em></div>
+        <div>삼중항 추출 · 그래프 구축</div>
         <div>필터 통과 일 750건 × 중형 모델 ($3 / $15)</div>
         <div class="num">약 920만 원</div>
 
-        <div>AI 리서치 에이전트<em>대화형 리포트 생성 — 사용량 비례</em></div>
+        <div>AI 리서치 에이전트</div>
         <div>유료 1,000명 × 월 5회 × 회당 약 $0.14</div>
         <div class="num">약 1,130만 원</div>
 
-        <div>클라우드 인프라 · 기타<em>수집 파이프라인 · DB · 그래프 서빙 · 도메인/모니터링</em></div>
+        <div>클라우드 인프라 · 기타</div>
         <div>AWS 자체 호스팅 기준 월 약 $760</div>
         <div class="num">약 1,280만 원</div>
 
