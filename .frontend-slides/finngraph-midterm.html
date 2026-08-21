@@ -334,6 +334,22 @@ h2 b{color:var(--primary);font-weight:700;}
   line-height:1.55;word-break:keep-all;}
 
 /* ===========================================
+   문제 03 — 가독성이 고려되지 않은 형식
+   좌측 : 표·텍스트 원자료 나열 / 우측 : 실제 시각화 화면 캡처
+   =========================================== */
+.rd-raw{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:20px;}
+.rd-tablewrap{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg);}
+.rd-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+.rd-table th,.rd-table td{padding:11px 16px;font-size:19px;text-align:right;
+  color:var(--pb-ink-700);border-bottom:1px solid var(--border);}
+.rd-table th{background:var(--card-bg);font-size:18px;font-weight:600;color:var(--pb-ink-500);}
+.rd-table tr:last-child td{border-bottom:0;}
+.rd-table th:first-child,.rd-table td:first-child{text-align:left;color:var(--pb-ink-500);}
+.rd-text{background:var(--bg);border:1px solid var(--border);border-radius:12px;
+  padding:18px 22px;font-size:19px;line-height:1.75;color:var(--pb-ink-500);word-break:keep-all;}
+.rd-text b{font-weight:600;color:var(--pb-ink-700);}
+
+/* ===========================================
    서비스 한눈에 보기 (PART 1 도입부)
    정의문(h2) → 두 축 카드 → 앵커 pill 의 3단 구조.
    문장의 두 절이 각각 아래 카드 01·02로 받아지도록 좌우를 맞춥니다.
@@ -800,12 +816,11 @@ body.editing .edit-bar{display:flex;}
           <h3>서비스 기획</h3>
           <div class="en">Service Concept</div>
           <ul>
-            <li><i>01</i><b>서비스 한눈에 보기<em>Service Lookup</em></b></li>
-            <li><i>02</i><b>문제 인식<em>Problem Statement</em></b></li>
-            <li><i>03</i><b>문제 해결 방식<em>Solution Overview</em></b></li>
-            <li><i>04</i><b>핵심 타겟층<em>Target Audience</em></b></li>
-            <li><i>05</i><b>핵심 기능<em>Core Features</em></b></li>
-            <li><i>06</i><b>사용자 흐름<em>User Flow</em></b></li>
+            <li><i>01</i><b>문제 인식<em>Problem Statement</em></b></li>
+            <li><i>02</i><b>서비스 요약<em>Service Summary</em></b></li>
+            <li><i>03</i><b>핵심 타겟층<em>Target Audience</em></b></li>
+            <li><i>04</i><b>핵심 기능<em>Core Features</em></b></li>
+            <li><i>05</i><b>사용자 흐름<em>User Flow</em></b></li>
           </ul>
         </div>
         <div class="toc-part reveal r4">
@@ -845,43 +860,8 @@ body.editing .edit-bar{display:flex;}
       <div class="section-en reveal r2">Service Concept</div>
       <div class="section-q reveal r3">무엇을 왜 만들고 있는 것인가</div>
       <div class="section-list reveal r4">
-        <div>서비스 한눈에 보기</div><div>문제 인식</div><div>문제 해결 방식</div>
-        <div>핵심 타겟층</div><div>핵심 기능</div><div>사용자 흐름</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 서비스 한눈에 보기 — 문제 인식에 앞선 도입부 -->
-<section class="slide" aria-label="서비스 한눈에 보기">
-  <div class="pad">
-    <div class="slide-header">
-      <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">Preview</div>
-    </div>
-    <div class="page-title reveal r2"><b>서비스 한눈에 보기</b><span>Service Lookup</span></div>
-    <div class="ovw">
-      <!-- 축 1 : 테마 트리맵 → 종목 상세 -->
-      <div class="ovw-card reveal r3">
-        <div class="ovw-head"><i>01</i><b>데이터 시각화</b></div>
-        <div class="ovw-shots">
-          <img src="images/01-theme-treemap.png" alt="테마 트리맵 화면">
-          <img src="images/03-issue-timeline.png" alt="이슈 타임라인 화면">
-          <img src="images/09-stock-detail-2.png" alt="종목 상세 화면 (재무지표)">
-          <img src="images/08-stock-detail.png" alt="종목 상세 화면">
-        </div>
-        <div class="ovw-lead"><span>테마 및 기업 데이터 시각화</span><em>→</em><b>기업 정보 한눈에 파악</b></div>
-        <div class="ovw-meta">테마 트리맵 · 재무지표 · 이슈 타임라인</div>
-      </div>
-      <!-- 축 2 : 뉴스 상세 → 관계 그래프 -->
-      <div class="ovw-card reveal r4">
-        <div class="ovw-head"><i>02</i><b>지식그래프 탐색</b></div>
-        <div class="ovw-shots">
-          <img src="images/04-news-detail.png" alt="뉴스 상세 화면">
-          <img src="images/07-graph-nhop3.png" alt="기업 관계 그래프 화면">
-        </div>
-        <div class="ovw-lead"><span>필터링된 뉴스 기반 지식 그래프</span><em>→</em><b>시장 내 관계망 탐색</b></div>
-        <div class="ovw-meta">뉴스 기반 그래프 · N-Hop 탐색 · 경로 탐색</div>
+        <div>문제 인식</div><div>서비스 요약</div><div>핵심 타겟층</div>
+        <div>핵심 기능</div><div>사용자 흐름</div>
       </div>
     </div>
   </div>
@@ -892,7 +872,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">01 / 06</div>
+      <div class="tag reveal r1">01 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>문제 인식</b><span>Problem Statement</span></div>
     <h2 class="reveal r2"><b>문제 01</b> · 정보 홍수의 시대 : 무분별한 정보의 증가</h2>
@@ -1023,7 +1003,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow">PART 1 · 서비스 기획</div>
-      <div class="tag">01 / 06</div>
+      <div class="tag">01 / 05</div>
     </div>
     <div class="page-title"><b>문제 인식</b><span>Problem Statement</span></div>
     <h2><b>문제 02</b> · 단편적인 정보 제공</h2>
@@ -1077,105 +1057,142 @@ body.editing .edit-bar{display:flex;}
         <div class="pb-panel__head"></div>
         <div class="pb-panel__body">
         <div class="pb-fig">
-          <svg viewBox="0 0 560 500" role="img">
-            <title>기업 A를 중심으로 한 지식그래프. 중심의 기업 A만 보이고, 주변 6개 노드와 그 연결 정보는 검은 원으로 가려져 있다.</title>
+          <svg viewBox="0 0 700 630" role="img">
+            <title>기업 A를 중심으로 한 지식그래프.</title>
             <defs>
               <marker id="s-p2-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M0 0 L9 4.5 L0 9 Z" fill="var(--pb-ink-400)"/>
+                <path d="M0 0 L9 4.5 L0 9 Z" fill="var(--pb-ink-500)"/>
               </marker>
             </defs>
             <!-- Hop 링 3개 -->
-            <g fill="none" stroke="var(--pb-ink-200)" stroke-dasharray="3 7">
-              <circle cx="280" cy="240" r="100"/>
-              <circle cx="280" cy="240" r="165"/>
-              <circle cx="280" cy="240" r="215"/>
+            <g fill="none" stroke="var(--pb-ink-400)" stroke-width="1.6" stroke-dasharray="7 7" opacity=".9">
+              <circle cx="340" cy="312" r="140"/>
+              <circle cx="340" cy="312" r="228"/>
+              <circle cx="340" cy="312" r="300"/>
             </g>
-            <!-- 엣지 6개 : 슬라이드 2에서만 opacity .35 -->
-            <g stroke="var(--pb-ink-300)" stroke-width="1.5" opacity=".35">
-              <line x1="301" y1="204" x2="313" y2="183" marker-end="url(#s-p2-arrow)"/>
-              <line x1="216" y1="251" x2="238" y2="247" marker-end="url(#s-p2-arrow)"/>
-              <line x1="330" y1="282" x2="313" y2="268" marker-end="url(#s-p2-arrow)"/>
-              <line x1="308" y1="126" x2="286" y2="100" marker-end="url(#s-p2-arrow)"/>
-              <line x1="155" y1="297" x2="162" y2="286" marker-end="url(#s-p2-arrow)"/>
-              <line x1="157" y1="86" x2="235" y2="79" marker-end="url(#s-p2-arrow)"/>
+            <!-- 엣지 -->
+            <g stroke="var(--pb-ink-400)" stroke-width="1.6" opacity=".38">
+              <line x1="361.2" y1="281.7" x2="401.4" y2="224.4" marker-end="url(#s-p2-arrow)"/>
+              <line x1="233.0" y1="312.0" x2="303.0" y2="312.0" marker-end="url(#s-p2-arrow)"/>
+              <line x1="427.6" y1="373.4" x2="370.3" y2="333.2" marker-end="url(#s-p2-arrow)"/>
+              <line x1="318.8" y1="281.7" x2="278.6" y2="224.4" marker-end="url(#s-p2-arrow)"/>
+              <line x1="451.0" y1="209.5" x2="532.4" y2="241.9" marker-end="url(#s-p2-arrow)"/>
+              <line x1="163.1" y1="211.3" x2="227.0" y2="202.1" marker-end="url(#s-p2-arrow)"/>
+              <line x1="163.3" y1="414.5" x2="188.9" y2="343.1" marker-end="url(#s-p2-arrow)"/>
+              <line x1="431.9" y1="494.1" x2="447.5" y2="424.5" marker-end="url(#s-p2-arrow)"/>
+              <line x1="572.8" y1="155.1" x2="564.1" y2="223.2" marker-end="url(#s-p2-arrow)"/>
+              <line x1="190.1" y1="550.4" x2="163.0" y2="471.2" marker-end="url(#s-p2-arrow)"/>
             </g>
             <!-- 엣지 라벨 -->
-            <g font-size="13" text-anchor="middle">
-              <rect x="263" y="174" width="40" height="18" fill="var(--bg)"/>
-              <text x="283" y="183" fill="var(--pb-ink-500)" dominant-baseline="central">생산</text>
-              <rect x="209" y="253" width="40" height="18" fill="var(--bg)"/>
-              <text x="229" y="262" fill="var(--pb-ink-500)" dominant-baseline="central">공급</text>
-              <rect x="315" y="251" width="40" height="18" fill="var(--bg)"/>
-              <text x="335" y="260" fill="var(--pb-ink-500)" dominant-baseline="central">발주</text>
-              <rect x="239" y="125" width="66" height="18" fill="var(--bg)"/>
-              <text x="272" y="134" fill="var(--pb-ink-500)" dominant-baseline="central">전방 수요</text>
-              <rect x="118" y="271" width="40" height="18" fill="var(--bg)"/>
-              <text x="138" y="280" fill="var(--pb-ink-500)" dominant-baseline="central">생산</text>
-              <rect x="176" y="59" width="40" height="18" fill="var(--bg)"/>
-              <text x="196" y="68" fill="var(--pb-ink-500)" dominant-baseline="central">생산</text>
+            <g font-size="12" text-anchor="middle">
+              <rect x="362.3" y="243.0" width="38" height="20" fill="var(--bg)"/>
+              <text x="381.3" y="253.0" fill="var(--pb-ink-600)" dominant-baseline="central">생산</text>
+              <rect x="249.0" y="302.0" width="38" height="20" fill="var(--bg)"/>
+              <text x="268.0" y="312.0" fill="var(--pb-ink-600)" dominant-baseline="central">공급</text>
+              <rect x="380.0" y="343.3" width="38" height="20" fill="var(--bg)"/>
+              <text x="399.0" y="353.3" fill="var(--pb-ink-600)" dominant-baseline="central">발주</text>
+              <rect x="279.7" y="243.0" width="38" height="20" fill="var(--bg)"/>
+              <text x="298.7" y="253.0" fill="var(--pb-ink-600)" dominant-baseline="central">경쟁</text>
+              <rect x="457.2" y="215.7" width="69" height="20" fill="var(--bg)"/>
+              <text x="491.7" y="225.7" fill="var(--pb-ink-600)" dominant-baseline="central">전방 수요</text>
+              <rect x="176.0" y="196.7" width="38" height="20" fill="var(--bg)"/>
+              <text x="195.0" y="206.7" fill="var(--pb-ink-600)" dominant-baseline="central">납품</text>
+              <rect x="157.1" y="368.8" width="38" height="20" fill="var(--bg)"/>
+              <text x="176.1" y="378.8" fill="var(--pb-ink-600)" dominant-baseline="central">생산</text>
+              <rect x="420.7" y="449.3" width="38" height="20" fill="var(--bg)"/>
+              <text x="439.7" y="459.3" fill="var(--pb-ink-600)" dominant-baseline="central">수출</text>
+              <rect x="549.4" y="179.2" width="38" height="20" fill="var(--bg)"/>
+              <text x="568.4" y="189.2" fill="var(--pb-ink-600)" dominant-baseline="central">생산</text>
+              <rect x="157.5" y="500.8" width="38" height="20" fill="var(--bg)"/>
+              <text x="176.5" y="510.8" fill="var(--pb-ink-600)" dominant-baseline="central">공급</text>
             </g>
             <!-- Hop 라벨 pill -->
             <g font-size="12" font-weight="600" text-anchor="middle">
-              <rect x="357" y="230" width="46" height="20" rx="10" fill="var(--bg)" stroke="var(--pb-ink-200)"/>
-              <text x="380" y="240" fill="var(--pb-ink-400)" dominant-baseline="central">1 Hop</text>
-              <rect x="422" y="230" width="46" height="20" rx="10" fill="var(--bg)" stroke="var(--pb-ink-200)"/>
-              <text x="445" y="240" fill="var(--pb-ink-400)" dominant-baseline="central">2 Hop</text>
-              <rect x="472" y="230" width="46" height="20" rx="10" fill="var(--bg)" stroke="var(--pb-ink-200)"/>
-              <text x="495" y="240" fill="var(--pb-ink-400)" dominant-baseline="central">3 Hop</text>
+              <rect x="455.0" y="301.0" width="50" height="22" rx="11" fill="var(--bg)" stroke="var(--pb-ink-300)"/>
+              <text x="480" y="312" fill="var(--pb-ink-500)" dominant-baseline="central">1 Hop</text>
+              <rect x="543.0" y="301.0" width="50" height="22" rx="11" fill="var(--bg)" stroke="var(--pb-ink-300)"/>
+              <text x="568" y="312" fill="var(--pb-ink-500)" dominant-baseline="central">2 Hop</text>
+              <rect x="615.0" y="301.0" width="50" height="22" rx="11" fill="var(--bg)" stroke="var(--pb-ink-300)"/>
+              <text x="640" y="312" fill="var(--pb-ink-500)" dominant-baseline="central">3 Hop</text>
             </g>
-            <!-- 노드 7개 -->
+            <!-- 노드 -->
             <g text-anchor="middle" font-weight="600">
-              <circle cx="280" cy="240" r="48" fill="none" stroke="var(--pb-corp)" opacity=".25"/>
-              <circle cx="280" cy="240" r="40" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="2.5"/>
-              <text x="280" y="240" font-size="15" font-weight="700" fill="var(--pb-corp)" dominant-baseline="central">기업 A</text>
-              <circle cx="330" cy="153" r="32" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.5"/>
-              <text x="330" y="153" font-size="14" fill="var(--pb-product)" dominant-baseline="central">제품 A</text>
-              <circle cx="182" cy="257" r="32" fill="color-mix(in srgb, var(--pb-material) 10%, white)" stroke="var(--pb-material)" stroke-width="1.5"/>
-              <text x="182" y="257" font-size="14" fill="var(--pb-material)" dominant-baseline="central">원자재 A</text>
-              <circle cx="357" cy="304" r="32" fill="color-mix(in srgb, var(--pb-country) 10%, white)" stroke="var(--pb-country)" stroke-width="1.5"/>
-              <text x="357" y="304" font-size="14" fill="var(--pb-country)" dominant-baseline="central">국가 A</text>
-              <circle cx="266" cy="76" r="28" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.5"/>
-              <text x="266" y="76" font-size="14" fill="var(--pb-product)" dominant-baseline="central">제품 B</text>
-              <circle cx="137" cy="322" r="28" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.5"/>
-              <text x="137" y="322" font-size="14" fill="var(--pb-corp)" dominant-baseline="central">기업 B</text>
-              <circle cx="128" cy="88" r="26" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.5"/>
-              <text x="128" y="88" font-size="13" fill="var(--pb-corp)" dominant-baseline="central">기업 C</text>
+              <circle cx="340" cy="312" r="42" fill="none" stroke="var(--pb-corp)" opacity=".25"/>
+              <circle cx="340" cy="312" r="33" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="2.5"/>
+              <text x="340" y="312" font-size="14" font-weight="700" fill="var(--pb-corp)" dominant-baseline="central">기업 A</text>
+              <circle cx="420.3" cy="197.3" r="29" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.8"/>
+              <text x="420.3" y="197.3" font-size="12.5" fill="var(--pb-product)" dominant-baseline="central">제품 A</text>
+              <circle cx="259.7" cy="197.3" r="29" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="259.7" y="197.3" font-size="12.5" fill="var(--pb-corp)" dominant-baseline="central">기업 D</text>
+              <circle cx="200.0" cy="312.0" r="29" fill="color-mix(in srgb, var(--pb-material) 10%, white)" stroke="var(--pb-material)" stroke-width="1.8"/>
+              <text x="200.0" y="312.0" font-size="12.5" fill="var(--pb-material)" dominant-baseline="central">원자재 A</text>
+              <circle cx="454.7" cy="392.3" r="29" fill="color-mix(in srgb, var(--pb-country) 10%, white)" stroke="var(--pb-country)" stroke-width="1.8"/>
+              <text x="454.7" y="392.3" font-size="12.5" fill="var(--pb-country)" dominant-baseline="central">국가 A</text>
+              <circle cx="560.2" cy="253.0" r="26" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.8"/>
+              <text x="560.2" y="253.0" font-size="12" fill="var(--pb-product)" dominant-baseline="central">제품 B</text>
+              <circle cx="133.4" cy="215.6" r="26" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="133.4" y="215.6" font-size="12" fill="var(--pb-corp)" dominant-baseline="central">기업 E</text>
+              <circle cx="153.2" cy="442.8" r="26" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="153.2" y="442.8" font-size="12" fill="var(--pb-corp)" dominant-baseline="central">기업 B</text>
+              <circle cx="425.4" cy="523.4" r="26" fill="color-mix(in srgb, var(--pb-material) 10%, white)" stroke="var(--pb-material)" stroke-width="1.8"/>
+              <text x="425.4" y="523.4" font-size="12" fill="var(--pb-material)" dominant-baseline="central">원자재 B</text>
+              <circle cx="576.4" cy="127.3" r="24" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="576.4" y="127.3" font-size="11.5" fill="var(--pb-corp)" dominant-baseline="central">기업 C</text>
+              <circle cx="199.2" cy="576.9" r="24" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="199.2" y="576.9" font-size="11.5" fill="var(--pb-corp)" dominant-baseline="central">기업 F</text>
             </g>
-            <!-- 수혜 차수 배지 (G5·G6 — 가림막에 덮이는 대상) -->
+            <!-- 수혜 차수 배지 (가림막에 덮이는 대상) -->
             <g font-size="12" font-weight="700" text-anchor="middle">
-              <rect x="98" y="354" width="78" height="20" rx="10" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
-              <text x="137" y="364" fill="var(--pb-brand-700)" dominant-baseline="central">2차 수혜주</text>
-              <rect x="89" y="118" width="78" height="20" rx="10" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
-              <text x="128" y="128" fill="var(--pb-brand-700)" dominant-baseline="central">3차 수혜주</text>
+              <rect x="219.7" y="139.3" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="259.7" y="149.8" fill="var(--pb-brand-700)" dominant-baseline="central">1차 수혜주</text>
+              <rect x="113.2" y="476.8" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="153.2" y="487.3" fill="var(--pb-brand-700)" dominant-baseline="central">2차 수혜주</text>
+              <rect x="93.4" y="160.6" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="133.4" y="171.1" fill="var(--pb-brand-700)" dominant-baseline="central">2차 수혜주</text>
+              <rect x="536.4" y="74.3" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="576.4" y="84.8" fill="var(--pb-brand-700)" dominant-baseline="central">3차 수혜주</text>
+              <rect x="159.2" y="523.9" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="199.2" y="534.4" fill="var(--pb-brand-700)" dominant-baseline="central">3차 수혜주</text>
             </g>
             <!-- BlindSide 가림막 : 이 슬라이드에만 존재 -->
             <g class="pb-blind" fill="var(--pb-blind)" opacity=".82">
-              <circle cx="330" cy="153" r="40"/>
-              <circle cx="182" cy="257" r="40"/>
-              <circle cx="357" cy="304" r="40"/>
-              <circle cx="266" cy="76" r="36"/>
-              <circle cx="137" cy="322" r="36"/>
-              <circle cx="128" cy="88" r="34"/>
-              <rect x="94" y="350" width="86" height="28" rx="10"/>
-              <rect x="85" y="114" width="86" height="28" rx="10"/>
-              <rect x="261" y="170" width="44" height="26" rx="4"/>
-              <rect x="207" y="249" width="44" height="26" rx="4"/>
-              <rect x="313" y="247" width="44" height="26" rx="4"/>
-              <rect x="235" y="121" width="74" height="26" rx="4"/>
-              <rect x="116" y="267" width="44" height="26" rx="4"/>
-              <rect x="174" y="55" width="44" height="26" rx="4"/>
-              <rect x="353" y="226" width="54" height="28" rx="10"/>
-              <rect x="418" y="226" width="54" height="28" rx="10"/>
-              <rect x="468" y="226" width="54" height="28" rx="10"/>
+              <circle cx="420.3" cy="197.3" r="37"/>
+              <circle cx="259.7" cy="197.3" r="37"/>
+              <circle cx="200.0" cy="312.0" r="37"/>
+              <circle cx="454.7" cy="392.3" r="37"/>
+              <circle cx="560.2" cy="253.0" r="34"/>
+              <circle cx="133.4" cy="215.6" r="34"/>
+              <circle cx="153.2" cy="442.8" r="34"/>
+              <circle cx="425.4" cy="523.4" r="34"/>
+              <circle cx="576.4" cy="127.3" r="32"/>
+              <circle cx="199.2" cy="576.9" r="32"/>
+              <rect x="359.3" y="240.0" width="44" height="26" rx="4"/>
+              <rect x="246.0" y="299.0" width="44" height="26" rx="4"/>
+              <rect x="377.0" y="340.3" width="44" height="26" rx="4"/>
+              <rect x="276.7" y="240.0" width="44" height="26" rx="4"/>
+              <rect x="454.2" y="212.7" width="75" height="26" rx="4"/>
+              <rect x="173.0" y="193.7" width="44" height="26" rx="4"/>
+              <rect x="154.1" y="365.8" width="44" height="26" rx="4"/>
+              <rect x="417.7" y="446.3" width="44" height="26" rx="4"/>
+              <rect x="546.4" y="176.2" width="44" height="26" rx="4"/>
+              <rect x="154.5" y="497.8" width="44" height="26" rx="4"/>
+              <rect x="215.7" y="135.3" width="88" height="29" rx="12"/>
+              <rect x="109.2" y="472.8" width="88" height="29" rx="12"/>
+              <rect x="89.4" y="156.6" width="88" height="29" rx="12"/>
+              <rect x="532.4" y="70.3" width="88" height="29" rx="12"/>
+              <rect x="155.2" y="519.9" width="88" height="29" rx="12"/>
+              <rect x="451.0" y="297.0" width="58" height="30" rx="14"/>
+              <rect x="539.0" y="297.0" width="58" height="30" rx="14"/>
+              <rect x="611.0" y="297.0" width="58" height="30" rx="14"/>
             </g>
             <!-- G0 배지 : 유일하게 온전히 보여야 하므로 가림막 위에 그림 -->
             <g font-size="12" font-weight="700" text-anchor="middle">
-              <rect x="220" y="284" width="120" height="20" rx="10" fill="var(--pb-ink-200)"/>
-              <text x="280" y="294" fill="var(--pb-ink-700)" dominant-baseline="central">기사에 언급된 기업</text>
+              <rect x="275.0" y="370" width="130" height="21" rx="10.5" fill="var(--pb-ink-200)"/>
+              <text x="340" y="380.5" fill="var(--pb-ink-700)" dominant-baseline="central">기사에 언급된 기업</text>
             </g>
             <g class="pb-blind">
-              <rect x="416" y="26" width="108" height="28" rx="14" fill="var(--pb-blind)" opacity=".9"/>
-              <text x="470" y="40" font-size="13" font-weight="700" fill="#FFFFFF" letter-spacing=".06em" text-anchor="middle" dominant-baseline="central">BlindSide</text>
+              <rect x="560" y="26" width="112" height="30" rx="15" fill="var(--pb-blind)" opacity=".9"/>
+              <text x="616" y="41" font-size="13" font-weight="700" fill="#FFFFFF" letter-spacing=".06em" text-anchor="middle" dominant-baseline="central">BlindSide</text>
             </g>
           </svg>
         </div>
@@ -1191,7 +1208,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow">PART 1 · 서비스 기획</div>
-      <div class="tag">01 / 06</div>
+      <div class="tag">01 / 05</div>
     </div>
     <div class="page-title"><b>문제 인식</b><span>Problem Statement</span></div>
     <h2><b>문제 02</b> · 단편적인 정보 제공</h2>
@@ -1245,78 +1262,104 @@ body.editing .edit-bar{display:flex;}
         <div class="pb-panel__head">기존의 사각지대를 제거 → 시야를 넓혀준다</div>
         <div class="pb-panel__body">
         <div class="pb-fig">
-          <svg viewBox="0 0 560 500" role="img">
-            <title>기업 A를 중심으로 제품 A, 원자재 A, 국가 A가 1홉, 제품 B와 2차 수혜주인 기업 B가 2홉, 3차 수혜주인 기업 C가 3홉 거리에 연결된 지식그래프.</title>
+          <svg viewBox="0 0 700 630" role="img">
+            <title>기업 A를 중심으로 한 지식그래프.</title>
             <defs>
               <marker id="s-p3-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M0 0 L9 4.5 L0 9 Z" fill="var(--pb-ink-400)"/>
+                <path d="M0 0 L9 4.5 L0 9 Z" fill="var(--pb-ink-500)"/>
               </marker>
             </defs>
             <!-- Hop 링 3개 -->
-            <g fill="none" stroke="var(--pb-ink-200)" stroke-dasharray="3 7">
-              <circle cx="280" cy="240" r="100"/>
-              <circle cx="280" cy="240" r="165"/>
-              <circle cx="280" cy="240" r="215"/>
+            <g fill="none" stroke="var(--pb-ink-400)" stroke-width="1.6" stroke-dasharray="7 7" opacity=".9">
+              <circle cx="340" cy="312" r="140"/>
+              <circle cx="340" cy="312" r="228"/>
+              <circle cx="340" cy="312" r="300"/>
             </g>
-            <!-- 엣지 6개 -->
-            <g stroke="var(--pb-ink-300)" stroke-width="1.5">
-              <line x1="301" y1="204" x2="313" y2="183" marker-end="url(#s-p3-arrow)"/>
-              <line x1="216" y1="251" x2="238" y2="247" marker-end="url(#s-p3-arrow)"/>
-              <line x1="330" y1="282" x2="313" y2="268" marker-end="url(#s-p3-arrow)"/>
-              <line x1="308" y1="126" x2="286" y2="100" marker-end="url(#s-p3-arrow)"/>
-              <line x1="155" y1="297" x2="162" y2="286" marker-end="url(#s-p3-arrow)"/>
-              <line x1="157" y1="86" x2="235" y2="79" marker-end="url(#s-p3-arrow)"/>
+            <!-- 엣지 -->
+            <g stroke="var(--pb-ink-400)" stroke-width="1.6">
+              <line x1="361.2" y1="281.7" x2="401.4" y2="224.4" marker-end="url(#s-p3-arrow)"/>
+              <line x1="233.0" y1="312.0" x2="303.0" y2="312.0" marker-end="url(#s-p3-arrow)"/>
+              <line x1="427.6" y1="373.4" x2="370.3" y2="333.2" marker-end="url(#s-p3-arrow)"/>
+              <line x1="318.8" y1="281.7" x2="278.6" y2="224.4" marker-end="url(#s-p3-arrow)"/>
+              <line x1="451.0" y1="209.5" x2="532.4" y2="241.9" marker-end="url(#s-p3-arrow)"/>
+              <line x1="163.1" y1="211.3" x2="227.0" y2="202.1" marker-end="url(#s-p3-arrow)"/>
+              <line x1="163.3" y1="414.5" x2="188.9" y2="343.1" marker-end="url(#s-p3-arrow)"/>
+              <line x1="431.9" y1="494.1" x2="447.5" y2="424.5" marker-end="url(#s-p3-arrow)"/>
+              <line x1="572.8" y1="155.1" x2="564.1" y2="223.2" marker-end="url(#s-p3-arrow)"/>
+              <line x1="190.1" y1="550.4" x2="163.0" y2="471.2" marker-end="url(#s-p3-arrow)"/>
             </g>
             <!-- 엣지 라벨 -->
-            <g font-size="13" text-anchor="middle">
-              <rect x="263" y="174" width="40" height="18" fill="var(--bg)"/>
-              <text x="283" y="183" fill="var(--pb-ink-500)" dominant-baseline="central">생산</text>
-              <rect x="209" y="253" width="40" height="18" fill="var(--bg)"/>
-              <text x="229" y="262" fill="var(--pb-ink-500)" dominant-baseline="central">공급</text>
-              <rect x="315" y="251" width="40" height="18" fill="var(--bg)"/>
-              <text x="335" y="260" fill="var(--pb-ink-500)" dominant-baseline="central">발주</text>
-              <rect x="239" y="125" width="66" height="18" fill="var(--bg)"/>
-              <text x="272" y="134" fill="var(--pb-ink-500)" dominant-baseline="central">전방 수요</text>
-              <rect x="118" y="271" width="40" height="18" fill="var(--bg)"/>
-              <text x="138" y="280" fill="var(--pb-ink-500)" dominant-baseline="central">생산</text>
-              <rect x="176" y="59" width="40" height="18" fill="var(--bg)"/>
-              <text x="196" y="68" fill="var(--pb-ink-500)" dominant-baseline="central">생산</text>
+            <g font-size="12" text-anchor="middle">
+              <rect x="362.3" y="243.0" width="38" height="20" fill="var(--bg)"/>
+              <text x="381.3" y="253.0" fill="var(--pb-ink-600)" dominant-baseline="central">생산</text>
+              <rect x="249.0" y="302.0" width="38" height="20" fill="var(--bg)"/>
+              <text x="268.0" y="312.0" fill="var(--pb-ink-600)" dominant-baseline="central">공급</text>
+              <rect x="380.0" y="343.3" width="38" height="20" fill="var(--bg)"/>
+              <text x="399.0" y="353.3" fill="var(--pb-ink-600)" dominant-baseline="central">발주</text>
+              <rect x="279.7" y="243.0" width="38" height="20" fill="var(--bg)"/>
+              <text x="298.7" y="253.0" fill="var(--pb-ink-600)" dominant-baseline="central">경쟁</text>
+              <rect x="457.2" y="215.7" width="69" height="20" fill="var(--bg)"/>
+              <text x="491.7" y="225.7" fill="var(--pb-ink-600)" dominant-baseline="central">전방 수요</text>
+              <rect x="176.0" y="196.7" width="38" height="20" fill="var(--bg)"/>
+              <text x="195.0" y="206.7" fill="var(--pb-ink-600)" dominant-baseline="central">납품</text>
+              <rect x="157.1" y="368.8" width="38" height="20" fill="var(--bg)"/>
+              <text x="176.1" y="378.8" fill="var(--pb-ink-600)" dominant-baseline="central">생산</text>
+              <rect x="420.7" y="449.3" width="38" height="20" fill="var(--bg)"/>
+              <text x="439.7" y="459.3" fill="var(--pb-ink-600)" dominant-baseline="central">수출</text>
+              <rect x="549.4" y="179.2" width="38" height="20" fill="var(--bg)"/>
+              <text x="568.4" y="189.2" fill="var(--pb-ink-600)" dominant-baseline="central">생산</text>
+              <rect x="157.5" y="500.8" width="38" height="20" fill="var(--bg)"/>
+              <text x="176.5" y="510.8" fill="var(--pb-ink-600)" dominant-baseline="central">공급</text>
             </g>
             <!-- Hop 라벨 pill -->
             <g font-size="12" font-weight="600" text-anchor="middle">
-              <rect x="357" y="230" width="46" height="20" rx="10" fill="var(--bg)" stroke="var(--pb-ink-200)"/>
-              <text x="380" y="240" fill="var(--pb-ink-400)" dominant-baseline="central">1 Hop</text>
-              <rect x="422" y="230" width="46" height="20" rx="10" fill="var(--bg)" stroke="var(--pb-ink-200)"/>
-              <text x="445" y="240" fill="var(--pb-ink-400)" dominant-baseline="central">2 Hop</text>
-              <rect x="472" y="230" width="46" height="20" rx="10" fill="var(--bg)" stroke="var(--pb-ink-200)"/>
-              <text x="495" y="240" fill="var(--pb-ink-400)" dominant-baseline="central">3 Hop</text>
+              <rect x="455.0" y="301.0" width="50" height="22" rx="11" fill="var(--bg)" stroke="var(--pb-ink-300)"/>
+              <text x="480" y="312" fill="var(--pb-ink-500)" dominant-baseline="central">1 Hop</text>
+              <rect x="543.0" y="301.0" width="50" height="22" rx="11" fill="var(--bg)" stroke="var(--pb-ink-300)"/>
+              <text x="568" y="312" fill="var(--pb-ink-500)" dominant-baseline="central">2 Hop</text>
+              <rect x="615.0" y="301.0" width="50" height="22" rx="11" fill="var(--bg)" stroke="var(--pb-ink-300)"/>
+              <text x="640" y="312" fill="var(--pb-ink-500)" dominant-baseline="central">3 Hop</text>
             </g>
-            <!-- 노드 7개 -->
+            <!-- 노드 -->
             <g text-anchor="middle" font-weight="600">
-              <circle cx="280" cy="240" r="48" fill="none" stroke="var(--pb-corp)" opacity=".25"/>
-              <circle cx="280" cy="240" r="40" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="2.5"/>
-              <text x="280" y="240" font-size="15" font-weight="700" fill="var(--pb-corp)" dominant-baseline="central">기업 A</text>
-              <circle cx="330" cy="153" r="32" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.5"/>
-              <text x="330" y="153" font-size="14" fill="var(--pb-product)" dominant-baseline="central">제품 A</text>
-              <circle cx="182" cy="257" r="32" fill="color-mix(in srgb, var(--pb-material) 10%, white)" stroke="var(--pb-material)" stroke-width="1.5"/>
-              <text x="182" y="257" font-size="14" fill="var(--pb-material)" dominant-baseline="central">원자재 A</text>
-              <circle cx="357" cy="304" r="32" fill="color-mix(in srgb, var(--pb-country) 10%, white)" stroke="var(--pb-country)" stroke-width="1.5"/>
-              <text x="357" y="304" font-size="14" fill="var(--pb-country)" dominant-baseline="central">국가 A</text>
-              <circle cx="266" cy="76" r="28" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.5"/>
-              <text x="266" y="76" font-size="14" fill="var(--pb-product)" dominant-baseline="central">제품 B</text>
-              <circle cx="137" cy="322" r="28" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.5"/>
-              <text x="137" y="322" font-size="14" fill="var(--pb-corp)" dominant-baseline="central">기업 B</text>
-              <circle cx="128" cy="88" r="26" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.5"/>
-              <text x="128" y="88" font-size="13" fill="var(--pb-corp)" dominant-baseline="central">기업 C</text>
+              <circle cx="340" cy="312" r="42" fill="none" stroke="var(--pb-corp)" opacity=".25"/>
+              <circle cx="340" cy="312" r="33" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="2.5"/>
+              <text x="340" y="312" font-size="14" font-weight="700" fill="var(--pb-corp)" dominant-baseline="central">기업 A</text>
+              <circle cx="420.3" cy="197.3" r="29" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.8"/>
+              <text x="420.3" y="197.3" font-size="12.5" fill="var(--pb-product)" dominant-baseline="central">제품 A</text>
+              <circle cx="259.7" cy="197.3" r="29" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="259.7" y="197.3" font-size="12.5" fill="var(--pb-corp)" dominant-baseline="central">기업 D</text>
+              <circle cx="200.0" cy="312.0" r="29" fill="color-mix(in srgb, var(--pb-material) 10%, white)" stroke="var(--pb-material)" stroke-width="1.8"/>
+              <text x="200.0" y="312.0" font-size="12.5" fill="var(--pb-material)" dominant-baseline="central">원자재 A</text>
+              <circle cx="454.7" cy="392.3" r="29" fill="color-mix(in srgb, var(--pb-country) 10%, white)" stroke="var(--pb-country)" stroke-width="1.8"/>
+              <text x="454.7" y="392.3" font-size="12.5" fill="var(--pb-country)" dominant-baseline="central">국가 A</text>
+              <circle cx="560.2" cy="253.0" r="26" fill="color-mix(in srgb, var(--pb-product) 10%, white)" stroke="var(--pb-product)" stroke-width="1.8"/>
+              <text x="560.2" y="253.0" font-size="12" fill="var(--pb-product)" dominant-baseline="central">제품 B</text>
+              <circle cx="133.4" cy="215.6" r="26" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="133.4" y="215.6" font-size="12" fill="var(--pb-corp)" dominant-baseline="central">기업 E</text>
+              <circle cx="153.2" cy="442.8" r="26" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="153.2" y="442.8" font-size="12" fill="var(--pb-corp)" dominant-baseline="central">기업 B</text>
+              <circle cx="425.4" cy="523.4" r="26" fill="color-mix(in srgb, var(--pb-material) 10%, white)" stroke="var(--pb-material)" stroke-width="1.8"/>
+              <text x="425.4" y="523.4" font-size="12" fill="var(--pb-material)" dominant-baseline="central">원자재 B</text>
+              <circle cx="576.4" cy="127.3" r="24" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="576.4" y="127.3" font-size="11.5" fill="var(--pb-corp)" dominant-baseline="central">기업 C</text>
+              <circle cx="199.2" cy="576.9" r="24" fill="color-mix(in srgb, var(--pb-corp) 10%, white)" stroke="var(--pb-corp)" stroke-width="1.8"/>
+              <text x="199.2" y="576.9" font-size="11.5" fill="var(--pb-corp)" dominant-baseline="central">기업 F</text>
             </g>
             <!-- 수혜 차수 배지 -->
             <g font-size="12" font-weight="700" text-anchor="middle">
-              <rect x="220" y="284" width="120" height="20" rx="10" fill="var(--pb-ink-200)"/>
-              <text x="280" y="294" fill="var(--pb-ink-700)" dominant-baseline="central">기사에 언급된 기업</text>
-              <rect x="98" y="354" width="78" height="20" rx="10" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
-              <text x="137" y="364" fill="var(--pb-brand-700)" dominant-baseline="central">2차 수혜주</text>
-              <rect x="89" y="118" width="78" height="20" rx="10" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
-              <text x="128" y="128" fill="var(--pb-brand-700)" dominant-baseline="central">3차 수혜주</text>
+              <rect x="275.0" y="370" width="130" height="21" rx="10.5" fill="var(--pb-ink-200)"/>
+              <text x="340" y="380.5" fill="var(--pb-ink-700)" dominant-baseline="central">기사에 언급된 기업</text>
+              <rect x="219.7" y="139.3" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="259.7" y="149.8" fill="var(--pb-brand-700)" dominant-baseline="central">1차 수혜주</text>
+              <rect x="113.2" y="476.8" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="153.2" y="487.3" fill="var(--pb-brand-700)" dominant-baseline="central">2차 수혜주</text>
+              <rect x="93.4" y="160.6" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="133.4" y="171.1" fill="var(--pb-brand-700)" dominant-baseline="central">2차 수혜주</text>
+              <rect x="536.4" y="74.3" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="576.4" y="84.8" fill="var(--pb-brand-700)" dominant-baseline="central">3차 수혜주</text>
+              <rect x="159.2" y="523.9" width="80" height="21" rx="10.5" fill="var(--pb-brand-100)" stroke="var(--pb-brand-300)"/>
+              <text x="199.2" y="534.4" fill="var(--pb-brand-700)" dominant-baseline="central">3차 수혜주</text>
             </g>
           </svg>
         </div>
@@ -1328,193 +1371,66 @@ body.editing .edit-bar{display:flex;}
 </section>
 
 <!-- 문제 3 -->
-<section class="slide" aria-label="문제 03 — 맥락 상실">
+<section class="slide" aria-label="문제 03 — 가독성이 고려되지 않은 형식">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">01 / 06</div>
+      <div class="tag reveal r1">01 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>문제 인식</b><span>Problem Statement</span></div>
-    <h2 class="reveal r2"><b>문제 03</b> · 기존 RAG 기술의 한계</h2>
-    <div class="pb-body pb-body--vs">
+    <h2 class="reveal r2"><b>문제 03</b> · 가독성이 고려되지 않은 형식</h2>
+    <div class="pb-body pb-body--even">
       <div class="pb-panel pb-panel--problem reveal r3">
-        <div class="pb-panel__head">기존 VectorRAG의 한계</div>
+        <div class="pb-panel__head">가독성이 고려되지 않은 형식</div>
         <div class="pb-panel__body">
-        <div class="pb-fig">
-          <svg viewBox="0 0 460 400" role="img">
-            <title>왼쪽은 흩어진 문서 조각들. 키워드가 유사한 조각 두 개만 유사도 점수와 함께 찾아냈고, 조각 사이에 관계는 존재하지만 그 관계가 무엇인지는 알 수 없어 물음표로 남아 있다.</title>
-            <!-- 관계 간선 : 오른쪽과 같은 배치이나, 관계의 정체는 알 수 없다 -->
-            <g stroke="var(--pb-green-600)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 7" opacity=".75">
-              <line x1="244" y1="58" x2="396" y2="96"/>
-              <line x1="244" y1="58" x2="280" y2="200"/>
-              <line x1="280" y1="200" x2="108" y2="212"/>
-              <line x1="108" y1="212" x2="76" y2="72"/>
-              <line x1="396" y1="96" x2="404" y2="270"/>
-            </g>
-            <!-- 간선 라벨 : 관계명 대신 물음표 -->
-            <g font-size="16" font-weight="700" text-anchor="middle" fill="var(--pb-green-700)">
-              <circle cx="320" cy="77" r="12" fill="var(--pb-green-100)"/>
-              <text x="320" y="77" dominant-baseline="central">?</text>
-              <circle cx="262" cy="129" r="12" fill="var(--pb-green-100)"/>
-              <text x="262" y="129" dominant-baseline="central">?</text>
-              <circle cx="194" cy="206" r="12" fill="var(--pb-green-100)"/>
-              <text x="194" y="206" dominant-baseline="central">?</text>
-              <circle cx="92" cy="142" r="12" fill="var(--pb-green-100)"/>
-              <text x="92" y="142" dominant-baseline="central">?</text>
-              <circle cx="400" cy="183" r="12" fill="var(--pb-green-100)"/>
-              <text x="400" y="183" dominant-baseline="central">?</text>
-            </g>
-            <!-- 흩어진 문서 청크 6개 -->
-            <g fill="var(--bg)" stroke="var(--pb-ink-300)" stroke-width="1">
-              <g transform="rotate(-8 76 72)">
-                <rect x="28" y="40" width="96" height="64" rx="6"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="42" y1="58" x2="112" y2="58"/><line x1="42" y1="72" x2="100" y2="72"/><line x1="42" y1="86" x2="86" y2="86"/>
-                </g>
-              </g>
-              <g transform="rotate(5 244 58)">
-                <rect x="196" y="26" width="96" height="64" rx="6" stroke="var(--pb-warn)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="210" y1="44" x2="280" y2="44"/><line x1="210" y1="58" x2="268" y2="58"/><line x1="210" y1="72" x2="254" y2="72"/>
-                </g>
-              </g>
-              <g transform="rotate(-3 396 96)">
-                <rect x="348" y="64" width="96" height="64" rx="6"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="362" y1="82" x2="432" y2="82"/><line x1="362" y1="96" x2="420" y2="96"/><line x1="362" y1="110" x2="406" y2="110"/>
-                </g>
-              </g>
-              <g transform="rotate(9 108 212)">
-                <rect x="60" y="180" width="96" height="64" rx="6"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="74" y1="198" x2="144" y2="198"/><line x1="74" y1="212" x2="132" y2="212"/><line x1="74" y1="226" x2="118" y2="226"/>
-                </g>
-              </g>
-              <g transform="rotate(-6 280 200)">
-                <rect x="232" y="168" width="96" height="64" rx="6" stroke="var(--pb-warn)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="246" y1="186" x2="316" y2="186"/><line x1="246" y1="200" x2="304" y2="200"/><line x1="246" y1="214" x2="290" y2="214"/>
-                </g>
-              </g>
-              <g transform="rotate(4 404 270)">
-                <rect x="356" y="238" width="96" height="64" rx="6"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="370" y1="256" x2="440" y2="256"/><line x1="370" y1="270" x2="428" y2="270"/><line x1="370" y1="284" x2="414" y2="284"/>
-                </g>
-              </g>
-            </g>
-            <g font-size="13" font-weight="600" fill="var(--pb-warn)" text-anchor="end">
-              <text x="296" y="16">유사도 0.87</text>
-              <text x="332" y="154">유사도 0.81</text>
-            </g>
-          </svg>
+          <div class="rd-raw">
+            <div class="rd-tablewrap">
+              <table class="rd-table">
+                <thead>
+                  <tr><th>재무지표</th><th>2023</th><th>2024</th><th>2025</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>매출액 (억원)</td><td>41,280</td><td>44,930</td><td>52,610</td></tr>
+                  <tr><td>영업이익 (억원)</td><td>3,120</td><td>2,780</td><td>4,460</td></tr>
+                  <tr><td>영업이익률 (%)</td><td>7.6</td><td>6.2</td><td>8.5</td></tr>
+                  <tr><td>부채비율 (%)</td><td>118.4</td><td>126.9</td><td>109.7</td></tr>
+                  <tr><td>PER (배)</td><td>14.2</td><td>17.8</td><td>12.6</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rd-text">
+              <b>[기업 A 리포트]</b> 2025년 연결 기준 매출액은 전년 대비 17.1% 증가한 5조 2,610억원,
+              영업이익은 60.4% 증가한 4,460억원을 기록하였다. 전년도 원가 부담으로 하락했던 영업이익률은
+              8.5%로 회복되었으며, 부채비율은 109.7%로 개선되었다. 다만 원자재 가격과 환율 변동에 따른
+              변동성은 여전히 상존한다.
+            </div>
+          </div>
         </div>
-        </div>
-        <div class="pb-panel__foot">문서는 찾지만, 문서 간의 관계는 모른다</div>
+        <div class="pb-panel__foot">수치와 문장의 나열 · 추세와 비교가 드러나지 않음</div>
       </div>
-      <div class="pb-vs reveal r4" aria-hidden="true"><i></i><b>VS</b><i></i></div>
-      <div class="pb-panel pb-panel--solution reveal r5">
-        <div class="pb-panel__head">지식 그래프를 통한 HybridRAG로 해결</div>
-        <div class="pb-panel__body">
-        <div class="pb-fig">
-          <svg viewBox="0 0 460 400" role="img">
-            <title>오른쪽은 왼쪽과 같은 문서 조각들이지만, 조각 사이에 관계 간선이 놓여 있다. 유사도로 찾은 두 조각에서 간선을 타고 1 Hop·2 Hop 떨어진 조각까지 함께 딸려 나온다.</title>
-            <!-- 관계 간선 : 카드 fill(var(--bg))이 덮으므로 중심-중심으로 그린다 -->
-            <g stroke="var(--pb-brand-600)" stroke-width="2.5" stroke-linecap="round">
-              <line x1="244" y1="58" x2="396" y2="96"/>
-              <line x1="244" y1="58" x2="280" y2="200"/>
-              <line x1="280" y1="200" x2="108" y2="212"/>
-              <line x1="108" y1="212" x2="76" y2="72"/>
-              <line x1="396" y1="96" x2="404" y2="270"/>
-            </g>
-            <!-- 간선 라벨 -->
-            <g font-size="13" text-anchor="middle">
-              <rect x="300" y="68" width="40" height="18" fill="var(--bg)"/>
-              <text x="320" y="77" fill="var(--pb-ink-500)" dominant-baseline="central">대상</text>
-              <rect x="242" y="120" width="40" height="18" fill="var(--bg)"/>
-              <text x="262" y="129" fill="var(--pb-ink-500)" dominant-baseline="central">언급</text>
-              <rect x="174" y="197" width="40" height="18" fill="var(--bg)"/>
-              <text x="194" y="206" fill="var(--pb-ink-500)" dominant-baseline="central">공급</text>
-              <rect x="72" y="133" width="40" height="18" fill="var(--bg)"/>
-              <text x="92" y="142" fill="var(--pb-ink-500)" dominant-baseline="central">관련</text>
-              <rect x="380" y="174" width="40" height="18" fill="var(--bg)"/>
-              <text x="400" y="183" fill="var(--pb-ink-500)" dominant-baseline="central">납품</text>
-            </g>
-            <!-- 문서 청크 6개 : 왼쪽과 같은 배치 -->
-            <g fill="var(--bg)" stroke="var(--pb-ink-300)" stroke-width="1">
-              <g transform="rotate(-8 76 72)">
-                <rect x="28" y="40" width="96" height="64" rx="6" stroke="var(--pb-brand-600)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="42" y1="58" x2="112" y2="58"/><line x1="42" y1="72" x2="100" y2="72"/><line x1="42" y1="86" x2="86" y2="86"/>
-                </g>
-              </g>
-              <g transform="rotate(5 244 58)">
-                <rect x="196" y="26" width="96" height="64" rx="6" stroke="var(--pb-warn)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="210" y1="44" x2="280" y2="44"/><line x1="210" y1="58" x2="268" y2="58"/><line x1="210" y1="72" x2="254" y2="72"/>
-                </g>
-              </g>
-              <g transform="rotate(-3 396 96)">
-                <rect x="348" y="64" width="96" height="64" rx="6" stroke="var(--pb-brand-600)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="362" y1="82" x2="432" y2="82"/><line x1="362" y1="96" x2="420" y2="96"/><line x1="362" y1="110" x2="406" y2="110"/>
-                </g>
-              </g>
-              <g transform="rotate(9 108 212)">
-                <rect x="60" y="180" width="96" height="64" rx="6" stroke="var(--pb-brand-600)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="74" y1="198" x2="144" y2="198"/><line x1="74" y1="212" x2="132" y2="212"/><line x1="74" y1="226" x2="118" y2="226"/>
-                </g>
-              </g>
-              <g transform="rotate(-6 280 200)">
-                <rect x="232" y="168" width="96" height="64" rx="6" stroke="var(--pb-warn)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="246" y1="186" x2="316" y2="186"/><line x1="246" y1="200" x2="304" y2="200"/><line x1="246" y1="214" x2="290" y2="214"/>
-                </g>
-              </g>
-              <g transform="rotate(4 404 270)">
-                <rect x="356" y="238" width="96" height="64" rx="6" stroke="var(--pb-brand-600)" stroke-width="2"/>
-                <g stroke="var(--pb-ink-200)" stroke-width="3" stroke-linecap="round">
-                  <line x1="370" y1="256" x2="440" y2="256"/><line x1="370" y1="270" x2="428" y2="270"/><line x1="370" y1="284" x2="414" y2="284"/>
-                </g>
-              </g>
-            </g>
-            <!-- 유사도로 찾은 두 조각 : 왼쪽과 동일 -->
-            <g font-size="13" font-weight="600" fill="var(--pb-warn)" text-anchor="end">
-              <text x="296" y="16">유사도 0.87</text>
-              <text x="312" y="258">유사도 0.81</text>
-            </g>
-            <!-- Hop 배지 : 간선을 타고 딸려 나온 조각 -->
-            <g font-size="12" font-weight="700" text-anchor="middle">
-              <rect x="373" y="36" width="46" height="20" rx="10" fill="var(--pb-brand-100)"/>
-              <text x="396" y="46" fill="var(--pb-brand-700)" dominant-baseline="central">1 Hop</text>
-              <rect x="85" y="258" width="46" height="20" rx="10" fill="var(--pb-brand-100)"/>
-              <text x="108" y="268" fill="var(--pb-brand-700)" dominant-baseline="central">1 Hop</text>
-              <rect x="132" y="104" width="46" height="20" rx="10" fill="var(--pb-brand-100)"/>
-              <text x="155" y="114" fill="var(--pb-brand-700)" dominant-baseline="central">2 Hop</text>
-              <rect x="381" y="316" width="46" height="20" rx="10" fill="var(--pb-brand-100)"/>
-              <text x="404" y="326" fill="var(--pb-brand-700)" dominant-baseline="central">2 Hop</text>
-            </g>
-          </svg>
+      <div class="ovw-card reveal r4">
+        <div class="ovw-head"><b>기업 데이터 시각화</b></div>
+        <div class="ovw-shots">
+          <img src="images/01-theme-treemap.png" alt="테마 트리맵 화면">
+          <img src="images/03-issue-timeline.png" alt="이슈 타임라인 화면">
+          <img src="images/09-stock-detail-2.png" alt="종목 상세 화면 (재무지표)">
+          <img src="images/08-stock-detail.png" alt="종목 상세 화면">
         </div>
-        <div class="pb-legend">
-          <span><i style="background:var(--pb-warn)"></i>유사도로 찾은 문서</span>
-          <span><i style="background:var(--pb-brand-600)"></i>관계를 타고 딸려온 문서</span>
-        </div>
-        </div>
-        <div class="pb-panel__foot">연관관계에 있는 문서까지 찾아주는 GraphRAG 추가<br>더 풍부한 컨텍스트로 정보를 제공할 수 있도록</div>
+        <div class="ovw-lead"><span>테마 및 기업 데이터 시각화</span><em>→</em><b>기업 정보 한눈에 파악</b></div>
+        <div class="ovw-meta">테마 트리맵 · 재무지표 · 이슈 타임라인</div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- 서비스 요약 -->
 <section class="slide">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">02 / 06</div>
+      <div class="tag reveal r1">02 / 05</div>
     </div>
-    <div class="page-title reveal r2"><b>문제 해결 방식</b><span>Solution Overview</span></div>
+    <div class="page-title reveal r2"><b>서비스 요약</b><span>Service Summary</span></div>
     <h2 class="reveal r2"><b>정보 정제</b>와 <b>관계 분석</b>을 통한 <span style="color:var(--negative);font-weight:600;">투자자 친화적</span>인 정보 제공</h2>
     <div class="body">
       <div class="map-head reveal r3">
@@ -1633,45 +1549,7 @@ body.editing .edit-bar{display:flex;}
                 </g>
               </svg>
             </span>
-            <span class="p-txt"><b>데이터 시각화</b><span>정보를 한눈에 파악 가능한 형태로</span></span>
-          </div>
-        </div>
-        <!-- 04 맥락 상실 → 맥락 확장 : Vector RAG 단독 → Vector RAG + GraphRAG -->
-        <div class="pair reveal r6">
-          <div class="p-left">
-            <span class="p-ico" aria-hidden="true">
-              <svg viewBox="0 0 96 56">
-                <g fill="none" stroke="var(--pb-ink-400)" stroke-width="1.8">
-                  <ellipse cx="18" cy="16" rx="13" ry="5"/>
-                  <path d="M5 16 V38 a13 5 0 0 0 26 0 V16"/>
-                  <path d="M5 27 a13 5 0 0 0 26 0"/>
-                </g>
-              </svg>
-            </span>
-            <span>관계 이해 X · 맥락 상실</span>
-          </div>
-          <div class="p-arrow">→</div>
-          <div class="p-right">
-            <span class="p-ico" aria-hidden="true">
-              <svg viewBox="0 0 96 56">
-                <g fill="none" stroke="var(--pb-ink-400)" stroke-width="1.8">
-                  <ellipse cx="18" cy="16" rx="13" ry="5"/>
-                  <path d="M5 16 V38 a13 5 0 0 0 26 0 V16"/>
-                  <path d="M5 27 a13 5 0 0 0 26 0"/>
-                </g>
-                <g stroke="var(--pb-ink-400)" stroke-width="1.8" stroke-linecap="round">
-                  <line x1="42" y1="28" x2="52" y2="28"/><line x1="47" y1="23" x2="47" y2="33"/>
-                </g>
-                <g stroke="var(--pb-brand-600)" stroke-width="2">
-                  <line x1="70" y1="14" x2="64" y2="40"/><line x1="70" y1="14" x2="86" y2="34"/>
-                  <line x1="64" y1="40" x2="86" y2="34"/>
-                </g>
-                <g fill="var(--pb-brand-100)" stroke="var(--pb-brand-600)" stroke-width="2">
-                  <circle cx="70" cy="14" r="6"/><circle cx="64" cy="40" r="6"/><circle cx="86" cy="34" r="6"/>
-                </g>
-              </svg>
-            </span>
-            <span class="p-txt"><b>관계 정보를 통한 맥락 확장</b><span>지식 그래프를 통해 더 풍부한 정보를 제공할 수 있도록</span></span>
+            <span class="p-txt"><b>기업 데이터 시각화</b><span>정보를 한눈에 파악 가능한 형태로</span></span>
           </div>
         </div>
       </div>
@@ -1683,7 +1561,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">03 / 06</div>
+      <div class="tag reveal r1">03 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 타겟층</b><span>Target Audience</span></div>
     <h2 class="reveal r2">단기 수익보다는, <b>‘투자의 근거’</b>가 필요한 사람들</h2>
@@ -1768,7 +1646,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">04 / 06</div>
+      <div class="tag reveal r1">04 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
     <h2 class="reveal r2">3가지 문제를 푸는 기능, 그리고 <b>결론을 만드는 기능</b></h2>
@@ -1804,7 +1682,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">04 / 06</div>
+      <div class="tag reveal r1">04 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
     <h2 class="reveal r2"><b>기능 01</b> · 이슈 타임라인</h2>
@@ -1854,7 +1732,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">04 / 06</div>
+      <div class="tag reveal r1">04 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
     <h2 class="reveal r2"><b>기능 02</b> · 임팩트 분석 <span class="soon-pill" style="vertical-align:12px;">개발 예정</span></h2>
@@ -1904,7 +1782,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">04 / 06</div>
+      <div class="tag reveal r1">04 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
     <h2 class="reveal r2"><b>기능 03</b> · 기업 그래프 탐색</h2>
@@ -1932,7 +1810,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">04 / 06</div>
+      <div class="tag reveal r1">04 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
     <h2 class="reveal r2"><b>기능 04</b> · AI 리서치 에이전트 <span class="soon-pill" style="vertical-align:12px;">개발 예정</span></h2>
@@ -1995,7 +1873,7 @@ body.editing .edit-bar{display:flex;}
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
-      <div class="tag reveal r1">05 / 06</div>
+      <div class="tag reveal r1">05 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>사용자 흐름</b><span>User Flow</span></div>
     <h2 class="reveal r2">익숙한 진입 → 깊어지는 탐색 → <b>근거 있는 결론</b></h2>
@@ -2434,24 +2312,24 @@ body.editing .edit-bar{display:flex;}
 </section>
 
 <!-- ===========================================
-     핵심 기술 개발 02 — 삼중항 추출
+     핵심 기술 개발 02 — 트리플 추출
      [넣어야 할 캡처 2장]
        images/12-graph-extracted.png : 이 기사에서 추출된 삼중항이 그려진 그래프 화면
        images/13-price-reaction.png  : 두산테스나 · 하나머트리얼즈 주가 (2026.03.17 전후)
      아래 두 개의 .ft-shot div 를 <img class="ft-img" ...> 로 교체하면 완성됩니다.
      =========================================== -->
-<section class="slide" aria-label="기술 검증 02 — 삼중항 추출">
+<section class="slide" aria-label="기술 검증 02 — 트리플 추출 및 지식그래프 구축">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 3 · 진행 상황</div>
       <div class="tag reveal r1">03 / 05</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 기술 개발</b><span>Technology Development</span></div>
-    <h2 class="reveal r2"><b>기술 개발 02</b> · 삼중항 추출 — 본문에 <span style="color:var(--negative);">없는 이름</span>을 찾아낸다</h2>
+    <h2 class="reveal r2"><b>기술 개발 02</b> · 트리플 추출 및 지식 그래프 구축 — 나무가 아닌 <span style="color:var(--negative);">숲</span>을 볼 수 있도록</h2>
     <div class="pb-body pb-body--three">
       <!-- 01 기사 본문이 말한 것 -->
       <div class="pb-panel pb-panel--problem reveal r3">
-        <div class="pb-panel__head">기사 본문이 말한 것</div>
+        <div class="pb-panel__head">기사에서 언급된 것</div>
         <div class="pb-panel__body">
           <div class="pb-article" style="margin-bottom:20px;">
             <div class="am">디일렉 · 2026.03.17</div>
@@ -2463,14 +2341,14 @@ body.editing .edit-bar{display:flex;}
             <span>오라클</span><span>오픈AI</span><span>앤트로픽</span><span>메타</span>
           </div>
           <div class="ent-note">
-            본문이 호명한 기업은 여기까지 — <b>두산테스나 · 하나머트리얼즈는 한 번도 등장하지 않는다</b>
+            언급된 기업은 여기까지 — <b>두산테스나 · 하나머트리얼즈는 한 번도 등장하지 않는다</b>
           </div>
         </div>
-        <div class="pb-panel__foot">키워드 검색은 여기서 멈춘다</div>
+        <div class="pb-panel__foot">뉴스 정보는 여기서 멈춘다</div>
       </div>
       <!-- 02 그래프가 이어붙인 경로 -->
       <div class="pb-panel pb-panel--solution reveal r4">
-        <div class="pb-panel__head">그래프가 이어붙인 경로</div>
+        <div class="pb-panel__head">지식 그래프가 이어붙인 경로</div>
         <div class="pb-panel__body">
           <div class="shot-stack">
             <img class="ft-img" src="images/00-doosan-tesna.png" alt="추출된 트리플 관계 그래프 — 엔비디아 → 삼성전자 → 웨이퍼테스트 → 두산테스나">
@@ -2492,7 +2370,7 @@ body.editing .edit-bar{display:flex;}
       </div>
     </div>
     <div class="vf-note reveal r6">
-      본문에 <em>이름이 없는 두 종목</em>을, <b>근거 경로와 함께</b> 찾아냈다 —
+      본문에 <em>언급되지 않은 기업</em>을, <b>근거 경로와 함께</b> 찾아냈다 —
       이것이 키워드 검색·기사 요약이 구조적으로 도달할 수 없는 지점이자, 지식그래프를 쓰는 유일한 이유
     </div>
   </div>
