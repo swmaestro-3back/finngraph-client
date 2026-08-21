@@ -7,6 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 interface Props {
+  /** 목록 머리말 — 기사에서 온 것과 확장으로 온 것을 나눠 부른다 */
+  title: string
+  /** 머리말 아래 한 줄 설명 (없으면 생략) */
+  hint?: string
   relations: NewsRelation[]
   /** 현재 강조 중인 간선 id */
   activeId: string | null
@@ -14,8 +18,8 @@ interface Props {
   onSelect: (linkId: string) => void
 }
 
-/** 기사에서 추출된 삼중항 목록 — 카드와 캔버스가 서로를 강조한다 */
-export function NewsRelationList({ relations, activeId, onHover, onSelect }: Props) {
+/** 삼중항 목록 한 묶음 — 카드와 캔버스가 서로를 강조한다 */
+export function NewsRelationList({ title, hint, relations, activeId, onHover, onSelect }: Props) {
   const listRef = useRef<HTMLDivElement>(null)
 
   // 캔버스에서 간선을 고르면 목록에서도 그 카드가 보이도록 따라간다
@@ -26,8 +30,16 @@ export function NewsRelationList({ relations, activeId, onHover, onSelect }: Pro
       ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [activeId])
 
+  if (relations.length === 0) return null
+
   return (
-    <div ref={listRef} className="flex flex-col gap-2 overflow-y-auto pr-0.5">
+    <div ref={listRef} className="flex flex-col gap-2">
+      <div>
+        <div className="text-caption font-semibold tracking-[0.4px] text-muted-foreground">
+          {title}
+        </div>
+        {hint && <div className="mt-0.5 text-[11px] text-muted-foreground/70">{hint}</div>}
+      </div>
       {relations.map(({ link, source, target }) => {
         const active = link.id === activeId
         return (

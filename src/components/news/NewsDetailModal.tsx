@@ -57,7 +57,7 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
   const open = newsId !== null && data !== null
   if (!data) return null
 
-  const { news, relations, graph, seedIds } = data
+  const { news, relations, expanded, graph, seedIds } = data
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,6 +102,7 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
             <NewsGraphSection
               graph={graph}
               relations={relations}
+              expanded={expanded}
               seedIds={seedIds}
               hop={hop}
               onHopChange={setHop}

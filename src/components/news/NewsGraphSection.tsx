@@ -30,6 +30,8 @@ interface Props {
   graph: GraphData
   /** 기사에 직접 등장한 관계 */
   relations: NewsRelation[]
+  /** 홉 확장으로 딸려온 관계 — 본문에 이름이 없는 기업이 왜 걸렸는지 */
+  expanded: NewsRelation[]
   /** 기사에 등장한 엔티티 id — 펼친 뒤에도 기사에서 온 것을 진하게 남긴다 */
   seedIds: string[]
   /** 기사를 원점으로 센 홉 — 1홉이 기사에 나온 엔티티다 */
@@ -45,6 +47,7 @@ type Selection = { kind: 'link' | 'node'; id: string }
 export function NewsGraphSection({
   graph,
   relations,
+  expanded,
   seedIds,
   hop,
   onHopChange,
@@ -86,6 +89,12 @@ export function NewsGraphSection({
   const activeLinkId =
     hoveredLinkId ?? (selected?.kind === 'link' ? selected.id : null)
 
+  const handleSelectLink = useCallback(
+    (id: string) =>
+      setSelected((prev) => (prev?.kind === 'link' && prev.id === id ? null : { kind: 'link', id })),
+    [],
+  )
+
   if (relations.length === 0) {
     return (
       <div
@@ -126,20 +135,24 @@ export function NewsGraphSection({
         />
       </div>
 
-      <div className="flex min-h-0 flex-col md:h-[420px]">
-        <div className="mb-1.5 text-caption font-semibold tracking-[0.4px] text-muted-foreground">
-          추출된 관계 {relations.length}건
-        </div>
+      <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-0.5 md:h-[420px]">
         <NewsRelationList
+          title={`기사에서 추출 ${relations.length}건`}
           relations={relations}
           activeId={activeLinkId}
           onHover={setHoveredLinkId}
-          onSelect={(id) =>
-            setSelected((prev) =>
-              prev?.kind === 'link' && prev.id === id ? null : { kind: 'link', id },
-            )
-          }
+          onSelect={handleSelectLink}
         />
+        {expanded.length > 0 && (
+          <NewsRelationList
+            title={`관계망 확장 ${expanded.length}건`}
+            hint="기사 본문에 이름이 없는 관계"
+            relations={expanded}
+            activeId={activeLinkId}
+            onHover={setHoveredLinkId}
+            onSelect={handleSelectLink}
+          />
+        )}
       </div>
     </div>
   )

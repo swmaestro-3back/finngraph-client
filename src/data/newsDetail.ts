@@ -37,6 +37,11 @@ export interface NewsGraph {
   news: NewsDetail
   /** 기사에 직접 등장한 관계 */
   relations: NewsRelation[]
+  /**
+   * 홉 확장으로 딸려온 관계 — 기사 본문에는 없지만 관계망을 타고 들어온 것들.
+   * 확장하지 않았으면(hops = 0) 빈 배열이다.
+   */
+  expanded: NewsRelation[]
   /** 캔버스용 데이터 — 기사에 등장한 엔티티와 관계, 홉 확장을 요청했으면 그 이웃까지 */
   graph: GraphData
   /** 기사에 등장한 엔티티 id — 확장된 그래프에서 "기사에서 온 것"을 가려낸다 */
@@ -74,6 +79,11 @@ NEWS_LINKS.forEach((link) => {
   else relationsByNews.set(link.news_id, [{ link, source, target }])
 })
 
+/** 같은 관계인지 판단하는 키 — 간선 id는 기사마다 달라 삼중항으로 비교한다 */
+function tripleKey(link: GraphLink): string {
+  return [endId(link.source), link.type, endId(link.target), link.item?.text ?? ''].join('|')
+}
+
 /** 뉴스에 등장한 엔티티 노드 id — 유사도 계산과 서브그래프 시드에 함께 쓴다 */
 function seedIds(newsId: string): Set<string> {
   const ids = new Set<string>()
@@ -98,6 +108,7 @@ const PRESS_BY_HOST: Record<string, string> = {
   'www.asiae.co.kr': '아시아경제',
   'www.fnnews.com': '파이낸셜뉴스',
   'biz.heraldcorp.com': '헤럴드경제',
+  'www.thelec.kr': '디일렉',
 }
 
 /** 원문 URL에서 신문사를 유도한다 (뉴스 테이블에 신문사 컬럼이 없다) */
@@ -152,10 +163,27 @@ export function getNewsGraph(newsId: string, hops = 0): NewsGraph | null {
     },
   }
 
+  const graph = expandGraph(MOCK_GRAPH, seed, hops)
+
+  // 확장으로 들어온 관계 — 기사에서 온 간선을 빼면 남는다.
+  // 기사 본문에 이름이 없는 기업이 왜 걸렸는지 보여주려면 이 목록이 필요하다.
+  //
+  // 같은 삼중항이 다른 기사에도 나오면 간선 id가 달라 그대로 두면 목록에 두 번 뜬다.
+  // 기사에 이미 있는 삼중항은 확장 목록에서 뺀다.
+  const seedLinkIds = new Set(links.map((l) => l.id))
+  const seedTriples = new Set(links.map(tripleKey))
+  const expanded: NewsRelation[] = graph.links.flatMap((link) => {
+    if (seedLinkIds.has(link.id) || seedTriples.has(tripleKey(link))) return []
+    const source = nodeById.get(endId(link.source))
+    const target = nodeById.get(endId(link.target))
+    return source && target ? [{ link, source, target }] : []
+  })
+
   return {
     news,
     relations,
-    graph: expandGraph(MOCK_GRAPH, seed, hops),
+    expanded,
+    graph,
     seedIds: nodes.map((n) => n.id),
   }
 }
