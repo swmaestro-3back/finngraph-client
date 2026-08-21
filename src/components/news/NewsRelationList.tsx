@@ -18,7 +18,7 @@ interface Props {
   onSelect: (linkId: string) => void
 }
 
-/** 삼중항 목록 한 묶음 — 카드와 캔버스가 서로를 강조한다 */
+/** 트리플 목록 한 묶음 — 카드와 캔버스가 서로를 강조한다 */
 export function NewsRelationList({ title, hint, relations, activeId, onHover, onSelect }: Props) {
   const listRef = useRef<HTMLDivElement>(null)
 

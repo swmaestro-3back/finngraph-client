@@ -1,5 +1,5 @@
 // 기업 지식그래프 도메인 타입
-// 엔티티(기업/국가/제품/원자재)와 삼중항 관계(11개 서술어)를 표현한다.
+// 엔티티(기업/국가/제품/원자재)와 트리플 관계(11개 서술어)를 표현한다.
 
 /** 엔티티(노드) 종류 */
 export type EntityType = "company" | "country" | "product" | "commodity";
@@ -44,7 +44,7 @@ export interface GraphNode {
   fy?: number | null;
 }
 
-/** 삼중항의 중간 항목 (예: A가 B에게 '무엇을' 공급/수출) */
+/** 트리플의 중간 항목 (예: A가 B에게 '무엇을' 공급/수출) */
 export interface EdgeItem {
   text: string;
   type: EntityType;
@@ -55,7 +55,7 @@ export interface GraphLink {
   source: string | GraphNode;
   target: string | GraphNode;
   type: Predicate;
-  /** 삼중항 중간 항목 — 없을 수 있음 */
+  /** 트리플 중간 항목 — 없을 수 있음 */
   item?: EdgeItem | null;
   /** 언급 횟수 — 간선 가중치(굵기)에 사용 */
   mentioned_count: number;

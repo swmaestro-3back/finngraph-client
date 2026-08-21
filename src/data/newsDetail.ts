@@ -79,7 +79,7 @@ NEWS_LINKS.forEach((link) => {
   else relationsByNews.set(link.news_id, [{ link, source, target }])
 })
 
-/** 같은 관계인지 판단하는 키 — 간선 id는 기사마다 달라 삼중항으로 비교한다 */
+/** 같은 관계인지 판단하는 키 — 간선 id는 기사마다 달라 트리플으로 비교한다 */
 function tripleKey(link: GraphLink): string {
   return [endId(link.source), link.type, endId(link.target), link.item?.text ?? ''].join('|')
 }
@@ -168,8 +168,8 @@ export function getNewsGraph(newsId: string, hops = 0): NewsGraph | null {
   // 확장으로 들어온 관계 — 기사에서 온 간선을 빼면 남는다.
   // 기사 본문에 이름이 없는 기업이 왜 걸렸는지 보여주려면 이 목록이 필요하다.
   //
-  // 같은 삼중항이 다른 기사에도 나오면 간선 id가 달라 그대로 두면 목록에 두 번 뜬다.
-  // 기사에 이미 있는 삼중항은 확장 목록에서 뺀다.
+  // 같은 트리플이 다른 기사에도 나오면 간선 id가 달라 그대로 두면 목록에 두 번 뜬다.
+  // 기사에 이미 있는 트리플은 확장 목록에서 뺀다.
   const seedLinkIds = new Set(links.map((l) => l.id))
   const seedTriples = new Set(links.map(tripleKey))
   const expanded: NewsRelation[] = graph.links.flatMap((link) => {
@@ -197,7 +197,7 @@ export interface NewsEntity {
 
 const nodeByLabel = new Map(MOCK_GRAPH.nodes.map((n) => [n.label, n]))
 
-/** 기사에 등장한 엔티티 — 주어·목적어 다음에 삼중항의 중간 항목(제품·원자재)을 붙인다 */
+/** 기사에 등장한 엔티티 — 주어·목적어 다음에 트리플의 중간 항목(제품·원자재)을 붙인다 */
 export function newsEntities(relations: NewsRelation[]): NewsEntity[] {
   const byLabel = new Map<string, NewsEntity>()
   const add = (entity: NewsEntity) => {

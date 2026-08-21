@@ -10,7 +10,7 @@ interface Props {
   target: GraphNode
 }
 
-/** 간선(관계) 상세 — 삼중항, 근거 문장, 뉴스 출처 */
+/** 간선(관계) 상세 — 트리플, 근거 문장, 뉴스 출처 */
 export function EdgeDetail({ link, source, target }: Props) {
   const tenseLabel = link.tense === 'future_or_planned' ? '전망·계획' : '사실'
 
@@ -27,7 +27,7 @@ export function EdgeDetail({ link, source, target }: Props) {
         <EntityPill node={target} />
       </div>
 
-      {/* 삼중항 중간 항목 */}
+      {/* 트리플 중간 항목 */}
       {link.item && (
         <div className="mb-4 flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">대상</span>

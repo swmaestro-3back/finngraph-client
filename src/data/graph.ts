@@ -10,7 +10,7 @@ import { LABEL_TO_TYPE, ALL_ENTITY_TYPES, ALL_PREDICATES } from '@/data/graphTyp
 import raw from '@/data/samsung-graph.json'
 
 /**
- * data/samsung-graph.json (뉴스 분석으로 추출한 삼중항 관계)을
+ * data/samsung-graph.json (뉴스 분석으로 추출한 트리플 관계)을
  * 그래프 컴포넌트가 쓰는 GraphData(nodes/links)로 변환한다.
  * 백엔드가 준비되면 이 모듈 대신 fetch 결과를 같은 형태로 매핑하면 된다.
  */
@@ -77,7 +77,7 @@ data.entities.forEach((e) => {
 })
 
 /**
- * 관계 하나 = 링크 하나. 같은 삼중항이 여러 기사에 나오면 링크도 그만큼 생긴다.
+ * 관계 하나 = 링크 하나. 같은 트리플이 여러 기사에 나오면 링크도 그만큼 생긴다.
  * 기사별 근거 문장·언급 횟수가 살아 있어야 뉴스 서브그래프를 그릴 수 있다.
  */
 export const NEWS_LINKS: GraphLink[] = data.relations.map((r, i) => {
