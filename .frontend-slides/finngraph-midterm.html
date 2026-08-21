@@ -310,6 +310,15 @@ h2 b{color:var(--primary);font-weight:700;}
 /* 실제 캡처가 들어간 자리 — 화면 전체가 잘리지 않게 contain */
 .ft-img{flex:1;min-height:0;width:100%;object-fit:contain;object-position:center;
   border:1.5px solid var(--border);border-radius:14px;background:var(--card-bg);}
+/* 세로형 캡처 단독 — 박스 폭이 이미지 실폭을 따라가 좌우 회색 여백이 생기지 않는다 */
+.ft-img--tall{width:auto;max-width:100%;align-self:center;}
+/* 세로형 캡처 2장 나란히 — 각 이미지 폭을 절반으로 잡는다 */
+.ft-row{flex:1;min-height:0;display:flex;gap:14px;align-items:center;justify-content:center;}
+.ft-row .ft-img{flex:0 1 auto;width:calc(50% - 7px);height:auto;max-height:100%;}
+/* 캡처 비교 슬라이드 압축 배치 — 상하 슬롯·여백을 줄여 캡처 영역을 키운다 */
+.vf-compact .pb-body{margin-top:16px;}
+.vf-compact .pb-panel{--pb-slot:52px;gap:10px;padding:22px 30px 20px;}
+.vf-compact .vf-note{margin-top:18px;padding:16px 26px;}
 
 /* 설명 항목 리스트 — 번호 배지 + 소제목 + 본문 */
 .ft-list{display:flex;flex-direction:column;justify-content:center;gap:14px;}
@@ -429,6 +438,15 @@ h2 b{color:var(--primary);font-weight:700;}
 .mkt li::before{content:"";position:absolute;left:0;top:.62em;
   width:5px;height:5px;border-radius:50%;background:var(--pb-brand-300);}
 .mkt li b{color:var(--text);font-weight:700;}
+.mkt-src{margin-top:-2px;font-size:14px;color:var(--light);line-height:1.5;word-break:keep-all;}
+/* 시장 분석 슬라이드 전용 압축 — .persona/.mkt 는 공용이라 반드시 이 스코프에서만 줄인다 */
+section[aria-label="시장 분석"] .persona{padding:26px 40px;min-height:0;}
+section[aria-label="시장 분석"] .persona__head{margin-bottom:18px;}
+section[aria-label="시장 분석"] .persona .p-ico{width:162px;height:96px;}
+section[aria-label="시장 분석"] .mkt{gap:16px;}
+section[aria-label="시장 분석"] .mkt ul{margin-top:8px;}
+section[aria-label="시장 분석"] .mkt h4{font-size:25px;}
+section[aria-label="시장 분석"] .mkt li{font-size:20px;}
 
 /* TAM > SAM > SOM — 들여쓰기로 좁혀지는 퍼널 */
 .tam{display:flex;flex-direction:column;gap:20px;margin:auto 0;}
@@ -2062,7 +2080,7 @@ body.editing .edit-bar{display:flex;}
             <div>
               <h4>주식 정보 수요의 폭증</h4>
               <ul>
-                <li>국내 개인투자자는 코로나 이후 급증하여 약 <b>1,542만 명</b> — 국민 3~4명 중 1명이 주식 보유</li>
+                <li>국내 개인투자자는 코로나 이후 급증하여 약 <b>1,456만 명</b> — 국민 3~4명 중 1명이 주식 보유</li>
                 <li>투자자 예탁금(투자 대기자금)의 증가 — 2025년 <b>80조 원</b>대를 기록하며 사상 최고 수준을 지속</li>
                 <li>증권사 앱 이용자의 전방위 확대 — 2026년 1월 상위 6개사 <b>MTS 모두</b> 전년 동월 대비 MAU 증가</li>
               </ul>
@@ -2080,6 +2098,7 @@ body.editing .edit-bar{display:flex;}
                 <li>2030년 약 <b>69억 달러</b> 규모, 연평균 <b>36.6%</b> 성장 전망</li>
               </ul>
             </div>
+            <div class="mkt-src">출처 — 한국예탁결제원 · 금융투자협회 · 와이즈앱·리테일</div>
           </div>
         </div>
         <div class="persona reveal r4">
@@ -2323,14 +2342,12 @@ body.editing .edit-bar{display:flex;}
 
 <!-- ===========================================
      핵심 기술 검증 01 — 뉴스 필터링
-     [넣어야 할 캡처 2장]
-       images/10-app-news.png       : 비교 대상 앱의 종목 뉴스 목록 (같은 종목·같은 시각)
-       images/11-finngraph-news.png : 같은 조건의 Finngraph 이슈 타임라인
-     캡처를 넣을 때 아래 .ft-shot div 를
-       <img class="ft-img" src="images/10-app-news.png" alt="...">
-     로 통째로 교체하면 됩니다. 비교 대상 앱 이름과 건수는 캡처에 맞춰 수정하세요.
+     [캡처 반영 완료]
+       images/10-before-1.png, 10-before-2.png : 비교 대상 앱의 종목 뉴스 목록 (같은 종목·같은 시각)
+       images/11-after.png                       : 같은 조건의 Finngraph 이슈 타임라인
+     하단 vf-note 의 건수(OO건)는 캡처 기준 실측값으로 채워야 한다.
      =========================================== -->
-<section class="slide" aria-label="기술 검증 01 — 뉴스 필터링">
+<section class="slide vf-compact" aria-label="기술 검증 01 — 뉴스 필터링">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 3 · 진행 상황</div>
@@ -2342,18 +2359,19 @@ body.editing .edit-bar{display:flex;}
       <div class="pb-panel pb-panel--problem reveal r3">
         <div class="pb-panel__head">기존 증권 앱 · 종목 뉴스</div>
         <div class="pb-panel__body">
-          <!-- 캡처 교체 자리 -->
-          <div class="ft-shot">비교 대상 앱의 종목 뉴스 목록<em>같은 종목 · 같은 시각 기준</em><code>images/10-app-news.png</code></div>
+          <div class="ft-row">
+            <img class="ft-img" src="images/10-before-1.png" alt="비교 대상 앱의 종목 뉴스 목록 캡처 1 — 같은 종목 · 같은 시각 기준">
+            <img class="ft-img" src="images/10-before-2.png" alt="비교 대상 앱의 종목 뉴스 목록 캡처 2 — 같은 종목 · 같은 시각 기준">
+          </div>
         </div>
         <div class="pb-panel__foot">종목명이 포함되면 노출 — 시황·지수·수급 기사가 함께 섞인다</div>
       </div>
       <div class="pb-panel pb-panel--solution reveal r4">
         <div class="pb-panel__head">Finngraph · 이슈 타임라인</div>
         <div class="pb-panel__body">
-          <!-- 캡처 교체 자리 -->
-          <div class="ft-shot">같은 조건의 Finngraph 뉴스 목록<em>노이즈 필터링 적용 후</em><code>images/11-finngraph-news.png</code></div>
+          <img class="ft-img ft-img--tall" src="images/11-after.png" alt="같은 조건의 Finngraph 뉴스 목록 — 노이즈 필터링 적용 후">
         </div>
-        <div class="pb-panel__foot">해당 기업의 실제 이벤트를 다룬 기사만 남는다</div>
+        <div class="pb-panel__foot">정규식 1차 필터 + 온톨로지 기반 LLM 3중 판정</div>
       </div>
     </div>
     <div class="vf-note reveal r5">
