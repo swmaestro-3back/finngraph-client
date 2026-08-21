@@ -643,7 +643,7 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
   color:var(--pb-warn);font-size:15px;font-weight:700;letter-spacing:.04em;}
 
 /* ===========================================
-   AI 리서치 에이전트 — 화면 캡처 대신 대화 목업
+   AI 리서치 — 화면 캡처 대신 리포트 목업
    기능 01·02 슬라이드의 .ft-img 자리에 그대로 들어갑니다.
    =========================================== */
 .chat{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:14px;
@@ -665,6 +665,13 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
   width:5px;height:5px;border-radius:50%;background:var(--pb-brand-300);}
 .chat .ans .src{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
   font-size:17px;color:var(--light);}
+/* 발견 블록 — 본문에 이름이 없는데 관계를 타고 찾아낸 기업.
+   슬라이드 26의 .ent-chips span.miss 와 같은 semantic-down 계열로 묶는다. */
+.chat .find{margin-top:14px;padding-top:13px;border-top:1px solid var(--border);}
+.chat .find-h{font-size:18px;font-weight:700;color:var(--pb-alert);margin-bottom:9px;}
+.chat .find-i{display:flex;gap:11px;align-items:baseline;padding:5px 0;}
+.chat .find-i b{flex:none;font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.chat .find-i span{font-size:17px;color:var(--muted);line-height:1.45;word-break:keep-all;}
 
 /* ===========================================
    핵심 기술 검증 (PART 3)
@@ -1909,64 +1916,69 @@ body.editing .edit-bar{display:flex;}
   </div>
 </section>
 
-<!-- 핵심 기능 04 — AI 리서치 에이전트 -->
-<section class="slide" aria-label="기능 04 — AI 리서치 에이전트">
+<!-- 핵심 기능 04 — AI 리서치 -->
+<section class="slide" aria-label="기능 04 — AI 리서치">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 1 · 서비스 기획</div>
       <div class="tag reveal r1">04 / 06</div>
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
-    <h2 class="reveal r2"><b>기능 04</b> · AI 리서치 에이전트 <span class="soon-pill" style="vertical-align:12px;">개발 예정</span></h2>
+    <h2 class="reveal r2"><b>기능 04</b> · AI 리서치 <span class="soon-pill" style="vertical-align:12px;">개발 예정</span></h2>
     <div class="pb-body pb-body--shot">
       <!-- 좌 : 화면 캡처 대신 대화 목업. 앞 세 기능의 캡처 패널과 같은 자리·같은 골격. -->
       <div class="pb-panel pb-panel--solution reveal r3">
-        <div class="pb-panel__head">대화형 리포트 생성</div>
+        <div class="pb-panel__head">종목 · 기간 지정 → 고정 형식 리포트</div>
         <div class="pb-panel__body">
           <div class="chat">
-            <div class="ask">3월부터 8월까지 삼성전자 리포트 만들어줘</div>
-            <div class="steps"><i>수집 중</i> 뉴스 412건 · 분기 재무 2건 · 관계 경로 37개</div>
+            <div class="ask">삼성전자 · 2026.03 – 08 리서치</div>
+            <div class="steps"><i>수집</i> 주가 268거래일 · 수급 · 분기재무 · 관계 경로 110개</div>
             <div class="ans">
-              <div class="rt">삼성전자 · 2026.03 – 2026.08 리서치 리포트</div>
+              <div class="rt">삼성전자 · 2026.03 – 2026.08</div>
               <ul>
-                <li>기간 내 핵심 이벤트 5건 — 엔비디아 <b>그록3</b> 수주가 최대 호재</li>
-                <li>동기간 영업이익률 개선, 파운드리 가동률 상승과 방향 일치</li>
-                <li>수주 파급이 닿는 후공정·소재 협력사 <b>6개 종목</b> 동반 상승</li>
+                <li>주가 · 수급 · 밸류에이션 변화</li>
+                <li>기간 내 이벤트 · 분기 실적 · 동종 비교</li>
               </ul>
-              <div class="src">문장마다 근거 기사·재무 항목·관계 경로 출처가 달립니다</div>
+              <div class="find">
+                <div class="find-h">본문에 이름이 없는 연관 기업 3곳</div>
+                <div class="find-i"><b>두산테스나</b><span>매출 95%가 삼성전자 파운드리·시스템LSI에서 발생</span></div>
+                <div class="find-i"><b>디바이스</b><span>삼성전자와 297억원 규모 웨이퍼 세정장비 공급계약</span></div>
+                <div class="find-i"><b>동진쎄미켐</b><span>삼성전자 핵심 소재 업체군으로 분류</span></div>
+              </div>
+              <div class="src">매수·매도 추천 ✕ &nbsp;·&nbsp; 주가 예측 ✕ &nbsp;·&nbsp; 없는 사실 생성 ✕</div>
             </div>
           </div>
         </div>
         <div class="pb-panel__foot"></div>
       </div>
       <div class="pb-panel pb-panel--problem reveal r4">
-        <div class="pb-panel__head">탐색의 끝에, 손에 남는 문서 한 장</div>
+        <div class="pb-panel__head">흩어진 데이터를 한 번에, 못 찾던 것까지</div>
         <div class="pb-panel__body">
           <div class="ft-list">
             <div class="ft-item">
               <i>01</i>
               <div class="tx">
-                <b>기간 · 종목 지정 대화</b>
-                <span>“A~B 기간 OO 리포트” 한 문장으로 범위를 지정 — 질의어를 배울 필요가 없다</span>
+                <b>종목 · 기간만 지정</b>
+                <span>질의어를 배울 필요가 없다 — 무엇을 물어야 할지 몰라도 결과가 나온다</span>
               </div>
             </div>
             <div class="ft-item">
               <i>02</i>
               <div class="tx">
-                <b>뉴스 · 재무 · 관계망 자동 수집</b>
-                <span>앞의 세 기능이 만든 데이터를 에이전트가 스스로 모아 하나의 문서로 종합</span>
+                <b>흩어진 데이터를 고정 형식으로 수집</b>
+                <span>주가·수급·밸류에이션·분기재무·이벤트·동종비교 — 직접 모으면 약 90분</span>
               </div>
             </div>
             <div class="ft-item">
               <i>03</i>
               <div class="tx">
-                <b>근거 출처가 달린 리포트</b>
-                <span>모든 문장에 원문 링크와 관계 경로를 표기 — 검증 가능한 리포트</span>
+                <b>본문에 없는 연관 기업까지</b>
+                <span>관계망을 타고 찾아 근거 문장과 함께 제시 — 시간을 더 써도 혼자서는 도달할 수 없는 항목</span>
               </div>
             </div>
           </div>
         </div>
-        <div class="pb-panel__foot">기간 전체를 직접 찾는 대신,<br>근거가 남는 문서 한 장으로</div>
+        <div class="pb-panel__foot">임팩트 분석이 기사를 읽다 만나는 것이라면,<br>AI 리서치는 찾아 나서는 것</div>
       </div>
     </div>
   </div>
