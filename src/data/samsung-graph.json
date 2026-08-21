@@ -1,1286 +1,985 @@
 {
   "center": "삼성전자",
+  "seed_news": "news-004",
   "news": [
     {
       "news_id": "news-001",
-      "title": "삼성전자, 엔비디아 HBM3E 공급 초읽기",
-      "summary": "삼성전자가 엔비디아에 공급할 5세대 고대역폭메모리(HBM3E) 품질 검증을 통과한 것으로 전해졌다. 업계에 따르면 양사는 공급 물량과 단가를 놓고 막바지 협의를 진행 중이며, 이르면 3분기부터 초도 물량이 출하될 전망이다. 삼성전자는 평택 공장의 HBM 전용 라인 생산능력을 연내 두 배로 늘리는 방안을 검토하고 있다. 그동안 엔비디아 HBM 물량 대부분을 담당해 온 SK하이닉스와의 점유율 경쟁도 한층 치열해질 것으로 보인다.",
-      "url": "https://biz.heraldcorp.com/article/202607229239",
-      "collected_at": "2026-07-22T16:50:00+09:00"
+      "title": "오킨스전자, 테스트 소켓 삼성전자에 공급",
+      "summary": "오킨스전자는 삼성전자와 66억5075만원 규모의 반도체 테스트 소켓 공급계약을 체결했다고 21일 공시했다. 오킨스전자는 2014년 코스닥시장에 상장해 테스트 소켓 등 반도체 검사용 소켓을 개발하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-002",
-      "title": "삼성전자 HBM·D램·낸드 3각 편대",
-      "summary": "삼성전자가 HBM3E 12단 제품 양산 체제를 갖추며 메모리 3개 축을 모두 가동하기 시작했다. 회사는 지난 분기 기준 세계 D램 시장에서 점유율 1위를 유지했고, 236단 낸드플래시를 주력으로 낸드 사업의 수익성도 개선했다. 회사 측은 서버용 고용량 제품 비중을 늘려 범용 메모리 가격 변동의 영향을 줄이겠다고 밝혔다. 증권가는 메모리 3개 사업의 동반 개선으로 하반기 반도체 부문 영업이익이 크게 늘어날 것으로 보고 있다.",
-      "url": "https://www.hankyung.com/article/202607189240",
-      "collected_at": "2026-07-18T17:51:00+09:00"
+      "title": "삼성전자, AP 현대차에 공급",
+      "summary": "삼성전자는 2023년 6월 현대차에 차량용 인포테인먼트 프로세서 'AP 오토 V920'을 공급하기로 했다. 2023년 10월 삼성SDI가 현대차와 각형 배터리 장기공급계약을 체결했다. 현대차와 삼성전자가 5G 기술 협업을 맺고 스마트 제조 솔루션 구축에 속도를 낸다. 지난 24일 현대차·기아와 삼성SDI가 경기 의왕연구소에서 '로봇 전용 배터리 공동 개발 위한 업무협약(MOU)'을 맺었다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-003",
-      "title": "삼성전자, 유리기판·엑시노스 개발 가속",
-      "summary": "삼성전자가 차세대 패키징 소재인 유리기판 개발에 본격 착수했다. 유리기판은 기존 플라스틱 기판보다 열에 강하고 미세 회로를 촘촘히 새길 수 있어 AI 반도체용 고성능 패키지의 핵심 소재로 꼽힌다. 회사는 천안 사업장에 시험 생산라인을 구축하고 2027년 양산을 목표로 검증을 진행 중이다. 자체 모바일 AP인 엑시노스 신제품 개발도 병행해 파운드리 선단 공정과 연계한다는 계획이다.",
-      "url": "https://www.mk.co.kr/article/202607159241",
-      "collected_at": "2026-07-15T18:52:00+09:00"
+      "title": "일본, 펠리클 삼성전자에 수출",
+      "summary": "25일 업계에 따르면 삼성전자는 일본 미쓰이화학에서 수십억 원 규모의 펠리클을 구매하기로 했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-004",
-      "title": "본사 수원, 삼성전자 국가대표 반도체",
-      "summary": "삼성전자는 경기 수원에 본사를 둔 국내 최대 반도체·전자 기업이다. 회사는 수원 디지털시티를 중심으로 기흥·화성·평택 반도체 단지를 운영하며 국내에서만 10만 명 이상을 고용하고 있다. 지난해 기준 국내 전체 수출에서 반도체가 차지하는 비중은 20%를 웃돌았고, 그 상당 부분을 삼성전자가 담당했다. 회사는 평택 4공장 추가 투자를 통해 국내 생산 기반을 계속 확대하고 있다.",
-      "url": "https://www.yna.co.kr/article/202607109242",
-      "collected_at": "2026-07-10T07:53:00+09:00"
+      "title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "summary": "반도체 전공정 장비 제조업체 테스가 SK하이닉스와 90억5000만원 규모의 반도체 제조장비 공급계약을 체결했다고 10일 공시했다. 하나머티리얼즈는 반도체 전공정 식각용 소재를 제조하는 회사로, 하나마이크론과 상호출자구조로 되어 있다. 2002년 설립된 테스는 반도체 제조에 필요한 반도체 전공정 장비를 주력으로 생산하는 기업이다. 반도체 전공정 장비 제조업체 테스는 반도체 소자의 박막 형성 및 식각 공정에 사용되는 플라즈마 강화 화학기상증착(증착 장비) 장비와 식각 장비 등을 주력 제품으로 생산한다. 키움증권에 따르면 삼성전자는 중국 시안 공장의 NAND 설비를 256단 적층 제품 생산을 위해 업그레이드하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-005",
-      "title": "삼성전자 애플에 모바일 D램 공급",
-      "summary": "삼성전자가 애플 아이폰에 저전력 모바일 D램(LPDDR)을 공급하고 있는 것으로 확인됐다. 업계에 따르면 삼성전자는 최신 아이폰 시리즈에 탑재되는 모바일 D램 물량의 상당 부분을 담당하고 있다. 온디바이스 AI 기능 확대로 스마트폰 한 대에 들어가는 메모리 용량이 늘면서 공급 규모도 함께 증가하는 추세다. 삼성전자는 차세대 LPDDR6 양산 준비도 마친 것으로 알려졌다.",
-      "url": "https://news.mt.co.kr/article/202607089243",
-      "collected_at": "2026-07-08T08:54:00+09:00"
+      "title": "한미반도체, TC 본더 SK하이닉스에 공급",
+      "summary": "한미반도체는 HBM용 열압착 장비인 TC 본더를 생산∙공급한다. 미국의 대중 제재로 해외직접생산규제(FDPR)에 첨단 장비가 규제 대상에 포함되는 등 중국 수출규제가 점점 까로워지는 형국이다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-006",
-      "title": "파운드리 삼성 vs TSMC",
-      "summary": "파운드리 시장에서 삼성전자가 1위 TSMC와의 격차를 좁히기 위한 공세를 이어가고 있다. 시장조사업체 집계 기준 TSMC의 점유율은 60%대, 삼성전자는 10%대 초반으로 여전히 차이가 크다. 삼성전자는 게이트올어라운드(GAA) 기술을 앞세운 3나노 공정으로 대형 고객사 확보에 나섰고, 테일러 공장 가동을 계기로 미국 내 수주도 늘리겠다는 방침이다. TSMC는 2나노 양산 일정을 앞당기며 기술 우위를 굳히려 하고 있다.",
-      "url": "https://www.edaily.co.kr/article/202607059244",
-      "collected_at": "2026-07-05T09:55:00+09:00"
+      "title": "와이씨, 메모리 테스터 삼성전자에 공급",
+      "summary": "올해 초 와이씨는 삼성전자와 511억원 규모 HBM용 메모리 테스터 'MT8311' 공급계약을 체결했다. 디아이는 삼성전자 중국법인에 191억원 규모의 반도체 검사/계측 장비인 메모리 테스터 공급계약을 체결했다. 지난 2020년 삼성전자는 전략적 투자자(SI)로서 와이씨에 473억원을 투자했다. 와이씨는 6세대 HBM인 HBM, 7세대 HBM인 HBM, 3D NAND 등 차세대 메모리 테스터도 준비하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-007",
-      "title": "D램 가격 경쟁 격화",
-      "summary": "D램 가격 주도권을 둘러싼 삼성전자와 마이크론의 경쟁이 격화되고 있다. 마이크론이 서버용 고용량 모듈 공급을 늘리며 북미 고객사 비중을 확대하자, 삼성전자도 선단 공정 전환에 속도를 내며 대응에 나섰다. 범용 D램 고정거래가격은 최근 수개월간 상승세를 이어왔으나, 신규 증설 물량이 풀리는 시점을 두고 전망이 엇갈린다. 업계는 하반기 공급 계약 협상에서 가격 협상력이 판가름 날 것으로 보고 있다.",
-      "url": "https://www.sedaily.com/article/202607039245",
-      "collected_at": "2026-07-03T10:56:00+09:00"
+      "title": "디아이, 메모리 테스터 삼성전자에 공급",
+      "summary": "디아이는 삼성전자 중국법인에 191억원 규모의 반도체 검사/계측 장비인 메모리 테스터 공급계약을 체결했다. 올해 초 와이씨는 삼성전자와 511억원 규모 HBM용 메모리 테스터 'MT8311' 공급계약을 체결했다. 디아이 관계자는 자사의 장비가 더블데이터레이트5(DRAM)용 차세대 메모리 테스터라고 설명했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-008",
-      "title": "삼성전자, AMD와 차세대 HBM 협력",
-      "summary": "삼성전자가 AMD와 차세대 HBM4 공동 개발을 논의하고 있는 것으로 알려졌다. 양사는 AI 가속기에 최적화된 커스텀 HBM 규격과 로직 다이 설계를 함께 검토 중인 것으로 전해졌다. HBM4는 기존 대비 대역폭을 크게 높이면서 고객사별 맞춤 설계가 가능한 것이 특징이다. 다만 구체적인 공급 규모와 일정은 확정되지 않았으며, 양사 모두 공식 입장을 밝히지 않았다.",
-      "url": "https://www.etnews.com/article/202606309246",
-      "collected_at": "2026-06-30T11:57:00+09:00"
+      "title": "파크시스템스, AFM 중국에 수출",
+      "summary": "파크시스템스의 주력 장비인 AFM(원자현미경)은 선단 공정뿐 아니라 레거시 공정 일부에도 도입된다. 에스티아이의 주요 장비는 반도체 및 디스플레이 생산라인에 화학 약품을 공급하는 중앙 약품 공급 시스템(CCSS)이다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-009",
-      "title": "삼성-구글, 텐서 칩 동맹",
-      "summary": "삼성전자가 구글과 협력해 픽셀 스마트폰에 탑재되는 텐서 AP를 공동 개발했다. 삼성전자는 칩 설계 단계부터 참여해 파운드리 공정으로 생산까지 맡아 왔다. 텐서 칩은 온디바이스 AI 연산을 담당하는 전용 블록을 갖춰 사진 처리와 음성 인식 기능에 활용된다. 구글은 차기 모델에서도 협력 관계를 이어갈 것으로 알려졌다.",
-      "url": "https://www.newspim.com/article/202606289247",
-      "collected_at": "2026-06-28T12:58:00+09:00"
+      "title": "와이씨, 반도체 후공정 삼성전자에 공급",
+      "summary": "반도체 후공정 장비 전문기업 와이씨가 삼성전자와 대규모 장비 공급 계약을 연이어 체결하며 수주 확대에 속도를 내고 있다. 와이씨는 반도체 장비 공급 계약을 통해 지속적인 성장세를 이어가고 있으며, 앞으로도 삼성전자와 같은 주요 고객과의 협력을 강화할 계획이다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-010",
-      "title": "삼성전자, 전장기업 하만 인수 효과",
-      "summary": "삼성전자는 2017년 미국 전장·오디오 기업 하만을 80억 달러에 인수했다. 국내 기업의 해외 인수합병 가운데 최대 규모로, 삼성전자는 이를 계기로 차량용 인포테인먼트와 오디오 사업에 본격 진출했다. 하만은 인수 이후 디지털 콕핏과 카오디오 수주를 늘리며 실적을 개선해 왔다. 최근에는 삼성전자 반도체·디스플레이 부문과 연계한 차량용 통합 솔루션 공급도 확대하고 있다.",
-      "url": "https://www.sedaily.com/article/202606259269",
-      "collected_at": "2026-06-25T10:20:00+09:00"
+      "title": "와이씨, 반도체 후공정 SK하이닉스에 공급",
+      "summary": "반도체 후공정 장비 전문기업 와이씨가 삼성전자와 대규모 장비 공급 계약을 연이어 체결하며 수주 확대에 속도를 내고 있다. 삼성전자는 미국 오스틴 공장에서 이미지센서를 생산한 뒤 대한민국에서 반도체 후공정을 진행할 예정이다. 하나머티리얼즈는 반도체 전공정 식각용 소재를 제조하는 회사로, 하나마이크론과 상호출자구조로 되어 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-011",
-      "title": "삼성전자, ASML 지분 일부 매각",
-      "summary": "삼성전자가 보유 중이던 ASML 지분 일부를 매각해 자금을 확보했다. 삼성전자는 2012년 ASML의 차세대 노광기 개발에 참여하며 지분을 취득했고, 이후 여러 차례에 걸쳐 단계적으로 처분해 왔다. 회사는 매각 대금을 시설 투자와 연구개발 재원으로 활용할 계획이다. 지분 매각과 별개로 EUV 노광장비 도입 등 ASML과의 협력 관계는 유지된다.",
-      "url": "https://www.etnews.com/article/202606209270",
-      "collected_at": "2026-06-20T11:21:00+09:00"
+      "title": "삼성전자, 파운드리 테슬라에 공급",
+      "summary": "삼성전자가 테슬라로부터 23조 원 규모 반도체 위탁생산(파운드리) 계약을 맺었다. 일론 머스크 테슬라 최고경영자(CEO)는 자신의 사회관계망서비스 엑스(X·구 트위터)에서 삼성전자와의 계약 사실을 공개했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-012",
-      "title": "삼성전자, 미국·중국에 메모리 수출",
-      "summary": "삼성전자가 미국과 중국을 양대 축으로 메모리 수출을 확대하고 있다. 회사는 미국 빅테크 기업의 AI 데이터센터 증설에 맞춰 HBM과 고용량 서버 D램 공급을 늘렸다. 중국에서는 시안 공장을 통해 낸드플래시를 생산해 현지 스마트폰·서버 업체에 공급하고 있다. 다만 미국의 대중 수출 통제가 이어지면서 중국 사업장의 장비 반입과 공정 전환에는 제약이 남아 있다.",
-      "url": "https://www.newspim.com/article/202606189271",
-      "collected_at": "2026-06-18T12:22:00+09:00"
+      "title": "삼성전자, 파운드리 애플에 공급",
+      "summary": "이재용 삼성전자 회장의 미국 장기 출장 이후, 테슬라, 애플, IBM 등이 삼성전자와 파운드리(반도체 위탁생산) 계약을 맺었다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-013",
-      "title": "삼성전자, AI 데이터센터 메모리 대규모 투자",
-      "summary": "삼성전자가 AI 데이터센터용 메모리 사업에 대규모 투자를 추진한다. 회사는 HBM과 고용량 서버 D램, 기업용 SSD를 묶은 데이터센터 전용 제품군을 확대할 계획이다. 투자에는 평택 라인 증설과 후공정 패키징 설비 확충이 포함된 것으로 알려졌다. 구체적인 투자 규모와 집행 시기는 확정되지 않았다.",
-      "url": "https://www.newsis.com/article/202606159272",
-      "collected_at": "2026-06-15T13:23:00+09:00"
+      "title": "삼성전자, 파운드리 현대차에 공급",
+      "summary": "삼성전자는 애플, 테슬라, 현대차, 인텔과 연이어 파운드리 수주에 성공했다. AMD의 주력 APU인 MI350에 들어가는 HBM3E(5세대) 12단 제품을 삼성전자가 공급하고 있다. 이재용 삼성전자 회장은 미국 오스틴에 위치한 삼성전자 파운드리 공장에서 일론 머스크 테슬라 최고경영자(CEO)를 만났다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-014",
-      "title": "삼성전자, 웨이퍼 소재 공급망 투자",
-      "summary": "삼성전자가 반도체 원자재 공급망 안정화를 위해 소재 기업 투자에 나섰다. 회사는 웨이퍼 원재료인 고순도 실리콘 확보를 위해 국내외 소재 업체와 장기 공급 계약을 맺고 일부 지분 투자도 병행했다. 배선 공정에 쓰이는 구리 역시 조달처를 다변화해 특정 국가 의존도를 낮추기로 했다. 최근 자원 수출 규제가 잦아지면서 원자재 확보가 생산 계획의 변수로 떠올랐다는 판단에서다.",
-      "url": "https://www.asiae.co.kr/article/202606129273",
-      "collected_at": "2026-06-12T14:24:00+09:00"
+      "title": "삼성전자, 이미지센서 애플에 공급",
+      "summary": "삼성전자는 미국 오스틴 공장에서 이미지센서를 생산한 뒤 대한민국에서 반도체 후공정을 진행할 예정이다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-015",
-      "title": "SK하이닉스, HBM 독점 공급",
-      "summary": "SK하이닉스가 HBM 시장에서 선두 자리를 지키고 있다. 회사는 엔비디아 AI 가속기에 들어가는 HBM 물량 대부분을 공급하며 사실상 독점적 지위를 유지해 왔다. HBM 판매 확대에 힘입어 메모리 사업의 수익성도 크게 개선됐다. 회사는 내년 물량까지 사실상 완판됐다며 HBM4 양산 준비에 들어갔다고 밝혔다.",
-      "url": "https://www.fnnews.com/article/202607209274",
-      "collected_at": "2026-07-20T15:25:00+09:00"
+      "title": "삼성전자, 이미지센서 중국에 공급",
+      "summary": "두산테스나는 삼성전자의 이미지센서 웨이퍼 테스트 1차 벤더로, 전체 매출의 약 95%가 삼성전자 파운드리 및 시스템LSI 부문에서 발생하고 있다. 애플은 7일 보도자료를 통해 미국 오스틴에 있는 삼성전자 반도체공장에서 삼성전자와 협력해 혁신적인 새로운 칩 제조 기술을 개발하고 있다고 밝혔다. 삼성전자는 애플과 기술개발 협력을 통해 차세대 제품에 하이브리드 본딩 기술을 적용할 것으로 보인다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-016",
-      "title": "SK하이닉스 이천 공장 증설",
-      "summary": "SK하이닉스가 경기 이천 본사 캠퍼스의 생산 능력을 늘린다. 이천 사업장은 회사의 주력 D램 생산기지로, HBM용 핵심 공정과 연구개발 조직이 함께 자리하고 있다. 회사는 신규 팹 건설과 노후 라인의 선단 공정 전환을 병행해 고부가 제품 비중을 높일 계획이다. 청주와 용인 클러스터를 포함한 국내 생산 기반 확충도 함께 추진된다.",
-      "url": "https://biz.heraldcorp.com/article/202607129275",
-      "collected_at": "2026-07-12T16:26:00+09:00"
+      "title": "일본, 블랭크마스크 삼성전자에 수출",
+      "summary": "삼성전자는 현재 일본 호야에서 극자외선(EUV) 노광장비용 블랭크마스크 대부분을 수입한다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-017",
-      "title": "엔비디아 GPU와 AI 데이터센터",
-      "summary": "엔비디아가 AI 가속기용 GPU 시장에서 압도적 점유율을 유지하고 있다. 회사의 데이터센터 부문 매출은 최근 분기에도 큰 폭으로 늘며 전체 실적을 견인했다. 엔비디아는 GPU 단품 판매를 넘어 네트워크와 소프트웨어를 묶은 데이터센터 통합 플랫폼으로 사업 범위를 넓히고 있다. 개발자 생태계인 쿠다(CUDA)를 기반으로 한 진입 장벽도 여전히 높다는 평가다.",
-      "url": "https://www.hankyung.com/article/202607199276",
-      "collected_at": "2026-07-19T17:27:00+09:00"
+      "title": "삼성전자, OLED 애플에 공급",
+      "summary": "삼성전자 디스플레이 부문은 애플의 내년 폴더블 아이폰용 플렉서블 OLED 패널 공급사로 선정되었다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-018",
-      "title": "엔비디아 미국 본사",
-      "summary": "엔비디아는 미국 캘리포니아 산타클라라에 본사를 두고 있다. 회사는 1993년 설립된 팹리스 기업으로, 칩 설계에 집중하고 생산은 외부 파운드리에 맡기는 구조를 유지해 왔다. 본사에는 아키텍처 설계와 소프트웨어 개발 조직이 모여 있다. 최근에는 AI 수요 확대에 맞춰 미국 내 연구 인력을 지속적으로 늘리고 있다.",
-      "url": "https://www.mk.co.kr/article/202607119277",
-      "collected_at": "2026-07-11T18:28:00+09:00"
+      "title": "삼성전자, HBM 엔비디아에 공급",
+      "summary": "삼성전자는 인공지능(AI) 투자 열풍에 따른 HBM 등 고부가 메모리 제품의 판매 급증과 범용 메모리 공급 부족으로 인한 가격 상승으로 3분기 실적 반등을 이뤘다. 삼성전자는 APU, 차세대 공정, 시스템반도체 등 미래 성장동력 확보를 위한 투자를 지속적으로 확대하고 있다는 평가를 받는다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-019",
-      "title": "TSMC, 엔비디아 GPU 위탁생산",
-      "summary": "TSMC가 엔비디아 GPU를 첨단 공정으로 위탁 생산해 공급하고 있다. 양사는 선단 로직 공정과 CoWoS 패키징을 함께 활용하며, AI 가속기 공급량은 사실상 TSMC의 패키징 생산능력에 좌우된다는 평가를 받는다. TSMC는 대만 신주과학단지에 본사와 주력 팹을 두고 있으며, 패키징 설비 증설에 대규모 자금을 투입하고 있다. 회사는 미국 애리조나 공장 가동으로 생산 거점 분산도 추진 중이다.",
-      "url": "https://www.yna.co.kr/article/202607169278",
-      "collected_at": "2026-07-16T07:29:00+09:00"
+      "title": "SK하이닉스, HBM 엔비디아에 공급",
+      "summary": "SK하이닉스는 세계 최초로 12단 HBM3E를 양산해 엔비디아 등 APU 기업에 독점적으로 HBM을 공급하고 있다. 삼성전자와 SK하이닉스는 NAND와 범용 DRAM 시장에서도 치열하게 경쟁하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-020",
-      "title": "ASML EUV 독점 공급",
-      "summary": "ASML은 EUV 노광장비를 만드는 세계 유일의 기업이다. 네덜란드 벨트호벤에 본사를 둔 이 회사는 삼성전자와 TSMC 등 선단 공정 업체에 장비를 공급하고 있다. EUV 장비는 대당 가격이 수천억 원에 달하고 연간 생산 대수가 제한돼 있어, 확보 물량이 각 업체의 미세 공정 전환 속도를 좌우한다. 회사는 차세대 하이 NA EUV 장비의 출하도 시작했다.",
-      "url": "https://www.hankyung.com/article/202607149300",
-      "collected_at": "2026-07-14T17:51:00+09:00"
+      "title": "하나머티리얼즈, SiC 삼성전자에 공급",
+      "summary": "하나머티리얼즈가 SiC(SIC) 포커스링 생산 능력을 확대한다. 한미반도체는 티씨케이, 하나머티리얼즈와 함께 삼성전자 반도체 밸류체인의 핵심 소재 축을 형성하고 있다. 하나머티리얼즈는 티씨케이, 한미반도체와 함께 삼성전자 반도체 밸류체인의 핵심 소재 축을 형성하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-021",
-      "title": "애플, 폴더블 시장 진입",
-      "summary": "애플이 폴더블 스마트폰 시장에 진입할 것이라는 전망이 나온다. 업계에서는 애플이 내년 신제품 라인업에 화면이 접히는 모델을 추가하는 방안을 검토 중인 것으로 보고 있다. 폴더블 시장은 삼성전자가 초기부터 주도해 왔으며, 중국 업체들이 가격을 앞세워 추격하는 구도다. 애플은 미국 쿠퍼티노 본사에서 관련 개발을 진행 중이나 출시 시점은 공개하지 않았다.",
-      "url": "https://www.mk.co.kr/article/202607099301",
-      "collected_at": "2026-07-09T18:52:00+09:00"
+      "title": "테스, 증착 장비 삼성전자에 공급",
+      "summary": "반도체 전공정 장비 제조업체 테스는 반도체 소자의 박막 형성 및 식각 공정에 사용되는 플라즈마 강화 화학기상증착(증착 장비) 장비와 식각 장비 등을 주력 제품으로 생산한다. 금융감독원 전자공시에 따르면 원익IPS는 반도체 전공정 단계의 증착 장비를 제조한다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-022",
-      "title": "마이크론, D램 3위 추격",
-      "summary": "마이크론이 D램 시장에서 상위 업체 추격에 속도를 내고 있다. 미국 아이다호주 보이시에 본사를 둔 이 회사는 미국에 기반을 둔 유일한 대형 메모리 기업으로, D램과 HBM을 함께 생산한다. 회사는 서버용 고용량 제품과 HBM 비중을 늘리며 수익성을 개선했다. 미국 정부의 반도체 보조금을 받아 자국 내 신규 팹 건설도 추진하고 있다.",
-      "url": "https://www.yna.co.kr/article/202607049302",
-      "collected_at": "2026-07-04T07:53:00+09:00"
+      "title": "삼성전자, 차량용 반도체 테슬라에 공급",
+      "summary": "삼성전자는 파운드리 등 시스템반도체 분야에서 글로벌 대형 고객사의 차량용 반도체 주문을 잇따라 수주하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-023",
-      "title": "일본, 반도체 소재 수출규제",
-      "summary": "일본이 반도체 핵심 소재인 포토레지스트의 한국 수출을 규제한 조치가 산업계에 남긴 영향이 재조명되고 있다. 일본 정부는 2019년 포토레지스트를 포함한 3개 품목의 대한국 수출 절차를 강화했다. 이후 국내 기업들은 소재 국산화와 조달처 다변화를 추진해 특정국 의존도를 낮췄다. 규제는 이후 완화됐지만 공급망 리스크 관리의 중요성을 보여준 사례로 꼽힌다.",
-      "url": "https://news.mt.co.kr/article/202606229303",
-      "collected_at": "2026-06-22T08:54:00+09:00"
+      "title": "삼성전자, LPU 엔비디아에 공급",
+      "summary": "엔비디아의 그록3 언어처리장치(LPU) 칩 생산은 삼성전자가 맡았다. 엔비디아가 인공지능(AI) 추론에 최적화한 그록(Groq)3 언어처리장치(LPU)와 이를 탑재한 그록3 LPX 랙을 출시한다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-024",
-      "title": "미국, 대중 반도체 장비 제재",
-      "summary": "미국이 중국에 대한 첨단 반도체 장비 수출 통제를 이어가고 있다. 규제 대상에는 EUV 노광장비를 비롯한 선단 공정 장비와 관련 부품·기술이 포함된다. 이에 따라 중국 기업의 미세 공정 전환이 지연되고 있으며, 중국에 생산 거점을 둔 해외 기업들도 장비 반입에 제약을 받고 있다. 미국은 우방국과 공조해 통제 범위를 단계적으로 넓혀 왔다.",
-      "url": "https://www.edaily.co.kr/article/202606199304",
-      "collected_at": "2026-06-19T09:55:00+09:00"
+      "title": "하나머티리얼즈, 실리콘 전극 삼성전자에 공급",
+      "summary": "하나머티리얼즈는 삼성전자와 SK하이닉스 등 대한민국 칩메이커들 위주로 실리콘 전극 제품을 공급하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-025",
-      "title": "삼성전기 MLCC, 삼성전자에 공급",
-      "summary": "삼성전기가 적층세라믹콘덴서(MLCC) 시장에서 세계 2위 자리를 지키고 있다. MLCC는 전자회로에서 전류를 안정적으로 흐르게 하는 부품으로, 스마트폰 한 대에 1000개 안팎이 들어간다. 삼성전기는 삼성전자의 스마트폰과 서버 제품에 MLCC를 공급하고 있다. 회사는 전장·서버용 고부가 제품 비중을 높여 수익성을 개선한다는 방침이다.",
-      "url": "https://www.sedaily.com/article/202607079305",
-      "collected_at": "2026-07-07T10:56:00+09:00"
+      "title": "하나머티리얼즈, 포커스링 삼성전자에 공급",
+      "summary": "하나머티리얼즈가 SiC(SIC) 포커스링 생산 능력을 확대한다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-026",
-      "title": "삼성전기, 팔라듐 원자재 확보",
-      "summary": "삼성전기가 MLCC 전극 소재인 팔라듐 확보에 나섰다. 팔라듐은 산지가 일부 국가에 편중돼 있어 국제 정세에 따라 가격 변동이 큰 원자재로 꼽힌다. 회사는 장기 공급 계약과 재고 확대로 조달 안정성을 높이는 한편, 니켈 등 대체 소재를 적용한 전극 기술 개발도 병행하고 있다. 원자재 가격은 MLCC 원가에 직접 반영되는 만큼 수익성과도 직결된다.",
-      "url": "https://www.etnews.com/article/202606279306",
-      "collected_at": "2026-06-27T11:57:00+09:00"
+      "title": "하나머티리얼즈, 실리콘 삼성전자에 공급",
+      "summary": "하나머티리얼즈는 반도체 에칭공정용 실리콘 및 SiC 부품 제조·판매를 주요 사업으로 하고 있다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     },
     {
       "news_id": "news-027",
-      "title": "삼성디스플레이, 애플에 OLED 공급",
-      "summary": "삼성디스플레이가 중소형 OLED 패널 시장에서 1위를 유지하고 있다. 회사는 애플 아이폰에 OLED 패널을 공급하며 매출의 상당 부분을 확보해 왔다. 최근에는 태블릿과 노트북용 중형 OLED로 적용 범위를 넓히고 있다. 중국 패널 업체들이 저가 공세로 점유율을 늘리면서 경쟁은 심화되는 추세다.",
-      "url": "https://www.newspim.com/article/202607069307",
-      "collected_at": "2026-07-06T12:58:00+09:00"
+      "title": "하나머티리얼즈, 실리콘 SK하이닉스에 공급",
+      "summary": "대신증권은 하나머티리얼즈의 실리콘 부품 매출이 2025년 2417억원에서 2027년 3223억원까지 늘어날 것이라고 전망했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
+    },
+    {
+      "news_id": "news-028",
+      "title": "하나머티리얼즈, 실리콘 일본에 수출",
+      "summary": "대신증권은 하나머티리얼즈의 실리콘 부품 사업이 성장의 핵심 동력으로 지목됐다고 분석했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
+    },
+    {
+      "news_id": "news-029",
+      "title": "현대차, 전기차에 생산",
+      "summary": "지난 2023년 삼성SDI는 현대차의 차세대 유럽향 전기차에 탑재될 P6(6세대 각형 배터리)를 7년간 공급하는 계약을 체결했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
+    },
+    {
+      "news_id": "news-030",
+      "title": "원익IPS, 삼성전자에 협력",
+      "summary": "삼성전자 서플라이 체인(공급망)에 속한 소재·부품·장비 종목인 원익IPS는 테슬라 수주 소식에 주가가 급등했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
+    },
+    {
+      "news_id": "news-031",
+      "title": "테슬라, 미국에 소재",
+      "summary": "미국의 전기차 기업 테슬라는 삼성전자와 대규모 파운드리 공급 계약을 체결했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
+    },
+    {
+      "news_id": "news-032",
+      "title": "삼성전자, 테슬라에 협력",
+      "summary": "이재용 삼성전자 회장의 미국 출장을 계기로 삼성전자와 테슬라 간의 협력 관계가 한층 더 구체화된 것으로 보인다. 삼성전자와 엔비디아의 대항마로 꼽히는 AMD와의 파트너십 또한 메모리 분야를 넘어 시스템반도체 영역으로 확장될 전망이다. 엔비디아의 대항마로 꼽히는 AMD는 삼성전자와의 파트너십을 메모리 분야를 넘어 시스템반도체 영역으로 확장할 전망이다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
+    },
+    {
+      "news_id": "news-033",
+      "title": "하나머티리얼즈, 실리콘에 생산",
+      "summary": "금융감독원 전자공시시스템에 따르면 테스는 SK하이닉스와 121억 원 규모의 반도체 제조 장비 공급 계약을 체결했다. 유안타증권은 실리콘 부품 생산 기업인 하나머티리얼즈를 이달 주목할 추천 종목으로 제시했다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
+    },
+    {
+      "news_id": "news-034",
+      "title": "삼성전자, 한미반도체에 협력",
+      "summary": "HBM 관련하여 삼성전자와 한미반도체는 아직 제휴를 맺고 있지 않다.",
+      "url": "",
+      "collected_at": "2026-08-21T09:00:00+09:00"
     }
   ],
   "entities": [
     {
-      "text": "삼성전자",
-      "label": "COMPANY",
-      "description": "대한민국 대표 종합 반도체·전자 기업. 메모리(HBM·D램·낸드), 파운드리, 모바일, 디스플레이 사업을 영위한다.",
-      "aliases": [
-        "Samsung Electronics",
-        "삼성"
-      ]
-    },
-    {
-      "text": "SK하이닉스",
-      "label": "COMPANY",
-      "description": "대한민국 메모리 반도체 기업. HBM 시장 선두주자로 엔비디아향 공급을 주도한다.",
-      "aliases": [
-        "SK Hynix"
-      ]
-    },
-    {
-      "text": "TSMC",
-      "label": "COMPANY",
-      "description": "대만의 세계 1위 파운드리 기업. 엔비디아·애플 등의 첨단 칩을 위탁 생산한다.",
-      "aliases": [
-        "대만반도체",
-        "티에스엠씨"
-      ]
-    },
-    {
-      "text": "엔비디아",
-      "label": "COMPANY",
-      "description": "미국의 AI 가속기·GPU 설계 기업. HBM의 최대 수요처다.",
-      "aliases": [
-        "NVIDIA"
-      ]
+      "text": "AFM",
+      "label": "PRODUCT",
+      "description": "파크시스템스의 주력 장비인 AFM(원자현미경)은 선단 공정뿐 아니라 레거시 공정 일부에도 도입된다."
     },
     {
       "text": "AMD",
       "label": "COMPANY",
-      "description": "미국의 CPU·GPU 설계 기업. AI 가속기 시장에서 엔비디아와 경쟁한다.",
-      "aliases": [
-        "에이엠디"
-      ]
+      "description": "미국 팹리스 반도체 기업."
     },
     {
-      "text": "애플",
+      "text": "AP",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "APU",
+      "label": "PRODUCT",
+      "description": "삼성전자는 APU, 차세대 공정, 시스템반도체 등 미래 성장동력 확보를 위한 투자를 지속적으로 확대하고 있다는 평가를 받는다."
+    },
+    {
+      "text": "CCSS",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "HBM",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "IBM",
       "label": "COMPANY",
-      "description": "미국의 스마트폰·IT 기기 기업. 삼성전자·삼성디스플레이의 주요 고객이다.",
-      "aliases": [
-        "Apple"
-      ]
+      "description": "미국 IT 기업."
     },
     {
-      "text": "구글",
+      "text": "LPU",
+      "label": "PRODUCT",
+      "description": "엔비디아가 인공지능(AI) 추론에 최적화한 그록(Groq)3 언어처리장치(LPU)와 이를 탑재한 그록3 LPX 랙을 출시한다."
+    },
+    {
+      "text": "OLED",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "SK하이닉스",
       "label": "COMPANY",
-      "description": "미국의 빅테크 기업. 삼성전자와 모바일 AP(텐서)를 공동 개발했다.",
-      "aliases": [
-        "Google"
-      ]
+      "description": "대한민국 메모리 반도체 기업. HBM 시장 선두로 엔비디아향 공급을 주도한다."
     },
     {
-      "text": "하만",
-      "label": "COMPANY",
-      "description": "전장·오디오 전문 기업. 2017년 삼성전자가 인수했다.",
-      "aliases": [
-        "Harman"
-      ]
+      "text": "SiC",
+      "label": "PRODUCT"
     },
     {
-      "text": "ASML",
-      "label": "COMPANY",
-      "description": "네덜란드의 노광장비 기업. 세계 유일의 EUV 노광장비 제조사다.",
-      "aliases": [
-        "에이에스엠엘"
-      ]
+      "text": "TC 본더",
+      "label": "PRODUCT",
+      "description": "한미반도체는 HBM용 열압착 장비인 TC 본더를 생산∙공급한다."
     },
     {
-      "text": "마이크론",
-      "label": "COMPANY",
-      "description": "미국의 메모리 반도체 기업. D램·HBM 시장에서 삼성전자와 경쟁한다.",
-      "aliases": [
-        "Micron"
-      ]
-    },
-    {
-      "text": "삼성전기",
-      "label": "COMPANY",
-      "description": "적층세라믹콘덴서(MLCC)·기판 전문 기업. 삼성전자에 부품을 공급한다.",
-      "aliases": [
-        "Samsung Electro-Mechanics"
-      ]
-    },
-    {
-      "text": "삼성디스플레이",
-      "label": "COMPANY",
-      "description": "중소형 OLED 패널 세계 1위 기업. 애플 아이폰에 OLED를 공급한다.",
-      "aliases": [
-        "Samsung Display",
-        "SDC"
-      ]
-    },
-    {
-      "text": "대한민국",
-      "label": "COUNTRY",
-      "description": "삼성전자·SK하이닉스의 본거지. 세계 메모리 반도체 생산의 중심이다.",
-      "aliases": [
-        "한국",
-        "Korea"
-      ]
-    },
-    {
-      "text": "미국",
-      "label": "COUNTRY",
-      "description": "엔비디아·애플·마이크론의 본거지이자 최대 반도체 수요·규제 국가.",
-      "aliases": [
-        "USA",
-        "United States"
-      ]
-    },
-    {
-      "text": "중국",
-      "label": "COUNTRY",
-      "description": "세계 최대 전자제품 생산·소비 시장. 미국의 반도체 수출 규제 대상이다.",
-      "aliases": [
-        "China"
-      ]
-    },
-    {
-      "text": "일본",
-      "label": "COUNTRY",
-      "description": "반도체 소재·장비 강국. 과거 대한민국에 소재 수출 규제를 단행했다.",
-      "aliases": [
-        "Japan"
-      ]
+      "text": "각형 배터리",
+      "label": "PRODUCT"
     },
     {
       "text": "대만",
       "label": "COUNTRY",
-      "description": "TSMC의 본거지. 세계 파운드리 생산의 중심이다.",
-      "aliases": [
-        "Taiwan"
-      ]
+      "description": "파크시스템스의 주력 장비인 AFM(원자현미경)은 선단 공정뿐 아니라 레거시 공정 일부에도 도입된다."
     },
     {
-      "text": "네덜란드",
+      "text": "디아이",
+      "label": "COMPANY",
+      "description": "메모리 테스터 제조사."
+    },
+    {
+      "text": "메모리 테스터",
+      "label": "PRODUCT",
+      "description": "와이씨는 6세대 HBM인 HBM, 7세대 HBM인 HBM, 3D NAND 등 차세대 메모리 테스터도 준비하고 있다."
+    },
+    {
+      "text": "미국",
       "label": "COUNTRY",
-      "description": "ASML의 본거지. 첨단 노광장비 공급망의 핵심 국가다.",
-      "aliases": [
-        "Netherlands"
-      ]
+      "description": "미국의 대중 제재로 해외직접생산규제(FDPR)에 첨단 장비가 규제 대상에 포함되는 등 중국 수출규제가 점점 까로워지는 형국이다."
     },
     {
-      "text": "HBM",
+      "text": "반도체 전공정",
       "label": "PRODUCT",
-      "description": "고대역폭메모리. D램을 수직 적층한 AI용 고성능 메모리로, HBM3E가 주력이다.",
-      "aliases": [
-        "고대역폭메모리",
-        "HBM3E"
-      ]
+      "description": "2002년 설립된 테스는 반도체 제조에 필요한 반도체 전공정 장비를 주력으로 생산하는 기업이다."
     },
     {
-      "text": "DRAM",
-      "label": "PRODUCT",
-      "description": "D램. 컴퓨터·모바일의 주기억장치로 쓰이는 휘발성 메모리.",
-      "aliases": [
-        "D램",
-        "디램"
-      ]
+      "text": "반도체 후공정",
+      "label": "PRODUCT"
     },
     {
-      "text": "NAND",
-      "label": "PRODUCT",
-      "description": "낸드플래시. 데이터를 저장하는 비휘발성 메모리.",
-      "aliases": [
-        "낸드",
-        "낸드플래시"
-      ]
+      "text": "블랭크마스크",
+      "label": "PRODUCT"
     },
     {
-      "text": "유리기판",
-      "label": "PRODUCT",
-      "description": "차세대 반도체 패키징 소재. 기존 유기 기판 대비 미세회로·발열에 유리하다.",
-      "aliases": [
-        "Glass Substrate"
-      ]
+      "text": "삼성SDI",
+      "label": "COMPANY",
+      "description": "대한민국 2차전지 기업."
     },
     {
-      "text": "AP",
-      "label": "PRODUCT",
-      "description": "애플리케이션 프로세서. 스마트폰의 두뇌 역할을 하는 시스템 반도체.",
-      "aliases": [
-        "엑시노스",
-        "Application Processor"
-      ]
+      "text": "삼성전자",
+      "label": "COMPANY",
+      "description": "대한민국 종합 반도체·전자 기업. 메모리(HBM·DRAM·NAND), 파운드리, 모바일을 영위한다."
     },
     {
-      "text": "AI 데이터센터",
+      "text": "식각 장비",
       "label": "PRODUCT",
-      "description": "AI 연산을 위한 대규모 데이터센터. HBM·GPU의 핵심 수요처.",
-      "aliases": [
-        "데이터센터",
-        "AI DataCenter"
-      ]
-    },
-    {
-      "text": "GPU",
-      "label": "PRODUCT",
-      "description": "그래픽·AI 연산 가속기. 엔비디아가 설계하고 TSMC가 생산한다.",
-      "aliases": [
-        "그래픽처리장치"
-      ]
-    },
-    {
-      "text": "EUV 노광장비",
-      "label": "PRODUCT",
-      "description": "극자외선 노광장비. 첨단 미세공정에 필수적이며 ASML이 독점 공급한다.",
-      "aliases": [
-        "EUV",
-        "노광장비"
-      ]
-    },
-    {
-      "text": "MLCC",
-      "label": "PRODUCT",
-      "description": "적층세라믹콘덴서. 전자제품의 전류를 제어하는 초소형 수동부품.",
-      "aliases": [
-        "적층세라믹콘덴서"
-      ]
-    },
-    {
-      "text": "OLED",
-      "label": "PRODUCT",
-      "description": "유기발광다이오드 디스플레이. 삼성디스플레이가 중소형 시장을 주도한다.",
-      "aliases": [
-        "유기발광다이오드"
-      ]
-    },
-    {
-      "text": "폴더블폰",
-      "label": "PRODUCT",
-      "description": "화면이 접히는 스마트폰. 삼성전자가 시장을 개척했다.",
-      "aliases": [
-        "폴더블",
-        "Foldable"
-      ]
-    },
-    {
-      "text": "포토레지스트",
-      "label": "PRODUCT",
-      "description": "반도체 노광 공정용 감광액. 일본이 강점을 가진 핵심 소재다.",
-      "aliases": [
-        "감광액",
-        "PR"
-      ]
+      "description": "반도체 전공정 장비 제조업체 테스는 반도체 소자의 박막 형성 및 식각 공정에 사용되는 플라즈마 강화 화학기상증착(증착 장비) 장비와 식각 장비 등을 주력 제품으로 생산한다."
     },
     {
       "text": "실리콘",
       "label": "COMMODITY",
-      "description": "반도체 웨이퍼의 기초 원자재. 규소를 정제해 만든다.",
-      "aliases": [
-        "규소",
-        "Silicon"
-      ]
+      "description": "유안타증권은 실리콘 부품 생산 기업인 하나머티리얼즈를 이달 주목할 추천 종목으로 제시했다."
     },
     {
-      "text": "팔라듐",
-      "label": "COMMODITY",
-      "description": "MLCC 내부 전극에 쓰이는 귀금속 원자재.",
-      "aliases": [
-        "Palladium"
-      ]
+      "text": "실리콘 전극",
+      "label": "PRODUCT"
     },
     {
-      "text": "구리",
-      "label": "COMMODITY",
-      "description": "반도체 배선·전자부품에 쓰이는 핵심 산업용 금속.",
-      "aliases": [
-        "동",
-        "Copper"
-      ]
+      "text": "애플",
+      "label": "COMPANY",
+      "description": "미국 전자기기 기업."
+    },
+    {
+      "text": "에스티아이",
+      "label": "COMPANY",
+      "description": "반도체·디스플레이 라인의 중앙 약품 공급 시스템(CCSS)을 납품한다."
+    },
+    {
+      "text": "엔비디아",
+      "label": "COMPANY",
+      "description": "미국 GPU·AI 가속기 기업. HBM 최대 수요처다."
+    },
+    {
+      "text": "오킨스전자",
+      "label": "COMPANY",
+      "description": "반도체 테스트 소켓 제조사. 삼성전자·SK하이닉스를 주요 고객사로 확보하고 있다."
+    },
+    {
+      "text": "와이씨",
+      "label": "COMPANY",
+      "description": "메모리 테스터 등 반도체 후공정 검사 장비를 공급한다."
+    },
+    {
+      "text": "원익IPS",
+      "label": "COMPANY",
+      "description": "반도체 전공정 증착 장비 제조사."
+    },
+    {
+      "text": "이미지센서",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "인텔",
+      "label": "COMPANY",
+      "description": "미국 종합 반도체 기업."
+    },
+    {
+      "text": "일본",
+      "label": "COUNTRY",
+      "description": "25일 업계에 따르면 삼성전자는 일본 미쓰이화학에서 수십억 원 규모의 펠리클을 구매하기로 했다."
+    },
+    {
+      "text": "전기차",
+      "label": "PRODUCT",
+      "description": "지난 2023년 삼성SDI는 현대차의 차세대 유럽향 전기차에 탑재될 P6(6세대 각형 배터리)를 7년간 공급하는 계약을 체결했다."
+    },
+    {
+      "text": "중국",
+      "label": "COUNTRY",
+      "description": "올해 초 와이씨는 삼성전자와 511억원 규모 HBM용 메모리 테스터 'MT8311' 공급계약을 체결했다."
+    },
+    {
+      "text": "증착 장비",
+      "label": "PRODUCT",
+      "description": "반도체 전공정 장비 제조업체 테스는 반도체 소자의 박막 형성 및 식각 공정에 사용되는 플라즈마 강화 화학기상증착(증착 장비) 장비와 식각 장비 등을 주력 제품으로 생산한다."
+    },
+    {
+      "text": "차량용 반도체",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "테스",
+      "label": "COMPANY",
+      "description": "반도체 전공정 장비 제조업체. 증착·식각 장비를 삼성전자와 SK하이닉스에 공급한다."
+    },
+    {
+      "text": "테스트 소켓",
+      "label": "PRODUCT",
+      "description": "오킨스전자는 2014년 코스닥시장에 상장해 테스트 소켓 등 반도체 검사용 소켓을 개발하고 있다."
+    },
+    {
+      "text": "테슬라",
+      "label": "COMPANY",
+      "description": "미국 전기차 기업."
+    },
+    {
+      "text": "파운드리",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "파크시스템스",
+      "label": "COMPANY",
+      "description": "원자현미경(AFM) 기반 계측 장비 제조사."
+    },
+    {
+      "text": "펠리클",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "포커스링",
+      "label": "PRODUCT"
+    },
+    {
+      "text": "하나머티리얼즈",
+      "label": "COMPANY",
+      "description": "반도체 전공정 식각용 소재 제조사. 하나마이크론과 상호출자 구조다."
+    },
+    {
+      "text": "한미반도체",
+      "label": "COMPANY",
+      "description": "HBM용 열압착 장비(TC 본더) 제조사. SK하이닉스향 시장을 주도해 왔다."
+    },
+    {
+      "text": "현대차",
+      "label": "COMPANY",
+      "description": "대한민국 완성차 기업."
     }
   ],
   "relations": [
     {
       "news_id": "news-001",
-      "news_title": "삼성전자, 엔비디아 HBM3E 공급 초읽기",
-      "timestamp": "2026-07-22",
-      "mentioned_count": 14,
+      "mentioned_count": 2,
       "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "오킨스전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "테스트 소켓",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "오킨스전자는 삼성전자와 66억5075만원 규모의 반도체 테스트 소켓 공급계약을 체결했다고 21일 공시했다.",
+      "news_title": "오킨스전자, 테스트 소켓 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-001",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "오킨스전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "테스트 소켓",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "오킨스전자는 삼성전자와 66억5075만원 규모의 반도체 테스트 소켓 공급계약을 체결했다고 21일 공시했다.",
+      "news_title": "오킨스전자, 테스트 소켓 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-002",
+      "mentioned_count": 3,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "현대차",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "AP",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "삼성전자는 2023년 6월 현대차에 차량용 인포테인먼트 프로세서 'AP 오토 V920'을 공급하기로 했다.",
+      "news_title": "삼성전자, AP 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-002",
+      "mentioned_count": 3,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성SDI",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "현대차",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "각형 배터리",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "2023년 10월 삼성SDI가 현대차와 각형 배터리 장기공급계약을 체결했다.",
+      "news_title": "삼성전자, AP 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-003",
+      "mentioned_count": 1,
+      "predicate": "EXPORTS_TO",
       "is_negated": false,
       "tense": "future_or_planned",
       "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전자가 엔비디아에 공급할 5세대 고대역폭메모리(HBM3E) 품질 검증을 통과한 것으로 전해졌다."
-    },
-    {
-      "news_id": "news-001",
-      "news_title": "삼성전자, 엔비디아 HBM3E 공급 초읽기",
-      "timestamp": "2026-07-22",
-      "mentioned_count": 11,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전자는 평택 공장의 HBM 전용 라인 생산능력을 연내 두 배로 늘리는 방안을 검토하고 있다."
-    },
-    {
-      "news_id": "news-001",
-      "news_title": "삼성전자, 엔비디아 HBM3E 공급 초읽기",
-      "timestamp": "2026-07-22",
-      "mentioned_count": 7,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "엔비디아는 HBM을 여러 개 쌓아 붙인 AI 가속기용 GPU를 설계한다."
-    },
-    {
-      "news_id": "news-001",
-      "news_title": "삼성전자, 엔비디아 HBM3E 공급 초읽기",
-      "timestamp": "2026-07-22",
-      "mentioned_count": 5,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AI 데이터센터",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "AI 데이터센터 증설이 이어지면서 엔비디아 가속기 수요도 함께 늘고 있다."
-    },
-    {
-      "news_id": "news-001",
-      "news_title": "삼성전자, 엔비디아 HBM3E 공급 초읽기",
-      "timestamp": "2026-07-22",
-      "mentioned_count": 9,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "그동안 엔비디아 HBM 물량 대부분은 SK하이닉스가 담당해 왔다."
-    },
-    {
-      "news_id": "news-001",
-      "news_title": "삼성전자, 엔비디아 HBM3E 공급 초읽기",
-      "timestamp": "2026-07-22",
-      "mentioned_count": 8,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "HBM 점유율을 둘러싼 삼성전자와 SK하이닉스의 경쟁도 한층 치열해질 전망이다."
-    },
-    {
-      "news_id": "news-002",
-      "news_title": "삼성전자 HBM·D램·낸드 3각 편대",
-      "timestamp": "2026-07-18",
-      "mentioned_count": 18,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전자가 HBM3E 12단 제품 양산 체제를 갖췄다."
-    },
-    {
-      "news_id": "news-002",
-      "news_title": "삼성전자 HBM·D램·낸드 3각 편대",
-      "timestamp": "2026-07-18",
-      "mentioned_count": 15,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "회사는 지난 분기 기준 세계 D램 시장에서 점유율 1위를 유지했다."
-    },
-    {
-      "news_id": "news-002",
-      "news_title": "삼성전자 HBM·D램·낸드 3각 편대",
-      "timestamp": "2026-07-18",
-      "mentioned_count": 12,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "NAND",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "236단 낸드플래시를 주력으로 낸드 사업의 수익성도 개선했다."
-    },
-    {
-      "news_id": "news-002",
-      "news_title": "삼성전자 HBM·D램·낸드 3각 편대",
-      "timestamp": "2026-07-18",
-      "mentioned_count": 9,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "HBM에서는 SK하이닉스와의 점유율 경쟁이 이어지고 있다."
-    },
-    {
-      "news_id": "news-002",
-      "news_title": "삼성전자 HBM·D램·낸드 3각 편대",
-      "timestamp": "2026-07-18",
-      "mentioned_count": 6,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "SK하이닉스도 서버용 고용량 D램 비중을 늘리고 있다."
-    },
-    {
-      "news_id": "news-002",
-      "news_title": "삼성전자 HBM·D램·낸드 3각 편대",
-      "timestamp": "2026-07-18",
-      "mentioned_count": 4,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "NAND",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "마이크론은 낸드 감산 이후 가동률을 다시 끌어올렸다."
-    },
-    {
-      "news_id": "news-003",
-      "news_title": "삼성전자, 유리기판·엑시노스 개발 가속",
-      "timestamp": "2026-07-15",
-      "mentioned_count": 7,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "유리기판",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전자가 차세대 패키징 소재인 유리기판 개발에 본격 착수했다."
-    },
-    {
-      "news_id": "news-003",
-      "news_title": "삼성전자, 유리기판·엑시노스 개발 가속",
-      "timestamp": "2026-07-15",
-      "mentioned_count": 6,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AP",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "자체 모바일 AP인 엑시노스 신제품 개발도 병행한다."
-    },
-    {
-      "news_id": "news-003",
-      "news_title": "삼성전자, 유리기판·엑시노스 개발 가속",
-      "timestamp": "2026-07-15",
-      "mentioned_count": 5,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "유리기판은 AI 반도체용 고성능 패키지의 핵심 소재로 꼽힌다."
-    },
-    {
-      "news_id": "news-003",
-      "news_title": "삼성전자, 유리기판·엑시노스 개발 가속",
-      "timestamp": "2026-07-15",
-      "mentioned_count": 4,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "유리기판",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전기도 유리기판 시험 생산라인을 구축하며 개발 경쟁에 뛰어들었다."
-    },
-    {
-      "news_id": "news-003",
-      "news_title": "삼성전자, 유리기판·엑시노스 개발 가속",
-      "timestamp": "2026-07-15",
-      "mentioned_count": 3,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "MLCC",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전기는 삼성전자에 MLCC 등 핵심 부품을 공급하고 있다."
-    },
-    {
-      "news_id": "news-003",
-      "news_title": "삼성전자, 유리기판·엑시노스 개발 가속",
-      "timestamp": "2026-07-15",
-      "mentioned_count": 3,
-      "predicate": "PARTNERS_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "구글",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "AP",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "엑시노스 개발 경험은 구글과 함께 만든 텐서 AP에도 반영됐다."
-    },
-    {
-      "news_id": "news-004",
-      "news_title": "본사 수원, 삼성전자 국가대표 반도체",
-      "timestamp": "2026-07-10",
-      "mentioned_count": 20,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
+        "text": "일본",
         "label": "COUNTRY"
       },
-      "item": null,
-      "source_sentence": "삼성전자는 경기 수원에 본사를 둔 국내 최대 반도체·전자 기업이다."
-    },
-    {
-      "news_id": "news-004",
-      "news_title": "본사 수원, 삼성전자 국가대표 반도체",
-      "timestamp": "2026-07-10",
-      "mentioned_count": 11,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
+      "object": {
         "text": "삼성전자",
         "label": "COMPANY"
       },
-      "object": {
-        "text": "DRAM",
+      "item": {
+        "text": "펠리클",
         "label": "PRODUCT"
       },
-      "item": null,
-      "source_sentence": "회사는 기흥·화성·평택 단지에서 D램을 생산한다."
+      "source_sentence": "25일 업계에 따르면 삼성전자는 일본 미쓰이화학에서 수십억 원 규모의 펠리클을 구매하기로 했다.",
+      "news_title": "일본, 펠리클 삼성전자에 수출",
+      "timestamp": "2026-08-21"
     },
     {
       "news_id": "news-004",
-      "news_title": "본사 수원, 삼성전자 국가대표 반도체",
-      "timestamp": "2026-07-10",
-      "mentioned_count": 9,
-      "predicate": "PRODUCES",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
-        "text": "삼성전자",
+        "text": "테스",
         "label": "COMPANY"
       },
       "object": {
-        "text": "NAND",
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "반도체 전공정",
         "label": "PRODUCT"
       },
-      "item": null,
-      "source_sentence": "평택 캠퍼스는 낸드플래시 생산의 중심 거점이다."
+      "source_sentence": "반도체 전공정 장비 제조업체 테스가 SK하이닉스와 90억5000만원 규모의 반도체 제조장비 공급계약을 체결했다고 10일 공시했다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
     },
     {
       "news_id": "news-004",
-      "news_title": "본사 수원, 삼성전자 국가대표 반도체",
-      "timestamp": "2026-07-10",
-      "mentioned_count": 7,
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "반도체 전공정",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "하나머티리얼즈는 반도체 전공정 식각용 소재를 제조하는 회사로, 하나마이크론과 상호출자구조로 되어 있다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-004",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "반도체 전공정",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "반도체 전공정 장비 제조업체 테스가 SK하이닉스와 90억5000만원 규모의 반도체 제조장비 공급계약을 체결했다고 10일 공시했다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-004",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "반도체 전공정",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "하나머티리얼즈는 반도체 전공정 식각용 소재를 제조하는 회사로, 하나마이크론과 상호출자구조로 되어 있다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-005",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "한미반도체",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "TC 본더",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "한미반도체는 HBM용 열압착 장비인 TC 본더를 생산∙공급한다.",
+      "news_title": "한미반도체, TC 본더 SK하이닉스에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-006",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "와이씨",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "메모리 테스터",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "올해 초 와이씨는 삼성전자와 511억원 규모 HBM용 메모리 테스터 'MT8311' 공급계약을 체결했다.",
+      "news_title": "와이씨, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-007",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "디아이",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "메모리 테스터",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "디아이는 삼성전자 중국법인에 191억원 규모의 반도체 검사/계측 장비인 메모리 테스터 공급계약을 체결했다.",
+      "news_title": "디아이, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-006",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "와이씨",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "메모리 테스터",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "올해 초 와이씨는 삼성전자와 511억원 규모 HBM용 메모리 테스터 'MT8311' 공급계약을 체결했다.",
+      "news_title": "와이씨, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-006",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "디아이",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "메모리 테스터",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "디아이는 삼성전자 중국법인에 191억원 규모의 반도체 검사/계측 장비인 메모리 테스터 공급계약을 체결했다.",
+      "news_title": "와이씨, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-007",
+      "mentioned_count": 1,
       "predicate": "EXPORTS_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
-        "text": "삼성전자",
+        "text": "와이씨",
         "label": "COMPANY"
       },
       "object": {
-        "text": "미국",
+        "text": "중국",
         "label": "COUNTRY"
       },
       "item": {
-        "text": "DRAM",
+        "text": "메모리 테스터",
         "label": "PRODUCT"
       },
-      "source_sentence": "생산 물량 상당수는 미국 등 해외 고객사로 수출된다."
+      "source_sentence": "올해 초 와이씨는 삼성전자와 511억원 규모 HBM용 메모리 테스터 'MT8311' 공급계약을 체결했다.",
+      "news_title": "디아이, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-004",
-      "news_title": "본사 수원, 삼성전자 국가대표 반도체",
-      "timestamp": "2026-07-10",
-      "mentioned_count": 6,
-      "predicate": "LOCATED_IN",
+      "news_id": "news-007",
+      "mentioned_count": 1,
+      "predicate": "EXPORTS_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
-        "text": "SK하이닉스",
+        "text": "디아이",
         "label": "COMPANY"
       },
       "object": {
-        "text": "대한민국",
+        "text": "중국",
         "label": "COUNTRY"
       },
-      "item": null,
-      "source_sentence": "SK하이닉스 역시 이천·청주에 주력 생산기지를 두고 있다."
-    },
-    {
-      "news_id": "news-005",
-      "news_title": "삼성전자 애플에 모바일 D램 공급",
-      "timestamp": "2026-07-08",
-      "mentioned_count": 8,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
       "item": {
-        "text": "DRAM",
+        "text": "메모리 테스터",
         "label": "PRODUCT"
       },
-      "source_sentence": "삼성전자가 애플 아이폰에 저전력 모바일 D램(LPDDR)을 공급하고 있는 것으로 확인됐다."
+      "source_sentence": "디아이는 삼성전자 중국법인에 191억원 규모의 반도체 검사/계측 장비인 메모리 테스터 공급계약을 체결했다.",
+      "news_title": "디아이, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-005",
-      "news_title": "삼성전자 애플에 모바일 D램 공급",
-      "timestamp": "2026-07-08",
-      "mentioned_count": 7,
-      "predicate": "PRODUCES",
+      "news_id": "news-008",
+      "mentioned_count": 1,
+      "predicate": "EXPORTS_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
-        "text": "삼성전자",
+        "text": "파크시스템스",
         "label": "COMPANY"
       },
       "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전자는 차세대 LPDDR6 양산 준비도 마친 것으로 알려졌다."
-    },
-    {
-      "news_id": "news-005",
-      "news_title": "삼성전자 애플에 모바일 D램 공급",
-      "timestamp": "2026-07-08",
-      "mentioned_count": 4,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
+        "text": "중국",
         "label": "COUNTRY"
       },
-      "item": null,
-      "source_sentence": "애플은 미국 쿠퍼티노에 본사를 두고 있다."
-    },
-    {
-      "news_id": "news-005",
-      "news_title": "삼성전자 애플에 모바일 D램 공급",
-      "timestamp": "2026-07-08",
-      "mentioned_count": 4,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AP",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "애플은 아이폰에 들어가는 AP를 자체 설계한다."
-    },
-    {
-      "news_id": "news-005",
-      "news_title": "삼성전자 애플에 모바일 D램 공급",
-      "timestamp": "2026-07-08",
-      "mentioned_count": 3,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
       "item": {
-        "text": "OLED",
+        "text": "AFM",
         "label": "PRODUCT"
       },
-      "source_sentence": "삼성디스플레이도 같은 기기에 OLED 패널을 공급하고 있다."
+      "source_sentence": "파크시스템스의 주력 장비인 AFM(원자현미경)은 선단 공정뿐 아니라 레거시 공정 일부에도 도입된다.",
+      "news_title": "파크시스템스, AFM 중국에 수출",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-006",
-      "news_title": "파운드리 삼성 vs TSMC",
-      "timestamp": "2026-07-05",
-      "mentioned_count": 13,
-      "predicate": "COMPETES_WITH",
+      "news_id": "news-008",
+      "mentioned_count": 1,
+      "predicate": "EXPORTS_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "item": null,
-      "source_sentence": "파운드리 시장에서 삼성전자가 1위 TSMC와의 격차를 좁히기 위한 공세를 이어가고 있다."
-    },
-    {
-      "news_id": "news-006",
-      "news_title": "파운드리 삼성 vs TSMC",
-      "timestamp": "2026-07-05",
-      "mentioned_count": 8,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "TSMC는 엔비디아 등 대형 팹리스 물량을 사실상 독식하고 있다."
-    },
-    {
-      "news_id": "news-006",
-      "news_title": "파운드리 삼성 vs TSMC",
-      "timestamp": "2026-07-05",
-      "mentioned_count": 6,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
+        "text": "파크시스템스",
         "label": "COMPANY"
       },
       "object": {
         "text": "대만",
         "label": "COUNTRY"
       },
-      "item": null,
-      "source_sentence": "TSMC는 대만 신주과학단지에 주력 팹을 두고 있다."
-    },
-    {
-      "news_id": "news-006",
-      "news_title": "파운드리 삼성 vs TSMC",
-      "timestamp": "2026-07-05",
-      "mentioned_count": 5,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "삼성전자는 국내 화성·평택 라인에서 선단 공정을 운영한다."
-    },
-    {
-      "news_id": "news-006",
-      "news_title": "파운드리 삼성 vs TSMC",
-      "timestamp": "2026-07-05",
-      "mentioned_count": 4,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
       "item": {
-        "text": "EUV 노광장비",
+        "text": "AFM",
         "label": "PRODUCT"
       },
-      "source_sentence": "두 회사 모두 ASML의 EUV 노광장비 확보량이 공정 전환 속도를 좌우한다."
-    },
-    {
-      "news_id": "news-006",
-      "news_title": "파운드리 삼성 vs TSMC",
-      "timestamp": "2026-07-05",
-      "mentioned_count": 4,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "TSMC는 2나노 양산을 위해 EUV 장비 도입을 늘리고 있다."
-    },
-    {
-      "news_id": "news-007",
-      "news_title": "D램 가격 경쟁 격화",
-      "timestamp": "2026-07-03",
-      "mentioned_count": 5,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "D램 가격 주도권을 둘러싼 삼성전자와 마이크론의 경쟁이 격화되고 있다."
-    },
-    {
-      "news_id": "news-007",
-      "news_title": "D램 가격 경쟁 격화",
-      "timestamp": "2026-07-03",
-      "mentioned_count": 5,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "마이크론이 서버용 고용량 모듈 공급을 늘리며 북미 고객사 비중을 확대했다."
-    },
-    {
-      "news_id": "news-007",
-      "news_title": "D램 가격 경쟁 격화",
-      "timestamp": "2026-07-03",
-      "mentioned_count": 7,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전자도 선단 공정 전환에 속도를 내며 대응에 나섰다."
-    },
-    {
-      "news_id": "news-007",
-      "news_title": "D램 가격 경쟁 격화",
-      "timestamp": "2026-07-03",
-      "mentioned_count": 4,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "SK하이닉스의 증설 물량이 풀리는 시점도 변수로 꼽힌다."
-    },
-    {
-      "news_id": "news-007",
-      "news_title": "D램 가격 경쟁 격화",
-      "timestamp": "2026-07-03",
-      "mentioned_count": 4,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "하반기 공급 계약 협상에서 가격 협상력이 판가름 날 것으로 보인다."
-    },
-    {
-      "news_id": "news-007",
-      "news_title": "D램 가격 경쟁 격화",
-      "timestamp": "2026-07-03",
-      "mentioned_count": 3,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "마이크론은 미국 아이다호주에 본사를 두고 있다."
+      "source_sentence": "파크시스템스의 주력 장비인 AFM(원자현미경)은 선단 공정뿐 아니라 레거시 공정 일부에도 도입된다.",
+      "news_title": "파크시스템스, AFM 중국에 수출",
+      "timestamp": "2026-08-21"
     },
     {
       "news_id": "news-008",
-      "news_title": "삼성전자, AMD와 차세대 HBM 협력",
-      "timestamp": "2026-06-30",
-      "mentioned_count": 6,
-      "predicate": "PARTNERS_WITH",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "에스티아이",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "CCSS",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "에스티아이의 주요 장비는 반도체 및 디스플레이 생산라인에 화학 약품을 공급하는 중앙 약품 공급 시스템(CCSS)이다.",
+      "news_title": "파크시스템스, AFM 중국에 수출",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-008",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "에스티아이",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "CCSS",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "에스티아이의 주요 장비는 반도체 및 디스플레이 생산라인에 화학 약품을 공급하는 중앙 약품 공급 시스템(CCSS)이다.",
+      "news_title": "파크시스템스, AFM 중국에 수출",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-008",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "에스티아이",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "인텔",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "CCSS",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "에스티아이의 주요 장비는 반도체 및 디스플레이 생산라인에 화학 약품을 공급하는 중앙 약품 공급 시스템(CCSS)이다.",
+      "news_title": "파크시스템스, AFM 중국에 수출",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-009",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "와이씨",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "반도체 후공정",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "반도체 후공정 장비 전문기업 와이씨가 삼성전자와 대규모 장비 공급 계약을 연이어 체결하며 수주 확대에 속도를 내고 있다.",
+      "news_title": "와이씨, 반도체 후공정 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-010",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "와이씨",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "반도체 후공정",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "반도체 후공정 장비 전문기업 와이씨가 삼성전자와 대규모 장비 공급 계약을 연이어 체결하며 수주 확대에 속도를 내고 있다.",
+      "news_title": "와이씨, 반도체 후공정 SK하이닉스에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-010",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
       "is_negated": false,
       "tense": "future_or_planned",
       "subject": {
@@ -1288,400 +987,21 @@
         "label": "COMPANY"
       },
       "object": {
-        "text": "AMD",
+        "text": "SK하이닉스",
         "label": "COMPANY"
       },
       "item": {
-        "text": "HBM",
+        "text": "반도체 후공정",
         "label": "PRODUCT"
       },
-      "source_sentence": "삼성전자가 AMD와 차세대 HBM4 공동 개발을 논의하고 있는 것으로 알려졌다."
-    },
-    {
-      "news_id": "news-008",
-      "news_title": "삼성전자, AMD와 차세대 HBM 협력",
-      "timestamp": "2026-06-30",
-      "mentioned_count": 5,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "HBM4는 고객사별 맞춤 설계가 가능한 것이 특징이다."
-    },
-    {
-      "news_id": "news-008",
-      "news_title": "삼성전자, AMD와 차세대 HBM 협력",
-      "timestamp": "2026-06-30",
-      "mentioned_count": 4,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "AMD",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "AMD는 AI 가속기용 GPU 라인업을 확대하고 있다."
-    },
-    {
-      "news_id": "news-008",
-      "news_title": "삼성전자, AMD와 차세대 HBM 협력",
-      "timestamp": "2026-06-30",
-      "mentioned_count": 4,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "AMD",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "AMD는 AI 가속기 시장에서 엔비디아를 추격하고 있다."
-    },
-    {
-      "news_id": "news-008",
-      "news_title": "삼성전자, AMD와 차세대 HBM 협력",
-      "timestamp": "2026-06-30",
-      "mentioned_count": 3,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "AMD",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "AMD는 미국 캘리포니아에 본사를 두고 있다."
-    },
-    {
-      "news_id": "news-009",
-      "news_title": "삼성-구글, 텐서 칩 동맹",
-      "timestamp": "2026-06-28",
-      "mentioned_count": 5,
-      "predicate": "PARTNERS_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "구글",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "AP",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전자가 구글과 협력해 픽셀 스마트폰에 탑재되는 텐서 AP를 공동 개발했다."
-    },
-    {
-      "news_id": "news-009",
-      "news_title": "삼성-구글, 텐서 칩 동맹",
-      "timestamp": "2026-06-28",
-      "mentioned_count": 5,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AP",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전자는 칩 설계 단계부터 참여해 파운드리 공정으로 생산까지 맡아 왔다."
-    },
-    {
-      "news_id": "news-009",
-      "news_title": "삼성-구글, 텐서 칩 동맹",
-      "timestamp": "2026-06-28",
-      "mentioned_count": 3,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "구글",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AI 데이터센터",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "구글은 자체 데이터센터용 AI 칩 개발에도 힘을 싣고 있다."
-    },
-    {
-      "news_id": "news-009",
-      "news_title": "삼성-구글, 텐서 칩 동맹",
-      "timestamp": "2026-06-28",
-      "mentioned_count": 3,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "구글",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "AP",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "픽셀은 자체 칩을 앞세운 애플 아이폰과 정면으로 맞선다."
-    },
-    {
-      "news_id": "news-009",
-      "news_title": "삼성-구글, 텐서 칩 동맹",
-      "timestamp": "2026-06-28",
-      "mentioned_count": 3,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AP",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "애플은 일찌감치 자체 AP 설계로 전환했다."
-    },
-    {
-      "news_id": "news-010",
-      "news_title": "삼성전자, 전장기업 하만 인수 효과",
-      "timestamp": "2026-06-25",
-      "mentioned_count": 11,
-      "predicate": "ACQUIRES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "하만",
-        "label": "COMPANY"
-      },
-      "item": null,
-      "source_sentence": "삼성전자는 2017년 미국 전장·오디오 기업 하만을 80억 달러에 인수했다."
-    },
-    {
-      "news_id": "news-010",
-      "news_title": "삼성전자, 전장기업 하만 인수 효과",
-      "timestamp": "2026-06-25",
-      "mentioned_count": 6,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "하만",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "하만은 미국 코네티컷주에 본사를 두고 있다."
-    },
-    {
-      "news_id": "news-010",
-      "news_title": "삼성전자, 전장기업 하만 인수 효과",
-      "timestamp": "2026-06-25",
-      "mentioned_count": 5,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "국내 기업의 해외 인수합병 가운데 최대 규모였다."
-    },
-    {
-      "news_id": "news-010",
-      "news_title": "삼성전자, 전장기업 하만 인수 효과",
-      "timestamp": "2026-06-25",
-      "mentioned_count": 4,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "하만",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "MLCC",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전기는 하만의 차량용 제품에 전장용 MLCC를 공급한다."
-    },
-    {
-      "news_id": "news-010",
-      "news_title": "삼성전자, 전장기업 하만 인수 효과",
-      "timestamp": "2026-06-25",
-      "mentioned_count": 3,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "하만",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "OLED",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성디스플레이는 디지털 콕핏용 패널을 공급하며 협업 범위를 넓혔다."
+      "source_sentence": "삼성전자는 미국 오스틴 공장에서 이미지센서를 생산한 뒤 대한민국에서 반도체 후공정을 진행할 예정이다.",
+      "news_title": "와이씨, 반도체 후공정 SK하이닉스에 공급",
+      "timestamp": "2026-08-21"
     },
     {
       "news_id": "news-011",
-      "news_title": "삼성전자, ASML 지분 일부 매각",
-      "timestamp": "2026-06-20",
-      "mentioned_count": 7,
-      "predicate": "DIVESTS_FROM",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "item": null,
-      "source_sentence": "삼성전자가 보유 중이던 ASML 지분 일부를 매각해 자금을 확보했다."
-    },
-    {
-      "news_id": "news-011",
-      "news_title": "삼성전자, ASML 지분 일부 매각",
-      "timestamp": "2026-06-20",
-      "mentioned_count": 6,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "ASML은 세계에서 유일하게 EUV 노광장비를 만든다."
-    },
-    {
-      "news_id": "news-011",
-      "news_title": "삼성전자, ASML 지분 일부 매각",
-      "timestamp": "2026-06-20",
-      "mentioned_count": 4,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "네덜란드",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "ASML은 네덜란드 벨트호벤에 본사를 두고 있다."
-    },
-    {
-      "news_id": "news-011",
-      "news_title": "삼성전자, ASML 지분 일부 매각",
-      "timestamp": "2026-06-20",
-      "mentioned_count": 3,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "지분 매각과 별개로 ASML은 TSMC 등 고객사에 장비 공급을 이어간다."
-    },
-    {
-      "news_id": "news-011",
-      "news_title": "삼성전자, ASML 지분 일부 매각",
-      "timestamp": "2026-06-20",
-      "mentioned_count": 4,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "item": null,
-      "source_sentence": "삼성전자는 매각 대금을 파운드리 등 시설 투자 재원으로 활용할 계획이다."
-    },
-    {
-      "news_id": "news-012",
-      "news_title": "삼성전자, 미국·중국에 메모리 수출",
-      "timestamp": "2026-06-18",
       "mentioned_count": 10,
-      "predicate": "EXPORTS_TO",
+      "predicate": "SUPPLIES_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
@@ -1689,21 +1009,131 @@
         "label": "COMPANY"
       },
       "object": {
-        "text": "미국",
-        "label": "COUNTRY"
+        "text": "테슬라",
+        "label": "COMPANY"
       },
       "item": {
-        "text": "HBM",
+        "text": "파운드리",
         "label": "PRODUCT"
       },
-      "source_sentence": "삼성전자는 미국 빅테크의 AI 데이터센터 증설에 맞춰 HBM 수출을 늘렸다."
+      "source_sentence": "삼성전자가 테슬라로부터 23조 원 규모 반도체 위탁생산(파운드리) 계약을 맺었다.",
+      "news_title": "삼성전자, 파운드리 테슬라에 공급",
+      "timestamp": "2026-08-21"
     },
     {
       "news_id": "news-012",
-      "news_title": "삼성전자, 미국·중국에 메모리 수출",
-      "timestamp": "2026-06-18",
-      "mentioned_count": 8,
-      "predicate": "EXPORTS_TO",
+      "mentioned_count": 10,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "애플",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "파운드리",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "이재용 삼성전자 회장의 미국 장기 출장 이후, 테슬라, 애플, IBM 등이 삼성전자와 파운드리(반도체 위탁생산) 계약을 맺었다.",
+      "news_title": "삼성전자, 파운드리 애플에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-012",
+      "mentioned_count": 10,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "IBM",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "파운드리",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "이재용 삼성전자 회장의 미국 장기 출장 이후, 테슬라, 애플, IBM 등이 삼성전자와 파운드리(반도체 위탁생산) 계약을 맺었다.",
+      "news_title": "삼성전자, 파운드리 애플에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-013",
+      "mentioned_count": 10,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "현대차",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "파운드리",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "삼성전자는 애플, 테슬라, 현대차, 인텔과 연이어 파운드리 수주에 성공했다.",
+      "news_title": "삼성전자, 파운드리 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-013",
+      "mentioned_count": 10,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "인텔",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "파운드리",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "삼성전자는 애플, 테슬라, 현대차, 인텔과 연이어 파운드리 수주에 성공했다.",
+      "news_title": "삼성전자, 파운드리 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-014",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "애플",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "이미지센서",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "삼성전자는 미국 오스틴 공장에서 이미지센서를 생산한 뒤 대한민국에서 반도체 후공정을 진행할 예정이다.",
+      "news_title": "삼성전자, 이미지센서 애플에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-015",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
@@ -1715,17 +1145,39 @@
         "label": "COUNTRY"
       },
       "item": {
-        "text": "NAND",
+        "text": "이미지센서",
         "label": "PRODUCT"
       },
-      "source_sentence": "중국에서는 시안 공장을 통해 낸드플래시를 생산해 현지에 공급한다."
+      "source_sentence": "두산테스나는 삼성전자의 이미지센서 웨이퍼 테스트 1차 벤더로, 전체 매출의 약 95%가 삼성전자 파운드리 및 시스템LSI 부문에서 발생하고 있다.",
+      "news_title": "삼성전자, 이미지센서 중국에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-012",
-      "news_title": "삼성전자, 미국·중국에 메모리 수출",
-      "timestamp": "2026-06-18",
-      "mentioned_count": 7,
-      "predicate": "PRODUCES",
+      "news_id": "news-016",
+      "mentioned_count": 1,
+      "predicate": "EXPORTS_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "일본",
+        "label": "COUNTRY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "블랭크마스크",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "삼성전자는 현재 일본 호야에서 극자외선(EUV) 노광장비용 블랭크마스크 대부분을 수입한다.",
+      "news_title": "일본, 블랭크마스크 삼성전자에 수출",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-017",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
@@ -1733,17 +1185,20 @@
         "label": "COMPANY"
       },
       "object": {
-        "text": "HBM",
+        "text": "애플",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "OLED",
         "label": "PRODUCT"
       },
-      "item": null,
-      "source_sentence": "평택 라인에서 생산한 HBM이 수출 물량의 중심이다."
+      "source_sentence": "삼성전자 디스플레이 부문은 애플의 내년 폴더블 아이폰용 플렉서블 OLED 패널 공급사로 선정되었다.",
+      "news_title": "삼성전자, OLED 애플에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-012",
-      "news_title": "삼성전자, 미국·중국에 메모리 수출",
-      "timestamp": "2026-06-18",
-      "mentioned_count": 5,
+      "news_id": "news-018",
+      "mentioned_count": 10,
       "predicate": "SUPPLIES_TO",
       "is_negated": false,
       "tense": "past_or_present_fact",
@@ -1759,13 +1214,514 @@
         "text": "HBM",
         "label": "PRODUCT"
       },
-      "source_sentence": "미국 수출 물량에는 엔비디아향 HBM이 포함된다."
+      "source_sentence": "삼성전자는 인공지능(AI) 투자 열풍에 따른 HBM 등 고부가 메모리 제품의 판매 급증과 범용 메모리 공급 부족으로 인한 가격 상승으로 3분기 실적 반등을 이뤘다.",
+      "news_title": "삼성전자, HBM 엔비디아에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-012",
-      "news_title": "삼성전자, 미국·중국에 메모리 수출",
-      "timestamp": "2026-06-18",
-      "mentioned_count": 6,
+      "news_id": "news-019",
+      "mentioned_count": 7,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "엔비디아",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "HBM",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "SK하이닉스는 세계 최초로 12단 HBM3E를 양산해 엔비디아 등 APU 기업에 독점적으로 HBM을 공급하고 있다.",
+      "news_title": "SK하이닉스, HBM 엔비디아에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-018",
+      "mentioned_count": 10,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "AMD",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "HBM",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "삼성전자는 인공지능(AI) 투자 열풍에 따른 HBM 등 고부가 메모리 제품의 판매 급증과 범용 메모리 공급 부족으로 인한 가격 상승으로 3분기 실적 반등을 이뤘다.",
+      "news_title": "삼성전자, HBM 엔비디아에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-019",
+      "mentioned_count": 4,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "AMD",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "HBM",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "SK하이닉스는 세계 최초로 12단 HBM3E를 양산해 엔비디아 등 APU 기업에 독점적으로 HBM을 공급하고 있다.",
+      "news_title": "SK하이닉스, HBM 엔비디아에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-020",
+      "mentioned_count": 4,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "SiC",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "하나머티리얼즈가 SiC(SIC) 포커스링 생산 능력을 확대한다.",
+      "news_title": "하나머티리얼즈, SiC 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-020",
+      "mentioned_count": 4,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "SiC",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "하나머티리얼즈가 SiC(SIC) 포커스링 생산 능력을 확대한다.",
+      "news_title": "하나머티리얼즈, SiC 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-021",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "증착 장비",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "반도체 전공정 장비 제조업체 테스는 반도체 소자의 박막 형성 및 식각 공정에 사용되는 플라즈마 강화 화학기상증착(증착 장비) 장비와 식각 장비 등을 주력 제품으로 생산한다.",
+      "news_title": "테스, 증착 장비 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-021",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "원익IPS",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "증착 장비",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "금융감독원 전자공시에 따르면 원익IPS는 반도체 전공정 단계의 증착 장비를 제조한다.",
+      "news_title": "테스, 증착 장비 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-022",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "테슬라",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "차량용 반도체",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "삼성전자는 파운드리 등 시스템반도체 분야에서 글로벌 대형 고객사의 차량용 반도체 주문을 잇따라 수주하고 있다.",
+      "news_title": "삼성전자, 차량용 반도체 테슬라에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-023",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "엔비디아",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "LPU",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "엔비디아의 그록3 언어처리장치(LPU) 칩 생산은 삼성전자가 맡았다.",
+      "news_title": "삼성전자, LPU 엔비디아에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-024",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "실리콘 전극",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "하나머티리얼즈는 삼성전자와 SK하이닉스 등 대한민국 칩메이커들 위주로 실리콘 전극 제품을 공급하고 있다.",
+      "news_title": "하나머티리얼즈, 실리콘 전극 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-024",
+      "mentioned_count": 2,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "실리콘 전극",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "하나머티리얼즈는 삼성전자와 SK하이닉스 등 대한민국 칩메이커들 위주로 실리콘 전극 제품을 공급하고 있다.",
+      "news_title": "하나머티리얼즈, 실리콘 전극 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-025",
+      "mentioned_count": 1,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "포커스링",
+        "label": "PRODUCT"
+      },
+      "source_sentence": "하나머티리얼즈가 SiC(SIC) 포커스링 생산 능력을 확대한다.",
+      "news_title": "하나머티리얼즈, 포커스링 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-026",
+      "mentioned_count": 8,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "실리콘",
+        "label": "COMMODITY"
+      },
+      "source_sentence": "하나머티리얼즈는 반도체 에칭공정용 실리콘 및 SiC 부품 제조·판매를 주요 사업으로 하고 있다.",
+      "news_title": "하나머티리얼즈, 실리콘 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-027",
+      "mentioned_count": 8,
+      "predicate": "SUPPLIES_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": {
+        "text": "실리콘",
+        "label": "COMMODITY"
+      },
+      "source_sentence": "대신증권은 하나머티리얼즈의 실리콘 부품 매출이 2025년 2417억원에서 2027년 3223억원까지 늘어날 것이라고 전망했다.",
+      "news_title": "하나머티리얼즈, 실리콘 SK하이닉스에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-028",
+      "mentioned_count": 8,
+      "predicate": "EXPORTS_TO",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "일본",
+        "label": "COUNTRY"
+      },
+      "item": {
+        "text": "실리콘",
+        "label": "COMMODITY"
+      },
+      "source_sentence": "대신증권은 하나머티리얼즈의 실리콘 부품 사업이 성장의 핵심 동력으로 지목됐다고 분석했다.",
+      "news_title": "하나머티리얼즈, 실리콘 일본에 수출",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-001",
+      "mentioned_count": 1,
+      "predicate": "DEVELOPS",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "오킨스전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "테스트 소켓",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "오킨스전자는 2014년 코스닥시장에 상장해 테스트 소켓 등 반도체 검사용 소켓을 개발하고 있다.",
+      "news_title": "오킨스전자, 테스트 소켓 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-002",
+      "mentioned_count": 3,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "현대차",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "현대차와 삼성전자가 5G 기술 협업을 맺고 스마트 제조 솔루션 구축에 속도를 낸다.",
+      "news_title": "삼성전자, AP 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-002",
+      "mentioned_count": 2,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "현대차",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성SDI",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "지난 24일 현대차·기아와 삼성SDI가 경기 의왕연구소에서 '로봇 전용 배터리 공동 개발 위한 업무협약(MOU)'을 맺었다.",
+      "news_title": "삼성전자, AP 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-005",
+      "mentioned_count": 2,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "한미반도체",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "TC 본더",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "한미반도체는 HBM용 열압착 장비인 TC 본더를 생산∙공급한다.",
+      "news_title": "한미반도체, TC 본더 SK하이닉스에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-029",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "현대차",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "전기차",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "지난 2023년 삼성SDI는 현대차의 차세대 유럽향 전기차에 탑재될 P6(6세대 각형 배터리)를 7년간 공급하는 계약을 체결했다.",
+      "news_title": "현대차, 전기차에 생산",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-004",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "반도체 전공정",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "2002년 설립된 테스는 반도체 제조에 필요한 반도체 전공정 장비를 주력으로 생산하는 기업이다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-004",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "증착 장비",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "반도체 전공정 장비 제조업체 테스는 반도체 소자의 박막 형성 및 식각 공정에 사용되는 플라즈마 강화 화학기상증착(증착 장비) 장비와 식각 장비 등을 주력 제품으로 생산한다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-004",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "식각 장비",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "반도체 전공정 장비 제조업체 테스는 반도체 소자의 박막 형성 및 식각 공정에 사용되는 플라즈마 강화 화학기상증착(증착 장비) 장비와 식각 장비 등을 주력 제품으로 생산한다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-004",
+      "mentioned_count": 2,
+      "predicate": "LOCATED_IN",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "중국",
+        "label": "COUNTRY"
+      },
+      "item": null,
+      "source_sentence": "키움증권에 따르면 삼성전자는 중국 시안 공장의 NAND 설비를 256단 적층 제품 생산을 위해 업그레이드하고 있다.",
+      "news_title": "테스, SK하이닉스와 90억 규모 반도체 전공정 장비 공급계약",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-005",
+      "mentioned_count": 1,
       "predicate": "SANCTIONS",
       "is_negated": false,
       "tense": "past_or_present_fact",
@@ -1777,139 +1733,437 @@
         "text": "중국",
         "label": "COUNTRY"
       },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "미국의 대중 수출 통제가 이어지면서 중국 사업장의 공정 전환에는 제약이 남아 있다."
+      "item": null,
+      "source_sentence": "미국의 대중 제재로 해외직접생산규제(FDPR)에 첨단 장비가 규제 대상에 포함되는 등 중국 수출규제가 점점 까로워지는 형국이다.",
+      "news_title": "한미반도체, TC 본더 SK하이닉스에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-013",
-      "news_title": "삼성전자, AI 데이터센터 메모리 대규모 투자",
-      "timestamp": "2026-06-15",
-      "mentioned_count": 9,
+      "news_id": "news-006",
+      "mentioned_count": 1,
       "predicate": "INVESTS_IN",
       "is_negated": false,
-      "tense": "future_or_planned",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AI 데이터센터",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전자가 AI 데이터센터용 메모리 사업에 대규모 투자를 추진한다."
-    },
-    {
-      "news_id": "news-013",
-      "news_title": "삼성전자, AI 데이터센터 메모리 대규모 투자",
-      "timestamp": "2026-06-15",
-      "mentioned_count": 7,
-      "predicate": "PRODUCES",
-      "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
         "text": "삼성전자",
         "label": "COMPANY"
       },
       "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
+        "text": "와이씨",
+        "label": "COMPANY"
       },
       "item": null,
-      "source_sentence": "HBM과 고용량 서버 D램을 묶은 데이터센터 전용 제품군을 확대할 계획이다."
+      "source_sentence": "지난 2020년 삼성전자는 전략적 투자자(SI)로서 와이씨에 473억원을 투자했다.",
+      "news_title": "와이씨, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-013",
-      "news_title": "삼성전자, AI 데이터센터 메모리 대규모 투자",
-      "timestamp": "2026-06-15",
-      "mentioned_count": 6,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "투자에는 평택 라인 증설과 후공정 패키징 설비 확충이 포함된다."
-    },
-    {
-      "news_id": "news-013",
-      "news_title": "삼성전자, AI 데이터센터 메모리 대규모 투자",
-      "timestamp": "2026-06-15",
-      "mentioned_count": 5,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "future_or_planned",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "확보한 물량은 AI 가속기 고객사에 공급될 전망이다."
-    },
-    {
-      "news_id": "news-013",
-      "news_title": "삼성전자, AI 데이터센터 메모리 대규모 투자",
-      "timestamp": "2026-06-15",
-      "mentioned_count": 4,
+      "news_id": "news-006",
+      "mentioned_count": 1,
       "predicate": "DEVELOPS",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
-        "text": "엔비디아",
+        "text": "와이씨",
         "label": "COMPANY"
       },
       "object": {
-        "text": "AI 데이터센터",
+        "text": "메모리 테스터",
         "label": "PRODUCT"
       },
       "item": null,
-      "source_sentence": "엔비디아는 데이터센터 통합 플랫폼으로 사업 범위를 넓히고 있다."
+      "source_sentence": "와이씨는 6세대 HBM인 HBM, 7세대 HBM인 HBM, 3D NAND 등 차세대 메모리 테스터도 준비하고 있다.",
+      "news_title": "와이씨, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-013",
-      "news_title": "삼성전자, AI 데이터센터 메모리 대규모 투자",
-      "timestamp": "2026-06-15",
-      "mentioned_count": 4,
-      "predicate": "INVESTS_IN",
+      "news_id": "news-008",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "파크시스템스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "AFM",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "파크시스템스의 주력 장비인 AFM(원자현미경)은 선단 공정뿐 아니라 레거시 공정 일부에도 도입된다.",
+      "news_title": "파크시스템스, AFM 중국에 수출",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-009",
+      "mentioned_count": 2,
+      "predicate": "PARTNERS_WITH",
       "is_negated": false,
       "tense": "future_or_planned",
       "subject": {
-        "text": "SK하이닉스",
+        "text": "와이씨",
         "label": "COMPANY"
       },
       "object": {
-        "text": "AI 데이터센터",
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "와이씨는 반도체 장비 공급 계약을 통해 지속적인 성장세를 이어가고 있으며, 앞으로도 삼성전자와 같은 주요 고객과의 협력을 강화할 계획이다.",
+      "news_title": "와이씨, 반도체 후공정 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-011",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테슬라",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "일론 머스크 테슬라 최고경영자(CEO)는 자신의 사회관계망서비스 엑스(X·구 트위터)에서 삼성전자와의 계약 사실을 공개했다.",
+      "news_title": "삼성전자, 파운드리 테슬라에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-030",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "원익IPS",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "삼성전자 서플라이 체인(공급망)에 속한 소재·부품·장비 종목인 원익IPS는 테슬라 수주 소식에 주가가 급등했다.",
+      "news_title": "원익IPS, 삼성전자에 협력",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-031",
+      "mentioned_count": 3,
+      "predicate": "LOCATED_IN",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테슬라",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "미국",
+        "label": "COUNTRY"
+      },
+      "item": null,
+      "source_sentence": "미국의 전기차 기업 테슬라는 삼성전자와 대규모 파운드리 공급 계약을 체결했다.",
+      "news_title": "테슬라, 미국에 소재",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-031",
+      "mentioned_count": 3,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테슬라",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "전기차",
         "label": "PRODUCT"
       },
       "item": null,
-      "source_sentence": "SK하이닉스도 데이터센터용 메모리 증설 투자를 예고했다."
+      "source_sentence": "미국의 전기차 기업 테슬라는 삼성전자와 대규모 파운드리 공급 계약을 체결했다.",
+      "news_title": "테슬라, 미국에 소재",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-014",
-      "news_title": "삼성전자, 웨이퍼 소재 공급망 투자",
-      "timestamp": "2026-06-12",
-      "mentioned_count": 4,
-      "predicate": "INVESTS_IN",
+      "news_id": "news-015",
+      "mentioned_count": 2,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "애플",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "애플은 7일 보도자료를 통해 미국 오스틴에 있는 삼성전자 반도체공장에서 삼성전자와 협력해 혁신적인 새로운 칩 제조 기술을 개발하고 있다고 밝혔다.",
+      "news_title": "삼성전자, 이미지센서 중국에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-015",
+      "mentioned_count": 2,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "future_or_planned",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "애플",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "삼성전자는 애플과 기술개발 협력을 통해 차세대 제품에 하이브리드 본딩 기술을 적용할 것으로 보인다.",
+      "news_title": "삼성전자, 이미지센서 중국에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-018",
+      "mentioned_count": 1,
+      "predicate": "DEVELOPS",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
         "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "APU",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "삼성전자는 APU, 차세대 공정, 시스템반도체 등 미래 성장동력 확보를 위한 투자를 지속적으로 확대하고 있다는 평가를 받는다.",
+      "news_title": "삼성전자, HBM 엔비디아에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-019",
+      "mentioned_count": 4,
+      "predicate": "COMPETES_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "삼성전자와 SK하이닉스는 NAND와 범용 DRAM 시장에서도 치열하게 경쟁하고 있다.",
+      "news_title": "SK하이닉스, HBM 엔비디아에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-020",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "한미반도체",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "한미반도체는 티씨케이, 하나머티리얼즈와 함께 삼성전자 반도체 밸류체인의 핵심 소재 축을 형성하고 있다.",
+      "news_title": "하나머티리얼즈, SiC 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-020",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "하나머티리얼즈는 티씨케이, 한미반도체와 함께 삼성전자 반도체 밸류체인의 핵심 소재 축을 형성하고 있다.",
+      "news_title": "하나머티리얼즈, SiC 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-021",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "원익IPS",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "증착 장비",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "금융감독원 전자공시에 따르면 원익IPS는 반도체 전공정 단계의 증착 장비를 제조한다.",
+      "news_title": "테스, 증착 장비 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-007",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "디아이",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "메모리 테스터",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "디아이 관계자는 자사의 장비가 더블데이터레이트5(DRAM)용 차세대 메모리 테스터라고 설명했다.",
+      "news_title": "디아이, 메모리 테스터 삼성전자에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-032",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "future_or_planned",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "테슬라",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "이재용 삼성전자 회장의 미국 출장을 계기로 삼성전자와 테슬라 간의 협력 관계가 한층 더 구체화된 것으로 보인다.",
+      "news_title": "삼성전자, 테슬라에 협력",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-032",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "future_or_planned",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "AMD",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "삼성전자와 엔비디아의 대항마로 꼽히는 AMD와의 파트너십 또한 메모리 분야를 넘어 시스템반도체 영역으로 확장될 전망이다.",
+      "news_title": "삼성전자, 테슬라에 협력",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-032",
+      "mentioned_count": 1,
+      "predicate": "COMPETES_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "AMD",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "엔비디아",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "엔비디아의 대항마로 꼽히는 AMD는 삼성전자와의 파트너십을 메모리 분야를 넘어 시스템반도체 영역으로 확장할 전망이다.",
+      "news_title": "삼성전자, 테슬라에 협력",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-013",
+      "mentioned_count": 1,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "AMD",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "APU",
+        "label": "PRODUCT"
+      },
+      "item": null,
+      "source_sentence": "AMD의 주력 APU인 MI350에 들어가는 HBM3E(5세대) 12단 제품을 삼성전자가 공급하고 있다.",
+      "news_title": "삼성전자, 파운드리 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-013",
+      "mentioned_count": 2,
+      "predicate": "LOCATED_IN",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "삼성전자",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "미국",
+        "label": "COUNTRY"
+      },
+      "item": null,
+      "source_sentence": "이재용 삼성전자 회장은 미국 오스틴에 위치한 삼성전자 파운드리 공장에서 일론 머스크 테슬라 최고경영자(CEO)를 만났다.",
+      "news_title": "삼성전자, 파운드리 현대차에 공급",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-033",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "테스",
+        "label": "COMPANY"
+      },
+      "object": {
+        "text": "SK하이닉스",
+        "label": "COMPANY"
+      },
+      "item": null,
+      "source_sentence": "금융감독원 전자공시시스템에 따르면 테스는 SK하이닉스와 121억 원 규모의 반도체 제조 장비 공급 계약을 체결했다.",
+      "news_title": "하나머티리얼즈, 실리콘에 생산",
+      "timestamp": "2026-08-21"
+    },
+    {
+      "news_id": "news-033",
+      "mentioned_count": 8,
+      "predicate": "PRODUCES",
+      "is_negated": false,
+      "tense": "past_or_present_fact",
+      "subject": {
+        "text": "하나머티리얼즈",
         "label": "COMPANY"
       },
       "object": {
@@ -1917,979 +2171,51 @@
         "label": "COMMODITY"
       },
       "item": null,
-      "source_sentence": "삼성전자는 웨이퍼 원재료인 고순도 실리콘 확보를 위해 소재 업체에 투자했다."
+      "source_sentence": "유안타증권은 실리콘 부품 생산 기업인 하나머티리얼즈를 이달 주목할 추천 종목으로 제시했다.",
+      "news_title": "하나머티리얼즈, 실리콘에 생산",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-014",
-      "news_title": "삼성전자, 웨이퍼 소재 공급망 투자",
-      "timestamp": "2026-06-12",
-      "mentioned_count": 4,
-      "predicate": "INVESTS_IN",
-      "is_negated": false,
+      "news_id": "news-034",
+      "mentioned_count": 1,
+      "predicate": "PARTNERS_WITH",
+      "is_negated": true,
       "tense": "past_or_present_fact",
       "subject": {
         "text": "삼성전자",
         "label": "COMPANY"
       },
       "object": {
-        "text": "구리",
-        "label": "COMMODITY"
+        "text": "한미반도체",
+        "label": "COMPANY"
       },
       "item": null,
-      "source_sentence": "배선 공정에 쓰이는 구리도 조달처를 다변화했다."
+      "source_sentence": "HBM 관련하여 삼성전자와 한미반도체는 아직 제휴를 맺고 있지 않다.",
+      "news_title": "삼성전자, 한미반도체에 협력",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-014",
-      "news_title": "삼성전자, 웨이퍼 소재 공급망 투자",
-      "timestamp": "2026-06-12",
-      "mentioned_count": 5,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "원자재 확보는 D램 등 주력 제품의 생산 계획과 직결된다."
-    },
-    {
-      "news_id": "news-014",
-      "news_title": "삼성전자, 웨이퍼 소재 공급망 투자",
-      "timestamp": "2026-06-12",
-      "mentioned_count": 4,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "국내 생산 비중이 높아 소재 수급의 영향을 크게 받는다."
-    },
-    {
-      "news_id": "news-014",
-      "news_title": "삼성전자, 웨이퍼 소재 공급망 투자",
-      "timestamp": "2026-06-12",
-      "mentioned_count": 3,
-      "predicate": "SANCTIONS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "일본",
-        "label": "COUNTRY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": {
-        "text": "포토레지스트",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "과거 일본의 소재 수출 규제 이후 조달처 다변화가 과제로 남았다."
-    },
-    {
-      "news_id": "news-015",
-      "news_title": "SK하이닉스, HBM 독점 공급",
-      "timestamp": "2026-07-20",
-      "mentioned_count": 17,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "SK하이닉스는 엔비디아 AI 가속기에 들어가는 HBM 물량 대부분을 공급해 왔다."
-    },
-    {
-      "news_id": "news-015",
-      "news_title": "SK하이닉스, HBM 독점 공급",
-      "timestamp": "2026-07-20",
-      "mentioned_count": 15,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "회사는 HBM4 양산 준비에 들어갔다고 밝혔다."
-    },
-    {
-      "news_id": "news-015",
-      "news_title": "SK하이닉스, HBM 독점 공급",
-      "timestamp": "2026-07-20",
-      "mentioned_count": 8,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "엔비디아는 HBM을 탑재한 AI 가속기용 GPU를 설계한다."
-    },
-    {
-      "news_id": "news-015",
-      "news_title": "SK하이닉스, HBM 독점 공급",
-      "timestamp": "2026-07-20",
-      "mentioned_count": 6,
+      "news_id": "news-023",
+      "mentioned_count": 1,
       "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AI 데이터센터",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "AI 데이터센터 수요가 HBM 판매 확대를 이끌었다."
-    },
-    {
-      "news_id": "news-015",
-      "news_title": "SK하이닉스, HBM 독점 공급",
-      "timestamp": "2026-07-20",
-      "mentioned_count": 7,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전자가 공급망 진입을 노리면서 경쟁 구도가 형성됐다."
-    },
-    {
-      "news_id": "news-016",
-      "news_title": "SK하이닉스 이천 공장 증설",
-      "timestamp": "2026-07-12",
-      "mentioned_count": 9,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "SK하이닉스가 경기 이천 본사 캠퍼스의 생산 능력을 늘린다."
-    },
-    {
-      "news_id": "news-016",
-      "news_title": "SK하이닉스 이천 공장 증설",
-      "timestamp": "2026-07-12",
-      "mentioned_count": 8,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "이천 사업장은 회사의 주력 D램 생산기지다."
-    },
-    {
-      "news_id": "news-016",
-      "news_title": "SK하이닉스 이천 공장 증설",
-      "timestamp": "2026-07-12",
-      "mentioned_count": 7,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "HBM용 핵심 공정과 연구개발 조직도 이곳에 있다."
-    },
-    {
-      "news_id": "news-016",
-      "news_title": "SK하이닉스 이천 공장 증설",
-      "timestamp": "2026-07-12",
-      "mentioned_count": 6,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "증설은 삼성전자와의 선단 공정 경쟁에 대응하기 위한 것이다."
-    },
-    {
-      "news_id": "news-016",
-      "news_title": "SK하이닉스 이천 공장 증설",
-      "timestamp": "2026-07-12",
-      "mentioned_count": 4,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "삼성전자도 평택 라인 증설로 국내 생산 기반을 넓히고 있다."
-    },
-    {
-      "news_id": "news-017",
-      "news_title": "엔비디아 GPU와 AI 데이터센터",
-      "timestamp": "2026-07-19",
-      "mentioned_count": 14,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "엔비디아가 AI 가속기용 GPU 시장에서 압도적 점유율을 유지하고 있다."
-    },
-    {
-      "news_id": "news-017",
-      "news_title": "엔비디아 GPU와 AI 데이터센터",
-      "timestamp": "2026-07-19",
-      "mentioned_count": 11,
-      "predicate": "DEVELOPS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "AI 데이터센터",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "엔비디아는 네트워크와 소프트웨어를 묶은 데이터센터 통합 플랫폼으로 사업을 넓히고 있다."
-    },
-    {
-      "news_id": "news-017",
-      "news_title": "엔비디아 GPU와 AI 데이터센터",
-      "timestamp": "2026-07-19",
-      "mentioned_count": 8,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "GPU 생산은 TSMC의 선단 공정과 패키징에 의존한다."
-    },
-    {
-      "news_id": "news-017",
-      "news_title": "엔비디아 GPU와 AI 데이터센터",
-      "timestamp": "2026-07-19",
-      "mentioned_count": 7,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "가속기에 들어가는 HBM은 SK하이닉스가 주로 공급한다."
-    },
-    {
-      "news_id": "news-017",
-      "news_title": "엔비디아 GPU와 AI 데이터센터",
-      "timestamp": "2026-07-19",
-      "mentioned_count": 5,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "AMD",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "AMD가 추격에 나섰지만 쿠다 생태계의 진입 장벽은 여전히 높다."
-    },
-    {
-      "news_id": "news-018",
-      "news_title": "엔비디아 미국 본사",
-      "timestamp": "2026-07-11",
-      "mentioned_count": 8,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "엔비디아는 미국 캘리포니아 산타클라라에 본사를 두고 있다."
-    },
-    {
-      "news_id": "news-018",
-      "news_title": "엔비디아 미국 본사",
-      "timestamp": "2026-07-11",
-      "mentioned_count": 7,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "회사는 칩 설계에 집중하는 팹리스 구조를 유지해 왔다."
-    },
-    {
-      "news_id": "news-018",
-      "news_title": "엔비디아 미국 본사",
-      "timestamp": "2026-07-11",
-      "mentioned_count": 6,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "생산은 대만 TSMC 등 외부 파운드리에 맡긴다."
-    },
-    {
-      "news_id": "news-018",
-      "news_title": "엔비디아 미국 본사",
-      "timestamp": "2026-07-11",
-      "mentioned_count": 4,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대만",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "TSMC의 주력 팹은 대만에 몰려 있다."
-    },
-    {
-      "news_id": "news-018",
-      "news_title": "엔비디아 미국 본사",
-      "timestamp": "2026-07-11",
-      "mentioned_count": 5,
-      "predicate": "SANCTIONS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "object": {
-        "text": "중국",
-        "label": "COUNTRY"
-      },
-      "item": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "미국 정부는 자국 기업의 첨단 AI 칩 대중 수출을 통제하고 있다."
-    },
-    {
-      "news_id": "news-019",
-      "news_title": "TSMC, 엔비디아 GPU 위탁생산",
-      "timestamp": "2026-07-16",
-      "mentioned_count": 13,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "TSMC가 엔비디아 GPU를 첨단 공정으로 위탁 생산해 공급하고 있다."
-    },
-    {
-      "news_id": "news-019",
-      "news_title": "TSMC, 엔비디아 GPU 위탁생산",
-      "timestamp": "2026-07-16",
-      "mentioned_count": 9,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "엔비디아",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "GPU",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "AI 가속기 공급량은 사실상 패키징 생산능력에 좌우된다는 평가다."
-    },
-    {
-      "news_id": "news-019",
-      "news_title": "TSMC, 엔비디아 GPU 위탁생산",
-      "timestamp": "2026-07-16",
-      "mentioned_count": 7,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대만",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "TSMC는 대만 신주과학단지에 본사와 주력 팹을 두고 있다."
-    },
-    {
-      "news_id": "news-019",
-      "news_title": "TSMC, 엔비디아 GPU 위탁생산",
-      "timestamp": "2026-07-16",
-      "mentioned_count": 5,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "선단 공정 전환에는 ASML의 EUV 노광장비가 필수적이다."
-    },
-    {
-      "news_id": "news-019",
-      "news_title": "TSMC, 엔비디아 GPU 위탁생산",
-      "timestamp": "2026-07-16",
-      "mentioned_count": 5,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": null,
-      "source_sentence": "파운드리 시장에서는 삼성전자가 추격자로 자리한다."
-    },
-    {
-      "news_id": "news-020",
-      "news_title": "ASML EUV 독점 공급",
-      "timestamp": "2026-07-14",
-      "mentioned_count": 11,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "ASML은 EUV 노광장비를 만드는 세계 유일의 기업이다."
-    },
-    {
-      "news_id": "news-020",
-      "news_title": "ASML EUV 독점 공급",
-      "timestamp": "2026-07-14",
-      "mentioned_count": 8,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "ASML은 삼성전자에 최신 EUV 노광장비를 공급한다."
-    },
-    {
-      "news_id": "news-020",
-      "news_title": "ASML EUV 독점 공급",
-      "timestamp": "2026-07-14",
-      "mentioned_count": 8,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "TSMC에도 같은 장비를 공급하고 있다."
-    },
-    {
-      "news_id": "news-020",
-      "news_title": "ASML EUV 독점 공급",
-      "timestamp": "2026-07-14",
-      "mentioned_count": 6,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "네덜란드",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "네덜란드 벨트호벤에 본사를 두고 있다."
-    },
-    {
-      "news_id": "news-020",
-      "news_title": "ASML EUV 독점 공급",
-      "timestamp": "2026-07-14",
-      "mentioned_count": 5,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "TSMC",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": null,
-      "source_sentence": "확보 물량이 두 회사의 미세 공정 전환 속도를 좌우한다."
-    },
-    {
-      "news_id": "news-021",
-      "news_title": "애플, 폴더블 시장 진입",
-      "timestamp": "2026-07-09",
-      "mentioned_count": 7,
-      "predicate": "COMPETES_WITH",
       "is_negated": false,
       "tense": "future_or_planned",
       "subject": {
-        "text": "애플",
+        "text": "엔비디아",
         "label": "COMPANY"
       },
       "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "폴더블폰",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "애플이 폴더블 스마트폰 시장에 진입할 것이라는 전망이 나온다."
-    },
-    {
-      "news_id": "news-021",
-      "news_title": "애플, 폴더블 시장 진입",
-      "timestamp": "2026-07-09",
-      "mentioned_count": 6,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "폴더블폰",
+        "text": "LPU",
         "label": "PRODUCT"
       },
       "item": null,
-      "source_sentence": "폴더블 시장은 삼성전자가 초기부터 주도해 왔다."
-    },
-    {
-      "news_id": "news-021",
-      "news_title": "애플, 폴더블 시장 진입",
-      "timestamp": "2026-07-09",
-      "mentioned_count": 4,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "애플은 미국 쿠퍼티노 본사에서 관련 개발을 진행 중이다."
-    },
-    {
-      "news_id": "news-021",
-      "news_title": "애플, 폴더블 시장 진입",
-      "timestamp": "2026-07-09",
-      "mentioned_count": 5,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "OLED",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "접히는 화면에는 중소형 OLED 패널이 쓰인다."
-    },
-    {
-      "news_id": "news-021",
-      "news_title": "애플, 폴더블 시장 진입",
-      "timestamp": "2026-07-09",
-      "mentioned_count": 4,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "future_or_planned",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "OLED",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "패널 물량은 삼성디스플레이가 맡을 것으로 업계는 보고 있다."
-    },
-    {
-      "news_id": "news-022",
-      "news_title": "마이크론, D램 3위 추격",
-      "timestamp": "2026-07-04",
-      "mentioned_count": 6,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "마이크론이 D램 시장에서 상위 업체 추격에 속도를 내고 있다."
-    },
-    {
-      "news_id": "news-022",
-      "news_title": "마이크론, D램 3위 추격",
-      "timestamp": "2026-07-04",
-      "mentioned_count": 5,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "회사는 HBM 비중을 늘리며 수익성을 개선했다."
-    },
-    {
-      "news_id": "news-022",
-      "news_title": "마이크론, D램 3위 추격",
-      "timestamp": "2026-07-04",
-      "mentioned_count": 5,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "마이크론은 미국 아이다호주 보이시에 본사를 두고 있다."
-    },
-    {
-      "news_id": "news-022",
-      "news_title": "마이크론, D램 3위 추격",
-      "timestamp": "2026-07-04",
-      "mentioned_count": 4,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "DRAM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "D램에서는 삼성전자와 점유율 격차를 좁히는 것이 과제다."
-    },
-    {
-      "news_id": "news-022",
-      "news_title": "마이크론, D램 3위 추격",
-      "timestamp": "2026-07-04",
-      "mentioned_count": 4,
-      "predicate": "COMPETES_WITH",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "마이크론",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "HBM",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "HBM 시장에서는 SK하이닉스를 추격하는 구도다."
+      "source_sentence": "엔비디아가 인공지능(AI) 추론에 최적화한 그록(Groq)3 언어처리장치(LPU)와 이를 탑재한 그록3 LPX 랙을 출시한다.",
+      "news_title": "삼성전자, LPU 엔비디아에 공급",
+      "timestamp": "2026-08-21"
     },
     {
       "news_id": "news-023",
-      "news_title": "일본, 반도체 소재 수출규제",
-      "timestamp": "2026-06-22",
-      "mentioned_count": 9,
-      "predicate": "SANCTIONS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "일본",
-        "label": "COUNTRY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": {
-        "text": "포토레지스트",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "일본 정부는 2019년 포토레지스트를 포함한 3개 품목의 대한국 수출 절차를 강화했다."
-    },
-    {
-      "news_id": "news-023",
-      "news_title": "일본, 반도체 소재 수출규제",
-      "timestamp": "2026-06-22",
-      "mentioned_count": 6,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "규제는 국내에 생산 거점을 둔 반도체 기업에 직접적인 영향을 줬다."
-    },
-    {
-      "news_id": "news-023",
-      "news_title": "일본, 반도체 소재 수출규제",
-      "timestamp": "2026-06-22",
-      "mentioned_count": 5,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "SK하이닉스",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "SK하이닉스도 소재 재고 확보에 나섰다."
-    },
-    {
-      "news_id": "news-023",
-      "news_title": "일본, 반도체 소재 수출규제",
-      "timestamp": "2026-06-22",
-      "mentioned_count": 4,
-      "predicate": "INVESTS_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "포토레지스트",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "이후 국내 기업들은 소재 국산화에 투자하며 조달처를 다변화했다."
-    },
-    {
-      "news_id": "news-023",
-      "news_title": "일본, 반도체 소재 수출규제",
-      "timestamp": "2026-06-22",
-      "mentioned_count": 4,
+      "mentioned_count": 1,
       "predicate": "PRODUCES",
       "is_negated": false,
       "tense": "past_or_present_fact",
@@ -2898,415 +2224,32 @@
         "label": "COMPANY"
       },
       "object": {
-        "text": "DRAM",
+        "text": "LPU",
         "label": "PRODUCT"
       },
       "item": null,
-      "source_sentence": "포토레지스트는 D램 노광 공정에 반드시 쓰이는 소재다."
+      "source_sentence": "엔비디아의 그록3 언어처리장치(LPU) 칩 생산은 삼성전자가 맡았다.",
+      "news_title": "삼성전자, LPU 엔비디아에 공급",
+      "timestamp": "2026-08-21"
     },
     {
-      "news_id": "news-024",
-      "news_title": "미국, 대중 반도체 장비 제재",
-      "timestamp": "2026-06-19",
-      "mentioned_count": 12,
-      "predicate": "SANCTIONS",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "object": {
-        "text": "중국",
-        "label": "COUNTRY"
-      },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "미국이 중국에 대한 첨단 반도체 장비 수출 통제를 이어가고 있다."
-    },
-    {
-      "news_id": "news-024",
-      "news_title": "미국, 대중 반도체 장비 제재",
-      "timestamp": "2026-06-19",
-      "mentioned_count": 7,
+      "news_id": "news-010",
+      "mentioned_count": 2,
       "predicate": "PRODUCES",
       "is_negated": false,
       "tense": "past_or_present_fact",
       "subject": {
-        "text": "ASML",
+        "text": "하나머티리얼즈",
         "label": "COMPANY"
       },
       "object": {
-        "text": "EUV 노광장비",
+        "text": "반도체 전공정",
         "label": "PRODUCT"
       },
       "item": null,
-      "source_sentence": "규제 대상에는 ASML이 만드는 EUV 노광장비가 포함된다."
-    },
-    {
-      "news_id": "news-024",
-      "news_title": "미국, 대중 반도체 장비 제재",
-      "timestamp": "2026-06-19",
-      "mentioned_count": 5,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "네덜란드",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "미국은 네덜란드 등 우방국과 공조해 통제 범위를 넓혀 왔다."
-    },
-    {
-      "news_id": "news-024",
-      "news_title": "미국, 대중 반도체 장비 제재",
-      "timestamp": "2026-06-19",
-      "mentioned_count": 4,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "ASML",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "EUV 노광장비",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "중국에 팹을 둔 기업들은 장비 반입 허가를 별도로 받아야 한다."
-    },
-    {
-      "news_id": "news-024",
-      "news_title": "미국, 대중 반도체 장비 제재",
-      "timestamp": "2026-06-19",
-      "mentioned_count": 5,
-      "predicate": "EXPORTS_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "중국",
-        "label": "COUNTRY"
-      },
-      "item": {
-        "text": "NAND",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전자는 시안 공장을 통해 중국 현지에 낸드플래시를 공급하고 있다."
-    },
-    {
-      "news_id": "news-025",
-      "news_title": "삼성전기 MLCC, 삼성전자에 공급",
-      "timestamp": "2026-07-07",
-      "mentioned_count": 8,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "MLCC",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성전기가 적층세라믹콘덴서(MLCC) 시장에서 세계 2위 자리를 지키고 있다."
-    },
-    {
-      "news_id": "news-025",
-      "news_title": "삼성전기 MLCC, 삼성전자에 공급",
-      "timestamp": "2026-07-07",
-      "mentioned_count": 7,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "MLCC",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전기는 삼성전자의 스마트폰과 서버 제품에 MLCC를 공급하고 있다."
-    },
-    {
-      "news_id": "news-025",
-      "news_title": "삼성전기 MLCC, 삼성전자에 공급",
-      "timestamp": "2026-07-07",
-      "mentioned_count": 5,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "삼성전기는 수원 본사와 부산 사업장에서 MLCC를 만든다."
-    },
-    {
-      "news_id": "news-025",
-      "news_title": "삼성전기 MLCC, 삼성전자에 공급",
-      "timestamp": "2026-07-07",
-      "mentioned_count": 4,
-      "predicate": "INVESTS_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "팔라듐",
-        "label": "COMMODITY"
-      },
-      "item": null,
-      "source_sentence": "MLCC 전극에 쓰이는 팔라듐 확보에도 자금을 투입했다."
-    },
-    {
-      "news_id": "news-025",
-      "news_title": "삼성전기 MLCC, 삼성전자에 공급",
-      "timestamp": "2026-07-07",
-      "mentioned_count": 3,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "MLCC",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "해외 스마트폰 업체향 공급도 늘리고 있다."
-    },
-    {
-      "news_id": "news-026",
-      "news_title": "삼성전기, 팔라듐 원자재 확보",
-      "timestamp": "2026-06-27",
-      "mentioned_count": 5,
-      "predicate": "INVESTS_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "팔라듐",
-        "label": "COMMODITY"
-      },
-      "item": null,
-      "source_sentence": "삼성전기가 MLCC 전극 소재인 팔라듐 확보에 나섰다."
-    },
-    {
-      "news_id": "news-026",
-      "news_title": "삼성전기, 팔라듐 원자재 확보",
-      "timestamp": "2026-06-27",
-      "mentioned_count": 6,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "MLCC",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "팔라듐 가격은 MLCC 원가에 직접 반영된다."
-    },
-    {
-      "news_id": "news-026",
-      "news_title": "삼성전기, 팔라듐 원자재 확보",
-      "timestamp": "2026-06-27",
-      "mentioned_count": 3,
-      "predicate": "INVESTS_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "구리",
-        "label": "COMMODITY"
-      },
-      "item": null,
-      "source_sentence": "니켈·구리 등 대체 소재를 적용한 전극 기술 개발도 병행하고 있다."
-    },
-    {
-      "news_id": "news-026",
-      "news_title": "삼성전기, 팔라듐 원자재 확보",
-      "timestamp": "2026-06-27",
-      "mentioned_count": 4,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "MLCC",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "생산된 MLCC는 삼성전자 스마트폰과 서버에 공급된다."
-    },
-    {
-      "news_id": "news-026",
-      "news_title": "삼성전기, 팔라듐 원자재 확보",
-      "timestamp": "2026-06-27",
-      "mentioned_count": 3,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성전기",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "원자재 대부분을 수입에 의존해 환율과 시세에 민감하다."
-    },
-    {
-      "news_id": "news-027",
-      "news_title": "삼성디스플레이, 애플에 OLED 공급",
-      "timestamp": "2026-07-06",
-      "mentioned_count": 9,
-      "predicate": "PRODUCES",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "OLED",
-        "label": "PRODUCT"
-      },
-      "item": null,
-      "source_sentence": "삼성디스플레이가 중소형 OLED 패널 시장에서 1위를 유지하고 있다."
-    },
-    {
-      "news_id": "news-027",
-      "news_title": "삼성디스플레이, 애플에 OLED 공급",
-      "timestamp": "2026-07-06",
-      "mentioned_count": 8,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "OLED",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "회사는 애플 아이폰에 OLED 패널을 공급해 왔다."
-    },
-    {
-      "news_id": "news-027",
-      "news_title": "삼성디스플레이, 애플에 OLED 공급",
-      "timestamp": "2026-07-06",
-      "mentioned_count": 6,
-      "predicate": "SUPPLIES_TO",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "삼성전자",
-        "label": "COMPANY"
-      },
-      "item": {
-        "text": "OLED",
-        "label": "PRODUCT"
-      },
-      "source_sentence": "삼성전자 스마트폰에도 같은 패널을 공급한다."
-    },
-    {
-      "news_id": "news-027",
-      "news_title": "삼성디스플레이, 애플에 OLED 공급",
-      "timestamp": "2026-07-06",
-      "mentioned_count": 5,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "삼성디스플레이",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "대한민국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "주력 생산라인은 충남 아산에 있다."
-    },
-    {
-      "news_id": "news-027",
-      "news_title": "삼성디스플레이, 애플에 OLED 공급",
-      "timestamp": "2026-07-06",
-      "mentioned_count": 4,
-      "predicate": "LOCATED_IN",
-      "is_negated": false,
-      "tense": "past_or_present_fact",
-      "subject": {
-        "text": "애플",
-        "label": "COMPANY"
-      },
-      "object": {
-        "text": "미국",
-        "label": "COUNTRY"
-      },
-      "item": null,
-      "source_sentence": "애플은 미국 쿠퍼티노에 본사를 두고 있다."
+      "source_sentence": "하나머티리얼즈는 반도체 전공정 식각용 소재를 제조하는 회사로, 하나마이크론과 상호출자구조로 되어 있다.",
+      "news_title": "와이씨, 반도체 후공정 SK하이닉스에 공급",
+      "timestamp": "2026-08-21"
     }
   ]
 }
