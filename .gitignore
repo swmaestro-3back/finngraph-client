@@ -88,6 +88,8 @@ Desktop.ini
 CLAUDE.md
 CLAUDE.local.md
 .claude-*
+# oh-my-claudecode 로컬 상태 — 머신·세션마다 다르고 자동 재생성됨
+.omc/
 RALPH.md
 LOOP_LOG.md
 .cursor/
