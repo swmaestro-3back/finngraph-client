@@ -318,7 +318,7 @@ h2 b{color:var(--primary);font-weight:700;}
 /* 캡처 비교 슬라이드 압축 배치 — 상하 슬롯·여백을 줄여 캡처 영역을 키운다 */
 .vf-compact .pb-body{margin-top:16px;}
 .vf-compact .pb-panel{--pb-slot:52px;gap:10px;padding:22px 30px 20px;}
-.vf-compact .vf-note{margin-top:18px;padding:16px 26px;}
+.vf-compact .vf-note{margin-top:18px;padding:16px 26px;text-align:center;}
 
 /* 설명 항목 리스트 — 번호 배지 + 소제목 + 본문 */
 .ft-list{display:flex;flex-direction:column;justify-content:center;gap:14px;}
@@ -667,7 +667,7 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
   font-size:17px;color:var(--light);}
 
 /* ===========================================
-   핵심 기술 검증 (PART 3)
+   핵심 기술 개발 (PART 3)
    문제정의 4연작의 .pb-panel 골격을 그대로 씁니다.
    =========================================== */
 /* 3분할 : 기사 → 추출 결과 → 실제 주가 */
@@ -693,7 +693,7 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
 /* 패널 안에서 캡처를 위아래로 두 장 쌓는 배치 */
 .shot-stack{flex:1;min-height:0;display:grid;grid-template-rows:1fr 1fr;gap:12px;}
 .shot-stack .ft-shot,.shot-stack .ft-img{flex:none;min-height:0;height:100%;}
-/* 검증 슬라이드 하단 결론 줄 — .common 의 저밀도 변형 */
+/* 기술 개발 슬라이드 하단 결론 줄 — .common 의 저밀도 변형 */
 .vf-note{flex:none;margin-top:26px;background:var(--accent-light);border-left:4px solid var(--primary);
   border-radius:12px;padding:22px 30px;font-size:25px;font-weight:500;color:var(--text);
   word-break:keep-all;}
@@ -807,7 +807,7 @@ body.editing .edit-bar{display:flex;}
           <ul>
             <li><i>01</i><b>개발 로드맵<em>Roadmap</em></b></li>
             <li><i>02</i><b>파이프라인 설계<em>Data Engineering Pipeline</em></b></li>
-            <li><i>03</i><b>핵심 기술 검증<em>Technology Validation</em></b></li>
+            <li><i>03</i><b>핵심 기술 개발<em>Technology Development</em></b></li>
             <li><i>04</i><b>서비스 시연<em>Live Demo</em></b></li>
             <li><i>05</i><b>기획심의 주요 의견 반영<em>Review Feedback</em></b></li>
           </ul>
@@ -2239,7 +2239,7 @@ body.editing .edit-bar{display:flex;}
         <div>기업 정보 &amp; 지식그래프 OpenAPI<em>기업 정보·관계 데이터를 조회하는 개발자용 API</em></div>
         <div class="v">일 50건</div>
         <div class="v">일 300건</div>
-        <div class="v">일 3,000건</div>
+        <div class="v">일 2,000건</div>
       </div>
     </div>
   </div>
@@ -2255,7 +2255,7 @@ body.editing .edit-bar{display:flex;}
       <div class="section-en reveal r2">Technical Progress</div>
       <div class="section-q reveal r3">프로젝트를 잘 진행하고 있는가</div>
       <div class="section-list reveal r4">
-        <div>개발 로드맵</div><div>파이프라인 설계</div><div>핵심 기술 검증</div>
+        <div>개발 로드맵</div><div>파이프라인 설계</div><div>핵심 기술 개발</div>
         <div>서비스 시연</div><div>기획심의 주요 의견 반영</div>
       </div>
     </div>
@@ -2346,20 +2346,20 @@ body.editing .edit-bar{display:flex;}
 </section>
 
 <!-- ===========================================
-     핵심 기술 검증 01 — 뉴스 필터링
+     핵심 기술 개발 01 — 뉴스 필터링
      [캡처 반영 완료]
        images/10-before-1.png, 10-before-2.png : 비교 대상 앱의 종목 뉴스 목록 (같은 종목·같은 시각)
        images/11-after.png                       : 같은 조건의 Finngraph 이슈 타임라인
      하단 vf-note 의 건수(OO건)는 캡처 기준 실측값으로 채워야 한다.
      =========================================== -->
-<section class="slide vf-compact" aria-label="기술 검증 01 — 뉴스 필터링">
+<section class="slide vf-compact" aria-label="기술 개발 01 — 뉴스 필터링">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 3 · 진행 상황</div>
       <div class="tag reveal r1">03 / 05</div>
     </div>
-    <div class="page-title reveal r2"><b>핵심 기술 검증</b><span>Technology Validation</span></div>
-    <h2 class="reveal r2"><b>기술 검증 01</b> · 뉴스 필터링</h2>
+    <div class="page-title reveal r2"><b>핵심 기술 개발</b><span>Technology Development</span></div>
+    <h2 class="reveal r2"><b>기술 개발 01</b> · 뉴스 필터링</h2>
     <div class="pb-body pb-body--even">
       <div class="pb-panel pb-panel--problem reveal r3">
         <div class="pb-panel__head">기존 증권 앱 · 종목 뉴스</div>
@@ -2376,31 +2376,30 @@ body.editing .edit-bar{display:flex;}
         <div class="pb-panel__body">
           <img class="ft-img ft-img--tall" src="images/11-after.png" alt="같은 조건의 Finngraph 뉴스 목록 — 노이즈 필터링 적용 후">
         </div>
-        <div class="pb-panel__foot">정규식 1차 필터 + 온톨로지 기반 LLM 3중 판정</div>
+        <div class="pb-panel__foot" style="font-size:25px;">정규식 1차 필터 + 온톨로지 기반 LLM 3중 판정(관계 중심·확정성·시장 영향력)</div>
       </div>
     </div>
     <div class="vf-note reveal r5">
-      동일 종목 · 동일 시각에 수집된 <b>OO건</b> 중 <em>OO건</em>을 제외 —
-      제목 키워드가 아니라 <b>본문의 사건</b>을 판정하기 때문에, 종목명만 스친 시황·중복·홍보성 기사까지 걸러낸다
+      단순히 키워드가 아니라 <b>실제 발생한 기업 이벤트</b>를 통해 판정하기 때문에, 종목명만 스친 시황·중복·홍보성 기사까지 걸러낸다
     </div>
   </div>
 </section>
 
 <!-- ===========================================
-     핵심 기술 검증 02 — 삼중항 추출
+     핵심 기술 개발 02 — 삼중항 추출
      [넣어야 할 캡처 2장]
        images/12-graph-extracted.png : 이 기사에서 추출된 삼중항이 그려진 그래프 화면
        images/13-price-reaction.png  : 두산테스나 · 하나머트리얼즈 주가 (2026.03.17 전후)
      아래 두 개의 .ft-shot div 를 <img class="ft-img" ...> 로 교체하면 완성됩니다.
      =========================================== -->
-<section class="slide" aria-label="기술 검증 02 — 삼중항 추출">
+<section class="slide" aria-label="기술 개발 02 — 삼중항 추출">
   <div class="pad">
     <div class="slide-header">
       <div class="eyebrow reveal r1">PART 3 · 진행 상황</div>
       <div class="tag reveal r1">03 / 05</div>
     </div>
-    <div class="page-title reveal r2"><b>핵심 기술 검증</b><span>Technology Validation</span></div>
-    <h2 class="reveal r2"><b>기술 검증 02</b> · 삼중항 추출 — 본문에 <span style="color:var(--negative);">없는 이름</span>을 찾아낸다</h2>
+    <div class="page-title reveal r2"><b>핵심 기술 개발</b><span>Technology Development</span></div>
+    <h2 class="reveal r2"><b>기술 개발 02</b> · 삼중항 추출 — 본문에 <span style="color:var(--negative);">없는 이름</span>을 찾아낸다</h2>
     <div class="pb-body pb-body--three">
       <!-- 01 기사 본문이 말한 것 -->
       <div class="pb-panel pb-panel--problem reveal r3">
@@ -2518,20 +2517,6 @@ body.editing .edit-bar{display:flex;}
               <li>논문·방법론 검토 결과, 금융 시장 전체의 온톨로지화는 기간 내 실현 불가능으로 판단</li>
               <li>거시경제(금리·채권·물가·고용)를 범위에서 제외하고, 대상을 <b>기업 중심 관계망</b>으로 축소</li>
               <li>엔티티 <b>4종</b>(기업·국가·원자재·제품), 관계 서술어 <b>11종</b>으로 온톨로지 스키마 정의</li>
-            </ul>
-          </div>
-        </div>
-        <div class="pair reveal r5">
-          <div class="p-left">
-            <b>뉴스 저작권 리스크</b>
-            <span>뉴스 활용에 따르는 법적 리스크 검토 필요</span>
-          </div>
-          <div class="p-arrow">→</div>
-          <div class="p-right">
-            <b>원문 비노출 설계로 확정</b>
-            <ul>
-              <li>뉴스 원문를 노출하지 않고 <b>제목·요약·원문 링크</b>만 제공</li>
-              <li>저작권 침해에 해당하지 않는 3~4줄 이내 요약만 노출하고, 상세 내용은 원문 링크에서 확인하도록 설계</li>
             </ul>
           </div>
         </div>
