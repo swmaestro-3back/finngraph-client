@@ -665,18 +665,50 @@ section[aria-label="시장 분석"] .mkt li{font-size:20px;}
   width:5px;height:5px;border-radius:50%;background:var(--pb-brand-300);}
 .chat .ans .src{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
   font-size:17px;color:var(--light);}
-/* 종목 선택 블록 — 관계망이 "같이 볼 만한 기업"을 먼저 제안하는 단계.
-   리포트 결과가 아니라 범위를 고르는 자리라는 점이 임팩트 분석과의 경계다. */
-.chat .pick{background:var(--bg);border:1px solid var(--border);border-radius:16px;
-  padding:15px 20px 13px;}
-.chat .pick-h{font-size:17px;font-weight:700;color:var(--pb-brand-700);margin-bottom:10px;}
-.chat .pick-i{display:flex;gap:12px;align-items:center;padding:5px 0;}
-.chat .pick-i em{flex:none;width:20px;height:20px;border-radius:5px;font-style:normal;
-  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
+/* ===========================================
+   기능 04 목업 — 선택 → 생성 → 결과 3단
+   실제 화면처럼 보이도록 폼·체크박스·진행바를 흉내낸다.
+   =========================================== */
+.rs{flex:1;min-height:0;display:flex;flex-direction:column;gap:13px;}
+/* 폼 행 : 라벨 + 값 */
+.rs-row{display:flex;align-items:center;gap:12px;background:var(--bg);
+  border:1px solid var(--border);border-radius:10px;padding:11px 16px;}
+.rs-row i{flex:none;font-style:normal;font-size:16px;font-weight:600;color:var(--light);width:44px;}
+.rs-row b{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.rs-row .add{margin-left:auto;font-size:15px;font-weight:600;color:var(--pb-brand-600);
+  border:1px dashed var(--pb-brand-300);border-radius:8px;padding:4px 10px;}
+/* 섹션 라벨 */
+.rs-lb{font-size:16px;font-weight:700;color:var(--pb-brand-700);margin-top:3px;}
+/* 체크 항목 */
+.rs-ck{display:flex;gap:9px;align-items:center;padding:4px 0;font-size:17px;color:var(--muted);}
+.rs-ck em{flex:none;width:18px;height:18px;border-radius:5px;font-style:normal;font-size:12px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;
   border:1.5px solid var(--pb-ink-300);color:transparent;}
-.chat .pick-i.on em{background:var(--pb-brand-600);border-color:var(--pb-brand-600);color:#fff;}
-.chat .pick-i b{flex:none;font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
-.chat .pick-i span{font-size:16px;color:var(--light);line-height:1.4;word-break:keep-all;}
+.rs-ck.on em{background:var(--pb-brand-600);border-color:var(--pb-brand-600);color:#fff;}
+.rs-ck.on{color:var(--text);font-weight:600;}
+.rs-ck b{font-weight:700;color:var(--text);}
+.rs-ck span{margin-left:auto;font-size:15px;color:var(--light);}
+/* 2열 체크 그리드 */
+.rs-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;}
+/* CTA 버튼 */
+.rs-btn{margin-top:auto;background:var(--pb-brand-600);color:#fff;border-radius:10px;
+  padding:13px 0;text-align:center;font-size:19px;font-weight:700;letter-spacing:-.01em;}
+/* 진행바 */
+.rs-bar{background:var(--accent-light);border-radius:100px;height:9px;overflow:hidden;}
+.rs-bar i{display:block;height:100%;width:78%;background:var(--pb-brand-600);border-radius:100px;}
+.rs-pg{display:flex;justify-content:space-between;font-size:16px;color:var(--light);}
+.rs-pg b{color:var(--pb-brand-700);font-weight:700;}
+/* 결과 체크리스트 */
+.rs-done{display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:17px;}
+.rs-done i{flex:none;font-style:normal;font-weight:700;color:var(--positive);}
+.rs-done.wait i{color:var(--pb-ink-300);}
+.rs-done b{flex:none;font-weight:700;color:var(--text);}
+.rs-done span{margin-left:auto;color:var(--light);font-size:16px;
+  font-variant-numeric:tabular-nums;text-align:right;}
+.rs-done.wait b,.rs-done.wait span{color:var(--pb-ink-400);}
+/* 경계 고지 */
+.rs-guard{margin-top:11px;padding-top:10px;border-top:1px solid var(--border);
+  font-size:15px;color:var(--light);text-align:center;}
 
 /* ===========================================
    핵심 기술 검증 (PART 3)
@@ -1930,62 +1962,67 @@ body.editing .edit-bar{display:flex;}
     </div>
     <div class="page-title reveal r2"><b>핵심 기능</b><span>Core Features</span></div>
     <h2 class="reveal r2"><b>기능 04</b> · AI 리서치 <span class="soon-pill" style="vertical-align:12px;">개발 예정</span></h2>
-    <div class="pb-body pb-body--shot">
-      <!-- 좌 : 화면 캡처 대신 대화 목업. 앞 세 기능의 캡처 패널과 같은 자리·같은 골격. -->
+    <div class="pb-body pb-body--three">
+
+      <!-- ① 무엇을 모을지 고른다 -->
       <div class="pb-panel pb-panel--solution reveal r3">
-        <div class="pb-panel__head">종목 · 기간 지정 → 고정 형식 리포트</div>
+        <div class="pb-panel__head">① 무엇을 모을지 고른다</div>
         <div class="pb-panel__body">
-          <div class="chat">
-            <div class="ask">삼성전자 · 2026.03 – 08 리서치</div>
-            <div class="pick">
-              <div class="pick-h">관계망 기준 · 같이 볼 만한 기업</div>
-              <div class="pick-i on"><em>✓</em><b>두산테스나</b><span>웨이퍼 테스트 공급</span></div>
-              <div class="pick-i on"><em>✓</em><b>디바이스</b><span>웨이퍼 세정장비 공급</span></div>
-              <div class="pick-i"><em>✓</em><b>동진쎄미켐</b><span>포토레지스트 공급</span></div>
-            </div>
-            <div class="steps"><i>수집</i> 3개 종목 × 5개 소스 · 고정 형식</div>
-            <div class="ans">
-              <div class="rt">삼성전자 외 2종목 · 2026.03 – 2026.08</div>
-              <ul>
-                <li>시세 · 수급 · 밸류에이션 변화</li>
-                <li>분기 실적 · 기간 내 이벤트 타임라인</li>
-                <li>공급망 관계망 · 선택 종목 간 비교</li>
-              </ul>
-              <div class="src">매수·매도 추천 ✕ &nbsp;·&nbsp; 주가 예측 ✕ &nbsp;·&nbsp; 없는 사실 생성 ✕</div>
+          <div class="rs">
+            <div class="rs-row"><i>종목</i><b>삼성전자</b><span class="add">＋ 종목 추가</span></div>
+            <div class="rs-row"><i>기간</i><b>2026.03.01 – 08.21</b></div>
+            <div class="rs-lb">수집 항목</div>
+            <div class="rs-grid">
+              <div class="rs-ck on"><em>✓</em>시세 · 거래대금</div>
+              <div class="rs-ck on"><em>✓</em>PER · PBR · 시총</div>
+              <div class="rs-ck on"><em>✓</em>기관 · 외국인 수급</div>
+              <div class="rs-ck on"><em>✓</em>분기 실적 · ROE</div>
+              <div class="rs-ck on"><em>✓</em>기간 내 이벤트</div>
+              <div class="rs-ck"><em>✓</em>배당 이력</div>
+              <div class="rs-ck on"><em>✓</em>공급망 관계망</div>
+              <div class="rs-ck"><em>✓</em>동종 테마 비교</div>
             </div>
           </div>
         </div>
-        <div class="pb-panel__foot"></div>
+        <div class="pb-panel__foot">PER 하나만 볼 수도,<br>여덟 항목을 한 번에 볼 수도 있다</div>
       </div>
+
+      <!-- ② 같이 볼 기업까지 -->
       <div class="pb-panel pb-panel--problem reveal r4">
-        <div class="pb-panel__head">무엇을 볼지 제안하고, 한 장으로 모은다</div>
+        <div class="pb-panel__head">② 같이 볼 기업까지</div>
         <div class="pb-panel__body">
-          <div class="ft-list">
-            <div class="ft-item">
-              <i>01</i>
-              <div class="tx">
-                <b>종목 · 기간만 지정</b>
-                <span>질의어를 배울 필요가 없다 — 무엇을 물어야 할지 몰라도 결과가 나온다</span>
-              </div>
-            </div>
-            <div class="ft-item">
-              <i>02</i>
-              <div class="tx">
-                <b>같이 볼 기업을 관계망이 먼저 제안</b>
-                <span>공급망·고객사를 타고 함께 살펴볼 종목을 추천 — 무엇을 봐야 할지 모를 때의 출발점</span>
-              </div>
-            </div>
-            <div class="ft-item">
-              <i>03</i>
-              <div class="tx">
-                <b>흩어진 데이터를 고정 형식으로 수집</b>
-                <span>시세·수급·밸류·분기재무·이벤트·관계망을 한 문서로 — 직접 모으면 약 90분</span>
-              </div>
-            </div>
+          <div class="rs">
+            <div class="rs-lb">관계망 기준 · 함께 살펴볼 기업</div>
+            <div class="rs-ck on"><em>✓</em><b>두산테스나</b><span>웨이퍼 테스트 공급</span></div>
+            <div class="rs-ck on"><em>✓</em><b>디바이스</b><span>세정장비 공급</span></div>
+            <div class="rs-ck"><em>✓</em><b>동진쎄미켐</b><span>포토레지스트 공급</span></div>
+            <div class="rs-ck"><em>✓</em><b>신성이엔지</b><span>클린룸 독점 공급</span></div>
+            <div class="rs-btn">리포트 생성</div>
           </div>
         </div>
-        <div class="pb-panel__foot">임팩트 분석이 기사에서 출발한다면,<br>AI 리서치는 종목 · 기간에서 출발한다</div>
+        <div class="pb-panel__foot">무엇을 봐야 할지 모를 때,<br>관계망이 먼저 제안한다</div>
       </div>
+
+      <!-- ③ 고정 형식으로 모인다 -->
+      <div class="pb-panel pb-panel--solution reveal r5">
+        <div class="pb-panel__head">③ 고정 형식으로 모인다</div>
+        <div class="pb-panel__body">
+          <div class="rs">
+            <div class="rs-pg"><span>삼성전자 외 2종목</span><b>7 / 8</b></div>
+            <div class="rs-bar"><i></i></div>
+            <div class="rs-done"><i>✓</i><b>시세 · 거래대금</b><span>3종목 × 268거래일</span></div>
+            <div class="rs-done"><i>✓</i><b>PER · PBR · 시총</b><span>18.59 → 21.70</span></div>
+            <div class="rs-done"><i>✓</i><b>기관 · 외국인 수급</b><span>30거래일</span></div>
+            <div class="rs-done"><i>✓</i><b>분기 실적 · ROE</b><span>2건</span></div>
+            <div class="rs-done"><i>✓</i><b>기간 내 이벤트</b><span>12건</span></div>
+            <div class="rs-done"><i>✓</i><b>공급망 관계망</b><span>경로 110개</span></div>
+            <div class="rs-done wait"><i>⋯</i><b>동종 테마 비교</b><span>수집 중</span></div>
+            <div class="rs-guard">매수·매도 추천 ✕ &nbsp;·&nbsp; 주가 예측 ✕ &nbsp;·&nbsp; 없는 사실 생성 ✕</div>
+          </div>
+        </div>
+        <div class="pb-panel__foot">직접 모으면 약 90분,<br>관계망은 증권앱에 아예 없다</div>
+      </div>
+
     </div>
   </div>
 </section>
