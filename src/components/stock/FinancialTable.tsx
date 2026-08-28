@@ -19,18 +19,18 @@ interface RowDef {
   highlight?: (f: AnnualFinancials) => boolean
 }
 
+/** 순이익률(%) — 원본 데이터에 없어 당기순이익/매출액으로 계산 */
+function netMargin(f: AnnualFinancials): number | null {
+  if (f.netIncome === null || f.revenue === null || f.revenue === 0) return null
+  return (f.netIncome / f.revenue) * 100
+}
+
 const ROWS: RowDef[] = [
   { label: '매출액', value: (f) => formatTrillion(f.revenue), metric: (f) => f.revenue, direction: 'up-good' },
   { label: '영업이익', value: (f) => formatTrillion(f.operatingProfit), metric: (f) => f.operatingProfit, direction: 'up-good' },
   { label: '당기순이익', value: (f) => formatTrillion(f.netIncome), metric: (f) => f.netIncome, direction: 'up-good' },
   { label: '영업이익률', value: (f) => formatPercent(f.operatingMargin), metric: (f) => f.operatingMargin, direction: 'up-good' },
-  { label: 'ROE', value: (f) => formatPercent(f.roe), metric: (f) => f.roe, direction: 'up-good' },
-  { label: '부채비율', value: (f) => formatPercent(f.debtRatio), metric: (f) => f.debtRatio, direction: 'down-good' },
-  { label: '자산총계', value: (f) => formatTrillion(f.totalAssets), metric: (f) => f.totalAssets, direction: 'up-good' },
-  { label: '별도자산총계', value: (f) => formatTrillion(f.separateAssets), metric: (f) => f.separateAssets, direction: 'up-good' },
-  { label: '자본총계', value: (f) => formatTrillion(f.totalEquity), metric: (f) => f.totalEquity, direction: 'up-good' },
-  { label: '부채총계', value: (f) => formatTrillion(f.totalDebt), metric: (f) => f.totalDebt, direction: 'down-good' },
-  { label: 'EPS', value: (f) => formatWon(f.eps), metric: (f) => f.eps, direction: 'up-good' },
+  { label: '순이익률', value: (f) => formatPercent(netMargin(f)), metric: (f) => netMargin(f), direction: 'up-good' },
   { label: 'PER', value: (f) => formatMultiple(f.per), metric: (f) => f.per, direction: 'down-good' },
   {
     label: 'PBR',
@@ -40,7 +40,12 @@ const ROWS: RowDef[] = [
     // 역대 최저 PBR(2024 = 0.92) 오렌지 하이라이트
     highlight: (f) => f.year === 2024,
   },
-  { label: '주당배당금', value: (f) => formatWon(f.dps), metric: (f) => f.dps, direction: 'up-good' },
+  { label: 'ROE', value: (f) => formatPercent(f.roe), metric: (f) => f.roe, direction: 'up-good' },
+  { label: 'EPS', value: (f) => formatWon(f.eps), metric: (f) => f.eps, direction: 'up-good' },
+  { label: '자산총계', value: (f) => formatTrillion(f.totalAssets), metric: (f) => f.totalAssets, direction: 'up-good' },
+  { label: '자본총계', value: (f) => formatTrillion(f.totalEquity), metric: (f) => f.totalEquity, direction: 'up-good' },
+  { label: '부채총계', value: (f) => formatTrillion(f.totalDebt), metric: (f) => f.totalDebt, direction: 'down-good' },
+  { label: '부채비율', value: (f) => formatPercent(f.debtRatio), metric: (f) => f.debtRatio, direction: 'down-good' },
 ]
 
 type HighlightMode = 'none' | 'trend' | 'improving'
