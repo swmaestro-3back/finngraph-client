@@ -93,7 +93,7 @@ export function generateSupplyDemand(code: string): SupplyPoint[] {
 }
 
 
-export type IssueKind = '호재' | '악재'
+export type IssueKind = '호재' | '악재' | '중립'
 
 export interface IssueNews extends NewsItem {
   kind: IssueKind
@@ -104,6 +104,7 @@ export interface IssueDay {
   date: string
   good: number
   bad: number
+  neutral: number
   items: IssueNews[]
 }
 
@@ -135,6 +136,7 @@ export function generateIssueTimeline(
       date,
       good: goodItems.length,
       bad: badItems.length,
+      neutral: 0,
       items: [...goodItems, ...badItems],
     }
   })
