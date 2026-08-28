@@ -1,8 +1,15 @@
 import { useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { getMarketCap, getTradingValue } from '@/data/stockMeta'
-import type { ThemeItem } from '@/data/themes'
-import { changeColorClass, formatAmount, formatChange, formatPrice } from '@/lib/format'
+import type { ThemeStockRes } from '@/lib/apiTypes'
+import {
+  changeColorClass,
+  formatAmountOrDash,
+  formatChange,
+  formatChangeOrDash,
+  formatPriceOrDash,
+  toEok,
+  toMillion,
+} from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
@@ -10,24 +17,25 @@ const GRID =
   'grid gap-2 grid-cols-[minmax(0,1fr)_76px_78px_78px_62px] xl:gap-3 xl:grid-cols-[minmax(0,1fr)_80px_84px_84px_64px]'
 
 interface StockSectionProps {
-  theme: ThemeItem
+  name: string
+  change: number | null
+  stocks: ThemeStockRes[]
   className?: string
   listClassName?: string
 }
 
-export function StockSection({ theme, className, listClassName }: StockSectionProps) {
+export function StockSection({ name, change, stocks, className, listClassName }: StockSectionProps) {
   const { pathname } = useLocation()
 
-  const stocks = useMemo(
+  const sorted = useMemo(
     () =>
-      [...theme.stocks]
-        .sort((a, b) => b.change - a.change)
-        .map((stock) => ({
-          ...stock,
-          marketCap: getMarketCap(stock.code, stock.price),
-          tradingValue: getTradingValue(stock.name, stock.price),
-        })),
-    [theme],
+      [...stocks].sort((a, b) => {
+        if (a.change === null && b.change === null) return 0
+        if (a.change === null) return 1
+        if (b.change === null) return -1
+        return b.change - a.change
+      }),
+    [stocks],
   )
 
   return (
@@ -35,19 +43,19 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
       <div className="mb-[9px] flex min-h-[30px] items-center justify-between">
         <div className="flex items-baseline gap-[9px]">
           <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">
-            {theme.name}
+            {name}
           </h2>
           <span
             className={cn(
               'font-mono text-base font-medium tracking-[-0.5px]',
-              changeColorClass(theme.change),
+              changeColorClass(change ?? 0),
             )}
           >
-            {formatChange(theme.change)}
+            {formatChangeOrDash(change)}
           </span>
         </div>
         <Link
-          to={`/theme/${theme.id}`}
+          to={`/theme/${encodeURIComponent(name)}`}
           state={fromState(pathname)}
           className="text-xs font-semibold leading-none text-primary"
         >
@@ -56,7 +64,7 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
       </div>
 
       <div className={cn(GRID, 'border-b border-border pb-1.5 text-caption text-muted-foreground')}>
-        <span className="truncate">종목명 · {stocks.length}개 종목</span>
+        <span className="truncate">종목명 · {sorted.length}개 종목</span>
         <span className="whitespace-nowrap text-right">현재가</span>
         <span className="whitespace-nowrap text-right">시가총액(억)</span>
         <span className="whitespace-nowrap text-right">거래대금(백만)</span>
@@ -64,10 +72,10 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
       </div>
 
       <div className={cn(listClassName)}>
-        {stocks.map((stock) => (
+        {sorted.map((stock) => (
           <Link
-            key={stock.code}
-            to={`/stock/${stock.code}`}
+            key={stock.ticker}
+            to={`/stock/${stock.ticker}`}
             state={fromState(pathname)}
             className={cn(
               GRID,
@@ -79,28 +87,28 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
                 {stock.name}
               </span>
               <span className="hidden font-mono text-caption text-foreground-tertiary xl:inline">
-                {stock.code}
+                {stock.ticker}
               </span>
             </span>
             <span className="text-right font-mono text-sm font-medium text-foreground">
-              {formatPrice(stock.price)}
+              {formatPriceOrDash(stock.price)}
             </span>
             <span className="text-right font-mono text-xs text-foreground-secondary">
-              {formatAmount(stock.marketCap)}
+              {formatAmountOrDash(toEok(stock.marketCap))}
             </span>
             <span className="text-right font-mono text-xs text-foreground-secondary">
-              {formatAmount(stock.tradingValue)}
+              {formatAmountOrDash(toMillion(stock.tradingValue))}
             </span>
             <span className="justify-self-end">
               <span
                 className={cn(
                   'inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs font-semibold',
-                  changeColorClass(stock.change),
-                  stock.change > 0 && 'bg-stock-up/10',
-                  stock.change < 0 && 'bg-stock-down/10',
+                  changeColorClass(stock.change ?? 0),
+                  (stock.change ?? 0) > 0 && 'bg-stock-up/10',
+                  (stock.change ?? 0) < 0 && 'bg-stock-down/10',
                 )}
               >
-                {formatChange(stock.change)}
+                {stock.change === null ? '—' : formatChange(stock.change)}
               </span>
             </span>
           </Link>

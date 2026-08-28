@@ -1,5 +1,5 @@
 import { memo, useMemo, type ReactNode } from 'react'
-import type { IssueDay, IssueNews } from '@/data/stockDetail'
+import type { IssueDay, IssueKind, IssueNews } from '@/data/stockDetail'
 import { cn } from '@/lib/utils'
 
 
@@ -16,23 +16,29 @@ function KindColumn({
   items,
   onSelectNews,
 }: {
-  kind: '호재' | '악재'
+  kind: IssueKind
   items: IssueNews[]
   onSelectNews: (newsId: string) => void
 }) {
-  const up = kind === '호재'
   return (
     <div className="flex min-w-0 flex-col rounded-lg border border-surface-inset p-3">
       <div className="mb-1 flex items-baseline justify-between border-b border-border pb-1.5">
-        <span className={cn('text-xs font-semibold', up ? 'text-stock-up' : 'text-stock-down')}>
-          {kind}
+        <span
+          className={cn(
+            'text-xs font-semibold',
+            kind === '호재' && 'text-stock-up',
+            kind === '악재' && 'text-stock-down',
+            kind === '중립' && 'text-foreground',
+          )}
+        >
+          {kind === '중립' ? '뉴스' : kind}
         </span>
         <span className="font-mono text-caption text-muted-foreground">{items.length}건</span>
       </div>
 
       {items.length === 0 ? (
         <p className="py-5 text-center text-caption text-muted-foreground">
-          이 기간 {kind} 뉴스가 없습니다
+          이 기간 {kind === '중립' ? '' : kind} 뉴스가 없습니다
         </p>
       ) : (
         <div className="max-h-[240px] overflow-y-auto">
@@ -70,6 +76,7 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
       items: days.flatMap((d) => d.items).reverse(),
       good: days.reduce((n, d) => n + d.good, 0),
       bad: days.reduce((n, d) => n + d.bad, 0),
+      neutral: days.reduce((n, d) => n + d.neutral, 0),
     }),
     [days],
   )
@@ -78,6 +85,7 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
 
   const goodItems = useMemo(() => items.filter((item) => item.kind === '호재'), [items])
   const badItems = useMemo(() => items.filter((item) => item.kind === '악재'), [items])
+  const neutralOnly = good + bad === 0
 
   return (
     <section className="flex flex-col card-surface p-5">
@@ -87,7 +95,7 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
             {selected ? selected.date : `${days[0].date} ~ ${days[days.length - 1].date}`}
           </h3>
           <span className="text-caption text-muted-foreground">
-            {items.length}건 · 호재 {good} / 악재 {bad}
+            {neutralOnly ? `${items.length}건` : `${items.length}건 · 호재 ${good} / 악재 ${bad}`}
           </span>
         </div>
         {selected && (
@@ -108,10 +116,14 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
           이 기간에 수집된 뉴스가 없습니다. 다른 칸을 눌러 보세요.
         </p>
       ) : (
+        neutralOnly ? (
+        <KindColumn kind="중립" items={items} onSelectNews={onSelectNews} />
+      ) : (
         <div className="grid gap-3 md:grid-cols-2">
           <KindColumn kind="호재" items={goodItems} onSelectNews={onSelectNews} />
           <KindColumn kind="악재" items={badItems} onSelectNews={onSelectNews} />
         </div>
+        )
       )}
     </section>
   )

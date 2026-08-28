@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils'
 /** 위/아래 각 28px — 캔들 300px, 거래량 90px 대비 의도적으로 작다. 주인공은 가격이다 */
 const HALF = 'h-7'
 
+const NEUTRAL = 'var(--muted-foreground)'
+
 interface IssueLaneProps {
   days: IssueDay[]
   hoveredIndex: number | null
@@ -46,9 +48,10 @@ export function IssueLane({
   // 위아래 절반이 같은 척도를 써야 호재 3건과 악재 3건이 같은 길이로 보인다
   // (hover마다 리렌더되는 컴포넌트라 days가 바뀔 때만 스캔한다)
   const maxSide = useMemo(
-    () => Math.max(1, ...days.map((d) => Math.max(d.good, d.bad))),
+    () => Math.max(1, ...days.map((d) => Math.max(d.good, d.bad, d.neutral))),
     [days],
   )
+  const hasSentiment = useMemo(() => days.some((d) => d.good + d.bad > 0), [days])
   const tickIndexes = dateTickIndexes(count)
   // 캔들 차트와 같은 규칙: 크로스헤어는 짚는 대로 따라가고, 선택 룰은 그와 별개로 남는다
   const activeIndex = hoveredIndex ?? selectedIndex
@@ -93,7 +96,9 @@ export function IssueLane({
       <div className="mb-1.5 flex items-baseline justify-between">
         <span className="text-xs font-semibold text-foreground">이슈</span>
         <span className="text-caption text-muted-foreground">
-          위 호재 · 아래 악재 · 막대를 누르면 아래에 그 구간 뉴스가 열립니다
+          {hasSentiment
+            ? '위 호재 · 아래 악재 · 막대를 누르면 아래에 그 구간 뉴스가 열립니다'
+            : '막대를 누르면 아래에 그 구간 뉴스가 열립니다'}
         </span>
       </div>
 
@@ -114,7 +119,7 @@ export function IssueLane({
         <div className={cn('relative w-full', HALF)} />
 
         {days.map((day, i) => {
-          const total = day.good + day.bad
+          const total = day.good + day.bad + day.neutral
           const isSelected = selectedIndex === i
           const opacity = emphasis(i, activeIndex, 0.85, 0.35)
           return (
@@ -124,7 +129,11 @@ export function IssueLane({
               id={`issue-slot-${i}`}
               role="option"
               aria-selected={isSelected}
-              aria-label={`${day.date} 호재 ${day.good}건 악재 ${day.bad}건`}
+              aria-label={
+                hasSentiment
+                  ? `${day.date} 호재 ${day.good}건 악재 ${day.bad}건`
+                  : `${day.date} 뉴스 ${day.neutral}건`
+              }
               tabIndex={-1}
               onMouseEnter={() => onHover(i)}
               onFocus={() => setFocusIndex(i)}
@@ -152,6 +161,17 @@ export function IssueLane({
                     ...bar,
                     height: `calc(${(day.bad / maxSide) * 50}% - 0.5px)`,
                     backgroundColor: DOWN,
+                    opacity,
+                  }}
+                />
+              )}
+              {day.neutral > 0 && (
+                <span
+                  className="absolute bottom-1/2 rounded-t-[2px]"
+                  style={{
+                    ...bar,
+                    height: `calc(${(day.neutral / maxSide) * 50}% - 0.5px)`,
+                    backgroundColor: NEUTRAL,
                     opacity,
                   }}
                 />

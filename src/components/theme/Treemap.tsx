@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { hierarchy, treemap, treemapSquarify } from 'd3-hierarchy'
 import { formatChange } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import type { ThemeItem } from '@/data/themes'
+
+export interface TreemapItem {
+  id: string
+  name: string
+  change: number
+  size: number
+  detail?: string
+}
 
 const BASE_W = 1136
 const BASE_H = 520
@@ -35,14 +42,13 @@ function shade(rgb: number[], amt: number): string {
 }
 
 interface TreemapProps {
-  items: ThemeItem[]
+  items: TreemapItem[]
   selectedId: string | null
   onSelect: (id: string) => void
   className?: string
-  changeOf?: (item: ThemeItem) => number
 }
 
-export function Treemap({ items, selectedId, onSelect, className, changeOf }: TreemapProps) {
+export function Treemap({ items, selectedId, onSelect, className }: TreemapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [renderWidth, setRenderWidth] = useState(BASE_W)
 
@@ -58,9 +64,9 @@ export function Treemap({ items, selectedId, onSelect, className, changeOf }: Tr
   }, [])
 
   const { nodes, maxUp, maxDown } = useMemo(() => {
-    type TreeDatum = { children?: ThemeItem[] } & Partial<ThemeItem>
+    type TreeDatum = { children?: TreemapItem[] } & Partial<TreemapItem>
     const root = hierarchy<TreeDatum>({ children: items })
-      .sum((d) => d.tradingValue ?? 0)
+      .sum((d) => d.size ?? 0)
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
 
     const layout = treemap<TreeDatum>().tile(treemapSquarify).size([BASE_W, BASE_H]).paddingInner(3)
@@ -68,19 +74,17 @@ export function Treemap({ items, selectedId, onSelect, className, changeOf }: Tr
     const leaves = layout(root)
       .leaves()
       .map((leaf) => {
-        const theme = leaf.data as ThemeItem
-        const topStock = [...theme.stocks].sort((a, b) => b.change - a.change)[0]
-        const change = changeOf ? changeOf(theme) : theme.change
-        return { theme, change, topStock, x0: leaf.x0, y0: leaf.y0, x1: leaf.x1, y1: leaf.y1 }
+        const theme = leaf.data as TreemapItem
+        return { theme, change: theme.change, x0: leaf.x0, y0: leaf.y0, x1: leaf.x1, y1: leaf.y1 }
       })
 
-    const changes = items.map((t) => (changeOf ? changeOf(t) : t.change))
+    const changes = items.map((t) => t.change)
     return {
       nodes: leaves,
       maxUp: Math.max(...changes.filter((c) => c > 0), 0.01),
       maxDown: Math.max(...changes.filter((c) => c < 0).map((c) => Math.abs(c)), 0.01),
     }
-  }, [items, changeOf])
+  }, [items])
 
   const scale = renderWidth / BASE_W
   const scaleY = renderWidth / DESIGN_W
@@ -92,7 +96,7 @@ export function Treemap({ items, selectedId, onSelect, className, changeOf }: Tr
         className="relative w-full rounded-2xl bg-surface-inset"
         style={{ aspectRatio: `${DESIGN_W} / ${DESIGN_H}` }}
       >
-      {nodes.map(({ theme, change, topStock, x0, y0, x1, y1 }, i) => {
+      {nodes.map(({ theme, change, x0, y0, x1, y1 }, i) => {
         const w = (x1 - x0) * scale
         const h = (y1 - y0) * scaleY
         const dir = change >= 0 ? 'up' : 'down'
@@ -164,14 +168,12 @@ export function Treemap({ items, selectedId, onSelect, className, changeOf }: Tr
                 {Math.abs(change).toFixed(2)}%
               </span>
             )}
-            {showDetail && (
+            {showDetail && theme.detail && (
               <span
                 className="flex max-w-full items-baseline gap-1.5 overflow-hidden font-mono whitespace-nowrap opacity-75"
                 style={{ fontSize: Math.max(9, pctSize - 2) }}
               >
-                {theme.tradingValueLabel}
-                <span aria-hidden>·</span>
-                {topStock.name} {formatChange(topStock.change)}
+                {theme.detail}
               </span>
             )}
           </button>
