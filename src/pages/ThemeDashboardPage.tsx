@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
+import { InsightStrip } from '@/components/theme/InsightStrip'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { StockSection } from '@/components/theme/StockSection'
 import { Treemap } from '@/components/theme/Treemap'
@@ -9,7 +10,6 @@ import { selectTreemapThemes, getThemeById } from '@/data/themes'
 
 const THEME_COUNTS = [20, 30, 40]
 
-/** 종목 리스트·뉴스 카드가 같은 높이를 쓰도록 공유하는 스크롤 영역 클래스 */
 const LIST_CLASS =
   'h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
@@ -24,7 +24,6 @@ export default function ThemeDashboardPage() {
 
   return (
     <div className="page-container pb-12 pt-7">
-      {/* 헤더 행: 장마감 뱃지 + 타임스탬프 / 표시 테마 수 pill */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-[9px]">
           <span className="flex h-7 items-center rounded-md bg-stock-up-soft px-2.5 text-xs font-semibold whitespace-nowrap text-stock-up">
@@ -50,21 +49,29 @@ export default function ThemeDashboardPage() {
         </div>
       </div>
 
-      {/* 트리맵 */}
+      <InsightStrip onSelectTheme={setSelectedId} onOpenNews={setOpenNewsId} />
+
       <Treemap items={treemapThemes} selectedId={selectedId} onSelect={setSelectedId} />
 
-      {/* 하단 2컬럼 */}
       <div className="mt-5 grid items-stretch gap-4 lg:grid-cols-[1.08fr_0.92fr]">
-        {/* 선택 테마 종목 리스트 */}
-        <StockSection theme={selected} listClassName={LIST_CLASS} />
+        <div
+          key={`stocks-${selected.id}`}
+          className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 [&>section]:h-full"
+        >
+          <StockSection theme={selected} listClassName={LIST_CLASS} />
+        </div>
 
-        {/* 관련 뉴스 */}
-        <NewsSection
-          title={`${selected.name} 관련 뉴스`}
-          items={news}
-          listClassName={LIST_CLASS}
-          onItemClick={(item) => setOpenNewsId(item.id)}
-        />
+        <div
+          key={`news-${selected.id}`}
+          className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:delay-75 motion-safe:[animation-fill-mode:backwards] [&>section]:h-full"
+        >
+          <NewsSection
+            title={`${selected.name} 관련 뉴스`}
+            items={news}
+            listClassName={LIST_CLASS}
+            onItemClick={(item) => setOpenNewsId(item.id)}
+          />
+        </div>
       </div>
 
       <NewsDetailModal
