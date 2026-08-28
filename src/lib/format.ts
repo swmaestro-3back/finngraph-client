@@ -45,6 +45,32 @@ export function formatMultiple(value: number | null): string {
   return `${value.toFixed(2)}배`
 }
 
+export function toEok(won: number | null): number | null {
+  return won === null ? null : won / 1e8
+}
+
+export function toMillion(won: number | null): number | null {
+  return won === null ? null : won / 1e6
+}
+
+export function formatCompactKrw(won: number | null): string {
+  if (won === null) return '—'
+  if (won >= 1e12) return `${(won / 1e12).toFixed(1)}조`
+  return `${Math.round(won / 1e8).toLocaleString('ko-KR')}억`
+}
+
+export function formatChangeOrDash(value: number | null): string {
+  return value === null ? '—' : formatChange(value)
+}
+
+export function formatAmountOrDash(value: number | null): string {
+  return value === null ? '—' : formatAmount(value)
+}
+
+export function formatPriceOrDash(value: number | null): string {
+  return value === null ? '—' : formatPrice(value)
+}
+
 /** 상대 시각 — 하루 안이면 "3시간 전", 일주일 안이면 "5일 전", 그보다 오래면 "7월 22일" */
 export function formatRelativeTime(iso: string): string {
   const then = new Date(iso)
