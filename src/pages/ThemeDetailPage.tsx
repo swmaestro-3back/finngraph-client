@@ -1,35 +1,31 @@
-import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { CandleChart } from '@/components/chart/CandleChart'
-import { ChartCard } from '@/components/chart/ChartCard'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
+import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
+import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
+import { LeaderStockCard } from '@/components/theme/LeaderStockCard'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { RelatedStocksTable } from '@/components/theme/RelatedStocksTable'
-import { FilterChip } from '@/components/ui/filter-chip'
-import { generateCandles, type CandlePeriod } from '@/data/candles'
+import { CANDLE_COUNTS, candleDates, generateCandles, type CandlePeriod } from '@/data/candles'
 import { getThemeNews } from '@/data/news'
 import { getThemeById, themes } from '@/data/themes'
 import { getThemeDetailStocks } from '@/data/themeDetailStocks'
+import { generateThemeIssueTimeline } from '@/data/themeIssues'
 import { changeColorClass, formatChange, formatPrice } from '@/lib/format'
-import { useBackTarget } from '@/lib/navigation'
+import { fromState, useBackTarget } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
-const PERIODS: { key: CandlePeriod; label: string }[] = [
-  { key: 'D', label: '일봉' },
-  { key: 'W', label: '주봉' },
-  { key: 'M', label: '월봉' },
-]
-
-// 테마 지수 기준값 (스펙 예시: 철강 27,691)
 const BASE_INDEX = 27691
 
 export default function ThemeDetailPage() {
   const { themeId } = useParams()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const theme = getThemeById(themeId ?? '') ?? themes[13]
-  // 진입 경로가 없으면(직접 URL 접근·새로고침) 테마 트리맵으로
   const back = useBackTarget({ to: '/', label: '테마 트리맵' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(CANDLE_COUNTS.D - 1)
 
   const indexValue = useMemo(
     () => Math.round(BASE_INDEX * (1 + theme.change / 20)),
@@ -39,18 +35,21 @@ export default function ThemeDetailPage() {
     () => generateCandles(theme.id, period, indexValue, theme.change * 1.5),
     [theme, period, indexValue],
   )
+  const issues = useMemo(
+    () => generateThemeIssueTimeline(theme, candleDates(period)),
+    [theme, period],
+  )
   const detailStocks = useMemo(() => getThemeDetailStocks(theme.id), [theme.id])
   const news = useMemo(() => getThemeNews(theme.id), [theme])
 
-  const rangeLow = Math.min(...candles.map((c) => c.low))
-  const rangeHigh = Math.max(...candles.map((c) => c.high))
-  const periodChange =
-    ((candles[candles.length - 1].close - candles[0].open) / candles[0].open) * 100
-  const periodLabel = PERIODS.find((p) => p.key === period)?.label
+  useEffect(() => {
+    setSelectedIndex(CANDLE_COUNTS[period] - 1)
+  }, [period, theme.id])
+
+  const clearSelection = useCallback(() => setSelectedIndex(null), [])
 
   return (
     <div className="page-container pb-12 pt-7">
-      {/* 브레드크럼 */}
       <div className="mb-3 flex items-center gap-[9px]">
         <Link to={back.to} className="text-xs font-semibold leading-none text-primary">
           ← {back.label}
@@ -59,7 +58,6 @@ export default function ThemeDetailPage() {
         <span className="text-caption text-muted-foreground">테마 상세</span>
       </div>
 
-      {/* 타이틀 행 */}
       <div className="mb-3 flex items-baseline gap-[9px]">
         <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
           {theme.name}
@@ -77,38 +75,59 @@ export default function ThemeDetailPage() {
         </span>
       </div>
 
-      {/* 테마 설명 */}
       <p className="mb-4 max-w-[820px] text-body leading-[1.7] text-muted-foreground [text-wrap:pretty]">
         {theme.description}
       </p>
 
-      {/* 차트 기간 전환 */}
-      <div className="mb-3 flex justify-end gap-1.5">
-        {PERIODS.map((p) => (
-          <FilterChip
-            key={p.key}
-            active={period === p.key}
-            onClick={() => setPeriod(p.key)}
-          >
-            {p.label}
-          </FilterChip>
-        ))}
+      <PriceIssueCard
+        key={`${theme.id}-${period}`}
+        title="테마 지수"
+        candles={candles}
+        issues={issues}
+        period={period}
+        onPeriodChange={setPeriod}
+        selectedIndex={selectedIndex}
+        onSelect={setSelectedIndex}
+      />
+
+      <div className="mb-[9px] mt-7 flex items-center gap-2">
+        <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
+          이슈 타임라인
+        </h2>
       </div>
+      <IssueNewsPanel
+        days={issues}
+        selectedIndex={selectedIndex}
+        onSelectNews={setOpenNewsId}
+        onClearSelection={clearSelection}
+        extra={
+          selectedIndex !== null && issues[selectedIndex].reacted.length > 0 ? (
+            <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+              <span className="mr-[3px] text-caption text-muted-foreground">반응 종목</span>
+              {issues[selectedIndex].reacted.map((stock) => (
+                <button
+                  key={stock.code}
+                  type="button"
+                  onClick={() =>
+                    navigate(`/stock/${stock.code}`, { state: fromState(pathname) })
+                  }
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground hover:bg-surface-inset"
+                >
+                  {stock.name}
+                  <span className={cn('font-mono', changeColorClass(stock.change))}>
+                    {formatChange(stock.change)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null
+        }
+      />
 
-      {/* 테마 지수 차트 카드 */}
-      <ChartCard
-        title={`테마 지수 ${periodLabel}`}
-        change={periodChange}
-        rangeLow={rangeLow}
-        rangeHigh={rangeHigh}
-      >
-        <CandleChart candles={candles} />
-      </ChartCard>
+      <LeaderStockCard theme={theme} themeCandles={candles} period={period} />
 
-      {/* 관련 종목 */}
       <RelatedStocksTable stocks={detailStocks} />
 
-      {/* 관련 뉴스 */}
       <NewsSection
         title={`${theme.name} 관련 뉴스`}
         items={news}

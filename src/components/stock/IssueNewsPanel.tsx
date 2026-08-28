@@ -1,23 +1,60 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, type ReactNode } from 'react'
 import type { IssueDay, IssueNews } from '@/data/stockDetail'
 import { cn } from '@/lib/utils'
 
-// 이슈 레인에서 고른 칸의 뉴스 — 레인 아래 항상 자리를 지킨다
-// (docs/superpowers/specs/2026-08-14-issue-timeline-design.md)
-//
-// 호버 팝오버를 대신하는 자리다. 고정된 영역이라 커서를 옮기는 동안 사라지지 않고,
-// 한 줄이 그대로 뉴스 상세 모달로 이어진다.
-
-const ROW =
-  'grid min-h-[48px] w-full grid-cols-[46px_1fr_124px] items-center gap-3 border-b border-surface-inset py-1 text-left hover:bg-muted'
 
 interface IssueNewsPanelProps {
   days: IssueDay[]
-  /** null이면 전체 기간을 최신순으로 보여준다 */
   selectedIndex: number | null
   onSelectNews: (newsId: string) => void
-  /** 선택을 풀고 전체로 돌아간다 */
   onClearSelection: () => void
+  extra?: ReactNode
+}
+
+function KindColumn({
+  kind,
+  items,
+  onSelectNews,
+}: {
+  kind: '호재' | '악재'
+  items: IssueNews[]
+  onSelectNews: (newsId: string) => void
+}) {
+  const up = kind === '호재'
+  return (
+    <div className="flex min-w-0 flex-col rounded-lg border border-surface-inset p-3">
+      <div className="mb-1 flex items-baseline justify-between border-b border-border pb-1.5">
+        <span className={cn('text-xs font-semibold', up ? 'text-stock-up' : 'text-stock-down')}>
+          {kind}
+        </span>
+        <span className="font-mono text-caption text-muted-foreground">{items.length}건</span>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="py-5 text-center text-caption text-muted-foreground">
+          이 기간 {kind} 뉴스가 없습니다
+        </p>
+      ) : (
+        <div className="max-h-[240px] overflow-y-auto">
+          {items.map((item, i) => (
+            <button
+              key={`${item.id}-${i}`}
+              type="button"
+              onClick={() => onSelectNews(item.id)}
+              className="w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
+            >
+              <span className="block truncate text-sm font-medium text-foreground">
+                {item.title}
+              </span>
+              <span className="mt-0.5 block truncate text-caption text-muted-foreground">
+                {item.meta}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export const IssueNewsPanel = memo(function IssueNewsPanel({
@@ -25,9 +62,9 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
   selectedIndex,
   onSelectNews,
   onClearSelection,
+  extra,
 }: IssueNewsPanelProps) {
   const selected = selectedIndex === null ? null : days[selectedIndex]
-  // 전체 기간 집계는 매 렌더마다 60여 일치를 다시 훑지 않도록 기간이 바뀔 때만 만든다
   const all = useMemo(
     () => ({
       items: days.flatMap((d) => d.items).reverse(),
@@ -39,12 +76,20 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
   const { items, good, bad }: { items: IssueNews[]; good: number; bad: number } =
     selected ?? all
 
+  const goodItems = useMemo(() => items.filter((item) => item.kind === '호재'), [items])
+  const badItems = useMemo(() => items.filter((item) => item.kind === '악재'), [items])
+
   return (
     <section className="flex flex-col card-surface p-5">
       <div className="mb-[9px] flex min-h-[30px] flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">
-          {selected ? selected.date : `${days[0].date} ~ ${days[days.length - 1].date}`}
-        </h3>
+        <div className="flex flex-wrap items-baseline gap-2">
+          <h3 className="text-sm font-semibold text-foreground">
+            {selected ? selected.date : `${days[0].date} ~ ${days[days.length - 1].date}`}
+          </h3>
+          <span className="text-caption text-muted-foreground">
+            {items.length}건 · 호재 {good} / 악재 {bad}
+          </span>
+        </div>
         {selected && (
           <button
             type="button"
@@ -56,41 +101,16 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
         )}
       </div>
 
-      <div className="grid grid-cols-[46px_1fr_124px] gap-3 border-b border-border pb-1.5 text-caption text-muted-foreground">
-        <span>성격</span>
-        <span>
-          {items.length}건 · 호재 {good} / 악재 {bad}
-        </span>
-        <span className="text-right">출처 · 시간</span>
-      </div>
+      {selected && extra}
 
       {items.length === 0 ? (
         <p className="py-6 text-center text-body text-muted-foreground">
           이 기간에 수집된 뉴스가 없습니다. 다른 칸을 눌러 보세요.
         </p>
       ) : (
-        <div className="max-h-[280px] overflow-y-auto">
-          {items.map((item, i) => (
-            <button
-              key={`${item.id}-${i}`}
-              type="button"
-              onClick={() => onSelectNews(item.id)}
-              className={ROW}
-            >
-              <span
-                className={cn(
-                  'w-fit rounded-[4px] bg-muted px-1.5 py-[3px] text-micro font-semibold',
-                  item.kind === '호재' ? 'text-stock-up' : 'text-stock-down',
-                )}
-              >
-                {item.kind}
-              </span>
-              <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
-              <span className="truncate text-right text-caption text-muted-foreground">
-                {item.meta}
-              </span>
-            </button>
-          ))}
+        <div className="grid gap-3 md:grid-cols-2">
+          <KindColumn kind="호재" items={goodItems} onSelectNews={onSelectNews} />
+          <KindColumn kind="악재" items={badItems} onSelectNews={onSelectNews} />
         </div>
       )}
     </section>

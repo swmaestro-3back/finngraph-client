@@ -1,10 +1,7 @@
-// 뉴스 상세 — 뉴스 테이블 한 행과 그 뉴스에서 추출된 서브그래프
-//
-// 목업 뉴스 테이블은 samsung-graph.json의 `news` 배열이고, relations는 news_id로 그 행을 참조한다.
-// 백엔드가 준비되면 listNews/getNewsGraph 내부만 fetch 결과로 바꾸면 된다.
 
 import raw from '@/data/samsung-graph.json'
 import { MOCK_GRAPH, NEWS_LINKS } from '@/data/graph'
+import { ALL_THEME_NEWS } from '@/data/themeNews'
 import {
   endId,
   type EntityType,
@@ -14,37 +11,25 @@ import {
 } from '@/data/graphTypes'
 import { expandGraph } from '@/lib/graphTraversal'
 
-/** 뉴스 테이블 한 행 — 백엔드가 주는 전부 */
 export interface NewsDetail {
   id: string
   title: string
-  /** 원문 그대로 출력한다 (클라이언트가 가공하지 않는다) */
   summary: string
   url: string
-  /** 수집 시각 ISO */
   collectedAt: string
 }
 
-/** 관계 하나 + 양 끝 노드 — 목록이 라벨을 그리려면 id만으로는 부족하다 */
 export interface NewsRelation {
   link: GraphLink
   source: GraphNode
   target: GraphNode
 }
 
-/** 뉴스 + 그 뉴스에서 추출된 서브그래프 — 모달이 받는 단위 */
 export interface NewsGraph {
   news: NewsDetail
-  /** 기사에 직접 등장한 관계 */
   relations: NewsRelation[]
-  /**
-   * 홉 확장으로 딸려온 관계 — 기사 본문에는 없지만 관계망을 타고 들어온 것들.
-   * 확장하지 않았으면(hops = 0) 빈 배열이다.
-   */
   expanded: NewsRelation[]
-  /** 캔버스용 데이터 — 기사에 등장한 엔티티와 관계, 홉 확장을 요청했으면 그 이웃까지 */
   graph: GraphData
-  /** 기사에 등장한 엔티티 id — 확장된 그래프에서 "기사에서 온 것"을 가려낸다 */
   seedIds: string[]
 }
 
@@ -65,9 +50,9 @@ const NEWS: NewsDetail[] = ((raw as { news?: RawNews[] }).news ?? []).map((n) =>
 }))
 
 const newsById = new Map(NEWS.map((n) => [n.id, n]))
+ALL_THEME_NEWS.forEach((n) => newsById.set(n.id, n))
 const nodeById = new Map(MOCK_GRAPH.nodes.map((n) => [n.id, n]))
 
-/** news_id → 그 기사에서 추출된 관계들 (합쳐지기 전 원본 링크를 쓴다) */
 const relationsByNews = new Map<string, NewsRelation[]>()
 NEWS_LINKS.forEach((link) => {
   if (!link.news_id) return
@@ -79,12 +64,10 @@ NEWS_LINKS.forEach((link) => {
   else relationsByNews.set(link.news_id, [{ link, source, target }])
 })
 
-/** 같은 관계인지 판단하는 키 — 간선 id는 기사마다 달라 트리플으로 비교한다 */
 function tripleKey(link: GraphLink): string {
   return [endId(link.source), link.type, endId(link.target), link.item?.text ?? ''].join('|')
 }
 
-/** 뉴스에 등장한 엔티티 노드 id — 유사도 계산과 서브그래프 시드에 함께 쓴다 */
 function seedIds(newsId: string): Set<string> {
   const ids = new Set<string>()
   relationsByNews.get(newsId)?.forEach(({ source, target }) => {
@@ -94,7 +77,6 @@ function seedIds(newsId: string): Set<string> {
   return ids
 }
 
-/** 신문사 도메인 → 이름. 없는 호스트는 호스트 문자열을 그대로 쓴다 */
 const PRESS_BY_HOST: Record<string, string> = {
   'www.hankyung.com': '한국경제',
   'www.mk.co.kr': '매일경제',
@@ -109,9 +91,12 @@ const PRESS_BY_HOST: Record<string, string> = {
   'www.fnnews.com': '파이낸셜뉴스',
   'biz.heraldcorp.com': '헤럴드경제',
   'www.thelec.kr': '디일렉',
+  'news.example.com': '데모경제',
+  'press.example.com': '샘플경제',
+  'wire.example.net': '목업뉴스',
+  'daily.example.org': '가상일보',
 }
 
-/** 원문 URL에서 신문사를 유도한다 (뉴스 테이블에 신문사 컬럼이 없다) */
 export function pressOf(url: string): string {
   try {
     const host = new URL(url).hostname
@@ -129,13 +114,6 @@ export function getNews(newsId: string): NewsDetail | null {
   return newsById.get(newsId) ?? null
 }
 
-/**
- * 뉴스 하나와 그 서브그래프.
- *
- * 기본(hops = 0)은 기사에서 추출된 관계와 그 양 끝 엔티티뿐이다.
- * hops를 주면 그 엔티티들을 시드로 전체 그래프를 그만큼 따라가 넓힌다 —
- * 기사를 읽다가 "이 기업 주변엔 또 뭐가 있지"를 이어서 볼 수 있게.
- */
 export function getNewsGraph(newsId: string, hops = 0): NewsGraph | null {
   const news = newsById.get(newsId)
   if (!news) return null
@@ -146,7 +124,6 @@ export function getNewsGraph(newsId: string, hops = 0): NewsGraph | null {
   const nodes = MOCK_GRAPH.nodes.filter((n) => keep.has(n.id))
   const links = relations.map((r) => r.link)
 
-  // 중심은 이 기사에서 가장 많이 언급된 관계의 주어로 잡는다
   const center = relations.reduce<NewsRelation | null>(
     (top, r) => (!top || r.link.mentioned_count > top.link.mentioned_count ? r : top),
     null,
@@ -165,11 +142,6 @@ export function getNewsGraph(newsId: string, hops = 0): NewsGraph | null {
 
   const graph = expandGraph(MOCK_GRAPH, seed, hops)
 
-  // 확장으로 들어온 관계 — 기사에서 온 간선을 빼면 남는다.
-  // 기사 본문에 이름이 없는 기업이 왜 걸렸는지 보여주려면 이 목록이 필요하다.
-  //
-  // 같은 트리플이 다른 기사에도 나오면 간선 id가 달라 그대로 두면 목록에 두 번 뜬다.
-  // 기사에 이미 있는 트리플은 확장 목록에서 뺀다.
   const seedLinkIds = new Set(links.map((l) => l.id))
   const seedTriples = new Set(links.map(tripleKey))
   const expanded: NewsRelation[] = graph.links.flatMap((link) => {
@@ -188,7 +160,6 @@ export function getNewsGraph(newsId: string, hops = 0): NewsGraph | null {
   }
 }
 
-/** 헤더 칩 한 개 — 그래프에 노드가 있으면 nodeId가 붙어 호버 강조가 가능하다 */
 export interface NewsEntity {
   label: string
   type: EntityType
@@ -197,7 +168,6 @@ export interface NewsEntity {
 
 const nodeByLabel = new Map(MOCK_GRAPH.nodes.map((n) => [n.label, n]))
 
-/** 기사에 등장한 엔티티 — 주어·목적어 다음에 트리플의 중간 항목(제품·원자재)을 붙인다 */
 export function newsEntities(relations: NewsRelation[]): NewsEntity[] {
   const byLabel = new Map<string, NewsEntity>()
   const add = (entity: NewsEntity) => {
@@ -219,7 +189,6 @@ export function newsEntities(relations: NewsRelation[]): NewsEntity[] {
   return [...byLabel.values()]
 }
 
-/** 공유 엔티티가 많은 순으로 유사한 뉴스를 고른다 (동수면 언급 횟수 합) */
 export function getSimilarNews(newsId: string, limit = 5): NewsDetail[] {
   const base = seedIds(newsId)
   if (base.size === 0) return []

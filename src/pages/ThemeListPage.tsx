@@ -36,7 +36,6 @@ interface ThemeRow {
   topStocks: string
 }
 
-// key가 null인 컬럼(#·대표 종목)은 정렬 대상이 아니라 라벨만 표시한다
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
   { key: 'name', label: '테마명', align: 'left' },
@@ -89,10 +88,9 @@ export default function ThemeListPage() {
 
   return (
     <div className="page-container pb-12 pt-7">
-      {/* 타이틀 행 */}
       <div className="mb-3 flex items-end justify-between gap-4">
         <div className="flex items-baseline gap-[9px]">
-          <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
+          <h1 className="text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">
             테마 목록
           </h1>
           <span className="text-body text-muted-foreground">
@@ -101,11 +99,9 @@ export default function ThemeListPage() {
         </div>
       </div>
 
-      {/* 테마 목록 카드 */}
       <div className="card-surface overflow-hidden">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="min-w-[880px]">
-            {/* 컬럼 헤더 */}
             <SortableHeaderRow
               columns={COLUMNS}
               sortKey={sortKey}
@@ -114,7 +110,6 @@ export default function ThemeListPage() {
               className={cn(GRID, 'border-b border-border bg-muted px-4 py-2.5')}
             />
 
-            {/* 데이터 행 */}
             {pageRows.map((row, index) => (
               <button
                 key={row.id}
@@ -129,7 +124,7 @@ export default function ThemeListPage() {
                 <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">
                   {(page - 1) * PAGE_SIZE + index + 1}
                 </span>
-                <span className="overflow-hidden text-body whitespace-nowrap text-ellipsis text-foreground">
+                <span className="overflow-hidden text-sm font-medium whitespace-nowrap text-ellipsis text-foreground">
                   {row.name}
                 </span>
                 {(['change', 'w1', 'm1', 'm3'] as const).map((key) => (
@@ -143,7 +138,7 @@ export default function ThemeListPage() {
                     {formatChange(row[key])}
                   </span>
                 ))}
-                <span className="text-right text-xs text-foreground">
+                <span className="text-right font-mono text-xs leading-[1.4] text-foreground">
                   {row.tradingValueLabel}
                 </span>
                 <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
@@ -158,7 +153,6 @@ export default function ThemeListPage() {
         </div>
       </div>
 
-      {/* 페이지네이션 */}
       <Pagination className="mt-5">
         <PaginationContent>
           <PaginationItem>

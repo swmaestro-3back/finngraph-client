@@ -1,8 +1,6 @@
 import type { Market } from '@/data/stockMeta'
 import { cn } from '@/lib/utils'
 
-// 종목 식별 셀 (종목명 · 코드 · 시장 라벨) — 주식 목록 / 테마 상세 관련 종목이 공유
-// 종목명 + 코드 + 시장 라벨 한 줄
 interface StockIdentityProps {
   name: string
   code: string
@@ -13,10 +11,10 @@ interface StockIdentityProps {
 export function StockIdentity({ name, code, market, className }: StockIdentityProps) {
   return (
     <span className={cn('flex min-w-0 items-center gap-2 overflow-hidden', className)}>
-      <span className="overflow-hidden text-body whitespace-nowrap text-ellipsis text-foreground">
+      <span className="overflow-hidden text-sm font-semibold whitespace-nowrap text-ellipsis text-foreground">
         {name}
       </span>
-      <span className="font-mono text-micro leading-[1.4] text-foreground-tertiary">{code}</span>
+      <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">{code}</span>
       <span
         className={cn(
           'shrink-0 rounded px-1.5 py-0.5 text-[9px] tracking-[0.4px] text-muted-foreground',
