@@ -33,7 +33,6 @@ type SortKey =
   | 'roe'
   | 'dividendYield'
 
-// key가 null인 컬럼(#·현재가·테마)은 정렬 대상이 아니라 라벨만 표시한다
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
   { key: 'name', label: '종목명', align: 'left' },
@@ -72,7 +71,6 @@ export default function StockListPage() {
     window.scrollTo(0, 0)
   }
 
-  // 페이지 번호: 현재 페이지 주변 최대 7개만 노출
   const pageNumbers = useMemo(() => {
     const window_ = 3
     const start = Math.max(1, Math.min(page - window_, totalPages - window_ * 2))
@@ -84,10 +82,9 @@ export default function StockListPage() {
 
   return (
     <div className="page-container pb-12 pt-7">
-      {/* 타이틀 행 */}
       <div className="mb-3 flex items-end justify-between gap-4">
         <div className="flex items-baseline gap-[9px]">
-          <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
+          <h1 className="text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">
             주식 목록
           </h1>
           <span className="text-body text-muted-foreground">
@@ -96,11 +93,9 @@ export default function StockListPage() {
         </div>
       </div>
 
-      {/* 종목 목록 카드 */}
       <div className="card-surface overflow-hidden">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="min-w-[1140px]">
-            {/* 컬럼 헤더 */}
             <SortableHeaderRow
               columns={COLUMNS}
               sortKey={sortKey}
@@ -109,7 +104,6 @@ export default function StockListPage() {
               className={cn(GRID, 'border-b border-border bg-muted px-4 py-2.5')}
             />
 
-            {/* 데이터 행 */}
             {pageRows.map((row, index) => (
               <button
                 key={row.code}
@@ -125,7 +119,7 @@ export default function StockListPage() {
                   {(page - 1) * PAGE_SIZE + index + 1}
                 </span>
                 <StockIdentity name={row.name} code={row.code} market={row.market} />
-                <span className="text-right text-xs text-foreground">
+                <span className="text-right font-mono text-sm font-medium text-foreground">
                   {formatPrice(row.price)}
                 </span>
                 {(['change', 'w1', 'm1', 'm3'] as const).map((key) => (
@@ -163,7 +157,6 @@ export default function StockListPage() {
         </div>
       </div>
 
-      {/* 페이지네이션 */}
       <Pagination className="mt-5">
         <PaginationContent>
           <PaginationItem>

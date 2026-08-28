@@ -6,27 +6,18 @@ import { changeColorClass, formatAmount, formatChange, formatPrice } from '@/lib
 import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
-// 종목명 · 현재가 · 시가총액 · 거래대금 · 등락률
-// 수치 열 기준폭 = 최대 자릿수(시가총액·거래대금 9자리 "999,999,999" 80px, 현재가 76px).
-// xl 이상은 여기에 여유와 12px 간격을 얹고, 그보다 좁으면 최소폭으로 줄여 종목명 자리를 지킨다.
 const GRID =
-  'grid gap-2 grid-cols-[minmax(0,1fr)_78px_80px_80px_50px] xl:gap-3 xl:grid-cols-[minmax(0,1fr)_82px_86px_86px_50px]'
+  'grid gap-2 grid-cols-[minmax(0,1fr)_76px_78px_78px_62px] xl:gap-3 xl:grid-cols-[minmax(0,1fr)_80px_84px_84px_64px]'
 
 interface StockSectionProps {
-  /** 카드 제목·등락률·상세 링크와 종목 리스트의 출처가 되는 테마 */
   theme: ThemeItem
-  /** 섹션 래퍼 추가 클래스 (여백 등) */
   className?: string
-  /** 리스트 영역 추가 클래스 (고정 높이·스크롤 등) */
   listClassName?: string
 }
 
-/** 뉴스 리스트와 동일한 한 줄 Row 형태의 테마 종목 리스트 카드 */
 export function StockSection({ theme, className, listClassName }: StockSectionProps) {
   const { pathname } = useLocation()
 
-  // 등락률 내림차순 — 상승률이 큰 종목이 위로
-  // 시가총액·거래대금은 테마 상세·주식 목록과 같은 결정적 규칙으로 파생
   const stocks = useMemo(
     () =>
       [...theme.stocks]
@@ -87,7 +78,6 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
               <span className="truncate text-sm font-semibold text-foreground">
                 {stock.name}
               </span>
-              {/* 수치 열을 넉넉히 잡은 만큼, 폭이 좁을 땐 코드를 접어 종목명 자리를 지킨다 */}
               <span className="hidden font-mono text-caption text-foreground-tertiary xl:inline">
                 {stock.code}
               </span>
@@ -101,13 +91,17 @@ export function StockSection({ theme, className, listClassName }: StockSectionPr
             <span className="text-right font-mono text-xs text-foreground-secondary">
               {formatAmount(stock.tradingValue)}
             </span>
-            <span
-              className={cn(
-                'text-right font-mono text-xs font-medium',
-                changeColorClass(stock.change),
-              )}
-            >
-              {formatChange(stock.change)}
+            <span className="justify-self-end">
+              <span
+                className={cn(
+                  'inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs font-semibold',
+                  changeColorClass(stock.change),
+                  stock.change > 0 && 'bg-stock-up/10',
+                  stock.change < 0 && 'bg-stock-down/10',
+                )}
+              >
+                {formatChange(stock.change)}
+              </span>
             </span>
           </Link>
         ))}
