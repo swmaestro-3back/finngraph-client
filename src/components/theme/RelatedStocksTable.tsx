@@ -4,9 +4,15 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockIdentity } from '@/components/table/StockIdentity'
 import { FilterChip } from '@/components/ui/filter-chip'
-import type { Market } from '@/data/stockMeta'
-import type { ThemeStock } from '@/data/types'
-import { changeColorClass, formatAmount, formatChange, formatPrice } from '@/lib/format'
+import type { ThemeStockRes } from '@/lib/apiTypes'
+import {
+  changeColorClass,
+  formatAmountOrDash,
+  formatChangeOrDash,
+  formatPriceOrDash,
+  toEok,
+  toMillion,
+} from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
@@ -17,7 +23,6 @@ const GRID =
 
 type SortKey = 'name' | 'price' | 'change' | 'tradingValue' | 'marketCap'
 
-// key가 null인 컬럼(테마 포함 사유)은 정렬 대상이 아니라 라벨만 표시한다
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: 'name', label: '종목명', align: 'left', className: 'pl-[9px]' },
   { key: 'price', label: '현재가', align: 'right' },
@@ -27,18 +32,17 @@ const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '테마 포함 사유', align: 'left', className: 'pl-3' },
 ]
 
-// 아무것도 선택하지 않은 상태가 곧 전체
-const MARKETS: Market[] = ['KOSPI', 'KOSDAQ']
+const MARKETS = ['KOSPI', 'KOSDAQ'] as const
+type MarketFilter = (typeof MARKETS)[number]
 
 interface RelatedStocksTableProps {
-  stocks: ThemeStock[]
+  stocks: ThemeStockRes[]
 }
 
-// 관련 종목 테이블 (design-specs/theme-detail.md §3)
 export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const [selected, setSelected] = useState<Market | null>(null)
+  const [selected, setSelected] = useState<MarketFilter | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
 
   const filtered = useMemo(
@@ -46,12 +50,11 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
     [stocks, selected],
   )
 
-  // 한 번에 하나만 선택 — 켜져 있는 버튼을 다시 누르면 해제되고 전체가 된다
-  const toggleMarket = (market: Market) => {
+  const toggleMarket = (market: MarketFilter) => {
     setSelected((prev) => (prev === market ? null : market))
     setMoreOpen(false)
   }
-  const { sorted, sortKey, sortDesc, handleSort } = useTableSort<ThemeStock, SortKey>(
+  const { sorted, sortKey, sortDesc, handleSort } = useTableSort<ThemeStockRes, SortKey>(
     filtered,
     'change',
   )
@@ -90,9 +93,9 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
 
           {visible.map((stock) => (
             <button
-              key={stock.code}
+              key={stock.ticker}
               type="button"
-              onClick={() => navigate(`/stock/${stock.code}`, { state: fromState(pathname) })}
+              onClick={() => navigate(`/stock/${stock.ticker}`, { state: fromState(pathname) })}
               className={cn(
                 GRID,
                 'w-full cursor-pointer border-b border-surface-inset py-[9px] text-left hover:bg-muted',
@@ -100,29 +103,29 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
             >
               <StockIdentity
                 name={stock.name}
-                code={stock.code}
-                market={stock.market}
+                code={stock.ticker}
+                market={stock.market === 'KOSDAQ' ? 'KOSDAQ' : 'KOSPI'}
                 className="pl-[9px]"
               />
               <span className="text-right font-mono text-body font-medium text-foreground">
-                {formatPrice(stock.price)}
+                {formatPriceOrDash(stock.price)}
               </span>
               <span
                 className={cn(
                   'text-right font-mono text-body font-medium',
-                  changeColorClass(stock.change),
+                  changeColorClass(stock.change ?? 0),
                 )}
               >
-                {formatChange(stock.change)}
+                {formatChangeOrDash(stock.change)}
               </span>
               <span className="text-right font-mono text-xs text-foreground-secondary">
-                {formatAmount(stock.tradingValue)}
+                {formatAmountOrDash(toMillion(stock.tradingValue))}
               </span>
               <span className="text-right font-mono text-xs text-foreground-secondary">
-                {formatAmount(stock.marketCap)}
+                {formatAmountOrDash(toEok(stock.marketCap))}
               </span>
               <span className="pl-3 text-xs leading-[1.55] text-foreground-secondary [text-wrap:pretty]">
-                {stock.reason}
+                {stock.reason ?? '—'}
               </span>
             </button>
           ))}
