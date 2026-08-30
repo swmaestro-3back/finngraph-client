@@ -1,7 +1,6 @@
 import { memo, useMemo, useState } from 'react'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
-import { annualFinancials } from '@/data/financials'
 import type { AnnualFinancials } from '@/data/types'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 import { computeTrendTones, MIN_TREND_RUN } from '@/lib/trend'
@@ -37,8 +36,6 @@ const ROWS: RowDef[] = [
     value: (f) => (f.pbr === null ? '-' : f.pbr.toFixed(2)),
     metric: (f) => f.pbr,
     direction: 'down-good',
-    // 역대 최저 PBR(2024 = 0.92) 오렌지 하이라이트
-    highlight: (f) => f.year === 2024,
   },
   { label: 'ROE', value: (f) => formatPercent(f.roe), metric: (f) => f.roe, direction: 'up-good' },
   { label: 'EPS', value: (f) => formatWon(f.eps), metric: (f) => f.eps, direction: 'up-good' },
@@ -84,19 +81,19 @@ function toneClass(mode: HighlightMode, tone: TrendTone | null): string | undefi
     : 'bg-stock-down/10 text-stock-down'
 }
 
-export const FinancialTable = memo(function FinancialTable() {
+export const FinancialTable = memo(function FinancialTable({ rows }: { rows: AnnualFinancials[] }) {
   const [mode, setMode] = useState<HighlightMode>('none')
 
-  // 행별 연속 추세 구간 (데이터·지표 성격이 고정이라 한 번만 계산)
+  const gridCols = { gridTemplateColumns: `84px repeat(${rows.length}, minmax(44px, 1fr))` }
   const trendTones = useMemo(
     () =>
       ROWS.map((row) =>
         computeTrendTones(
-          annualFinancials.map((f) => row.metric(f)),
+          rows.map((f) => row.metric(f)),
           row.direction,
         ),
       ),
-    [],
+    [rows],
   )
 
   return (
@@ -142,9 +139,12 @@ export const FinancialTable = memo(function FinancialTable() {
       <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="min-w-[1080px]">
           {/* 헤더 행 */}
-          <div className="grid grid-cols-[84px_repeat(14,minmax(44px,1fr))] gap-1 rounded-t-lg border-b border-border bg-surface-inset px-1 py-2">
+          <div
+            className="grid gap-1 rounded-t-lg border-b border-border bg-surface-inset px-1 py-2"
+            style={gridCols}
+          >
             <span className="pl-1 text-caption text-foreground-secondary">항목</span>
-            {annualFinancials.map((f) => (
+            {rows.map((f) => (
               <span
                 key={f.year}
                 className="flex items-center justify-end gap-1 pr-1 text-right font-mono text-caption font-medium text-foreground"
@@ -163,14 +163,15 @@ export const FinancialTable = memo(function FinancialTable() {
             <div
               key={row.label}
               className={cn(
-                'grid grid-cols-[84px_repeat(14,minmax(44px,1fr))] items-center gap-1 rounded-md border-b border-secondary px-1 py-[7px] hover:bg-surface-inset',
+                'grid items-center gap-1 rounded-md border-b border-secondary px-1 py-[7px] hover:bg-surface-inset',
                 rowIndex % 2 === 0 && 'bg-muted',
               )}
+              style={gridCols}
             >
               <span className="pl-1 text-caption font-semibold leading-[1.4] text-foreground">
                 {row.label}
               </span>
-              {annualFinancials.map((f, colIndex) => {
+              {rows.map((f, colIndex) => {
                 const text = row.value(f)
                 const highlighted = text !== '-' && row.highlight?.(f)
                 const tone = toneClass(mode, trendTones[rowIndex][colIndex])

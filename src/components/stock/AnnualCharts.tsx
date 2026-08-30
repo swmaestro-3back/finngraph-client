@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import {
   Area,
   Bar,
@@ -11,13 +11,13 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts'
-import { annualFinancials } from '@/data/financials'
 import {
   syncMarks as sharedSyncMarks,
   SyncPinHeader,
   useSyncedIndex,
   type SyncedIndex,
 } from '@/lib/chartSync'
+import type { AnnualFinancials } from '@/data/types'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 
 // 차트 계열색 — index.css의 --chart-* 토큰을 그대로 소비한다 (SVG 속성에서 var() 해석됨)
@@ -29,10 +29,12 @@ const PINK = 'var(--chart-4)'
 const GRID = 'var(--chart-grid)'
 const GRID_EDGE = 'var(--border)'
 
-const data = annualFinancials.map((f) => ({
-  ...f,
-  yearLabel: f.estimated ? `${f.year}E` : String(f.year),
-}))
+type AnnualDatum = AnnualFinancials & { yearLabel: string }
+
+interface ChartCtx {
+  sync: SyncedIndex
+  data: AnnualDatum[]
+}
 
 const axisTick = { fontSize: 10, fill: 'var(--muted-foreground)', fontFamily: 'JetBrains Mono Variable, monospace' }
 
@@ -106,7 +108,7 @@ function AnnualTooltip({
 }
 
 /** 모든 카드가 공유하는 차트 props — 축이 같아야 동기화가 의미를 갖는다 */
-function chartProps(sync: SyncedIndex) {
+function chartProps(sync: SyncedIndex, data: AnnualDatum[]) {
   return {
     data,
     margin: { top: 8, right: 8, left: 4, bottom: 0 },
@@ -116,7 +118,7 @@ function chartProps(sync: SyncedIndex) {
 }
 
 /** 연간 축 전용 syncMarks — 툴팁 내용과 x 라벨만 이 파일 것으로 채운다 */
-function syncMarks(sync: SyncedIndex, kind: 'bar' | 'line') {
+function syncMarks(sync: SyncedIndex, kind: 'bar' | 'line', data: AnnualDatum[]) {
   return sharedSyncMarks(sync, {
     kind,
     xForIndex: (i) => data[i].yearLabel,
@@ -176,7 +178,7 @@ const trillionTick = (v: number) => (v === 0 ? '0억' : `${v.toFixed(1)}조`)
 const pctTick = (digits = 1) => (v: number) => `${v.toFixed(digits)}%`
 
 /** 매출액 / 영업이익 — grouped bar */
-function RevenueChart({ sync }: { sync: SyncedIndex }) {
+function RevenueChart({ sync, data }: ChartCtx) {
   return (
     <MetricCard
       title="매출액 / 영업이익"
@@ -185,10 +187,10 @@ function RevenueChart({ sync }: { sync: SyncedIndex }) {
         { label: '영업이익', color: GRAY },
       ]}
     >
-      <ComposedChart {...chartProps(sync)}>
+      <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={trillionTick} domain={[0, 600]} ticks={[0, 100, 200, 300, 400, 500, 600]} width={48} />
+        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={trillionTick} domain={[0, 'auto']} width={48} />
         <Bar isAnimationActive={false} dataKey="revenue" barSize={9} radius={[2, 2, 0, 0]}>
           {data.map((d) => (
             <Cell key={d.year} fill={TEAL} fillOpacity={d.estimated ? 0.45 : 1} />
@@ -199,14 +201,14 @@ function RevenueChart({ sync }: { sync: SyncedIndex }) {
             <Cell key={d.year} fill={GRAY} fillOpacity={d.estimated ? 0.45 : 1} />
           ))}
         </Bar>
-        {syncMarks(sync, 'bar')}
+        {syncMarks(sync, 'bar', data)}
       </ComposedChart>
     </MetricCard>
   )
 }
 
 /** 영업이익률 / ROE — dual line */
-function MarginRoeChart({ sync }: { sync: SyncedIndex }) {
+function MarginRoeChart({ sync, data }: ChartCtx) {
   return (
     <MetricCard
       title="영업이익률 / ROE"
@@ -215,20 +217,20 @@ function MarginRoeChart({ sync }: { sync: SyncedIndex }) {
         { label: 'ROE', color: GRAY },
       ]}
     >
-      <ComposedChart {...chartProps(sync)}>
+      <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick()} domain={[0, 40]} ticks={[0, 10, 20, 30, 40]} width={44} />
+        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick()} domain={['auto', 'auto']} width={44} />
         <Line isAnimationActive={false} type="monotone" dataKey="operatingMargin" stroke={TEAL} strokeWidth={2} dot={{ r: 3, fill: TEAL, strokeWidth: 0 }} />
         <Line isAnimationActive={false} type="monotone" dataKey="roe" stroke={GRAY} strokeWidth={2} dot={{ r: 3, fill: GRAY, strokeWidth: 0 }} />
-        {syncMarks(sync, 'line')}
+        {syncMarks(sync, 'line', data)}
       </ComposedChart>
     </MetricCard>
   )
 }
 
 /** EPS / 배당금 / 배당성향 — 혼합 이중축 */
-function EpsDividendChart({ sync }: { sync: SyncedIndex }) {
+function EpsDividendChart({ sync, data }: ChartCtx) {
   return (
     <MetricCard
       title="EPS / 배당금 / 배당성향"
@@ -239,11 +241,11 @@ function EpsDividendChart({ sync }: { sync: SyncedIndex }) {
       ]}
       axisCaptionLeft={{ text: '원' }}
     >
-      <ComposedChart {...chartProps(sync)}>
+      <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis yAxisId="won" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString('ko-KR')} domain={[0, 50000]} ticks={[0, 10000, 20000, 30000, 40000, 50000]} width={52}/>
-        <YAxis yAxisId="pct" orientation="right" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick(0)} domain={[0, 70]} ticks={[0, 10, 20, 30, 40, 50, 60, 70]} width={40} />
+        <YAxis yAxisId="won" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString('ko-KR')} domain={[0, 'auto']} width={52}/>
+        <YAxis yAxisId="pct" orientation="right" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick(0)} domain={[0, 'auto']} width={40} />
         <Bar isAnimationActive={false} yAxisId="won" dataKey="eps" barSize={7} radius={[2, 2, 0, 0]}>
           {data.map((d) => (
             <Cell key={d.year} fill={TEAL} fillOpacity={d.estimated ? 0.45 : 1} />
@@ -251,14 +253,14 @@ function EpsDividendChart({ sync }: { sync: SyncedIndex }) {
         </Bar>
         <Bar isAnimationActive={false} yAxisId="won" dataKey="dps" barSize={7} radius={[2, 2, 0, 0]} fill={PURPLE} />
         <Line isAnimationActive={false} yAxisId="pct" type="monotone" dataKey="payoutRatio" stroke={LIGHT_PURPLE} strokeWidth={2} dot={{ r: 3, fill: LIGHT_PURPLE, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'bar')}
+        {syncMarks(sync, 'bar', data)}
       </ComposedChart>
     </MetricCard>
   )
 }
 
 /** PBR / PER — 이중축 + 기준선 */
-function PbrPerChart({ sync }: { sync: SyncedIndex }) {
+function PbrPerChart({ sync, data }: ChartCtx) {
   return (
     <MetricCard
       title="PBR / PER"
@@ -269,23 +271,23 @@ function PbrPerChart({ sync }: { sync: SyncedIndex }) {
       axisCaptionLeft={{ text: 'PBR', color: TEAL }}
       axisCaptionRight={{ text: 'PER', color: GRAY }}
     >
-      <ComposedChart {...chartProps(sync)}>
+      <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis yAxisId="pbr" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toFixed(2)} domain={[0, 2.5]} ticks={[0, 0.5, 1, 1.5, 2, 2.5]} width={40}/>
-        <YAxis yAxisId="per" orientation="right" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toFixed(1)} domain={[0, 40]} ticks={[0, 10, 20, 30, 40]} width={40}/>
+        <YAxis yAxisId="pbr" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toFixed(2)} domain={[0, 'auto']} width={40}/>
+        <YAxis yAxisId="per" orientation="right" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toFixed(1)} domain={[0, 'auto']} width={40}/>
         <ReferenceLine yAxisId="pbr" y={1} stroke={TEAL} strokeDasharray="4 4" label={{ value: 'PBR=1', position: 'insideRight', fontSize: 9, fill: TEAL, dy: -8 }} />
         <ReferenceLine yAxisId="per" y={10} stroke={GRAY} strokeDasharray="4 4" label={{ value: 'PER=10', position: 'insideRight', fontSize: 9, fill: GRAY, dy: 10 }} />
         <Line isAnimationActive={false} yAxisId="pbr" type="monotone" dataKey="pbr" stroke={TEAL} strokeWidth={2} dot={{ r: 3, fill: TEAL, strokeWidth: 0 }} connectNulls={false} />
         <Line isAnimationActive={false} yAxisId="per" type="monotone" dataKey="per" stroke={GRAY} strokeWidth={2} dot={{ r: 3, fill: GRAY, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'line')}
+        {syncMarks(sync, 'line', data)}
       </ComposedChart>
     </MetricCard>
   )
 }
 
 /** 자본구조 (자본 + 부채) — stacked bar */
-function CapitalStructureChart({ sync }: { sync: SyncedIndex }) {
+function CapitalStructureChart({ sync, data }: ChartCtx) {
   return (
     <MetricCard
       title="자본구조 (자본 + 부채)"
@@ -294,23 +296,23 @@ function CapitalStructureChart({ sync }: { sync: SyncedIndex }) {
         { label: '부채총계', color: PINK },
       ]}
     >
-      <ComposedChart {...chartProps(sync)}>
+      <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={trillionTick} domain={[0, 600]} ticks={[0, 100, 200, 300, 400, 500, 600]} width={48} />
+        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={trillionTick} domain={[0, 'auto']} width={48} />
         <Bar isAnimationActive={false} dataKey="totalEquity" stackId="capital" barSize={14} fill={TEAL} />
         <Bar isAnimationActive={false} dataKey="totalDebt" stackId="capital" barSize={14} radius={[2, 2, 0, 0]} fill={PINK} />
-        {syncMarks(sync, 'bar')}
+        {syncMarks(sync, 'bar', data)}
       </ComposedChart>
     </MetricCard>
   )
 }
 
 /** 부채비율 — area + line */
-function DebtRatioChart({ sync }: { sync: SyncedIndex }) {
+function DebtRatioChart({ sync, data }: ChartCtx) {
   return (
     <MetricCard title="부채비율" legend={[{ label: '부채비율', color: PINK }]}>
-      <ComposedChart {...chartProps(sync)}>
+      <ComposedChart {...chartProps(sync, data)}>
         <defs>
           <linearGradient id="debtGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={PINK} stopOpacity={0.18} />
@@ -319,10 +321,10 @@ function DebtRatioChart({ sync }: { sync: SyncedIndex }) {
         </defs>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick(0)} domain={[0, 50]} ticks={[0, 10, 20, 30, 40, 50]} width={40} />
+        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick(0)} domain={[0, 'auto']} width={40} />
         <Area isAnimationActive={false} type="monotone" dataKey="debtRatio" stroke="none" fill="url(#debtGradient)" connectNulls={false} />
         <Line isAnimationActive={false} type="monotone" dataKey="debtRatio" stroke={PINK} strokeWidth={2} dot={{ r: 3, fill: PINK, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'line')}
+        {syncMarks(sync, 'line', data)}
       </ComposedChart>
     </MetricCard>
   )
@@ -332,9 +334,13 @@ function DebtRatioChart({ sync }: { sync: SyncedIndex }) {
  * 연간 실적 6종 — 여섯 카드가 하나의 연도 축을 공유한다.
  * 한 카드를 짚으면 나머지도 같은 해를 가리키고, 누르면 그 해가 고정된다.
  */
-export const AnnualCharts = memo(function AnnualCharts() {
+export const AnnualCharts = memo(function AnnualCharts({ rows }: { rows: AnnualFinancials[] }) {
   const sync = useSyncedIndex()
-  const pinnedYear = sync.pinnedIndex === null ? null : data[sync.pinnedIndex].yearLabel
+  const data = useMemo<AnnualDatum[]>(
+    () => rows.map((f) => ({ ...f, yearLabel: f.estimated ? `${f.year}E` : String(f.year) })),
+    [rows],
+  )
+  const pinnedYear = sync.pinnedIndex === null ? null : data[sync.pinnedIndex]?.yearLabel ?? null
 
   return (
     <div>
@@ -344,12 +350,12 @@ export const AnnualCharts = memo(function AnnualCharts() {
         onClear={sync.clear}
       />
       <div className="grid gap-4 lg:grid-cols-2">
-        <RevenueChart sync={sync} />
-        <MarginRoeChart sync={sync} />
-        <EpsDividendChart sync={sync} />
-        <PbrPerChart sync={sync} />
-        <CapitalStructureChart sync={sync} />
-        <DebtRatioChart sync={sync} />
+        <RevenueChart sync={sync} data={data} />
+        <MarginRoeChart sync={sync} data={data} />
+        <EpsDividendChart sync={sync} data={data} />
+        <PbrPerChart sync={sync} data={data} />
+        <CapitalStructureChart sync={sync} data={data} />
+        <DebtRatioChart sync={sync} data={data} />
       </div>
     </div>
   )

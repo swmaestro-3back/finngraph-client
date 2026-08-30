@@ -99,7 +99,7 @@ function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: Synced
       })}
       <Bar isAnimationActive={false} dataKey={key} barSize={5}>
         {points.map((p, i) => (
-          <Cell key={i} fill={(p[key] as number) >= 0 ? UP : DOWN} fillOpacity={0.85} />
+          <Cell key={i} fill={((p[key] as number | null) ?? 0) >= 0 ? UP : DOWN} fillOpacity={0.85} />
         ))}
       </Bar>
     </ComposedChart>
@@ -107,7 +107,7 @@ function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: Synced
 }
 
 function cumulative(points: SupplyPoint[], key: keyof SupplyPoint): number {
-  return points.reduce((sum, p) => sum + (p[key] as number), 0)
+  return points.reduce((sum, p) => sum + ((p[key] as number | null) ?? 0), 0)
 }
 
 // recharts 4카드는 페이지에서 가장 무거운 트리다 — points가 같으면 다시 그리지 않는다
@@ -119,11 +119,11 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
   // 4카드가 하나의 거래일 축을 공유한다 — 한 곳을 짚으면 나머지도 같은 날을 가리킨다
   const sync = useSyncedIndex()
   const pinnedDay = sync.pinnedIndex === null ? null : points[sync.pinnedIndex].label
-  const latestRatio = points[points.length - 1].foreignRatio
+  const latestRatio = [...points].reverse().find((p) => p.foreignRatio !== null)?.foreignRatio ?? null
   const nets: { title: string; key: keyof SupplyPoint }[] = [
     { title: '외국인 순매수량', key: 'foreignNet' },
     { title: '기관 순매수량', key: 'institutionNet' },
-    { title: '연기금 순매수량', key: 'pensionNet' },
+    { title: '개인 순매수량', key: 'individualNet' },
   ]
 
   return (
@@ -135,7 +135,7 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <SupplyCard title="외국인 보유율" meta={`${latestRatio.toFixed(2)}%`}>
+        <SupplyCard title="외국인 보유율" meta={latestRatio === null ? '—' : `${latestRatio.toFixed(2)}%`}>
           <ComposedChart
             data={points}
             margin={{ top: 4, right: 4, left: 0, bottom: 0 }}

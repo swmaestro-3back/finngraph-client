@@ -1,9 +1,15 @@
 import type { NewsItem } from '@/data/news'
-import type { CandleDate, CandlePeriod } from '@/data/candles'
+import type { Candle, CandleDate, CandlePeriod } from '@/data/candles'
 import { pressOf, type NewsDetail } from '@/data/newsDetail'
-import type { IssueDay, IssueNews } from '@/data/stockDetail'
+import type { IssueDay, IssueNews, SupplyPoint } from '@/data/stockDetail'
+import type { AnnualFinancials } from '@/data/types'
 import { formatRelativeTime } from '@/lib/format'
-import type { NewsRes } from '@/lib/apiTypes'
+import type {
+  AnnualFinancialsRes,
+  CandleRes,
+  InvestorFlowRes,
+  NewsRes,
+} from '@/lib/apiTypes'
 
 export function toNewsDetail(raw: NewsRes): NewsDetail {
   return {
@@ -56,4 +62,64 @@ export function buildIssueTimeline(
     neutral: buckets[i].length,
     items: buckets[i],
   }))
+}
+
+export function toCandleView(res: CandleRes, period: CandlePeriod): Candle {
+  const [y, m, d] = res.date.split('-').map(Number)
+  return {
+    open: res.open,
+    high: res.high,
+    low: res.low,
+    close: res.close,
+    volume: res.volume,
+    label: period === 'M' ? `${y}.${String(m).padStart(2, '0')}` : `${m}/${d}`,
+  }
+}
+
+export function toCandleDates(candles: CandleRes[], period: CandlePeriod): CandleDate[] {
+  return candles.map((c) => {
+    const [y, m, d] = c.date.split('-').map(Number)
+    return {
+      label: period === 'M' ? `${y}.${String(m).padStart(2, '0')}` : `${m}/${d}`,
+      date: `${y}.${String(m).padStart(2, '0')}.${String(d).padStart(2, '0')}`,
+    }
+  })
+}
+
+export function toSupplyPoint(res: InvestorFlowRes): SupplyPoint {
+  const [, m, d] = res.date.split('-').map(Number)
+  return {
+    label: `${m}/${d}`,
+    foreignRatio: res.foreignRatio,
+    foreignNet: res.foreignNet === null ? null : Math.round(res.foreignNet / 1e4),
+    institutionNet: res.institutionNet === null ? null : Math.round(res.institutionNet / 1e4),
+    individualNet: res.individualNet === null ? null : Math.round(res.individualNet / 1e4),
+  }
+}
+
+const TRILLION = 1e12
+
+function toTrillion(won: number | null): number | null {
+  return won === null ? null : Math.round((won / TRILLION) * 100) / 100
+}
+
+export function toAnnualFinancials(res: AnnualFinancialsRes): AnnualFinancials {
+  return {
+    year: res.year,
+    revenue: toTrillion(res.revenue),
+    operatingProfit: toTrillion(res.operatingProfit),
+    netIncome: toTrillion(res.netIncome),
+    operatingMargin: res.operatingMargin,
+    roe: res.roe,
+    debtRatio: res.debtRatio,
+    totalAssets: toTrillion(res.totalAssets),
+    separateAssets: toTrillion(res.separateAssets),
+    totalEquity: toTrillion(res.totalEquity),
+    totalDebt: toTrillion(res.totalDebt),
+    eps: res.eps,
+    per: res.per,
+    pbr: res.pbr,
+    dps: res.dps,
+    payoutRatio: res.payoutRatio,
+  }
 }
