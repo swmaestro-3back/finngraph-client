@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { themes } from '@/data/themes'
+import { getData } from '@/lib/api'
+import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
@@ -13,26 +14,38 @@ const MENU_ITEMS = [
   { label: '기업 그래프', to: '/graph' },
 ]
 
-/** 검색어로 테마/종목 매칭 → 이동 경로 (종목 우선 완전일치, 이후 부분일치) */
-function searchTarget(rawQuery: string): string | null {
+let searchDataCache: Promise<[ThemeRes[], StockRowRes[]]> | null = null
+
+function loadSearchData(): Promise<[ThemeRes[], StockRowRes[]]> {
+  searchDataCache ??= Promise.all([
+    getData<ThemeRes[]>('/v1/themes'),
+    getData<StockRowRes[]>('/v1/stocks'),
+  ]).catch((err: unknown) => {
+    searchDataCache = null
+    throw err
+  })
+  return searchDataCache
+}
+
+function searchTarget(
+  rawQuery: string,
+  themes: ThemeRes[],
+  stocks: StockRowRes[],
+): string | null {
   const query = rawQuery.trim().toLowerCase()
   if (!query) return null
 
-  for (const theme of themes) {
-    for (const stock of theme.stocks) {
-      if (stock.name.toLowerCase() === query || stock.code === query) {
-        return `/stock/${stock.code}`
-      }
-    }
-  }
+  const exact = stocks.find((s) => s.name.toLowerCase() === query || s.ticker === query)
+  if (exact) return `/stock/${exact.ticker}`
+
   const theme = themes.find((t) => t.name.toLowerCase().includes(query))
-  if (theme) return `/theme/${theme.id}`
-  for (const t of themes) {
-    const stock = t.stocks.find(
-      (s) => s.name.toLowerCase().includes(query) || s.code.includes(query),
-    )
-    if (stock) return `/stock/${stock.code}`
-  }
+  if (theme) return `/theme/${encodeURIComponent(theme.name)}`
+
+  const partial = stocks.find(
+    (s) => s.name.toLowerCase().includes(query) || s.ticker.includes(query),
+  )
+  if (partial) return `/stock/${partial.ticker}`
+
   return null
 }
 
@@ -51,11 +64,16 @@ export function NavBar() {
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return
-    const target = searchTarget(query)
-    if (target) {
-      navigate(target, { state: fromState(pathname) })
-      setQuery('')
-    }
+    const rawQuery = query
+    loadSearchData()
+      .then(([themes, stocks]) => {
+        const target = searchTarget(rawQuery, themes, stocks)
+        if (target) {
+          navigate(target, { state: fromState(pathname) })
+          setQuery('')
+        }
+      })
+      .catch(() => {})
   }
 
   return (
