@@ -13,10 +13,11 @@ import { NewsEntityChips } from '@/components/news/NewsEntityChips'
 import { NewsGraphSection } from '@/components/news/NewsGraphSection'
 import { RelatedStocks } from '@/components/news/RelatedStocks'
 import { NewsSection } from '@/components/theme/NewsSection'
+import { newsEntities } from '@/data/graphNews'
 import { toNewsItem } from '@/lib/apiMappers'
-import { newsEntities, pressOf } from '@/data/newsDetail'
-import { formatRelativeTime } from '@/lib/format'
+import { formatRelativeTime, pressOf } from '@/lib/format'
 import { useNewsGraph } from '@/lib/useNewsGraph'
+import { useNewsCompanies } from '@/lib/queries/useNewsCompanies'
 import { useNewsDetail } from '@/lib/queries/useNewsDetail'
 
 interface Props {
@@ -41,16 +42,14 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
   }, [currentId])
 
   const { data: news, loading, error, refetch } = useNewsDetail(currentId)
+  const { data: companies } = useNewsCompanies(currentId)
   const { data: graphData, similar } = useNewsGraph(currentId, hop)
 
   const entities = useMemo(
     () => (graphData ? newsEntities(graphData.relations) : []),
     [graphData],
   )
-  const companyNames = useMemo(
-    () => entities.filter((e) => e.type === 'company').map((e) => e.label),
-    [entities],
-  )
+  const relatedStocks = companies ?? []
   const similarItems = useMemo(() => similar.map(toNewsItem), [similar])
 
   const open = newsId !== null
@@ -154,10 +153,10 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
                 </Section>
               )}
 
-              {companyNames.length > 0 && (
+              {relatedStocks.length > 0 && (
                 <Section title="관련 종목">
                   <RelatedStocks
-                    companyNames={companyNames}
+                    stocks={relatedStocks}
                     onNavigate={() => onOpenChange(false)}
                   />
                 </Section>
