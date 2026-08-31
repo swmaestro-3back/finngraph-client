@@ -2,7 +2,8 @@
 import { ApiError, getData } from '@/lib/api'
 import { toNewsDetail } from '@/lib/apiMappers'
 import type { NewsRes } from '@/lib/apiTypes'
-import { getNews, type NewsDetail } from '@/data/newsDetail'
+import { getNews } from '@/data/graphNews'
+import type { NewsDetail } from '@/lib/apiTypes'
 import { useApi, type ApiState } from '@/lib/queries/useApi'
 
 const isApiId = (id: string) => /^\d+$/.test(id)

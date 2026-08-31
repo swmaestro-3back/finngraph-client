@@ -1,7 +1,7 @@
 import { getPage } from '@/lib/api'
 import { toNewsDetail } from '@/lib/apiMappers'
 import type { NewsRes } from '@/lib/apiTypes'
-import type { NewsDetail } from '@/data/newsDetail'
+import type { NewsDetail } from '@/lib/apiTypes'
 import { useApi, type ApiState } from '@/lib/queries/useApi'
 
 export function useThemeNews(name: string | null): ApiState<NewsDetail[]> {

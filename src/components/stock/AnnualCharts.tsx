@@ -17,7 +17,7 @@ import {
   useSyncedIndex,
   type SyncedIndex,
 } from '@/lib/chartSync'
-import type { AnnualFinancials } from '@/data/types'
+import type { AnnualFinancials } from '@/lib/apiTypes'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 
 // 차트 계열색 — index.css의 --chart-* 토큰을 그대로 소비한다 (SVG 속성에서 var() 해석됨)

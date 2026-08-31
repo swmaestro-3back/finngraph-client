@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import type { CandlePeriod } from '@/data/candles'
+import type { CandlePeriod } from '@/lib/apiTypes'
 import type { CandleRes, ThemeStockRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChange, formatChangeOrDash, formatPriceOrDash } from '@/lib/format'
 import { fromState } from '@/lib/navigation'

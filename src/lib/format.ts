@@ -7,7 +7,7 @@ export function formatChange(value: number): string {
 
 /**
  * 콤마 구분 정수 금액 — 단위 환산이 끝난 값에 사용한다.
- * (시가총액은 억, 거래대금은 백만 단위로 `@/data/stockMeta`에서 이미 환산되어 넘어온다)
+ *
  */
 export function formatAmount(value: number): string {
   return Math.round(value).toLocaleString('ko-KR')
@@ -80,4 +80,33 @@ export function formatRelativeTime(iso: string): string {
   if (minutes < 60 * 24) return `${Math.floor(minutes / 60)}시간 전`
   if (minutes < 60 * 24 * 7) return `${Math.floor(minutes / (60 * 24))}일 전`
   return `${then.getMonth() + 1}월 ${then.getDate()}일`
+}
+
+const PRESS_BY_HOST: Record<string, string> = {
+  'www.hankyung.com': '한국경제',
+  'www.mk.co.kr': '매일경제',
+  'www.yna.co.kr': '연합뉴스',
+  'news.mt.co.kr': '머니투데이',
+  'www.edaily.co.kr': '이데일리',
+  'www.sedaily.com': '서울경제',
+  'www.etnews.com': '전자신문',
+  'www.newspim.com': '뉴스핌',
+  'www.newsis.com': '뉴시스',
+  'www.asiae.co.kr': '아시아경제',
+  'www.fnnews.com': '파이낸셜뉴스',
+  'biz.heraldcorp.com': '헤럴드경제',
+  'www.thelec.kr': '디일렉',
+  'news.example.com': '데모경제',
+  'press.example.com': '샘플경제',
+  'wire.example.net': '목업뉴스',
+  'daily.example.org': '가상일보',
+}
+
+export function pressOf(url: string): string {
+  try {
+    const host = new URL(url).hostname
+    return PRESS_BY_HOST[host] ?? host
+  } catch {
+    return '출처 미상'
+  }
 }

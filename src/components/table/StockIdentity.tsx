@@ -1,4 +1,4 @@
-import type { Market } from '@/data/stockMeta'
+import type { Market } from '@/lib/apiTypes'
 import { cn } from '@/lib/utils'
 
 interface StockIdentityProps {

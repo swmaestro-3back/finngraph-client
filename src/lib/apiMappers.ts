@@ -1,23 +1,46 @@
-import type { NewsItem } from '@/data/news'
-import type { Candle, CandleDate, CandlePeriod } from '@/data/candles'
-import { pressOf, type NewsDetail } from '@/data/newsDetail'
-import type { IssueDay, IssueNews, SupplyPoint } from '@/data/stockDetail'
-import type { AnnualFinancials } from '@/data/types'
-import { formatRelativeTime } from '@/lib/format'
-import type {
-  AnnualFinancialsRes,
-  CandleRes,
-  InvestorFlowRes,
-  NewsRes,
+import { formatRelativeTime, pressOf } from '@/lib/format'
+import {
+  CANDLE_COUNTS,
+  type AnnualFinancials,
+  type AnnualFinancialsRes,
+  type Candle,
+  type CandleDate,
+  type CandlePeriod,
+  type CandleRes,
+  type InvestorFlowRes,
+  type IssueDay,
+  type IssueNews,
+  type NewsDetail,
+  type NewsItem,
+  type NewsRes,
+  type SupplyPoint,
 } from '@/lib/apiTypes'
+
+function calendarDate(index: number, count: number, period: CandlePeriod): CandleDate {
+  const base = new Date(2026, 6, 31)
+  const stepDays = period === 'D' ? 1 : period === 'W' ? 7 : 30
+  const d = new Date(base)
+  d.setDate(base.getDate() - (count - 1 - index) * stepDays)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  return {
+    label: period === 'M' ? `${y}.${m}` : `${d.getMonth() + 1}/${d.getDate()}`,
+    date: `${y}.${m}.${String(d.getDate()).padStart(2, '0')}`,
+  }
+}
+
+export function candleDates(period: CandlePeriod): CandleDate[] {
+  const count = CANDLE_COUNTS[period]
+  return Array.from({ length: count }, (_, i) => calendarDate(i, count, period))
+}
 
 export function toNewsDetail(raw: NewsRes): NewsDetail {
   return {
     id: String(raw.id),
     title: raw.title ?? '(제목 없음)',
     summary: raw.summary ?? '',
-    url: raw.link ?? '',
-    collectedAt: raw.publishedAt ?? '',
+    url: raw.url ?? '',
+    collectedAt: raw.publishedAt ?? raw.collectedAt ?? '',
   }
 }
 

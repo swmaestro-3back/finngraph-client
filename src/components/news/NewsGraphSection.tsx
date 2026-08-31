@@ -15,7 +15,7 @@ import {
   type GraphLink,
   type GraphNode,
 } from '@/data/graphTypes'
-import type { NewsRelation } from '@/data/newsDetail'
+import type { NewsRelation } from '@/data/graphNews'
 import { useIsMobile } from '@/hooks/use-mobile'
 
 // 모달에서는 필터 UI가 없어 항상 전체를 보여준다 (GraphCanvas가 참조 동일성으로 재렌더를 판단한다)

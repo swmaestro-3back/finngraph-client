@@ -1,6 +1,6 @@
 import { memo, useMemo, useRef, useState } from 'react'
 import { AxisRules, DateTicks } from '@/components/chart/AxisMarks'
-import type { Candle } from '@/data/candles'
+import type { Candle } from '@/lib/apiTypes'
 import {
   AXIS_GUTTER,
   DOWN,

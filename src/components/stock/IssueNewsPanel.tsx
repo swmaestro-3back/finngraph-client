@@ -1,5 +1,5 @@
 import { memo, useMemo, type ReactNode } from 'react'
-import type { IssueDay, IssueKind, IssueNews } from '@/data/stockDetail'
+import type { IssueDay, IssueKind, IssueNews } from '@/lib/apiTypes'
 import { cn } from '@/lib/utils'
 
 
