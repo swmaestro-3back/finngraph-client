@@ -1,0 +1,14 @@
+services:
+  client:
+    build:
+      context: .
+    container_name: finngraph-client
+    ports:
+      - "5173:80"
+    networks:
+      - etl
+
+networks:
+  etl:
+    external: true
+    name: finngraph-etl_default
