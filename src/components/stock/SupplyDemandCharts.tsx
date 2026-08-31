@@ -9,7 +9,7 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts'
-import type { SupplyPoint } from '@/data/stockDetail'
+import type { SupplyPoint } from '@/lib/apiTypes'
 import { DOWN, UP } from '@/lib/chartAxis'
 import { syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/lib/chartSync'
 import { cn } from '@/lib/utils'

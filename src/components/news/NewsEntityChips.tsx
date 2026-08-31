@@ -1,4 +1,4 @@
-import type { NewsEntity } from '@/data/newsDetail'
+import type { NewsEntity } from '@/data/graphNews'
 import { EntityChip } from '@/components/graph/DetailParts'
 
 interface Props {

@@ -1,7 +1,6 @@
 
 import raw from '@/data/samsung-graph.json'
 import { MOCK_GRAPH, NEWS_LINKS } from '@/data/graph'
-import { ALL_THEME_NEWS } from '@/data/themeNews'
 import {
   endId,
   type EntityType,
@@ -9,15 +8,8 @@ import {
   type GraphLink,
   type GraphNode,
 } from '@/data/graphTypes'
+import type { NewsDetail } from '@/lib/apiTypes'
 import { expandGraph } from '@/lib/graphTraversal'
-
-export interface NewsDetail {
-  id: string
-  title: string
-  summary: string
-  url: string
-  collectedAt: string
-}
 
 export interface NewsRelation {
   link: GraphLink
@@ -50,7 +42,6 @@ const NEWS: NewsDetail[] = ((raw as { news?: RawNews[] }).news ?? []).map((n) =>
 }))
 
 const newsById = new Map(NEWS.map((n) => [n.id, n]))
-ALL_THEME_NEWS.forEach((n) => newsById.set(n.id, n))
 const nodeById = new Map(MOCK_GRAPH.nodes.map((n) => [n.id, n]))
 
 const relationsByNews = new Map<string, NewsRelation[]>()
@@ -75,35 +66,6 @@ function seedIds(newsId: string): Set<string> {
     ids.add(target.id)
   })
   return ids
-}
-
-const PRESS_BY_HOST: Record<string, string> = {
-  'www.hankyung.com': '한국경제',
-  'www.mk.co.kr': '매일경제',
-  'www.yna.co.kr': '연합뉴스',
-  'news.mt.co.kr': '머니투데이',
-  'www.edaily.co.kr': '이데일리',
-  'www.sedaily.com': '서울경제',
-  'www.etnews.com': '전자신문',
-  'www.newspim.com': '뉴스핌',
-  'www.newsis.com': '뉴시스',
-  'www.asiae.co.kr': '아시아경제',
-  'www.fnnews.com': '파이낸셜뉴스',
-  'biz.heraldcorp.com': '헤럴드경제',
-  'www.thelec.kr': '디일렉',
-  'news.example.com': '데모경제',
-  'press.example.com': '샘플경제',
-  'wire.example.net': '목업뉴스',
-  'daily.example.org': '가상일보',
-}
-
-export function pressOf(url: string): string {
-  try {
-    const host = new URL(url).hostname
-    return PRESS_BY_HOST[host] ?? host
-  } catch {
-    return '출처 미상'
-  }
 }
 
 export function listNews(): NewsDetail[] {

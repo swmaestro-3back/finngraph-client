@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Hop } from '@/components/graph/HopSelector'
-import { getNewsGraph, getSimilarNews, type NewsGraph, type NewsDetail } from '@/data/newsDetail'
+import { getNewsGraph, getSimilarNews, type NewsGraph } from '@/data/graphNews'
+import type { NewsDetail } from '@/lib/apiTypes'
 
 /**
  * 뉴스 상세 모달의 데이터 진입점 — 지금은 로컬 목업을 동기로 읽는다.

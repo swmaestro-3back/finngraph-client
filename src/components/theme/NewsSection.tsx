@@ -1,4 +1,4 @@
-import type { NewsItem } from '@/data/news'
+import type { NewsItem } from '@/lib/apiTypes'
 import { cn } from '@/lib/utils'
 
 interface NewsSectionProps {

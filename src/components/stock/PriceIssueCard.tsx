@@ -3,9 +3,7 @@ import { CandleChart } from '@/components/chart/CandleChart'
 import { ChartCard } from '@/components/chart/ChartCard'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { IssueLane } from '@/components/stock/IssueLane'
-import type { Candle, CandlePeriod } from '@/data/candles'
-import type { IssueDay } from '@/data/stockDetail'
-
+import type { Candle, CandlePeriod, IssueDay } from '@/lib/apiTypes'
 
 const PERIODS: { key: CandlePeriod; label: string; chartLabel: string }[] = [
   { key: 'D', label: '1일', chartLabel: '일봉' },

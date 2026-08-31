@@ -1,7 +1,7 @@
 import { memo, useMemo, useState } from 'react'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
-import type { AnnualFinancials } from '@/data/types'
+import type { AnnualFinancials } from '@/lib/apiTypes'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 import { computeTrendTones, MIN_TREND_RUN } from '@/lib/trend'
 import type { MetricDirection, TrendTone } from '@/lib/trend'

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { PREDICATE_LABELS } from '@/data/graphTypes'
-import type { NewsRelation } from '@/data/newsDetail'
+import type { NewsRelation } from '@/data/graphNews'
 import { EntityChip } from '@/components/graph/DetailParts'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'

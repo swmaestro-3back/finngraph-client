@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AxisRules, DateTicks } from '@/components/chart/AxisMarks'
-import type { IssueDay } from '@/data/stockDetail'
+import type { IssueDay } from '@/lib/apiTypes'
 import {
   AXIS_GUTTER,
   BAR_FILL,

@@ -8,9 +8,8 @@ import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { Button } from '@/components/ui/button'
-import { CANDLE_COUNTS, type CandlePeriod } from '@/data/candles'
-import { generateIssueTimeline } from '@/data/stockDetail'
-import { toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
+import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
+import { CANDLE_COUNTS, type CandlePeriod } from '@/lib/apiTypes'
 import {
   changeColorClass,
   formatAmountOrDash,
@@ -24,6 +23,7 @@ import { useCandles } from '@/lib/queries/useCandles'
 import { useFinancials } from '@/lib/queries/useFinancials'
 import { useInvestorFlows } from '@/lib/queries/useInvestorFlows'
 import { useStockDetail } from '@/lib/queries/useStockDetail'
+import { useStockNews } from '@/lib/queries/useStockNews'
 import { cn } from '@/lib/utils'
 
 interface StatTile {
@@ -45,6 +45,7 @@ export default function StockDetailPage() {
   const { data: candleRes } = useCandles(code, period)
   const { data: flowRes } = useInvestorFlows(code)
   const { data: financialRows } = useFinancials(code)
+  const { data: newsRows } = useStockNews(code)
 
   const candles = useMemo(
     () => (candleRes ?? []).map((c) => toCandleView(c, period)),
@@ -53,9 +54,9 @@ export default function StockDetailPage() {
   const issues = useMemo(
     () =>
       candleRes && candleRes.length > 0
-        ? generateIssueTimeline(code, toCandleDates(candleRes, period))
+        ? buildIssueTimeline(newsRows ?? [], toCandleDates(candleRes, period), period)
         : [],
-    [code, candleRes, period],
+    [candleRes, newsRows, period],
   )
   const supply = useMemo(() => (flowRes ?? []).map(toSupplyPoint), [flowRes])
 
