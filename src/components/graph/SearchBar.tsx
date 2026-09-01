@@ -1,19 +1,19 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Search } from 'lucide-react'
-import { NODE_COLORS, ENTITY_LABELS, type GraphNode } from '@/data/graphTypes'
+import { NODE_COLORS } from '@/data/graphTypes'
+import type { StockRowRes } from '@/lib/apiTypes'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 interface Props {
-  onSelectResult: (nodeId: string) => void
-  nodes: GraphNode[]
+  stocks: StockRowRes[]
+  onSelectTicker: (ticker: string) => void
 }
 
 const MAX_RESULTS = 8
 const LISTBOX_ID = 'graph-search-results'
 
-/** 엔티티(기업·제품·원자재·국가)를 라벨/별칭으로 검색 */
-export function SearchBar({ onSelectResult, nodes }: Props) {
+export function SearchBar({ stocks, onSelectTicker }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -22,26 +22,22 @@ export function SearchBar({ onSelectResult, nodes }: Props) {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return []
-    return nodes
-      .filter((n) => {
-        if (n.label.toLowerCase().includes(q)) return true
-        const aliases = n.data.aliases ?? []
-        return aliases.some((a) => a.toLowerCase().includes(q))
-      })
+    return stocks
+      .filter((s) => s.name.toLowerCase().includes(q) || s.ticker.includes(q))
       .slice(0, MAX_RESULTS)
-  }, [query, nodes])
+  }, [query, stocks])
 
   const showList = open && results.length > 0
 
   const select = useCallback(
-    (id: string) => {
-      onSelectResult(id)
+    (ticker: string) => {
+      onSelectTicker(ticker)
       setOpen(false)
       setQuery('')
       setActiveIndex(0)
       inputRef.current?.blur()
     },
-    [onSelectResult],
+    [onSelectTicker],
   )
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -60,7 +56,7 @@ export function SearchBar({ onSelectResult, nodes }: Props) {
     if (e.key === 'Enter') {
       e.preventDefault()
       const target = results[activeIndex]
-      if (target) select(target.id)
+      if (target) select(target.ticker)
     }
   }
 
@@ -81,7 +77,7 @@ export function SearchBar({ onSelectResult, nodes }: Props) {
         onFocus={() => setOpen(query.trim().length > 0)}
         onBlur={() => setOpen(false)}
         onKeyDown={handleKeyDown}
-        placeholder="기업 · 제품 · 원자재 검색"
+        placeholder="종목 검색 (이름 · 코드)"
         className="h-10 rounded-xl pl-11 text-sm"
         role="combobox"
         aria-expanded={showList}
@@ -96,16 +92,16 @@ export function SearchBar({ onSelectResult, nodes }: Props) {
           role="listbox"
           className="absolute top-[calc(100%+4px)] right-0 left-0 z-100 max-h-80 overflow-y-auto rounded-xl border border-border bg-background shadow-soft"
         >
-          {results.map((n, i) => (
+          {results.map((s, i) => (
             <div
-              key={n.id}
+              key={s.ticker}
               id={`${LISTBOX_ID}-${i}`}
               role="option"
               aria-selected={i === activeIndex}
               // mousedown 시 input blur를 막아야 click이 살아남는다
               onMouseDown={(e) => e.preventDefault()}
               onMouseEnter={() => setActiveIndex(i)}
-              onClick={() => select(n.id)}
+              onClick={() => select(s.ticker)}
               className={cn(
                 'flex cursor-pointer items-center gap-2 px-3.5 py-2.5 not-last:border-b not-last:border-surface-inset',
                 i === activeIndex && 'bg-surface-inset',
@@ -113,11 +109,11 @@ export function SearchBar({ onSelectResult, nodes }: Props) {
             >
               <span
                 className="size-2.5 shrink-0 rounded-full"
-                style={{ background: NODE_COLORS[n.type] }}
+                style={{ background: NODE_COLORS.company }}
               />
-              <span className="text-body font-semibold text-foreground">{n.label}</span>
-              <span className="ml-auto text-caption text-muted-foreground">
-                {ENTITY_LABELS[n.type]}
+              <span className="text-body font-semibold text-foreground">{s.name}</span>
+              <span className="ml-auto font-mono text-caption text-muted-foreground">
+                {s.ticker}
               </span>
             </div>
           ))}

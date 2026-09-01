@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
-import { useGraphData } from '@/lib/useGraphData'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { CircleAlert, RotateCw } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { GraphCanvas, type GraphCanvasRef, type GraphHighlight } from '@/components/graph/GraphCanvas'
 import { SearchBar } from '@/components/graph/SearchBar'
 import { FilterPanel } from '@/components/graph/FilterPanel'
@@ -7,6 +8,7 @@ import { DetailPanel } from '@/components/graph/DetailPanel'
 import { Legend } from '@/components/graph/Legend'
 import { Toolbar } from '@/components/graph/Toolbar'
 import { HopSelector, type Hop } from '@/components/graph/HopSelector'
+import { Button } from '@/components/ui/button'
 import {
   SidebarProvider,
   Sidebar,
@@ -26,11 +28,20 @@ import {
   type GraphSelection,
   type Predicate,
 } from '@/data/graphTypes'
+import { useKgGraph } from '@/lib/queries/useKgGraph'
+import { useStocks } from '@/lib/queries/useStocks'
 import { useIsMobile } from '@/hooks/use-mobile'
 
+interface Props {
+  ticker: string
+}
+
 /** 기업 지식그래프 통합 뷰 — 검색/필터 사이드바 + 그래프 캔버스 + 상세 패널 */
-export function GraphView() {
-  const { data, loading, error } = useGraphData()
+export function GraphView({ ticker }: Props) {
+  const [hop, setHop] = useState<Hop>(1)
+  const { data, loading, error, refetch } = useKgGraph(ticker, hop)
+  const { data: stocks } = useStocks()
+  const navigate = useNavigate()
   const isMobile = useIsMobile()
   const graphRef = useRef<GraphCanvasRef>(null)
 
@@ -40,8 +51,10 @@ export function GraphView() {
   const [selectedPredicates, setSelectedPredicates] = useState<Set<Predicate>>(
     new Set(ALL_PREDICATES),
   )
-  /** 노드 선택 시 몇 홉까지 펼쳐 볼지 — 선택을 바꿔도 사용자가 고른 깊이는 유지한다 */
-  const [hop, setHop] = useState<Hop>(1)
+
+  useEffect(() => {
+    setSelection(null)
+  }, [ticker])
 
   const nodeById = useMemo(() => {
     const map = new Map<string, GraphNode>()
@@ -69,14 +82,6 @@ export function GraphView() {
   )
 
   const clearSelection = useCallback(() => setSelection(null), [])
-
-  const handleSearchSelect = useCallback(
-    (nodeId: string) => {
-      const node = nodeById.get(nodeId)
-      if (node) selectNode(node)
-    },
-    [nodeById, selectNode],
-  )
 
   // 필터 카운트
   const typeCounts = useMemo(() => {
@@ -117,12 +122,48 @@ export function GraphView() {
     setHop(1)
   }
 
-  if (loading) {
-    return <CenteredMessage>데이터를 불러오는 중...</CenteredMessage>
+  if (loading && !data) {
+    return (
+      <div className="flex h-full items-center justify-center bg-background">
+        <div className="w-72 space-y-3">
+          <div className="h-5 animate-pulse rounded bg-muted" />
+          <div className="h-40 animate-pulse rounded-xl bg-muted" />
+          <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
+        </div>
+      </div>
+    )
   }
+
   if (error) {
-    return <CenteredMessage tone="error">{error}</CenteredMessage>
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background text-center">
+        <CircleAlert className="size-8 text-muted-foreground" />
+        <h1 className="text-lg font-medium text-foreground">
+          {error.isNotFound ? '존재하지 않는 종목입니다' : '일시적인 오류'}
+        </h1>
+        <p className="text-body text-muted-foreground">
+          {error.isNotFound
+            ? `"${ticker}" 종목의 그래프를 찾을 수 없습니다.`
+            : error.isRetryable
+              ? '일시적으로 그래프를 불러올 수 없습니다.'
+              : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
+        </p>
+        {error.isNotFound ? (
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/stocks">종목 목록으로</Link>
+          </Button>
+        ) : (
+          error.isRetryable && (
+            <Button variant="outline" size="sm" onClick={refetch}>
+              <RotateCw data-icon="inline-start" />
+              다시 시도
+            </Button>
+          )
+        )}
+      </div>
+    )
   }
+
   if (!data) return null
 
   return (
@@ -137,7 +178,10 @@ export function GraphView() {
         className="absolute h-full"
       >
         <SidebarHeader className="p-4 pb-3">
-          <SearchBar onSelectResult={handleSearchSelect} nodes={data.nodes} />
+          <SearchBar
+            stocks={stocks ?? []}
+            onSelectTicker={(next) => navigate(`/graph/${next}`)}
+          />
         </SidebarHeader>
         <SidebarContent className="px-3 pb-4">
           <FilterPanel
@@ -174,20 +218,27 @@ export function GraphView() {
               className="absolute top-3 left-3 z-20 size-9 rounded-lg border border-border bg-background/90 text-foreground shadow-sm backdrop-blur hover:bg-accent"
               aria-label="사이드바 열기/닫기"
             />
-            <GraphCanvas
-              ref={graphRef}
-              data={data}
-              onNodeClick={selectNode}
-              onLinkClick={selectLink}
-              onBackgroundClick={clearSelection}
-              highlight={highlight}
-              selectedTypes={selectedTypes}
-              selectedPredicates={selectedPredicates}
-            />
-            <Legend visibleTypes={selectedTypes} />
-            {selection?.kind === 'node' && (
-              <HopSelector value={hop} onChange={setHop} isMobile={isMobile} />
+            {data.links.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                <p className="text-body font-medium text-foreground">연결된 관계가 없습니다</p>
+                <p className="text-caption text-muted-foreground">
+                  다른 종목을 검색하거나 홉을 넓혀 보세요.
+                </p>
+              </div>
+            ) : (
+              <GraphCanvas
+                ref={graphRef}
+                data={data}
+                onNodeClick={selectNode}
+                onLinkClick={selectLink}
+                onBackgroundClick={clearSelection}
+                highlight={highlight}
+                selectedTypes={selectedTypes}
+                selectedPredicates={selectedPredicates}
+              />
             )}
+            <Legend visibleTypes={selectedTypes} />
+            <HopSelector value={hop} onChange={setHop} isMobile={isMobile} />
             <Toolbar
               onZoomIn={() => graphRef.current?.zoomIn()}
               onZoomOut={() => graphRef.current?.zoomOut()}
@@ -216,21 +267,5 @@ export function GraphView() {
         />
       )}
     </SidebarProvider>
-  )
-}
-
-function CenteredMessage({
-  children,
-  tone = 'muted',
-}: {
-  children: React.ReactNode
-  tone?: 'muted' | 'error'
-}) {
-  return (
-    <div className="flex h-full items-center justify-center bg-background">
-      <div className={tone === 'error' ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}>
-        {children}
-      </div>
-    </div>
   )
 }

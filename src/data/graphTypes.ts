@@ -2,7 +2,7 @@
 // 엔티티(기업/국가/제품/원자재)와 트리플 관계(11개 서술어)를 표현한다.
 
 /** 엔티티(노드) 종류 */
-export type EntityType = "company" | "country" | "product" | "commodity";
+export type EntityType = "company" | "country" | "product" | "commodity" | "theme";
 
 /** 원본 데이터의 라벨(대문자) → 내부 EntityType 매핑 */
 export const LABEL_TO_TYPE: Record<string, EntityType> = {
@@ -24,7 +24,12 @@ export type Predicate =
   | "PRODUCES"
   | "COMPETES_WITH"
   | "DEVELOPS"
-  | "SANCTIONS";
+  | "SANCTIONS"
+  | "SUPPLIES"
+  | "SUPPLIED_TO"
+  | "EXPORTS"
+  | "EXPORTED_TO"
+  | "BELONGS_TO";
 
 export interface GraphNode {
   id: string;
@@ -65,10 +70,10 @@ export interface GraphLink {
   /** 뉴스 원문 링크 — 백엔드가 주면 상세 패널에 '원문 보기' 버튼이 뜬다 */
   news_url?: string;
   /** 근거 문장 */
-  source_sentence: string;
-  timestamp: string;
-  is_negated: boolean;
-  tense: "past_or_present_fact" | "future_or_planned";
+  source_sentence?: string;
+  timestamp?: string;
+  is_negated?: boolean;
+  tense?: "past_or_present_fact" | "future_or_planned";
   /** 시뮬레이션 힘 계산용 가중치 (mentioned_count 기반) */
   value: number;
 }
@@ -121,6 +126,7 @@ export const NODE_COLORS: Record<EntityType, string> = {
   commodity: "#f4b000", // 액센트 옐로 — 원자재
   /** --chart-3 */
   country: "#874ef5", // 바이올렛 — 국가
+  theme: "#f6657a",
 };
 
 /**
@@ -132,6 +138,7 @@ export const NODE_TEXT_COLORS: Record<EntityType, string> = {
   product: "#ffffff",
   commodity: "#0a0b0d",
   country: "#ffffff",
+  theme: "#ffffff",
 };
 
 /** 엔티티 종류 한글 라벨 */
@@ -140,6 +147,7 @@ export const ENTITY_LABELS: Record<EntityType, string> = {
   country: "국가",
   product: "제품",
   commodity: "원자재",
+  theme: "테마",
 };
 
 /** 서술어 한글 라벨 */
@@ -155,6 +163,11 @@ export const PREDICATE_LABELS: Record<Predicate, string> = {
   COMPETES_WITH: "경쟁",
   DEVELOPS: "개발",
   SANCTIONS: "제재",
+  SUPPLIES: "공급(품목)",
+  SUPPLIED_TO: "납품처",
+  EXPORTS: "수출(품목)",
+  EXPORTED_TO: "수출처",
+  BELONGS_TO: "테마 소속",
 };
 
 export const ALL_ENTITY_TYPES: EntityType[] = [
@@ -162,6 +175,7 @@ export const ALL_ENTITY_TYPES: EntityType[] = [
   "product",
   "commodity",
   "country",
+  "theme",
 ];
 
 export const ALL_PREDICATES: Predicate[] = [
@@ -176,4 +190,9 @@ export const ALL_PREDICATES: Predicate[] = [
   "EXPORTS_TO",
   "LOCATED_IN",
   "SANCTIONS",
+  "SUPPLIES",
+  "SUPPLIED_TO",
+  "EXPORTS",
+  "EXPORTED_TO",
+  "BELONGS_TO",
 ];

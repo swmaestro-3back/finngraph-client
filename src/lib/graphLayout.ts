@@ -85,7 +85,7 @@ export function buildAdjacency(links: GraphLink[]): Map<string, Set<string>> {
   return adjacency
 }
 
-const SECTOR_ORDER: EntityType[] = ['company', 'product', 'commodity', 'country']
+const SECTOR_ORDER: EntityType[] = ['company', 'product', 'theme', 'commodity', 'country']
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
 
 /**
@@ -106,8 +106,10 @@ export function seedPositions(nodes: GraphNode[], width: number, height: number)
   })
 
   const seatsPerType = new Map<EntityType, number>()
+  const fallbackCenter = { x: width / 2, y: height / 2 }
   nodes.forEach((n) => {
-    const center = sectorCenter.get(n.type)!
+    // 섹터에 없는 타입이 새로 생겨도 캔버스가 죽지 않도록 중앙으로 보낸다
+    const center = sectorCenter.get(n.type) ?? fallbackCenter
     const seat = seatsPerType.get(n.type) ?? 0
     seatsPerType.set(n.type, seat + 1)
     const r = 30 * Math.sqrt(seat + 0.5)

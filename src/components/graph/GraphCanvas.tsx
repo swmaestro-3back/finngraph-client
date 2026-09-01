@@ -199,6 +199,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     // 간선의 색은 출발(부모) 엔티티를 따른다 — 어느 엔티티에서 뻗어 나온 관계인지 색으로 읽힌다
     const typeOf = new Map(nodes.map((n) => [n.id, n.type]))
+    const labelOf = new Map(nodes.map((n) => [n.id, n.label]))
     const sourceType = (l: GraphLink) => typeOf.get(endId(l.source))
     const linkColor = (l: GraphLink) => {
       const type = sourceType(l)
@@ -435,8 +436,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         showTooltip(
           tooltip,
           event,
-          `${endId(d.source).replace(/^n:/, '')} → ${endId(d.target).replace(/^n:/, '')}`,
-          d.type + (d.item ? ` · ${d.item.text}` : ''),
+          `${labelOf.get(endId(d.source)) ?? ''} → ${labelOf.get(endId(d.target)) ?? ''}`,
+          (PREDICATE_LABELS[d.type] ?? d.type) + (d.item ? ` · ${d.item.text}` : ''),
           linkColor(d),
         )
       })

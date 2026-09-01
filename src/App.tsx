@@ -22,7 +22,7 @@ function App() {
         <Route path="/theme/:themeId" element={<ThemeDetailPage />} />
         <Route path="/stocks" element={<StockListPage />} />
         <Route path="/stock/:stockCode" element={<StockDetailPage />} />
-        <Route path="/graph" element={<CorpGraphPage />} />
+        <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

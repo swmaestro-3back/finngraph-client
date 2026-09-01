@@ -170,6 +170,9 @@ export default function StockDetailPage() {
             >
               {formatChangeOrDash(stock.change)}
             </span>
+            <Button variant="outline" size="sm" className="ml-auto" asChild>
+              <Link to={`/graph/${stock.ticker}`}>지식그래프에서 보기</Link>
+            </Button>
           </div>
 
           <div className="mb-4 grid grid-cols-2 gap-[9px] md:grid-cols-4">
