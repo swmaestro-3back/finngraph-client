@@ -76,11 +76,16 @@ data.entities.forEach((e) => {
   node.data.aliases = e.aliases
 })
 
+const KNOWN_PREDICATES = new Set<string>(ALL_PREDICATES)
+
 /**
  * 관계 하나 = 링크 하나. 같은 트리플이 여러 기사에 나오면 링크도 그만큼 생긴다.
  * 기사별 근거 문장·언급 횟수가 살아 있어야 뉴스 서브그래프를 그릴 수 있다.
+ * 시드 JSON에는 지금 그래프가 쓰지 않는 서술어(PRODUCES 등)가 섞여 있어 라벨이 없는 것은 걸러낸다.
  */
-export const NEWS_LINKS: GraphLink[] = data.relations.map((r, i) => {
+export const NEWS_LINKS: GraphLink[] = data.relations
+  .filter((r) => KNOWN_PREDICATES.has(r.predicate))
+  .map((r, i) => {
   ensureNode(r.subject.text, r.subject.label)
   ensureNode(r.object.text, r.object.label)
 

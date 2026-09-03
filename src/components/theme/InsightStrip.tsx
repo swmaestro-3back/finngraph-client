@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { MOCK_GRAPH } from '@/data/graph'
 import {
-  ENTITY_LABELS,
-  NODE_COLORS,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
   PREDICATE_LABELS,
   type EntityType,
 } from '@/data/graphTypes'
@@ -44,12 +44,14 @@ function MomentumBadgeChip({ badge }: { badge: MomentumBadge }) {
   )
 }
 
+/** 시드 근거 데이터에는 시장 정보가 없어 기업은 KOSPI 색으로 통일한다 */
 function EntityDot({ type }: { type: EntityType }) {
+  const category = type === 'theme' ? 'theme' : 'kospi'
   return (
     <span
-      aria-label={ENTITY_LABELS[type]}
+      aria-label={CATEGORY_LABELS[category]}
       className="inline-block size-2 shrink-0 rounded-full"
-      style={{ backgroundColor: NODE_COLORS[type] }}
+      style={{ backgroundColor: CATEGORY_COLORS[category] }}
     />
   )
 }

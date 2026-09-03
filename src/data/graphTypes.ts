@@ -1,35 +1,23 @@
-// 기업 지식그래프 도메인 타입
-// 엔티티(기업/국가/제품/원자재)와 트리플 관계(11개 서술어)를 표현한다.
+// 지식그래프 도메인 타입
+// kg-api가 주는 그래프는 기업(Company)·테마(Theme) 두 노드와
+// 공급(SUPPLIES_TO)·테마 소속(BELONGS_TO) 두 관계로만 이루어진다.
 
 /** 엔티티(노드) 종류 */
-export type EntityType = "company" | "country" | "product" | "commodity" | "theme";
+export type EntityType = "company" | "theme";
 
-/** 원본 데이터의 라벨(대문자) → 내부 EntityType 매핑 */
+/** 원본 데이터의 라벨(대문자) → 내부 EntityType 매핑 (데모 시드 데이터용) */
 export const LABEL_TO_TYPE: Record<string, EntityType> = {
   COMPANY: "company",
-  COUNTRY: "country",
-  PRODUCT: "product",
-  COMMODITY: "commodity",
+  THEME: "theme",
 };
 
 /** 관계(간선) 서술어 */
-export type Predicate =
-  | "DIVESTS_FROM"
-  | "INVESTS_IN"
-  | "PARTNERS_WITH"
-  | "ACQUIRES"
-  | "SUPPLIES_TO"
-  | "EXPORTS_TO"
-  | "LOCATED_IN"
-  | "PRODUCES"
-  | "COMPETES_WITH"
-  | "DEVELOPS"
-  | "SANCTIONS"
-  | "SUPPLIES"
-  | "SUPPLIED_TO"
-  | "EXPORTS"
-  | "EXPORTED_TO"
-  | "BELONGS_TO";
+export type Predicate = "SUPPLIES_TO" | "BELONGS_TO";
+
+/** 그래프의 원점 — 기업은 티커로 공급망을, 테마는 이름으로 소속 기업을 조회한다 */
+export type GraphFocus =
+  | { kind: "company"; ticker: string }
+  | { kind: "theme"; name: string };
 
 export interface GraphNode {
   id: string;
@@ -38,6 +26,13 @@ export interface GraphNode {
   data: {
     description?: string;
     aliases?: string[];
+    /** 기업 노드 — 종목 코드와 상장 시장(KOSPI/KOSDAQ) */
+    ticker?: string;
+    market?: string;
+    /** 기업 노드 — 지수 편입 여부 */
+    krx100?: boolean;
+    krx300?: boolean;
+    kosdaq150?: boolean;
     [k: string]: unknown;
   };
   // D3 simulation properties
@@ -53,6 +48,21 @@ export interface GraphNode {
 export interface EdgeItem {
   text: string;
   type: EntityType;
+}
+
+/** 관계의 근거 뉴스 한 건 */
+export interface NewsMention {
+  news_id: string;
+  /** 뉴스에서 추출된 품목/근거 문구 */
+  item: string | null;
+}
+
+/** 관계의 근거 공시 한 건 */
+export interface DisclosureMention {
+  /** DART 접수번호 */
+  rcept_no: string;
+  /** 공시 항목명 */
+  item: string | null;
 }
 
 export interface GraphLink {
@@ -74,6 +84,16 @@ export interface GraphLink {
   timestamp?: string;
   is_negated?: boolean;
   tense?: "past_or_present_fact" | "future_or_planned";
+  /** 근거 뉴스 건수·목록 — kg-api 공급망 관계(SUPPLIES_TO)에만 있다 */
+  news_mention_count?: number;
+  news?: NewsMention[];
+  /** 근거 공시 건수·목록 — 공급망 관계에만 있다 */
+  disclosure_count?: number;
+  disclosures?: DisclosureMention[];
+  first_mentioned_at?: string | null;
+  last_mentioned_at?: string | null;
+  /** 테마로 분류된 근거 — 테마 소속 관계(BELONGS_TO)에만 있다 */
+  reason?: string | null;
   /** 시뮬레이션 힘 계산용 가중치 (mentioned_count 기반) */
   value: number;
 }
@@ -103,7 +123,9 @@ export interface GraphData {
   nodes: GraphNode[];
   links: GraphLink[];
   metadata: {
+    /** 중심 노드의 라벨(표시용)과 id(캔버스 강조·재중심 판정용) */
     center?: string;
+    centerId?: string;
     entity_types: EntityType[];
     predicate_types: Predicate[];
     stats: {
@@ -114,85 +136,56 @@ export interface GraphData {
 }
 
 /**
- * 엔티티 종류별 색 (데이터 인코딩). 브랜드 블루를 중심 엔티티(기업)에 앵커링.
+ * 노드의 시각 분류 — 색·범례·종류 필터의 단위.
+ * 기업은 상장 시장으로 갈리고 테마는 그대로다. 종류(EntityType)는 도메인 의미를,
+ * 분류(NodeCategory)는 화면에서 어떻게 보이는지를 맡는다.
+ */
+export type NodeCategory = "kospi" | "kosdaq" | "theme";
+
+/** 시장 문자열 → 기업 분류. 시장 정보가 없으면 KOSPI 색으로 그린다 */
+export function marketCategory(market: string | null | undefined): NodeCategory {
+  return market === "KOSDAQ" ? "kosdaq" : "kospi";
+}
+
+export function nodeCategory(node: Pick<GraphNode, "type" | "data">): NodeCategory {
+  return node.type === "theme" ? "theme" : marketCategory(node.data.market);
+}
+
+/**
+ * 분류별 색 (데이터 인코딩). 브랜드 블루를 KOSPI 기업에 앵커링하고 KOSDAQ은 틸로 갈라 놓는다.
  * 캔버스 렌더라 var() 대신 리터럴 — 값은 index.css 토큰과 1:1로 동기화한다 (graphTheme.ts와 같은 계약).
  */
-export const NODE_COLORS: Record<EntityType, string> = {
+export const CATEGORY_COLORS: Record<NodeCategory, string> = {
   /** --primary */
-  company: "#0052ff", // 브랜드 블루 — 기업
+  kospi: "#0052ff",
   /** --chart-1 */
-  product: "#1f897d", // 틸 — 제품
-  /** --chart-5 */
-  commodity: "#f4b000", // 액센트 옐로 — 원자재
-  /** --chart-3 */
-  country: "#874ef5", // 바이올렛 — 국가
+  kosdaq: "#1f897d",
+  /** --chart-4 */
   theme: "#f6657a",
 };
 
-/**
- * 노드 안에 얹는 라벨 색 — 채움색 위에서 읽히도록 대비를 맞춘다.
- * 옐로(원자재) 위 흰 글자는 대비가 2:1 수준이라 어두운 글자를 쓴다.
- */
-export const NODE_TEXT_COLORS: Record<EntityType, string> = {
-  company: "#ffffff",
-  product: "#ffffff",
-  commodity: "#0a0b0d",
-  country: "#ffffff",
-  theme: "#ffffff",
-};
+/** 노드 안에 얹는 라벨 색 — 세 채움색 모두 흰 글자가 읽힌다 */
+export const NODE_LABEL_COLOR = "#ffffff";
 
-/** 엔티티 종류 한글 라벨 */
-export const ENTITY_LABELS: Record<EntityType, string> = {
-  company: "기업",
-  country: "국가",
-  product: "제품",
-  commodity: "원자재",
+/** 분류 한글 라벨 */
+export const CATEGORY_LABELS: Record<NodeCategory, string> = {
+  kospi: "KOSPI 기업",
+  kosdaq: "KOSDAQ 기업",
   theme: "테마",
 };
 
+export const ALL_CATEGORIES: NodeCategory[] = ["kospi", "kosdaq", "theme"];
+
+export function nodeColor(node: Pick<GraphNode, "type" | "data">): string {
+  return CATEGORY_COLORS[nodeCategory(node)];
+}
+
 /** 서술어 한글 라벨 */
 export const PREDICATE_LABELS: Record<Predicate, string> = {
-  DIVESTS_FROM: "매각",
-  INVESTS_IN: "투자",
-  PARTNERS_WITH: "협력",
-  ACQUIRES: "인수",
   SUPPLIES_TO: "공급",
-  EXPORTS_TO: "수출",
-  LOCATED_IN: "위치",
-  PRODUCES: "생산",
-  COMPETES_WITH: "경쟁",
-  DEVELOPS: "개발",
-  SANCTIONS: "제재",
-  SUPPLIES: "공급(품목)",
-  SUPPLIED_TO: "납품처",
-  EXPORTS: "수출(품목)",
-  EXPORTED_TO: "수출처",
   BELONGS_TO: "테마 소속",
 };
 
-export const ALL_ENTITY_TYPES: EntityType[] = [
-  "company",
-  "product",
-  "commodity",
-  "country",
-  "theme",
-];
+export const ALL_ENTITY_TYPES: EntityType[] = ["company", "theme"];
 
-export const ALL_PREDICATES: Predicate[] = [
-  "PRODUCES",
-  "SUPPLIES_TO",
-  "DEVELOPS",
-  "PARTNERS_WITH",
-  "COMPETES_WITH",
-  "INVESTS_IN",
-  "ACQUIRES",
-  "DIVESTS_FROM",
-  "EXPORTS_TO",
-  "LOCATED_IN",
-  "SANCTIONS",
-  "SUPPLIES",
-  "SUPPLIED_TO",
-  "EXPORTS",
-  "EXPORTED_TO",
-  "BELONGS_TO",
-];
+export const ALL_PREDICATES: Predicate[] = ["SUPPLIES_TO", "BELONGS_TO"];
