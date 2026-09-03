@@ -2,14 +2,16 @@ import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 
 import * as d3 from 'd3'
 import {
   endId,
-  ALL_ENTITY_TYPES,
-  NODE_COLORS,
-  NODE_TEXT_COLORS,
-  ENTITY_LABELS,
+  ALL_CATEGORIES,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  NODE_LABEL_COLOR,
+  nodeCategory,
+  nodeColor,
   type GraphNode,
   type GraphLink,
   type GraphData,
-  type EntityType,
+  type NodeCategory,
   type Predicate,
   PREDICATE_LABELS,
 } from '@/data/graphTypes'
@@ -50,11 +52,15 @@ export type GraphHighlight =
 interface Props {
   data: GraphData
   onNodeClick: (node: GraphNode) => void
+  /** 노드 더블클릭 — 그 노드를 새 중심으로 다시 조회하는 단축 동작 */
+  onNodeDoubleClick?: (node: GraphNode) => void
   onLinkClick: (link: GraphLink) => void
   /** 빈 캔버스 클릭 — 선택 해제 */
   onBackgroundClick: () => void
   highlight: GraphHighlight | null
-  selectedTypes: Set<EntityType>
+  /** 지금 조회의 중심 노드 — 바깥에 링을 둘러 "여기가 어디인지" 남긴다 */
+  centerId?: string | null
+  selectedCategories: Set<NodeCategory>
   selectedPredicates: Set<Predicate>
 }
 
@@ -77,7 +83,17 @@ interface D3State {
 }
 
 export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanvas(
-  { data, onNodeClick, onLinkClick, onBackgroundClick, highlight, selectedTypes, selectedPredicates },
+  {
+    data,
+    onNodeClick,
+    onNodeDoubleClick,
+    onLinkClick,
+    onBackgroundClick,
+    highlight,
+    centerId = null,
+    selectedCategories,
+    selectedPredicates,
+  },
   ref,
 ) {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -93,6 +109,15 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
   const fitTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity)
   /** 사용자가 직접 확대/이동했는지 — 이후 자동 맞춤이 카메라를 뺏지 않도록 */
   const userMovedRef = useRef(false)
+  /**
+   * 부모 콜백은 ref로 받아 d3 핸들러가 호출 시점의 최신 함수를 부른다.
+   * 메인 이펙트 의존성에 넣으면 부모가 콜백을 새로 만들 때마다(예: URL 쿼리 변경) 데이터가 같아도
+   * 그래프를 통째로 다시 그려 카메라와 레이아웃이 튄다.
+   */
+  const handlersRef = useRef({ onNodeClick, onNodeDoubleClick, onLinkClick, onBackgroundClick })
+  useEffect(() => {
+    handlersRef.current = { onNodeClick, onNodeDoubleClick, onLinkClick, onBackgroundClick }
+  })
 
   // 리사이즈 시에는 이미 배치된 그래프를 새 중심으로 평행이동한다 (약한 forceX/Y로는 못 따라옴)
   const handleResize = useCallback((next: CanvasSize, prev: CanvasSize) => {
@@ -135,21 +160,23 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
   }))
 
   const getFilteredData = useCallback(() => {
-    const typeOf = new Map(data.nodes.map((n) => [n.id, n.type]))
+    const categoryOf = new Map(data.nodes.map((n) => [n.id, nodeCategory(n)]))
     const links = data.links.filter((l) => {
       if (!selectedPredicates.has(l.type)) return false
-      const s = typeOf.get(endId(l.source))
-      const t = typeOf.get(endId(l.target))
-      return !!s && !!t && selectedTypes.has(s) && selectedTypes.has(t)
+      const s = categoryOf.get(endId(l.source))
+      const t = categoryOf.get(endId(l.target))
+      return !!s && !!t && selectedCategories.has(s) && selectedCategories.has(t)
     })
     const connected = new Set<string>()
     links.forEach((l) => {
       connected.add(endId(l.source))
       connected.add(endId(l.target))
     })
-    const nodes = data.nodes.filter((n) => selectedTypes.has(n.type) && connected.has(n.id))
+    const nodes = data.nodes.filter(
+      (n) => selectedCategories.has(nodeCategory(n)) && connected.has(n.id),
+    )
     return { nodes, links }
-  }, [data, selectedTypes, selectedPredicates])
+  }, [data, selectedCategories, selectedPredicates])
 
   // ========== MAIN EFFECT ==========
   useEffect(() => {
@@ -172,7 +199,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     const radius = createRadiusScale(nodes, degree)
     const maxRadius = nodes.length ? Math.max(...nodes.map(radius)) : NODE_RADIUS.min
 
-    // arrow markers — 화살촉은 간선 색을 따라가야 하므로 출발 엔티티 종류별로 하나씩 만든다
+    // arrow markers — 화살촉은 간선 색을 따라가야 하므로 출발 노드 분류별로 하나씩 만든다
     const defs = svg.append('defs')
     const addArrowMarker = (id: string, fill: string) => {
       defs
@@ -194,20 +221,20 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         // 선의 stroke-opacity는 마커에 상속되지 않아 직접 맞춰준다
         .attr('fill-opacity', EDGE_OPACITY)
     }
-    ALL_ENTITY_TYPES.forEach((type) => addArrowMarker(arrowId(type), NODE_COLORS[type]))
+    ALL_CATEGORIES.forEach((c) => addArrowMarker(arrowId(c), CATEGORY_COLORS[c]))
     addArrowMarker(ARROW_OFF_ID, T.hairlineSoft)
 
-    // 간선의 색은 출발(부모) 엔티티를 따른다 — 어느 엔티티에서 뻗어 나온 관계인지 색으로 읽힌다
-    const typeOf = new Map(nodes.map((n) => [n.id, n.type]))
+    // 간선의 색은 출발 노드를 따른다 — 어느 시장의 기업에서 뻗어 나온 관계인지 색으로 읽힌다
+    const categoryOf = new Map(nodes.map((n) => [n.id, nodeCategory(n)]))
     const labelOf = new Map(nodes.map((n) => [n.id, n.label]))
-    const sourceType = (l: GraphLink) => typeOf.get(endId(l.source))
+    const sourceCategory = (l: GraphLink) => categoryOf.get(endId(l.source))
     const linkColor = (l: GraphLink) => {
-      const type = sourceType(l)
-      return type ? NODE_COLORS[type] : T.hairline
+      const c = sourceCategory(l)
+      return c ? CATEGORY_COLORS[c] : T.hairline
     }
     const linkArrow = (l: GraphLink) => {
-      const type = sourceType(l)
-      return `url(#${type ? arrowId(type) : ARROW_OFF_ID})`
+      const c = sourceCategory(l)
+      return `url(#${c ? arrowId(c) : ARROW_OFF_ID})`
     }
 
     const g = svg.append('g')
@@ -291,6 +318,20 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         .attr('height', box.height + LINK_LABEL_PAD.y * 2)
     })
 
+    // === CENTER HALO ===
+    // 조회의 중심을 바깥 링으로 표시한다 — 재중심 탐색에서 "지금 어디를 보고 있는지"를 캔버스에 남긴다.
+    // 노드 채움과 사이를 띄워 KOSPI(블루) 노드 위에서도 링이 따로 읽힌다.
+    const halo = g
+      .append('g')
+      .selectAll<SVGCircleElement, GraphNode>('circle')
+      .data(nodes.filter((n) => n.id === centerId))
+      .join('circle')
+      .attr('r', (d) => radius(d) + CENTER_HALO_GAP)
+      .attr('fill', 'none')
+      .attr('stroke', T.primary)
+      .attr('stroke-width', 2)
+      .attr('pointer-events', 'none')
+
     // === NODES ===
     const node = g
       .append('g')
@@ -298,7 +339,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .data(nodes)
       .join('circle')
       .attr('r', radius)
-      .attr('fill', (d) => NODE_COLORS[d.type] || T.muted)
+      .attr('fill', (d) => nodeColor(d))
       .attr('stroke', T.canvas)
       .attr('stroke-width', 1.5)
       .attr('cursor', 'pointer')
@@ -313,7 +354,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .data(nodes)
       .join('text')
       .attr('font-weight', 600)
-      .attr('fill', (d) => NODE_TEXT_COLORS[d.type])
+      .attr('fill', NODE_LABEL_COLOR)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('pointer-events', 'none')
@@ -336,6 +377,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
           .attr('stroke-width', edgeWidth)
           .attr('marker-end', linkArrow)
         label.attr('opacity', 0.85)
+        halo.attr('opacity', 1)
         linkLabel.attr('opacity', zoomK >= LINK_LABEL_MIN_ZOOM ? 1 : 0)
         linkLabelText.attr('fill', T.muted)
         return
@@ -361,6 +403,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         )
         .attr('marker-end', (l) => (isLinkOn(l) ? linkArrow(l) : `url(#${ARROW_OFF_ID})`))
       label.attr('opacity', (d) => (isRelevant(d.id) ? 1 : 0.08))
+      halo.attr('opacity', (d) => (isRelevant(d.id) ? 1 : 0.15))
       linkLabel.attr('opacity', (l) => (isLinkOn(l) ? 1 : 0.1))
       linkLabelText.attr('fill', (l) => (isLinkOn(l) ? T.ink : T.muted))
     }
@@ -417,7 +460,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     node
       .on('mouseover', (event: MouseEvent, d) => {
         if (!highlightRef.current) applyHighlight({ kind: 'nodes', ids: [d.id] })
-        showTooltip(tooltip, event, d.label, ENTITY_LABELS[d.type], NODE_COLORS[d.type] || T.muted)
+        showTooltip(tooltip, event, d.label, CATEGORY_LABELS[nodeCategory(d)], nodeColor(d))
       })
       .on('mousemove', (event: MouseEvent) => moveTooltip(tooltip, event))
       .on('mouseout', () => {
@@ -426,7 +469,12 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       })
       .on('click', (event: MouseEvent, d) => {
         event.stopPropagation()
-        onNodeClick(d)
+        handlersRef.current.onNodeClick(d)
+      })
+      .on('dblclick', (event: MouseEvent, d) => {
+        // svg의 줌(dblclick.zoom)까지 올라가면 재중심과 확대가 동시에 일어난다
+        event.stopPropagation()
+        handlersRef.current.onNodeDoubleClick?.(d)
       })
 
     // ===== edge interactions =====
@@ -448,11 +496,11 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       })
       .on('click', (event: MouseEvent, d) => {
         event.stopPropagation()
-        onLinkClick(d)
+        handlersRef.current.onLinkClick(d)
       })
 
     svg.on('click', (event: MouseEvent) => {
-      if (event.target === svgRef.current) onBackgroundClick()
+      if (event.target === svgRef.current) handlersRef.current.onBackgroundClick()
     })
 
     // drag
@@ -537,6 +585,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
             segmentLength(seg(d)) >= (plateWidth.get(d.id) ?? 0) ? null : 'none',
           )
         node.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
+        halo.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
         // 두 줄 라벨의 tspan(x=0 기준)이 함께 움직이도록 좌표는 transform으로 옮긴다
         label.attr('transform', (d) => `translate(${d.x!},${d.y!})`)
 
@@ -565,7 +614,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     return () => {
       simulation.stop()
     }
-  }, [data, sized, sizeRef, getFilteredData, onNodeClick, onLinkClick, onBackgroundClick])
+  }, [data, sized, sizeRef, getFilteredData, centerId])
 
   // ========== 외부 선택 반영 + 카메라 이동 ==========
   useEffect(() => {
@@ -668,8 +717,10 @@ const EDGE_OPACITY = 0.85
 /** 서술어 라벨이 보이기 시작하는 줌 배율 — 초기 전체 보기(fit 상한 1.2)에선 숨긴다 */
 const LINK_LABEL_MIN_ZOOM = 1.25
 
-/** 출발 엔티티 종류별 화살촉 마커 id */
-const arrowId = (type: EntityType) => `arrow-${type}`
+/** 출발 노드 분류별 화살촉 마커 id */
+const arrowId = (category: NodeCategory) => `arrow-${category}`
+/** 중심 링과 노드 채움 사이 간격 */
+const CENTER_HALO_GAP = 5
 /** 필터·강조로 흐려진 간선용 화살촉 */
 const ARROW_OFF_ID = 'arrow-off'
 
