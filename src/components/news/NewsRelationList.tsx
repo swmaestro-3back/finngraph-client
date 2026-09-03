@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { PREDICATE_LABELS } from '@/data/graphTypes'
+import { CATEGORY_COLORS, PREDICATE_LABELS, nodeColor } from '@/data/graphTypes'
 import type { NewsRelation } from '@/data/graphNews'
 import { EntityChip } from '@/components/graph/DetailParts'
 import { Badge } from '@/components/ui/badge'
@@ -58,16 +58,21 @@ export function NewsRelationList({ title, hint, relations, activeId, onHover, on
             )}
           >
             <div className="flex flex-wrap items-center gap-1.5">
-              <EntityChip label={source.label} type={source.type} />
+              <EntityChip label={source.label} color={nodeColor(source)} />
               <span className="text-caption font-semibold text-primary">
                 {PREDICATE_LABELS[link.type]}
               </span>
               <ArrowRight className="size-3.5 text-muted-foreground" strokeWidth={2} />
-              <EntityChip label={target.label} type={target.type} />
+              <EntityChip label={target.label} color={nodeColor(target)} />
             </div>
 
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              {link.item && <EntityChip label={link.item.text} type={link.item.type} />}
+              {link.item && (
+                <EntityChip
+                  label={link.item.text}
+                  color={CATEGORY_COLORS[link.item.type === 'theme' ? 'theme' : 'kospi']}
+                />
+              )}
               {link.tense === 'future_or_planned' && <Badge variant="secondary">전망·계획</Badge>}
               {link.is_negated && <Badge variant="destructive">부정</Badge>}
             </div>

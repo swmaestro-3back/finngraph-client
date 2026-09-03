@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { PREDICATE_LABELS, type GraphNode, type GraphSelection } from '@/data/graphTypes'
-import { NodeDetail } from '@/components/graph/NodeDetail'
+import type { StockRowRes } from '@/lib/apiTypes'
+import { NodeDetail, type NodeNeighbors } from '@/components/graph/NodeDetail'
 import { EdgeDetail } from '@/components/graph/EdgeDetail'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -10,8 +11,14 @@ interface Props {
   onClose: () => void
   /** 모바일에서는 바텀시트로 띄운다 */
   isMobile?: boolean
-  connectedNodes?: GraphNode[]
+  /** 선택 노드의 방향별 이웃 (노드 선택일 때) */
+  neighbors: NodeNeighbors
+  /** 선택 노드가 지금 조회의 중심인가 */
+  isCenter: boolean
+  /** 선택 노드의 시세 행 (기업이고 종목 목록에 있을 때) */
+  stock?: StockRowRes
   onNodeSelect?: (node: GraphNode) => void
+  onRecenter?: (node: GraphNode) => void
 }
 
 /** 선택한 노드/간선의 상세 — 데스크톱은 우측 패널, 모바일은 바텀시트 */
@@ -19,17 +26,28 @@ export function DetailPanel({
   selection,
   onClose,
   isMobile = false,
-  connectedNodes = [],
+  neighbors,
+  isCenter,
+  stock,
   onNodeSelect,
+  onRecenter,
 }: Props) {
   const body =
     selection.kind === 'edge' ? (
-      <EdgeDetail link={selection.link} source={selection.source} target={selection.target} />
+      <EdgeDetail
+        link={selection.link}
+        source={selection.source}
+        target={selection.target}
+        onNodeSelect={onNodeSelect}
+      />
     ) : (
       <NodeDetail
         node={selection.node}
-        connectedNodes={connectedNodes}
+        neighbors={neighbors}
+        isCenter={isCenter}
+        stock={stock}
         onNodeSelect={onNodeSelect}
+        onRecenter={onRecenter}
       />
     )
 
