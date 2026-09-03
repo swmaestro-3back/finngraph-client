@@ -22,6 +22,8 @@ function App() {
         <Route path="/theme/:themeId" element={<ThemeDetailPage />} />
         <Route path="/stocks" element={<StockListPage />} />
         <Route path="/stock/:stockCode" element={<StockDetailPage />} />
+        {/* 더 구체적인 테마 경로를 먼저 둔다 — /graph/theme/… 가 :ticker 로 잡히지 않도록 */}
+        <Route path="/graph/theme/:name" element={<CorpGraphPage />} />
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
