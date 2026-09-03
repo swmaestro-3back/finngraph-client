@@ -85,7 +85,7 @@ export function buildAdjacency(links: GraphLink[]): Map<string, Set<string>> {
   return adjacency
 }
 
-const SECTOR_ORDER: EntityType[] = ['company', 'product', 'theme', 'commodity', 'country']
+const SECTOR_ORDER: EntityType[] = ['company', 'theme']
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
 
 /**
