@@ -1,31 +1,21 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { cn } from '@/lib/utils'
+import { HOP_VALUES, type Hop } from '@/lib/graphRoute'
 
-/** 원점에서 몇 홉까지 볼지 — 1은 원점의 바로 이웃까지다 */
-export type Hop = 1 | 2 | 3
-
-const HOP_VALUES: Hop[] = [1, 2, 3]
+// 컴포넌트 파일에서 값(HOP_VALUES)을 내보내면 Fast Refresh가 깨져 상수는 graphRoute에 두고 타입만 다시 내보낸다
+export type { Hop }
 
 interface Props {
   value: Hop
   onChange: (hop: Hop) => void
-  /** 모바일에서는 툴바가 우하단으로 내려가 우상단이 비어 있다 */
-  isMobile?: boolean
 }
 
 /**
  * 몇 홉까지 볼지 고르는 세그먼트 컨트롤.
- * 원점이 무엇인지(선택 노드 / 기사)와 렌더 여부는 부모가 정한다.
+ * 위치는 부모가 잡는다 — 범위 선택기 등 다른 컨트롤과 한 줄에 놓이기 때문이다.
  */
-export function HopSelector({ value, onChange, isMobile = false }: Props) {
+export function HopSelector({ value, onChange }: Props) {
   return (
-    <div
-      className={cn(
-        'absolute top-4 z-10 flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur',
-        // 데스크톱에서는 우상단 툴바(확대·축소·초기화) 왼쪽에 붙인다
-        isMobile ? 'right-4' : 'right-16',
-      )}
-    >
+    <div className="flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur">
       <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground">
         Hop
       </span>

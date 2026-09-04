@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { NODE_COLORS, type EntityType, type GraphNode } from '@/data/graphTypes'
+import { nodeColor, type GraphNode } from '@/data/graphTypes'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -35,25 +35,25 @@ export function TypeBadge({ color, children }: { color: string; children: ReactN
   )
 }
 
-/** 칩 하나. type을 주면 앞에 종류 색 점이 붙고, onClick이 있으면 버튼으로 동작한다 */
+/** 칩 하나. color를 주면 앞에 분류 색 점이 붙고, onClick이 있으면 버튼으로 동작한다 */
 export function EntityChip({
   label,
-  type,
+  color,
   size = 'sm',
   onClick,
 }: {
   label: string
-  /** 없으면 점 없이 라벨만 (별칭 등) */
-  type?: EntityType
+  /** 노드 분류 색 (nodeColor). 없으면 점 없이 라벨만 */
+  color?: string
   size?: 'sm' | 'md'
   onClick?: () => void
 }) {
   const content = (
     <>
-      {type && (
+      {color && (
         <span
           className={cn(size === 'md' ? 'size-2' : 'size-1.5', 'shrink-0 rounded-full')}
-          style={{ background: NODE_COLORS[type] }}
+          style={{ background: color }}
         />
       )}
       <span className="truncate">{label}</span>
@@ -81,7 +81,7 @@ export function EntityChip({
   )
 }
 
-/** 노드 라벨 + 종류 점 (간선 상세의 주어/목적어 표기용) */
-export function EntityPill({ node }: { node: GraphNode }) {
-  return <EntityChip label={node.label} type={node.type} size="md" />
+/** 노드 라벨 + 분류 점 (간선 상세의 주어/목적어 표기용). onClick이 있으면 그 노드로 선택을 옮긴다 */
+export function EntityPill({ node, onClick }: { node: GraphNode; onClick?: () => void }) {
+  return <EntityChip label={node.label} color={nodeColor(node)} size="md" onClick={onClick} />
 }

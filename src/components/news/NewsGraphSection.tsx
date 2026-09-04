@@ -9,7 +9,7 @@ import { Legend } from '@/components/graph/Legend'
 import { Toolbar } from '@/components/graph/Toolbar'
 import { NewsRelationList } from '@/components/news/NewsRelationList'
 import {
-  ALL_ENTITY_TYPES,
+  ALL_CATEGORIES,
   ALL_PREDICATES,
   type GraphData,
   type GraphLink,
@@ -17,9 +17,10 @@ import {
 } from '@/data/graphTypes'
 import type { NewsRelation } from '@/data/graphNews'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 
 // 모달에서는 필터 UI가 없어 항상 전체를 보여준다 (GraphCanvas가 참조 동일성으로 재렌더를 판단한다)
-const ALL_TYPES = new Set(ALL_ENTITY_TYPES)
+const ALL_CATEGORY_SET = new Set(ALL_CATEGORIES)
 const ALL_PREDICATE_SET = new Set(ALL_PREDICATES)
 
 /** 그래프 높이 — 스크롤 컨테이너 안에서는 auto가 0으로 측정되므로 고정값이 필요하다 */
@@ -119,11 +120,13 @@ export function NewsGraphSection({
           onLinkClick={handleLinkClick}
           onBackgroundClick={clearSelection}
           highlight={highlight}
-          selectedTypes={ALL_TYPES}
+          selectedCategories={ALL_CATEGORY_SET}
           selectedPredicates={ALL_PREDICATE_SET}
         />
-        <Legend visibleTypes={ALL_TYPES} />
-        <HopSelector value={hop} onChange={onHopChange} isMobile={isMobile} />
+        <Legend visibleCategories={ALL_CATEGORY_SET} />
+        <div className={cn('absolute top-4 z-10', isMobile ? 'right-4' : 'right-16')}>
+          <HopSelector value={hop} onChange={onHopChange} />
+        </div>
         <Toolbar
           onZoomIn={() => canvasRef.current?.zoomIn()}
           onZoomOut={() => canvasRef.current?.zoomOut()}

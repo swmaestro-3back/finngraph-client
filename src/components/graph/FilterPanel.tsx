@@ -1,10 +1,10 @@
 import {
-  NODE_COLORS,
-  ENTITY_LABELS,
-  PREDICATE_LABELS,
-  ALL_ENTITY_TYPES,
+  ALL_CATEGORIES,
   ALL_PREDICATES,
-  type EntityType,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  PREDICATE_LABELS,
+  type NodeCategory,
   type Predicate,
 } from '@/data/graphTypes'
 import { Button } from '@/components/ui/button'
@@ -13,12 +13,12 @@ import { FilterChip } from '@/components/ui/filter-chip'
 import { cn } from '@/lib/utils'
 
 interface Props {
-  selectedTypes: Set<EntityType>
-  onTypesChange: (v: Set<EntityType>) => void
+  selectedCategories: Set<NodeCategory>
+  onCategoriesChange: (v: Set<NodeCategory>) => void
   selectedPredicates: Set<Predicate>
   onPredicatesChange: (v: Set<Predicate>) => void
-  /** 종류별 노드 수 */
-  typeCounts?: Partial<Record<EntityType, number>>
+  /** 분류별 노드 수 */
+  categoryCounts?: Partial<Record<NodeCategory, number>>
   /** 서술어별 간선 수 */
   predicateCounts?: Partial<Record<Predicate, number>>
 }
@@ -30,13 +30,16 @@ function toggled<T>(set: Set<T>, value: T): Set<T> {
   return next
 }
 
-/** 엔티티 종류 필터 + 관계(서술어) 필터 */
+/**
+ * 노드 분류 필터 + 관계(서술어) 필터.
+ * 여기서 KOSDAQ을 끄는 것은 받아 온 그래프에서 숨기는 것이다 — 서버에 다시 묻는 상단의 '범위'와는 다르다.
+ */
 export function FilterPanel({
-  selectedTypes,
-  onTypesChange,
+  selectedCategories,
+  onCategoriesChange,
   selectedPredicates,
   onPredicatesChange,
-  typeCounts = {},
+  categoryCounts = {},
   predicateCounts = {},
 }: Props) {
   const allPredicatesOn = ALL_PREDICATES.every((p) => selectedPredicates.has(p))
@@ -44,27 +47,27 @@ export function FilterPanel({
   return (
     <div className="px-1">
       <h3 className="mb-2 text-body font-semibold tracking-[-0.2px] text-foreground">
-        엔티티 종류
+        노드 종류
       </h3>
       <div className="flex flex-col gap-0.5">
-        {ALL_ENTITY_TYPES.map((type) => {
-          const on = selectedTypes.has(type)
+        {ALL_CATEGORIES.map((category) => {
+          const on = selectedCategories.has(category)
           return (
-            <label key={type} className="flex cursor-pointer items-center gap-2 py-1.5">
+            <label key={category} className="flex cursor-pointer items-center gap-2 py-1.5">
               <Checkbox
                 checked={on}
-                onCheckedChange={() => onTypesChange(toggled(selectedTypes, type))}
-                aria-label={ENTITY_LABELS[type]}
+                onCheckedChange={() => onCategoriesChange(toggled(selectedCategories, category))}
+                aria-label={CATEGORY_LABELS[category]}
               />
               <span
                 className="size-2.5 shrink-0 rounded-full"
-                style={{ background: NODE_COLORS[type] }}
+                style={{ background: CATEGORY_COLORS[category] }}
               />
               <span className={cn('text-body', on ? 'text-foreground' : 'text-muted-foreground')}>
-                {ENTITY_LABELS[type]}
+                {CATEGORY_LABELS[category]}
               </span>
               <span className="ml-auto rounded-full bg-surface-inset px-2 py-px font-mono text-caption text-muted-foreground">
-                {typeCounts[type] ?? 0}
+                {categoryCounts[category] ?? 0}
               </span>
             </label>
           )

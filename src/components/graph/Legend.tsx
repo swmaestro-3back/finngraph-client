@@ -1,31 +1,38 @@
 import { useState } from 'react'
 import { List, X } from 'lucide-react'
-import { NODE_COLORS, ENTITY_LABELS, ALL_ENTITY_TYPES, type EntityType } from '@/data/graphTypes'
+import {
+  ALL_CATEGORIES,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  type NodeCategory,
+} from '@/data/graphTypes'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 interface Props {
-  /** 현재 표시 중인 엔티티 종류 */
-  visibleTypes: Set<EntityType>
+  /** 현재 표시 중인 노드 분류 */
+  visibleCategories: Set<NodeCategory>
 }
 
 const PANEL = 'rounded-xl border border-border bg-background/95 px-3.5 py-2.5 shadow-soft backdrop-blur'
 
-export function Legend({ visibleTypes }: Props) {
+export function Legend({ visibleCategories }: Props) {
   const isMobile = useIsMobile()
   const [expanded, setExpanded] = useState(false)
 
-  const types = ALL_ENTITY_TYPES.filter((t) => visibleTypes.has(t))
-  if (types.length === 0) return null
+  const categories = ALL_CATEGORIES.filter((c) => visibleCategories.has(c))
+  if (categories.length === 0) return null
 
-  const items = types.map((type) => (
-    <div key={type} className="flex items-center gap-1.5">
+  const items = categories.map((category) => (
+    <div key={category} className="flex items-center gap-1.5">
       <span
         className="inline-block size-2.5 shrink-0 rounded-full"
-        style={{ background: NODE_COLORS[type] }}
+        style={{ background: CATEGORY_COLORS[category] }}
       />
-      <span className="text-caption font-medium text-foreground-secondary">{ENTITY_LABELS[type]}</span>
+      <span className="text-caption font-medium text-foreground-secondary">
+        {CATEGORY_LABELS[category]}
+      </span>
     </div>
   ))
 

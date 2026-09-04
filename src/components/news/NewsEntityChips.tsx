@@ -1,4 +1,5 @@
 import type { NewsEntity } from '@/data/graphNews'
+import { CATEGORY_COLORS } from '@/data/graphTypes'
 import { EntityChip } from '@/components/graph/DetailParts'
 
 interface Props {
@@ -19,7 +20,11 @@ export function NewsEntityChips({ entities, onHover }: Props) {
           onMouseEnter={() => entity.nodeId && onHover(entity.nodeId)}
           onMouseLeave={() => onHover(null)}
         >
-          <EntityChip label={entity.label} type={entity.type} />
+          {/* 기사 엔티티에는 시장 정보가 없어 기업은 KOSPI 색으로 통일한다 */}
+          <EntityChip
+            label={entity.label}
+            color={CATEGORY_COLORS[entity.type === 'theme' ? 'theme' : 'kospi']}
+          />
         </span>
       ))}
     </div>
