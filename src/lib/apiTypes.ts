@@ -119,6 +119,20 @@ export type CandlePeriod = 'D' | 'W' | 'M'
 
 export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 65, W: 52, M: 36 }
 
+/** 투자자별 수급 조회 기간 — 백엔드는 거래일 개수(limit)만 받으므로 1개월 ≈ 20거래일로 환산한다 */
+export type SupplyRange = '1M' | '3M' | '6M' | '1Y'
+
+export const SUPPLY_RANGES: { key: SupplyRange; label: string; limit: number }[] = [
+  { key: '1M', label: '1개월', limit: 20 },
+  { key: '3M', label: '3개월', limit: 60 },
+  { key: '6M', label: '6개월', limit: 120 },
+  { key: '1Y', label: '1년', limit: 250 },
+]
+
+export const SUPPLY_RANGE_LIMITS: Record<SupplyRange, number> = Object.fromEntries(
+  SUPPLY_RANGES.map((r) => [r.key, r.limit]),
+) as Record<SupplyRange, number>
+
 export interface Candle {
   open: number
   high: number
