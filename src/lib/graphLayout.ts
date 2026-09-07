@@ -11,6 +11,22 @@ export const NODE_RADIUS = { min: 5, max: 14 } as const
 export const CENTER_RADIUS = 22
 
 /**
+ * 이벤트 태그(pill) 기하. 원형 기업 노드와 한눈에 구분되도록 가로로 길고, 크기는 차수와 무관하게 고정이다.
+ * 글자 폭 10px은 한글 10px 폰트 기준 — 라벨이 태그 안에 들어가야 하므로 글자 수로 폭을 정한다.
+ */
+export const EVENT_NODE = { height: 22, charWidth: 10, padX: 8, maxChars: 12 } as const
+
+/** 태그 안에 들어갈 만큼만 — 전체 제목은 툴팁·상세 패널에 있다 */
+export function truncateEventLabel(title: string): string {
+  return title.length > EVENT_NODE.maxChars ? `${title.slice(0, EVENT_NODE.maxChars - 1)}…` : title
+}
+
+/** 잘린 라벨이 꼭 맞는 태그 폭 */
+export function eventNodeWidth(title: string): number {
+  return truncateEventLabel(title).length * EVENT_NODE.charWidth + EVENT_NODE.padX * 2
+}
+
+/**
  * 연결 차수 → 반지름 스케일.
  *
  * 지금 화면에 있는 노드들의 차수 min~max를 기준으로 정규화하므로
