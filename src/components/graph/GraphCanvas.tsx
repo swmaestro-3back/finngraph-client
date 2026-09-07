@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 
 import * as d3 from 'd3'
 import {
   endId,
+  isEventLink,
   CATEGORY_COLORS,
   CATEGORY_LABELS,
   nodeCategory,
@@ -275,8 +276,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     // === EDGES ===
     // 테이퍼 곡선 — 공급자 쪽이 굵고 수요자 쪽으로 가늘어져 화살촉 없이 방향이 읽힌다.
     // fill로 그리는 닫힌 도형이라 굵기는 tick에서 path로 정해지고, 강조는 색·불투명도로만 준다.
-    // HAS_EVENT만 예외 — 근거가 쌓이는 관계가 아니라 "언급됐다"는 사실이므로 가는 점선 stroke로 물러난다.
-    const isDashed = (l: GraphLink) => l.type === 'HAS_EVENT'
+    // 이벤트 간선만 예외 — 근거가 쌓이는 관계가 아니라 "언급됐다"는 사실이므로 가는 점선 stroke로 물러난다.
+    const isDashed = isEventLink
     const link = g
       .append('g')
       .selectAll<SVGPathElement, GraphLink>('path')
@@ -306,7 +307,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('fill', 'none')
       .attr('stroke', 'transparent')
       .attr('stroke-width', 14)
-      .attr('cursor', 'pointer')
+      // 이벤트 간선은 클릭해도 열리는 게 없으니 클릭 가능해 보이지 않게 한다 (hover 툴팁은 유지)
+      .attr('cursor', (l) => (isEventLink(l) ? 'default' : 'pointer'))
 
     // === CENTER GLOW === 중심만 같은 색의 옅은 후광을 두른다 — 화면에서 유일한 초점
     const glow = g

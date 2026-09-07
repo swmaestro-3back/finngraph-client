@@ -35,14 +35,15 @@ const EVIDENCE_ICON = 'mt-0.5 size-4 shrink-0 text-muted-foreground/70'
 /**
  * 간선 상세. 근거(뉴스·공시)는 kg-api가 관계에 인라인으로 실어 보내므로 링크에서 바로 읽는다.
  * 공급 관계는 뉴스와 공시를 따로 세고, 테마 소속 관계는 분류 근거 문장만 갖는다.
+ * 이벤트 간선(HAS_EVENT)은 보여줄 상세가 없어 선택되지 않으므로 여기 오지 않는다.
  */
 export function EdgeDetail({ link, source, target, onNodeSelect }: Props) {
   const news = link.news ?? []
   const disclosures = link.disclosures ?? []
   // 공급망 관계는 뉴스/공시 건수를 따로 갖는다. 그 필드가 없으면 예전 단일 언급 횟수로 물러난다.
   const hasSplitCounts = link.news_mention_count != null || link.disclosure_count != null
-  // 테마 소속·이벤트 언급은 횟수가 있는 관계가 아니다
-  const showMentionCount = !hasSplitCounts && link.type !== 'BELONGS_TO' && link.type !== 'HAS_EVENT'
+  // 테마 소속은 횟수가 있는 관계가 아니다
+  const showMentionCount = !hasSplitCounts && link.type !== 'BELONGS_TO'
 
   return (
     <>
@@ -75,12 +76,6 @@ export function EdgeDetail({ link, source, target, onNodeSelect }: Props) {
             </Badge>
           )}
         </div>
-      )}
-
-      {link.type === 'HAS_EVENT' && (
-        <p className="mt-0 mb-4 text-body leading-relaxed text-foreground-secondary">
-          이 기업이 해당 이벤트(뉴스 클러스터)에 언급되었습니다. 근거 뉴스는 이벤트 노드에서 봅니다.
-        </p>
       )}
 
       {link.reason && (

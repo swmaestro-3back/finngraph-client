@@ -6,6 +6,7 @@ import {
   CATEGORY_COLORS,
   CATEGORY_LABELS,
   PREDICATE_LABELS,
+  isEventLink,
   nodeCategory,
 } from '@/data/graphTypes'
 
@@ -32,5 +33,12 @@ describe('graphTypes', () => {
       HAS_EVENT: '이벤트',
     })
     expect(CATEGORY_LABELS.event).toBe('이벤트')
+  })
+
+  it('HAS_EVENT만 이벤트 간선이다', () => {
+    expect(isEventLink({ type: 'HAS_EVENT' })).toBe(true)
+    ALL_PREDICATES.filter((p) => p !== 'HAS_EVENT').forEach((type) => {
+      expect(isEventLink({ type })).toBe(false)
+    })
   })
 })

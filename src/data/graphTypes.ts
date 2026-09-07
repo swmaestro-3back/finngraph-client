@@ -95,6 +95,14 @@ export function endId(v: string | GraphNode): string {
   return typeof v === "string" ? v : v.id;
 }
 
+/**
+ * 이벤트 언급 간선인가. 근거가 쌓이는 관계가 아니라 "언급됐다"는 사실뿐이라
+ * 점선으로 물러나 그리고, 클릭해도 보여줄 상세가 없으므로 선택 대상이 아니다.
+ */
+export function isEventLink(link: Pick<GraphLink, "type">): boolean {
+  return link.type === "HAS_EVENT";
+}
+
 export interface GraphData {
   nodes: GraphNode[];
   links: GraphLink[];

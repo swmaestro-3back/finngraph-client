@@ -27,6 +27,7 @@ import {
   endId,
   ALL_CATEGORIES,
   ALL_PREDICATES,
+  isEventLink,
   nodeCategory,
   type GraphData,
   type GraphFocus,
@@ -174,6 +175,8 @@ export function GraphView({ focus }: Props) {
 
   const selectLink = useCallback(
     (link: GraphLink) => {
+      // 이벤트 간선은 보여줄 상세가 없다 — 클릭을 무시하고 기존 선택을 그대로 둔다
+      if (isEventLink(link)) return
       const source = nodeById.get(endId(link.source))
       const target = nodeById.get(endId(link.target))
       if (!source || !target) return
