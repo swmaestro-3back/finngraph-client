@@ -6,10 +6,13 @@ import { SearchBar } from '@/components/graph/SearchBar'
 import { FilterPanel } from '@/components/graph/FilterPanel'
 import { DetailPanel } from '@/components/graph/DetailPanel'
 import { Legend } from '@/components/graph/Legend'
-import type { NodeNeighbors } from '@/components/graph/NodeDetail'
+import { NewsDetailModal } from '@/components/news/NewsDetailModal'
+import { classifyNeighbors, EMPTY_NEIGHBORS, type NodeNeighbors } from '@/lib/graphNeighbors'
+import type { CenterShortcuts } from '@/components/graph/NodeDetail'
 import { ScopeSelector } from '@/components/graph/ScopeSelector'
 import { Toolbar } from '@/components/graph/Toolbar'
 import { HopSelector } from '@/components/graph/HopSelector'
+import { LensSelector } from '@/components/graph/LensSelector'
 import { Button } from '@/components/ui/button'
 import {
   SidebarProvider,
@@ -25,6 +28,7 @@ import {
   ALL_CATEGORIES,
   ALL_PREDICATES,
   nodeCategory,
+  type GraphData,
   type GraphFocus,
   type GraphLink,
   type GraphNode,
@@ -32,7 +36,14 @@ import {
   type NodeCategory,
   type Predicate,
 } from '@/data/graphTypes'
-import { SCOPE_LABELS, graphPath, scopeToKgOptions, useGraphQuery } from '@/lib/graphRoute'
+import {
+  LENS_LABELS,
+  SCOPE_LABELS,
+  graphPath,
+  lensControls,
+  lensDefaultCategories,
+  useGraphQuery,
+} from '@/lib/graphRoute'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
 import { useStocks } from '@/lib/queries/useStocks'
 import { useThemes } from '@/lib/queries/useThemes'
@@ -43,8 +54,6 @@ interface Props {
   /** 그래프의 원점 — 기업(공급망) 또는 테마(소속 기업) */
   focus: GraphFocus
 }
-
-const NO_NEIGHBORS: NodeNeighbors = { incoming: [], outgoing: [] }
 
 /** 재중심 이동에 실어 보내는 navigation state — 도착한 화면이 중심 노드를 자동 선택하라는 요청 */
 interface GraphNavState {
@@ -58,8 +67,12 @@ export function GraphView({ focus }: Props) {
   const noun = isTheme ? '테마' : '종목'
   // hop·범위는 URL 쿼리가 원본이다 — 새로고침·공유가 유지되고 재중심 이력이 뒤로가기로 이어진다
   const [query, updateQuery] = useGraphQuery()
-  const { hop, scope } = query
-  const { data, loading, error, refetch } = useKgGraph(focus, hop, scopeToKgOptions(scope))
+  const { hop, scope, lens } = query
+  // 테마 원점은 렌즈가 없다 — 컨트롤을 전부 숨기고 필터도 전체 켜짐으로 둔다
+  const controls = isTheme ? { hop: false, scope: false } : lensControls(lens)
+  // 개요는 서버가 1홉 고정이라 URL에 hop이 남아 있어도 강조 범위는 1홉이다
+  const effectiveHop = controls.hop ? hop : 1
+  const { data, loading, error, refetch } = useKgGraph(focus, query)
   const { data: stocks } = useStocks()
   const { data: themes } = useThemes()
   const navigate = useNavigate()
@@ -70,8 +83,8 @@ export function GraphView({ focus }: Props) {
 
   // 선택이 유일한 출처 — 캔버스 하이라이트도 여기서 파생된다
   const [selection, setSelection] = useState<GraphSelection | null>(null)
-  const [selectedCategories, setSelectedCategories] = useState<Set<NodeCategory>>(
-    new Set(ALL_CATEGORIES),
+  const [selectedCategories, setSelectedCategories] = useState<Set<NodeCategory>>(() =>
+    isTheme ? new Set(ALL_CATEGORIES) : lensDefaultCategories(lens),
   )
   const [selectedPredicates, setSelectedPredicates] = useState<Set<Predicate>>(
     new Set(ALL_PREDICATES),
@@ -82,11 +95,54 @@ export function GraphView({ focus }: Props) {
     setSelection(null)
   }, [focus.kind, focusKey])
 
+  // 렌즈를 바꾸면 필터는 그 렌즈의 기본값으로 돌아간다 — 개요에서 숨긴 테마가 공급망 렌즈까지 따라오지 않도록
+  useEffect(() => {
+    setSelectedCategories(isTheme ? new Set(ALL_CATEGORIES) : lensDefaultCategories(lens))
+    setSelectedPredicates(new Set(ALL_PREDICATES))
+  }, [lens, isTheme])
+
   const nodeById = useMemo(() => {
     const map = new Map<string, GraphNode>()
     data?.nodes.forEach((n) => map.set(n.id, n))
     return map
   }, [data])
+
+  /**
+   * 렌즈·홉·범위가 바뀌어 새 그래프가 오면 선택을 같은 id로 갈아탄다 — 패널이 새 응답의 이웃으로 갱신된다.
+   * 새 그래프에 없으면 해제한다. 노드 객체가 같으면 손대지 않아 무한 갱신이 없다.
+   * nodeById가 data별로 참조가 안정적인 노드 객체를 돌려준다는 데 기대는 임시 방편이고, id 기반 선택으로
+   * 바꾸는 게 정식 후속 리팩터다 — 그때까지는 같은 data를 두 번 훑지 않도록 마지막으로 동기화한 data를 기억해 둔다.
+   * (캔버스가 클릭 핸들러에 노드 "복사본"을 넘기므로 클릭마다 fresh !== selection.node가 항상 참이 되어,
+   * data가 그대로여도 매번 재실행되며 불필요한 setSelection·카메라 재이동이 일어나는 것을 막는다.)
+   */
+  const syncedDataRef = useRef<GraphData | null>(null)
+  useEffect(() => {
+    if (syncedDataRef.current === data) return
+    syncedDataRef.current = data
+    if (!data || !selection) return
+    if (selection.kind === 'node') {
+      const fresh = nodeById.get(selection.node.id)
+      if (!fresh) setSelection(null)
+      else if (fresh !== selection.node) setSelection({ kind: 'node', node: fresh })
+      return
+    }
+    const link = data.links.find((l) => l.id === selection.link.id)
+    const source = link && nodeById.get(endId(link.source))
+    const target = link && nodeById.get(endId(link.target))
+    if (!link || !source || !target) setSelection(null)
+    else if (link !== selection.link) setSelection({ kind: 'edge', link, source, target })
+  }, [data, nodeById, selection])
+
+  // 이벤트의 언급 기업은 이름 문자열이라 이름으로 노드를 찾는다. 동명이면 먼저 온 것(중심에 가까운 쪽)이 남는다
+  const nodesByLabel = useMemo(() => {
+    const map = new Map<string, GraphNode>()
+    data?.nodes.forEach((n) => {
+      if (n.type === 'company' && !map.has(n.label)) map.set(n.label, n)
+    })
+    return map
+  }, [data])
+
+  const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const centerId = data?.metadata.centerId ?? null
 
@@ -110,9 +166,9 @@ export function GraphView({ focus }: Props) {
   const highlight = useMemo<GraphHighlight | null>(() => {
     if (!selection) return null
     return selection.kind === 'node'
-      ? { kind: 'nodes', ids: [selection.node.id], hops: hop }
+      ? { kind: 'nodes', ids: [selection.node.id], hops: effectiveHop }
       : { kind: 'link', id: selection.link.id }
-  }, [selection, hop])
+  }, [selection, effectiveHop])
 
   const selectNode = useCallback((node: GraphNode) => setSelection({ kind: 'node', node }), [])
 
@@ -132,6 +188,8 @@ export function GraphView({ focus }: Props) {
   const recenter = useCallback(
     (node: GraphNode) => {
       if (node.id === centerId) return
+      // 이벤트는 중심이 될 수 없다 — 이벤트 중심 엔드포인트가 없다
+      if (node.type === 'event') return
       const next: GraphFocus | null =
         node.type === 'theme'
           ? { kind: 'theme', name: node.label }
@@ -144,6 +202,35 @@ export function GraphView({ focus }: Props) {
     },
     [centerId, navigate, query],
   )
+
+  /** 테마 칩 → 테마 그래프. 개요 캔버스에서는 테마가 숨겨져 있어 선택 대신 이동한다 */
+  const openTheme = useCallback(
+    (node: GraphNode) => navigate(graphPath({ kind: 'theme', name: node.label }, query)),
+    [navigate, query],
+  )
+
+  const eventCount = useMemo(() => data?.nodes.filter((n) => n.type === 'event').length ?? 0, [data])
+
+  // 개요 렌즈의 중심 기업 패널에서만 — 다른 렌즈는 이미 그 축 안이다
+  const centerShortcuts = useMemo<CenterShortcuts | undefined>(
+    () =>
+      !isTheme && lens === 'overview'
+        ? {
+            onOpenSupply: () => updateQuery({ lens: 'supply' }),
+            // 개요는 hop을 안 쓰므로 URL에 남은 hop이 이벤트 렌즈로 새지 않게 1로 고정
+            onOpenEvents: () => updateQuery({ lens: 'events', hop: 1 }),
+            eventCount,
+          }
+        : undefined,
+    [isTheme, lens, updateQuery, eventCount],
+  )
+
+  // 이벤트 렌즈 hop 2 = "같은 이벤트를 공유하는 기업". 이미 그 안(hop ≥ 2)이면 버튼을 내지 않는다.
+  // 선택은 지우지 않는다 — 이벤트 id가 엔드포인트 사이에서 같아 새 응답에서도 그 노드가 선택된 채 남는다 (Task 13)
+  const showSharing =
+    !isTheme && (lens !== 'events' || hop < 2)
+      ? () => updateQuery({ lens: 'events', hop: 2 })
+      : undefined
 
   // 필터 카운트
   const categoryCounts = useMemo(() => {
@@ -163,25 +250,10 @@ export function GraphView({ focus }: Props) {
     return counts
   }, [data])
 
-  // 선택 노드의 이웃 — 간선 방향을 살려 공급처/납품처로 나눌 수 있게 한다
+  // 선택 노드의 이웃 — 필터 전 전체 links로 분류해, 캔버스에서 숨긴 테마도 칩으로는 보인다
   const neighbors = useMemo<NodeNeighbors>(() => {
-    if (!data || selection?.kind !== 'node') return NO_NEIGHBORS
-    const id = selection.node.id
-    const incoming = new Map<string, GraphNode>()
-    const outgoing = new Map<string, GraphNode>()
-    data.links.forEach((l) => {
-      const s = endId(l.source)
-      const t = endId(l.target)
-      if (t === id) {
-        const n = nodeById.get(s)
-        if (n) incoming.set(s, n)
-      }
-      if (s === id) {
-        const n = nodeById.get(t)
-        if (n) outgoing.set(t, n)
-      }
-    })
-    return { incoming: [...incoming.values()], outgoing: [...outgoing.values()] }
+    if (!data || selection?.kind !== 'node') return EMPTY_NEIGHBORS
+    return classifyNeighbors(selection.node.id, data.links, nodeById)
   }, [data, selection, nodeById])
 
   // 검색용으로 이미 받아 둔 종목 목록에서 선택 기업의 시세 행을 찾는다 — 추가 호출 없음
@@ -198,9 +270,9 @@ export function GraphView({ focus }: Props) {
   const handleReset = () => {
     graphRef.current?.resetZoom()
     clearSelection()
-    setSelectedCategories(new Set(ALL_CATEGORIES))
+    setSelectedCategories(isTheme ? new Set(ALL_CATEGORIES) : lensDefaultCategories('overview'))
     setSelectedPredicates(new Set(ALL_PREDICATES))
-    updateQuery({ hop: 1, scope: 'all' })
+    updateQuery({ hop: 1, scope: 'all', lens: 'overview' })
   }
 
   if (loading && !data) {
@@ -247,7 +319,7 @@ export function GraphView({ focus }: Props) {
 
   if (!data) return null
 
-  const scoped = !isTheme && scope !== 'all'
+  const scoped = controls.scope && scope !== 'all'
 
   return (
     <SidebarProvider
@@ -289,6 +361,7 @@ export function GraphView({ focus }: Props) {
             {data.metadata.center && (
               <div className="mt-1 text-caption text-muted-foreground">
                 중심: {data.metadata.center}
+                {!isTheme && ` · ${LENS_LABELS[lens]}`}
                 {scoped && ` · 범위 ${SCOPE_LABELS[scope]}`}
               </div>
             )}
@@ -304,22 +377,51 @@ export function GraphView({ focus }: Props) {
               className="absolute top-3 left-3 z-20 size-9 rounded-lg border border-border bg-background/90 text-foreground shadow-sm backdrop-blur hover:bg-accent"
               aria-label="사이드바 열기/닫기"
             />
+            {!isTheme && (
+              <div className={cn('absolute z-20', isMobile ? 'top-14 left-3' : 'top-3 left-14')}>
+                <LensSelector value={lens} onChange={(next) => updateQuery({ lens: next })} />
+              </div>
+            )}
+            {/* 렌즈·홉을 바꾸는 동안 이전 그래프를 그대로 두고 상단에 얇은 진행 표시만 — 화면이 비었다 채워지는 깜빡임을 피한다 */}
+            {loading && (
+              <div
+                role="progressbar"
+                aria-label="그래프 불러오는 중"
+                className="absolute inset-x-0 top-0 z-20 h-0.5 overflow-hidden bg-primary/15"
+              >
+                <div className="h-full w-1/3 animate-pulse bg-primary" />
+              </div>
+            )}
             {data.links.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
                 <p className="text-body font-medium text-foreground">
                   {isTheme
                     ? '이 테마에 속한 기업이 없습니다'
-                    : scoped
-                      ? `${SCOPE_LABELS[scope]} 범위에 연결된 관계가 없습니다`
-                      : '연결된 관계가 없습니다'}
+                    : lens === 'events'
+                      ? '아직 수집된 이벤트가 없습니다'
+                      : scoped
+                        ? `${SCOPE_LABELS[scope]} 범위에 연결된 관계가 없습니다`
+                        : '연결된 관계가 없습니다'}
                 </p>
                 <p className="text-caption text-muted-foreground">
                   {isTheme
                     ? '다른 테마나 종목을 검색해 보세요.'
-                    : scoped
-                      ? '범위를 전체로 넓히거나 홉을 늘려 보세요.'
-                      : '다른 종목을 검색하거나 홉을 넓혀 보세요.'}
+                    : lens === 'events'
+                      ? '뉴스가 쌓이면 여기에 이벤트가 나타납니다.'
+                      : scoped
+                        ? '범위를 전체로 넓히거나 홉을 늘려 보세요.'
+                        : '다른 종목을 검색하거나 홉을 넓혀 보세요.'}
                 </p>
+                {lens === 'events' && !isTheme && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => updateQuery({ lens: 'supply' })}
+                  >
+                    공급망 보기
+                  </Button>
+                )}
                 {scoped && (
                   <Button
                     variant="outline"
@@ -346,8 +448,8 @@ export function GraphView({ focus }: Props) {
               />
             )}
             <Legend visibleCategories={selectedCategories} />
-            {/* 테마 조회는 서버가 홉·범위를 받지 않는다 — 테마 + 소속 기업으로 고정 */}
-            {!isTheme && (
+            {/* Hop·범위는 렌즈가 서버에 보내는 파라미터만큼만 보인다 — 개요는 둘 다 없음, 이벤트는 Hop만 */}
+            {(controls.hop || controls.scope) && (
               <div
                 className={cn(
                   'absolute top-4 z-10 flex items-center gap-2',
@@ -355,14 +457,24 @@ export function GraphView({ focus }: Props) {
                   isMobile ? 'right-4' : 'right-16 max-w-[calc(100%-7.5rem)] flex-wrap justify-end',
                 )}
               >
-                {/* 캔버스가 42rem보다 좁으면 6칸 세그먼트가 사이드바 토글을 덮으므로 아이콘+시트로 접는다 */}
-                <div className="@2xl:hidden">
-                  <ScopeSelector value={scope} onChange={(next) => updateQuery({ scope: next })} compact />
-                </div>
-                <div className="hidden @2xl:block">
-                  <ScopeSelector value={scope} onChange={(next) => updateQuery({ scope: next })} />
-                </div>
-                <HopSelector value={hop} onChange={(next) => updateQuery({ hop: next })} />
+                {controls.scope && (
+                  <>
+                    {/* 캔버스가 42rem보다 좁으면 6칸 세그먼트가 사이드바 토글을 덮으므로 아이콘+시트로 접는다 */}
+                    <div className="@2xl:hidden">
+                      <ScopeSelector value={scope} onChange={(next) => updateQuery({ scope: next })} compact />
+                    </div>
+                    <div className="hidden @2xl:block">
+                      <ScopeSelector value={scope} onChange={(next) => updateQuery({ scope: next })} />
+                    </div>
+                  </>
+                )}
+                {controls.hop && <HopSelector value={hop} onChange={(next) => updateQuery({ hop: next })} />}
+                {/* 모바일은 폭이 없어 힌트를 숨긴다 — Hop 라벨은 남는다 */}
+                {lens === 'events' && !isMobile && (
+                  <p className="m-0 w-full text-right text-micro text-muted-foreground">
+                    1 이벤트 · 2 공유 기업 · 3 그 기업들의 이벤트
+                  </p>
+                )}
               </div>
             )}
             <Toolbar
@@ -381,6 +493,11 @@ export function GraphView({ focus }: Props) {
               stock={selectedStock}
               onNodeSelect={selectNode}
               onRecenter={recenter}
+              onThemeOpen={openTheme}
+              centerShortcuts={centerShortcuts}
+              nodesByLabel={nodesByLabel}
+              onShowSharing={showSharing}
+              onOpenNews={setOpenNewsId}
             />
           )}
         </div>
@@ -396,8 +513,14 @@ export function GraphView({ focus }: Props) {
           stock={selectedStock}
           onNodeSelect={selectNode}
           onRecenter={recenter}
+          onThemeOpen={openTheme}
+          centerShortcuts={centerShortcuts}
+          nodesByLabel={nodesByLabel}
+          onShowSharing={showSharing}
+          onOpenNews={setOpenNewsId}
         />
       )}
+      <NewsDetailModal newsId={openNewsId} onOpenChange={(open) => !open && setOpenNewsId(null)} />
     </SidebarProvider>
   )
 }
