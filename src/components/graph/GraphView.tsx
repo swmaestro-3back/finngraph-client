@@ -395,8 +395,24 @@ export function GraphView({ focus }: Props) {
                 <div className="h-full w-1/3 animate-pulse bg-primary" />
               </div>
             )}
-            {data.links.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+            <GraphCanvas
+              ref={graphRef}
+              data={data}
+              onNodeClick={selectNode}
+              onNodeDoubleClick={recenter}
+              onLinkClick={selectLink}
+              onBackgroundClick={clearSelection}
+              highlight={highlight}
+              centerId={centerId}
+              selectedCategories={selectedCategories}
+              selectedPredicates={selectedPredicates}
+            />
+            {/* 관계가 0개여도 캔버스와 중심 노드는 그대로 두고 안내만 얹는다 — 패널·통계와 화면이 어긋나지 않도록 */}
+            {data.links.length === 0 && (
+              <div
+                // 캔버스는 중심 노드 하나를 가운데에 그리고 있다 — 그 아래 빈자리에 겹쳐 두고, 노드 클릭·드래그는 통과시킨다
+                className="pointer-events-none absolute inset-x-0 top-[calc(50%+4.5rem)] z-10 flex flex-col items-center gap-2 px-4 text-center"
+              >
                 <p className="text-body font-medium text-foreground">
                   {isTheme
                     ? '이 테마에 속한 기업이 없습니다'
@@ -419,7 +435,7 @@ export function GraphView({ focus }: Props) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-2"
+                    className="pointer-events-auto mt-2"
                     onClick={() => updateQuery({ lens: 'supply' })}
                   >
                     공급망 보기
@@ -429,26 +445,13 @@ export function GraphView({ focus }: Props) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-2"
+                    className="pointer-events-auto mt-2"
                     onClick={() => updateQuery({ scope: 'all' })}
                   >
                     범위를 전체로
                   </Button>
                 )}
               </div>
-            ) : (
-              <GraphCanvas
-                ref={graphRef}
-                data={data}
-                onNodeClick={selectNode}
-                onNodeDoubleClick={recenter}
-                onLinkClick={selectLink}
-                onBackgroundClick={clearSelection}
-                highlight={highlight}
-                centerId={centerId}
-                selectedCategories={selectedCategories}
-                selectedPredicates={selectedPredicates}
-              />
             )}
             <Legend visibleCategories={selectedCategories} />
             {/* Hop·범위는 렌즈가 서버에 보내는 파라미터만큼만 보인다 — 개요는 둘 다 없음, 이벤트는 Hop만 */}

@@ -24,6 +24,7 @@ import {
   edgeOpacity,
   edgeWidth,
   eventNodeWidth,
+  filterVisibleGraph,
   placeIncrementally,
   seedPositions,
   taperedEdgePath,
@@ -169,24 +170,11 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     },
   }))
 
-  const getFilteredData = useCallback(() => {
-    const categoryOf = new Map(data.nodes.map((n) => [n.id, nodeCategory(n)]))
-    const links = data.links.filter((l) => {
-      if (!selectedPredicates.has(l.type)) return false
-      const s = categoryOf.get(endId(l.source))
-      const t = categoryOf.get(endId(l.target))
-      return !!s && !!t && selectedCategories.has(s) && selectedCategories.has(t)
-    })
-    const connected = new Set<string>()
-    links.forEach((l) => {
-      connected.add(endId(l.source))
-      connected.add(endId(l.target))
-    })
-    const nodes = data.nodes.filter(
-      (n) => selectedCategories.has(nodeCategory(n)) && connected.has(n.id),
-    )
-    return { nodes, links }
-  }, [data, selectedCategories, selectedPredicates])
+  // 중심은 연결이 없어도 남긴다 — 관계가 0개인 기업도 캔버스에 자기 노드는 보여야 한다
+  const getFilteredData = useCallback(
+    () => filterVisibleGraph(data, selectedCategories, selectedPredicates, centerId),
+    [data, selectedCategories, selectedPredicates, centerId],
+  )
 
   // ========== MAIN EFFECT ==========
   useEffect(() => {
