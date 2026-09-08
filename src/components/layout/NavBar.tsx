@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { ThemeBadge } from '@/components/theme/ThemeBadge'
 import { Button } from '@/components/ui/button'
 import { getData } from '@/lib/api'
 import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import { fromState } from '@/lib/navigation'
+import { loadStocks } from '@/lib/queries/useStocksCached'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
@@ -12,19 +14,22 @@ const MENU_ITEMS = [
   { label: '테마 목록', to: '/themes' },
   { label: '주식 목록', to: '/stocks' },
   { label: '기업 그래프', to: '/graph' },
+  { label: '데일리 브리핑', to: '/briefing' },
 ]
 
-let searchDataCache: Promise<[ThemeRes[], StockRowRes[]]> | null = null
+// 종목 쪽은 useStocksCached의 모듈 캐시를 재사용한다 — 별도 캐시를 두면 /v1/stocks가 세션 내 2회 나간다
+let themesCache: Promise<ThemeRes[]> | null = null
 
-function loadSearchData(): Promise<[ThemeRes[], StockRowRes[]]> {
-  searchDataCache ??= Promise.all([
-    getData<ThemeRes[]>('/v1/themes'),
-    getData<StockRowRes[]>('/v1/stocks'),
-  ]).catch((err: unknown) => {
-    searchDataCache = null
+function loadThemes(): Promise<ThemeRes[]> {
+  themesCache ??= getData<ThemeRes[]>('/v1/themes').catch((err: unknown) => {
+    themesCache = null
     throw err
   })
-  return searchDataCache
+  return themesCache
+}
+
+function loadSearchData(): Promise<[ThemeRes[], StockRowRes[]]> {
+  return Promise.all([loadThemes(), loadStocks()])
 }
 
 function searchTarget(
@@ -49,10 +54,54 @@ function searchTarget(
   return null
 }
 
+interface SearchMatches {
+  themes: ThemeRes[]
+  stocks: StockRowRes[]
+}
+
+function searchMatches(
+  rawQuery: string,
+  themes: ThemeRes[],
+  stocks: StockRowRes[],
+): SearchMatches {
+  const query = rawQuery.trim().toLowerCase()
+  if (!query) return { themes: [], stocks: [] }
+  return {
+    themes: themes.filter((t) => t.name.toLowerCase().includes(query)).slice(0, 3),
+    stocks: stocks
+      .filter((s) => s.name.toLowerCase().includes(query) || s.ticker.includes(query))
+      .slice(0, 5),
+  }
+}
+
 export function NavBar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const [matches, setMatches] = useState<SearchMatches | null>(null)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setMatches(null)
+      return
+    }
+    let alive = true
+    loadSearchData()
+      .then(([themes, stocks]) => {
+        if (alive) setMatches(searchMatches(query, themes, stocks))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [query])
+
+  // 라우트가 바뀌면(행·배지 클릭 포함) 검색 상태를 정리한다
+  useEffect(() => {
+    setQuery('')
+    setOpen(false)
+  }, [pathname])
 
   const isActive = (to: string) => {
     if (to === '/') return pathname === '/'
@@ -60,6 +109,10 @@ export function NavBar() {
     if (to === '/themes') return pathname === '/themes' || pathname.startsWith('/theme/')
     if (to === '/stocks') return pathname === '/stocks' || pathname.startsWith('/stock/')
     return pathname.startsWith(to.split('/').slice(0, 2).join('/'))
+  }
+
+  const goTo = (target: string) => {
+    navigate(target, { state: fromState(pathname) })
   }
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,16 +139,59 @@ export function NavBar() {
           Finn<span className="text-primary">graph</span>
         </Link>
 
-        <div className="hidden h-10 w-60 shrink-0 items-center gap-2 rounded-full bg-surface-inset px-5 md:flex">
+        <div
+          className="relative hidden h-10 w-60 shrink-0 items-center gap-2 rounded-full bg-surface-inset px-5 md:flex"
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+          }}
+        >
           <Search className="size-[18px] shrink-0 text-muted-foreground" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleSearch}
+            onFocus={() => setOpen(true)}
             placeholder="테마 · 종목 검색"
             className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
           />
+          {open && matches && (matches.themes.length > 0 || matches.stocks.length > 0) && (
+            <div className="absolute left-0 top-11 w-80 overflow-hidden rounded-xl border border-border bg-background py-1 shadow-soft">
+              {matches.themes.map((theme) => (
+                <button
+                  key={theme.name}
+                  type="button"
+                  onClick={() => goTo(`/theme/${encodeURIComponent(theme.name)}`)}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left hover:bg-surface-inset"
+                >
+                  <span className="truncate text-body font-medium text-foreground">
+                    {theme.name}
+                  </span>
+                  <span className="ml-auto shrink-0 text-caption text-muted-foreground">
+                    테마
+                  </span>
+                </button>
+              ))}
+              {matches.stocks.map((stock) => (
+                <button
+                  key={stock.ticker}
+                  type="button"
+                  onClick={() => goTo(`/stock/${stock.ticker}`)}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left hover:bg-surface-inset"
+                >
+                  <span className="truncate text-body font-medium text-foreground">
+                    {stock.name}
+                  </span>
+                  <span className="shrink-0 font-mono text-caption text-muted-foreground">
+                    {stock.ticker}
+                  </span>
+                  {stock.themeName !== null && (
+                    <ThemeBadge name={stock.themeName} className="ml-auto max-w-28" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex-1" />

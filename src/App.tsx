@@ -6,6 +6,7 @@ import StockDetailPage from '@/pages/StockDetailPage'
 import CorpGraphPage from '@/pages/CorpGraphPage'
 import ThemeListPage from '@/pages/ThemeListPage'
 import StockListPage from '@/pages/StockListPage'
+import BriefingPage from '@/pages/BriefingPage'
 
 function ThemesAliasRedirect() {
   const { themeId } = useParams()
@@ -25,6 +26,7 @@ function App() {
         {/* 더 구체적인 테마 경로를 먼저 둔다 — /graph/theme/… 가 :ticker 로 잡히지 않도록 */}
         <Route path="/graph/theme/:name" element={<CorpGraphPage />} />
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
+        <Route path="/briefing" element={<BriefingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

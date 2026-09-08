@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
+import { ThemeBadge } from '@/components/theme/ThemeBadge'
 import type { RelatedCompanyRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChangeOrDash, formatPriceOrDash } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
+import { useStockIndex } from '@/lib/queries/useStocksCached'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -11,22 +13,27 @@ interface Props {
 
 export function RelatedStocks({ stocks, onNavigate }: Props) {
   const { pathname } = useLocation()
+  const stockIndex = useStockIndex()
 
   if (stocks.length === 0) return null
 
   return (
     <div className="flex flex-wrap gap-2">
-      {stocks.map((stock) =>
-        stock.ticker === null ? (
-          <span
-            key={stock.companyName}
-            className="flex items-center rounded-xl border border-border px-3 py-2"
-          >
-            <span className="text-body font-semibold text-foreground">
-              {stock.companyName}
+      {stocks.map((stock) => {
+        if (stock.ticker === null) {
+          return (
+            <span
+              key={stock.companyName}
+              className="flex items-center rounded-xl border border-border px-3 py-2"
+            >
+              <span className="text-body font-semibold text-foreground">
+                {stock.companyName}
+              </span>
             </span>
-          </span>
-        ) : (
+          )
+        }
+        const themeName = stockIndex?.get(stock.ticker)?.themeName ?? null
+        return (
           <Link
             key={stock.ticker}
             to={`/stock/${stock.ticker}`}
@@ -48,9 +55,12 @@ export function RelatedStocks({ stocks, onNavigate }: Props) {
             >
               {formatChangeOrDash(stock.change)}
             </span>
+            {themeName !== null && (
+              <ThemeBadge name={themeName} className="max-w-32" onNavigate={onNavigate} />
+            )}
           </Link>
-        ),
-      )}
+        )
+      })}
     </div>
   )
 }
