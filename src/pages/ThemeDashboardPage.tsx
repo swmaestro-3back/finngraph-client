@@ -2,14 +2,20 @@ import { useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { InsightStrip } from '@/components/theme/InsightStrip'
+import { MarketHeadline } from '@/components/theme/MarketHeadline'
+import { MarketSummaryStrip } from '@/components/theme/MarketSummaryStrip'
+import { MoverFeed } from '@/components/theme/MoverFeed'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { StockSection } from '@/components/theme/StockSection'
+import { ThemeTopMovers } from '@/components/theme/ThemeTopMovers'
 import { Treemap, type TreemapItem } from '@/components/theme/Treemap'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { toNewsItem } from '@/lib/apiMappers'
+import { pickMovers } from '@/lib/briefing'
 import { formatCompactKrw } from '@/lib/format'
 import { selectTreemapThemes } from '@/lib/momentum'
+import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { useThemes } from '@/lib/queries/useThemes'
@@ -25,6 +31,9 @@ export default function ThemeDashboardPage() {
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const { data: themes, loading, error, refetch } = useThemes()
+  const { data: allStocks, error: stocksError } = useStocksCached()
+
+  const movers = useMemo(() => pickMovers(allStocks ?? [], 6), [allStocks])
 
   const treemapThemes = useMemo(
     () => selectTreemapThemes(themes ?? [], themeCount),
@@ -82,6 +91,16 @@ export default function ThemeDashboardPage() {
 
       {loading && (
         <>
+          <div className="mb-3 h-7 w-2/3 animate-pulse rounded bg-muted" />
+          <div className="mb-3 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+            <div className="h-40 animate-pulse rounded-2xl bg-muted" />
+            <div className="h-40 animate-pulse rounded-2xl bg-muted" />
+          </div>
+          <div className="mb-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
+            ))}
+          </div>
           <div className="mb-3 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
             <div className="h-40 animate-pulse rounded-2xl bg-muted" />
             <div className="h-40 animate-pulse rounded-2xl bg-muted" />
@@ -113,6 +132,31 @@ export default function ThemeDashboardPage() {
 
       {!loading && !error && themes && (
         <>
+          <MarketHeadline themes={themes} />
+
+          <div className="mb-3 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+            <MarketSummaryStrip />
+            <ThemeTopMovers themes={themes} onSelectTheme={setSelectedName} />
+          </div>
+
+          {!stocksError && (
+            <div className="mb-3 flex flex-col gap-2">
+              {/* 카드 밖 페이지 흐름의 제목 — StockSection h2와 같은 페이지 레벨 타이포 정본을 쓴다 */}
+              <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">
+                특징주
+              </h2>
+              {allStocks ? (
+                <MoverFeed movers={movers} />
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <InsightStrip
             themes={themes}
             onSelectTheme={setSelectedName}
