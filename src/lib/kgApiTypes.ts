@@ -1,6 +1,7 @@
 // finngraph-ai-server(kg-api) 응답 계약 — 서버 app/schemas.py와 1:1.
-// 그래프는 (:Company)-[:SUPPLIES_TO]->(:Company), (:Company)-[:BELONGS_TO]->(:Theme) 두 관계만 가진다.
-// 관계 타입은 응답에 없고 엔드포인트가 정한다 (공급망 → SUPPLIES_TO, 테마 → BELONGS_TO).
+// 노드는 Company·Theme·Event, 관계는 SUPPLIES_TO / ACQUIRES / INVESTS_IN(기업→기업), BELONGS_TO(기업→테마),
+// HAS_EVENT(기업→이벤트). 관계 응답에는 type 필드가 실려 온다.
+// 단, /supplychain은 Cypher가 SUPPLIES_TO만 따라가므로 인수·투자는 /companies/{ticker}(개요)에서만 나온다.
 
 /** 상장 시장 — `market` 쿼리 파라미터 값 */
 export type KgMarket = 'KOSPI' | 'KOSDAQ'
@@ -43,9 +44,13 @@ export interface KgDisclosureMention {
   item: string | null
 }
 
-/** 공급 관계 — start(공급자) → end(수요자). 근거가 인라인이라 별도 상세 조회가 없다 */
+/** 기업→기업 관계 타입 — 공급망 응답은 SUPPLIES_TO만, 개요 응답은 셋 다 */
+export type KgSupplyRelType = 'SUPPLIES_TO' | 'ACQUIRES' | 'INVESTS_IN'
+
+/** 기업→기업 관계 — start(공급자/인수자/투자자) → end. 근거가 인라인이라 별도 상세 조회가 없다 */
 export interface KgSupplyRelRes {
   id: string
+  type: KgSupplyRelType
   start: string
   end: string
   news_mention_count: number
@@ -59,10 +64,56 @@ export interface KgSupplyRelRes {
 /** 테마 소속 — start(기업) → end(테마) */
 export interface KgBelongsToRelRes {
   id: string
+  type: 'BELONGS_TO'
   start: string
   end: string
   /** 해당 테마로 분류된 근거 */
   reason: string | null
+}
+
+/** 이벤트(뉴스 클러스터) 노드 */
+export interface KgEventNode {
+  id: string
+  /** 뉴스 클러스터 id */
+  cluster_id: number | null
+  title: string | null
+  keywords: string[]
+  /** 이벤트에 언급된 기업명 */
+  companies: string[]
+  news_ids: number[]
+  representative_news_id: number | null
+  /** 정제 후 남은 뉴스 건수 */
+  member_count: number | null
+  original_size: number | null
+  first_published_at: string | null
+  last_published_at: string | null
+  titled_at: string | null
+  synced_at: string | null
+}
+
+/** 기업이 이벤트에 언급됨 — start(기업) → end(이벤트). 근거 필드가 없다 */
+export interface KgHasEventRelRes {
+  id: string
+  type: 'HAS_EVENT'
+  start: string
+  end: string
+}
+
+export type KgCompanyRelRes = KgSupplyRelRes | KgBelongsToRelRes | KgHasEventRelRes
+
+/** GET /v1/companies/{ticker} — 중심 기업의 1홉 전체. center 필드는 없다 */
+export interface KgCompanyRes {
+  companies: KgCompanyNode[]
+  themes: KgThemeNode[]
+  events: KgEventNode[]
+  relationships: KgCompanyRelRes[]
+}
+
+/** GET /v1/companies/{ticker}/events — 기업과 이벤트가 번갈아 나오는 서브그래프 */
+export interface KgCompanyEventsRes {
+  companies: KgCompanyNode[]
+  events: KgEventNode[]
+  relationships: KgHasEventRelRes[]
 }
 
 /** GET /v1/companies/{ticker}/supplychain — 중심 기업을 포함한 경로상의 모든 기업. center 필드는 없다 */

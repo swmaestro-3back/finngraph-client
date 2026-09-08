@@ -1,8 +1,10 @@
 import { X } from 'lucide-react'
 import { PREDICATE_LABELS, type GraphNode, type GraphSelection } from '@/data/graphTypes'
 import type { StockRowRes } from '@/lib/apiTypes'
-import { NodeDetail, type NodeNeighbors } from '@/components/graph/NodeDetail'
+import type { NodeNeighbors } from '@/lib/graphNeighbors'
+import { NodeDetail, type CenterShortcuts } from '@/components/graph/NodeDetail'
 import { EdgeDetail } from '@/components/graph/EdgeDetail'
+import { EventDetail } from '@/components/graph/EventDetail'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
@@ -11,7 +13,7 @@ interface Props {
   onClose: () => void
   /** 모바일에서는 바텀시트로 띄운다 */
   isMobile?: boolean
-  /** 선택 노드의 방향별 이웃 (노드 선택일 때) */
+  /** 선택 노드의 관계별 이웃 (노드 선택일 때) */
   neighbors: NodeNeighbors
   /** 선택 노드가 지금 조회의 중심인가 */
   isCenter: boolean
@@ -19,6 +21,12 @@ interface Props {
   stock?: StockRowRes
   onNodeSelect?: (node: GraphNode) => void
   onRecenter?: (node: GraphNode) => void
+  onThemeOpen?: (node: GraphNode) => void
+  centerShortcuts?: CenterShortcuts
+  /** 이벤트 상세의 언급 기업 칩이 그래프 노드를 이름으로 찾을 때 */
+  nodesByLabel: Map<string, GraphNode>
+  onShowSharing?: () => void
+  onOpenNews?: (newsId: string) => void
 }
 
 /** 선택한 노드/간선의 상세 — 데스크톱은 우측 패널, 모바일은 바텀시트 */
@@ -31,6 +39,11 @@ export function DetailPanel({
   stock,
   onNodeSelect,
   onRecenter,
+  onThemeOpen,
+  centerShortcuts,
+  nodesByLabel,
+  onShowSharing,
+  onOpenNews,
 }: Props) {
   const body =
     selection.kind === 'edge' ? (
@@ -40,6 +53,14 @@ export function DetailPanel({
         target={selection.target}
         onNodeSelect={onNodeSelect}
       />
+    ) : selection.node.type === 'event' ? (
+      <EventDetail
+        node={selection.node}
+        nodesByLabel={nodesByLabel}
+        onNodeSelect={onNodeSelect}
+        onShowSharing={onShowSharing}
+        onOpenNews={onOpenNews}
+      />
     ) : (
       <NodeDetail
         node={selection.node}
@@ -48,6 +69,8 @@ export function DetailPanel({
         stock={stock}
         onNodeSelect={onNodeSelect}
         onRecenter={onRecenter}
+        onThemeOpen={onThemeOpen}
+        centerShortcuts={centerShortcuts}
       />
     )
 

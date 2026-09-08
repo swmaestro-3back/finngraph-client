@@ -81,7 +81,13 @@ function SupplyCard({
   )
 }
 
+/** 기간(20~250거래일)에 상관없이 X축 라벨을 8개 안팎만 찍는다 */
+function xTickInterval(count: number): number {
+  return Math.max(1, Math.round(count / 8))
+}
+
 function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: SyncedIndex) {
+  const tickInterval = xTickInterval(points.length)
   return (
     <ComposedChart
       data={points}
@@ -90,7 +96,7 @@ function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: Synced
       onClick={sync.onChartClick}
     >
       <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
-      <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={8} />
+      <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
       <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}만`} width={38} />
       {syncMarks(sync, {
         kind: 'bar',
@@ -118,6 +124,7 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
 }) {
   // 4카드가 하나의 거래일 축을 공유한다 — 한 곳을 짚으면 나머지도 같은 날을 가리킨다
   const sync = useSyncedIndex()
+  const tickInterval = xTickInterval(points.length)
   const pinnedDay = sync.pinnedIndex === null ? null : points[sync.pinnedIndex].label
   const latestRatio = [...points].reverse().find((p) => p.foreignRatio !== null)?.foreignRatio ?? null
   const nets: { title: string; key: keyof SupplyPoint }[] = [
@@ -143,7 +150,7 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
             onClick={sync.onChartClick}
           >
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
-            <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={8} />
+            <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v.toFixed(1)}%`} domain={['dataMin - 0.5', 'dataMax + 0.5']} width={44} />
             {syncMarks(sync, {
               kind: 'line',

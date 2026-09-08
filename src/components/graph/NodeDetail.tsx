@@ -1,4 +1,4 @@
-import { Crosshair, ExternalLink } from 'lucide-react'
+import { Crosshair, ExternalLink, Network, Newspaper } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
   CATEGORY_LABELS,
@@ -7,6 +7,7 @@ import {
   type GraphNode,
 } from '@/data/graphTypes'
 import type { StockRowRes } from '@/lib/apiTypes'
+import type { NodeNeighbors } from '@/lib/graphNeighbors'
 import {
   changeColorClass,
   formatChangeOrDash,
@@ -27,10 +28,12 @@ const INDEX_FLAGS = [
   { key: 'kosdaq150', label: 'KOSDAQ150' },
 ] as const
 
-/** 간선 방향별 이웃 — incoming은 이 노드로 들어오는(공급하는) 쪽, outgoing은 이 노드가 향하는 쪽 */
-export interface NodeNeighbors {
-  incoming: GraphNode[]
-  outgoing: GraphNode[]
+/** 개요 렌즈에서 중심 기업 패널이 다른 렌즈로 건너가는 단축 버튼 */
+export interface CenterShortcuts {
+  onOpenSupply: () => void
+  onOpenEvents: () => void
+  /** 0이면 [이벤트 보기]를 비활성 처리한다 */
+  eventCount: number
 }
 
 interface Props {
@@ -43,6 +46,10 @@ interface Props {
   onNodeSelect?: (node: GraphNode) => void
   /** 이 노드를 새 중심으로 다시 조회 */
   onRecenter?: (node: GraphNode) => void
+  /** 테마 칩 — 캔버스에 숨겨져 있을 수 있어 선택이 아니라 테마 그래프로 이동한다 */
+  onThemeOpen?: (node: GraphNode) => void
+  /** 중심 기업 + 개요 렌즈일 때만 넘어온다 */
+  centerShortcuts?: CenterShortcuts
 }
 
 /** 이웃 칩 묶음 — 비어 있으면 섹션 자체를 그리지 않는다 */
@@ -78,18 +85,22 @@ function NeighborSection({
 }
 
 /**
- * 노드 상세. 기업은 시장·지수·시세와 공급처/납품처를, 테마는 설명과 소속 기업을 보인다.
+ * 노드 상세. 기업은 시장·지수·시세와 관계별 이웃(공급처/납품처/인수/투자/테마/이벤트)을, 테마는 설명과 소속 기업을 보인다.
  * 여기서 [중심으로 탐색]을 눌러야 재조회가 일어난다 — 클릭 한 번으로는 정보만 본다.
  */
-export function NodeDetail({ node, neighbors, isCenter, stock, onNodeSelect, onRecenter }: Props) {
+export function NodeDetail({
+  node,
+  neighbors,
+  isCenter,
+  stock,
+  onNodeSelect,
+  onRecenter,
+  onThemeOpen,
+  centerShortcuts,
+}: Props) {
   const isTheme = node.type === 'theme'
   const ticker = node.data.ticker
   const indexChips = INDEX_FLAGS.filter((f) => node.data[f.key])
-
-  // 공급 관계는 공급자 → 수요자 방향이다. 들어오는 기업이 공급처, 나가는 기업이 납품처.
-  const suppliers = neighbors.incoming.filter((n) => n.type === 'company')
-  const customers = neighbors.outgoing.filter((n) => n.type === 'company')
-  const themes = neighbors.outgoing.filter((n) => n.type === 'theme')
 
   const detailPath = isTheme
     ? `/theme/${encodeURIComponent(node.label)}`
@@ -138,7 +149,7 @@ export function NodeDetail({ node, neighbors, isCenter, stock, onNodeSelect, onR
         </p>
       )}
 
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className={cn('flex flex-wrap gap-2', isCenter && centerShortcuts ? 'mb-3' : 'mb-5')}>
         {isCenter ? (
           <Button size="sm" className="flex-1" disabled>
             <Crosshair data-icon="inline-start" />
@@ -162,23 +173,45 @@ export function NodeDetail({ node, neighbors, isCenter, stock, onNodeSelect, onR
         )}
       </div>
 
+      {/* 개요에서 더 깊이 — 공급망은 hop·범위로, 이벤트는 공유 기업으로 이어진다 */}
+      {isCenter && centerShortcuts && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="flex-1" onClick={centerShortcuts.onOpenSupply}>
+            <Network data-icon="inline-start" />
+            공급망 펼치기
+          </Button>
+          <span
+            title={centerShortcuts.eventCount === 0 ? '수집된 이벤트 없음' : undefined}
+            className="flex-1"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={centerShortcuts.eventCount === 0}
+              onClick={centerShortcuts.onOpenEvents}
+            >
+              <Newspaper data-icon="inline-start" />
+              이벤트 보기
+            </Button>
+          </span>
+        </div>
+      )}
+
       {isTheme ? (
-        <NeighborSection title="소속 기업" nodes={neighbors.incoming} onNodeSelect={onNodeSelect} />
+        <NeighborSection title="소속 기업" nodes={neighbors.members} onNodeSelect={onNodeSelect} />
       ) : (
         <>
-          <NeighborSection
-            title="공급처"
-            meta="이 기업에 납품"
-            nodes={suppliers}
-            onNodeSelect={onNodeSelect}
-          />
-          <NeighborSection
-            title="납품처"
-            meta="이 기업이 납품"
-            nodes={customers}
-            onNodeSelect={onNodeSelect}
-          />
-          <NeighborSection title="소속 테마" nodes={themes} onNodeSelect={onNodeSelect} />
+          {/* 공급 관계는 공급자 → 수요자 방향이다. 들어오는 기업이 공급처, 나가는 기업이 납품처 */}
+          <NeighborSection title="공급처" meta="이 기업에 납품" nodes={neighbors.suppliers} onNodeSelect={onNodeSelect} />
+          <NeighborSection title="납품처" meta="이 기업이 납품" nodes={neighbors.customers} onNodeSelect={onNodeSelect} />
+          <NeighborSection title="인수" meta="이 기업이 인수" nodes={neighbors.acquired} onNodeSelect={onNodeSelect} />
+          <NeighborSection title="피인수" meta="이 기업을 인수" nodes={neighbors.acquirers} onNodeSelect={onNodeSelect} />
+          <NeighborSection title="투자" meta="이 기업이 투자" nodes={neighbors.investees} onNodeSelect={onNodeSelect} />
+          <NeighborSection title="피투자" meta="이 기업에 투자" nodes={neighbors.investors} onNodeSelect={onNodeSelect} />
+          {/* 테마는 개요 캔버스에서 기본 숨김이라 응답 전체(필터 전)에서 채우고, 누르면 테마 그래프로 간다 */}
+          <NeighborSection title="소속 테마" nodes={neighbors.themes} onNodeSelect={onThemeOpen ?? onNodeSelect} />
+          <NeighborSection title="관련 이벤트" nodes={neighbors.events} onNodeSelect={onNodeSelect} />
         </>
       )}
     </>

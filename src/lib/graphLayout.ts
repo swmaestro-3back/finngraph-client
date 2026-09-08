@@ -1,6 +1,14 @@
 // 그래프 캔버스의 순수 계산 — d3 셀렉션이나 DOM에 의존하지 않아 단독으로 검증 가능하다.
 
-import { endId, type GraphLink, type GraphNode } from '@/data/graphTypes'
+import {
+  endId,
+  nodeCategory,
+  type GraphData,
+  type GraphLink,
+  type GraphNode,
+  type NodeCategory,
+  type Predicate,
+} from '@/data/graphTypes'
 
 /**
  * 일반 노드 반지름 범위. 라벨을 원 밖에 두므로 점은 작게 — 차수 차이는 면적으로만 읽힌다.
@@ -9,6 +17,22 @@ export const NODE_RADIUS = { min: 5, max: 14 } as const
 
 /** 중심 노드 반지름 — 차수 스케일과 무관하게 항상 가장 크다 (화면의 유일한 초점) */
 export const CENTER_RADIUS = 22
+
+/**
+ * 이벤트 태그(pill) 기하. 원형 기업 노드와 한눈에 구분되도록 가로로 길고, 크기는 차수와 무관하게 고정이다.
+ * 글자 폭 10px은 한글 10px 폰트 기준 — 라벨이 태그 안에 들어가야 하므로 글자 수로 폭을 정한다.
+ */
+export const EVENT_NODE = { height: 22, charWidth: 10, padX: 8, maxChars: 12 } as const
+
+/** 태그 안에 들어갈 만큼만 — 전체 제목은 툴팁·상세 패널에 있다 */
+export function truncateEventLabel(title: string): string {
+  return title.length > EVENT_NODE.maxChars ? `${title.slice(0, EVENT_NODE.maxChars - 1)}…` : title
+}
+
+/** 잘린 라벨이 꼭 맞는 태그 폭 */
+export function eventNodeWidth(title: string): number {
+  return truncateEventLabel(title).length * EVENT_NODE.charWidth + EVENT_NODE.padX * 2
+}
 
 /**
  * 연결 차수 → 반지름 스케일.
@@ -48,6 +72,40 @@ export function edgeWidth(link: GraphLink): number {
 /** 근거량 → 간선 불투명도. 굵기만으로는 차이가 작아 진하기로도 거든다 */
 export function edgeOpacity(link: GraphLink): number {
   return 0.28 + 0.42 * Math.min(1, link.mentioned_count / 12)
+}
+
+// ---------------------------------------------------------------- 가시 그래프
+
+/**
+ * 필터를 통과해 캔버스에 실제로 그릴 노드·간선.
+ *
+ * 간선은 관계 타입과 양 끝 분류가 모두 켜져 있어야 남고, 노드는 분류가 켜진 것 중 남은 간선의 끝점만 남는다
+ * — 고립된 노드는 자리만 차지하므로 숨긴다. 중심 노드만 예외로, 연결이 하나도 없어도(서버가 중심만 돌려준 기업,
+ * 필터로 모든 간선이 꺼진 경우) 화면에 남아 "어느 기업을 보고 있는가"가 캔버스에서 사라지지 않게 한다.
+ * 중심도 자기 분류가 꺼지면 숨는다 — 분류 필터의 의미는 그대로 둔다.
+ */
+export function filterVisibleGraph(
+  data: Pick<GraphData, 'nodes' | 'links'>,
+  selectedCategories: Set<NodeCategory>,
+  selectedPredicates: Set<Predicate>,
+  centerId: string | null,
+): { nodes: GraphNode[]; links: GraphLink[] } {
+  const categoryOf = new Map(data.nodes.map((n) => [n.id, nodeCategory(n)]))
+  const links = data.links.filter((l) => {
+    if (!selectedPredicates.has(l.type)) return false
+    const s = categoryOf.get(endId(l.source))
+    const t = categoryOf.get(endId(l.target))
+    return !!s && !!t && selectedCategories.has(s) && selectedCategories.has(t)
+  })
+  const connected = new Set<string>()
+  links.forEach((l) => {
+    connected.add(endId(l.source))
+    connected.add(endId(l.target))
+  })
+  const nodes = data.nodes.filter(
+    (n) => selectedCategories.has(nodeCategory(n)) && (connected.has(n.id) || n.id === centerId),
+  )
+  return { nodes, links }
 }
 
 /** 노드별 연결 차수 */

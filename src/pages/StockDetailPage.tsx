@@ -8,8 +8,15 @@ import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { Button } from '@/components/ui/button'
+import { FilterChip } from '@/components/ui/filter-chip'
 import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
-import { CANDLE_COUNTS, type CandlePeriod } from '@/lib/apiTypes'
+import {
+  CANDLE_COUNTS,
+  SUPPLY_RANGES,
+  SUPPLY_RANGE_LIMITS,
+  type CandlePeriod,
+  type SupplyRange,
+} from '@/lib/apiTypes'
 import {
   changeColorClass,
   formatAmountOrDash,
@@ -37,13 +44,14 @@ export default function StockDetailPage() {
   const { pathname } = useLocation()
   const back = useBackTarget({ to: '/stocks', label: '주식 목록' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
+  const [supplyRange, setSupplyRange] = useState<SupplyRange>('3M')
   const [annualOpen, setAnnualOpen] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(CANDLE_COUNTS.D - 1)
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const { data: stock, loading, error, refetch } = useStockDetail(code)
   const { data: candleRes } = useCandles(code, period)
-  const { data: flowRes } = useInvestorFlows(code)
+  const { data: flowRes } = useInvestorFlows(code, SUPPLY_RANGE_LIMITS[supplyRange])
   const { data: financialRows } = useFinancials(code)
   const { data: newsRows } = useStockNews(code)
 
@@ -214,13 +222,25 @@ export default function StockDetailPage() {
             />
           )}
 
-          <div className="mb-[9px] mt-7 flex items-center gap-2">
+          <div className="mb-[9px] mt-7 flex items-center justify-between">
             <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
               투자자별 수급
             </h2>
+            <div className="flex gap-1.5">
+              {SUPPLY_RANGES.map((r) => (
+                <FilterChip
+                  key={r.key}
+                  active={supplyRange === r.key}
+                  onClick={() => setSupplyRange(r.key)}
+                >
+                  {r.label}
+                </FilterChip>
+              ))}
+            </div>
           </div>
           {supply.length > 0 ? (
-            <SupplyDemandCharts points={supply} />
+            // 기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록
+            <SupplyDemandCharts key={supplyRange} points={supply} />
           ) : (
             <p className="text-caption text-muted-foreground">수급 데이터가 없습니다.</p>
           )}

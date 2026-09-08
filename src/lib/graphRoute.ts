@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import type { GraphFocus } from '@/data/graphTypes'
+import { ALL_CATEGORIES, type GraphFocus, type NodeCategory } from '@/data/graphTypes'
 import type { KgMarket, KgMarketIndex } from '@/lib/kgApiTypes'
 
 /** 원점에서 몇 홉까지 볼지 — 1은 원점의 바로 이웃까지다 (서버 허용 범위 1~3) */
@@ -26,6 +26,41 @@ export const SCOPE_LABELS: Record<Scope, string> = {
   kosdaq150: 'KOSDAQ150',
 }
 
+/**
+ * 렌즈 — 기업 원점을 어느 축으로 보는가. 렌즈마다 서버 엔드포인트가 다르다.
+ * 개요는 1홉 전체(서버 고정), 공급망은 hop·범위, 이벤트는 hop만 받는다.
+ */
+export type Lens = 'overview' | 'supply' | 'events'
+
+export const LENS_VALUES: Lens[] = ['overview', 'supply', 'events']
+
+export const LENS_LABELS: Record<Lens, string> = {
+  overview: '개요',
+  supply: '공급망',
+  events: '이벤트',
+}
+
+function isLens(v: string | null | undefined): v is Lens {
+  return (LENS_VALUES as string[]).includes(v ?? '')
+}
+
+/** 렌즈별로 상단에 보이는 컨트롤 — 서버가 받는 파라미터와 1:1 */
+export function lensControls(lens: Lens): { hop: boolean; scope: boolean } {
+  switch (lens) {
+    case 'supply':
+      return { hop: true, scope: true }
+    case 'events':
+      return { hop: true, scope: false }
+    default:
+      return { hop: false, scope: false }
+  }
+}
+
+/** 렌즈별 노드 종류 필터 기본값 — 개요는 테마가 수십 개라 공급망이 묻히므로 숨기고 시작한다 */
+export function lensDefaultCategories(lens: Lens): Set<NodeCategory> {
+  return new Set(lens === 'overview' ? ALL_CATEGORIES.filter((c) => c !== 'theme') : ALL_CATEGORIES)
+}
+
 function isMarket(v: string | null | undefined): v is KgMarket {
   return (MARKET_SCOPES as string[]).includes(v ?? '')
 }
@@ -38,9 +73,10 @@ function isIndex(v: string | null | undefined): v is KgMarketIndex {
 export interface GraphQuery {
   hop: Hop
   scope: Scope
+  lens: Lens
 }
 
-export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: 'all' }
+export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: 'all', lens: 'overview' }
 
 export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   const hopRaw = Number(params.get('hop'))
@@ -49,12 +85,15 @@ export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   const market = params.get('market')
   const index = params.get('index')
   const scope: Scope = isMarket(market) ? market : isIndex(index) ? index : 'all'
-  return { hop, scope }
+  const lensRaw = params.get('lens')
+  const lens: Lens = isLens(lensRaw) ? lensRaw : 'overview'
+  return { hop, scope, lens }
 }
 
-/** 기본값(hop 1·전체)은 쿼리에서 생략해 URL을 짧게 유지한다 */
+/** 기본값(개요·hop 1·전체)은 쿼리에서 생략해 URL을 짧게 유지한다 */
 export function graphSearch(query: GraphQuery): string {
   const params = new URLSearchParams()
+  if (query.lens !== 'overview') params.set('lens', query.lens)
   if (query.hop !== 1) params.set('hop', String(query.hop))
   if (isMarket(query.scope)) params.set('market', query.scope)
   else if (isIndex(query.scope)) params.set('index', query.scope)
@@ -79,9 +118,9 @@ export function scopeToKgOptions(scope: Scope): { market?: KgMarket; index?: KgM
 }
 
 /**
- * URL 쿼리에 실린 hop·범위.
+ * URL 쿼리에 실린 hop·범위·렌즈.
  * 갱신은 히스토리를 덧쓴다(replace) — 뒤로가기는 "이전 중심"으로만 이동해야 하므로
- * 홉·범위를 바꾼 흔적은 항목으로 남기지 않는다.
+ * 홉·범위·렌즈를 바꾼 흔적은 항목으로 남기지 않는다.
  */
 export function useGraphQuery(): [GraphQuery, (patch: Partial<GraphQuery>) => void] {
   const [params, setParams] = useSearchParams()
