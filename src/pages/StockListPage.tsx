@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
+import { StockFilterBar } from '@/components/table/StockFilterBar'
 import { StockIdentity } from '@/components/table/StockIdentity'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,7 +21,13 @@ import {
   toEok,
 } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
-import { useStocks } from '@/lib/queries/useStocks'
+import { useStocksCached } from '@/lib/queries/useStocksCached'
+import {
+  applyStockFilters,
+  DEFAULT_FILTER,
+  isFilterActive,
+  type FilterState,
+} from '@/lib/stockFilter'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
 
@@ -78,12 +85,20 @@ export default function StockListPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [page, setPage] = useState(1)
-  const { data: stocks, loading, error, refetch } = useStocks()
+  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
+  const { data: stocks, loading, error, refetch } = useStocksCached()
 
   const allRows: StockRow[] = useMemo(() => stocks ?? [], [stocks])
+  const filteredRows = useMemo(() => applyStockFilters(allRows, filter), [allRows, filter])
+  const filterActive = isFilterActive(filter)
+
+  const handleFilterChange = (next: FilterState) => {
+    setFilter(next)
+    setPage(1)
+  }
 
   const { sorted, sortKey, sortDesc, handleSort } = useTableSort<StockRow, SortKey>(
-    allRows,
+    filteredRows,
     'w1',
   )
 
@@ -117,7 +132,9 @@ export default function StockListPage() {
             주식 목록
           </h1>
           <span className="text-body text-muted-foreground">
-            전체 {allRows.length}개 종목
+            {filterActive
+              ? `조건 일치 ${filteredRows.length} / 전체 ${allRows.length}`
+              : `전체 ${allRows.length}개 종목`}
           </span>
         </div>
       </div>
@@ -149,6 +166,13 @@ export default function StockListPage() {
 
       {!loading && !error && (
         <>
+          <StockFilterBar
+            stocks={allRows}
+            value={filter}
+            onChange={handleFilterChange}
+            matchCount={filteredRows.length}
+          />
+
           <div className="card-surface overflow-hidden">
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="min-w-[1140px]">
