@@ -7,6 +7,8 @@ import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
+import { SupplyStreakBadges } from '@/components/stock/SupplyStreakBadges'
+import { ThemePeerComparison } from '@/components/stock/ThemePeerComparison'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
@@ -53,7 +55,7 @@ export default function StockDetailPage() {
   const { data: candleRes } = useCandles(code, period)
   const { data: flowRes } = useInvestorFlows(code, SUPPLY_RANGE_LIMITS[supplyRange])
   const { data: financialRows } = useFinancials(code)
-  const { data: newsRows } = useStockNews(code)
+  const { data: newsRows, loading: newsLoading } = useStockNews(code)
 
   const candles = useMemo(
     () => (candleRes ?? []).map((c) => toCandleView(c, period)),
@@ -61,12 +63,22 @@ export default function StockDetailPage() {
   )
   const issues = useMemo(
     () =>
-      candleRes && candleRes.length > 0
+      // 종목 전환 직후 useApi가 이전 종목 뉴스를 유지하므로, 로딩 중에는 타임라인을 만들지 않는다
+      !newsLoading && candleRes && candleRes.length > 0
         ? buildIssueTimeline(newsRows ?? [], toCandleDates(candleRes, period), period)
         : [],
-    [candleRes, newsRows, period],
+    [candleRes, newsRows, newsLoading, period],
   )
   const supply = useMemo(() => (flowRes ?? []).map(toSupplyPoint), [flowRes])
+
+  // 뉴스 응답의 정렬이 보장되지 않으므로 수집 시각 기준 최신 1건을 직접 고른다
+  // 로딩 중에는 null — 종목 전환 직후 이전 종목의 뉴스가 '최근 이슈'로 노출되는 것을 막는다
+  const latestNews = useMemo(() => {
+    if (newsLoading) return null
+    const dated = (newsRows ?? []).filter((n) => !Number.isNaN(new Date(n.collectedAt).getTime()))
+    dated.sort((a, b) => new Date(b.collectedAt).getTime() - new Date(a.collectedAt).getTime())
+    return dated[0] ?? null
+  }, [newsRows, newsLoading])
 
   const statTiles: StatTile[] = useMemo(() => {
     if (!stock) return []
@@ -183,6 +195,19 @@ export default function StockDetailPage() {
             </Button>
           </div>
 
+          {latestNews && (
+            <div className="mb-3 flex min-w-0 items-baseline gap-1.5 text-caption text-muted-foreground">
+              <span className="shrink-0">최근 이슈 —</span>
+              <button
+                type="button"
+                onClick={() => setOpenNewsId(latestNews.id)}
+                className="cursor-pointer truncate text-foreground hover:text-primary hover:underline"
+              >
+                {latestNews.title}
+              </button>
+            </div>
+          )}
+
           <div className="mb-4 grid grid-cols-2 gap-[9px] md:grid-cols-4">
             {statTiles.map((tile) => (
               <div key={tile.label} className="rounded-xl bg-muted px-3 py-[9px]">
@@ -193,6 +218,9 @@ export default function StockDetailPage() {
               </div>
             ))}
           </div>
+
+          <SupplyStreakBadges flows={flowRes ?? []} />
+          <ThemePeerComparison stock={stock} />
 
           {candles.length > 0 ? (
             <PriceIssueCard
