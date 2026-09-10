@@ -14,6 +14,7 @@ export interface ThemeTopStockRes {
 }
 
 export interface ThemeRes {
+  id: number
   name: string
   description: string | null
   change: number | null

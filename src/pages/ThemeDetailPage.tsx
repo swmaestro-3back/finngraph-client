@@ -26,16 +26,17 @@ const PERIODS: { key: CandlePeriod; label: string }[] = [
 
 export default function ThemeDetailPage() {
   const { themeId } = useParams()
-  const name = themeId ?? ''
+  const parsedId = Number(themeId)
+  const id = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
   const back = useBackTarget({ to: '/', label: '테마 트리맵' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-  const { data: theme, loading, error, refetch } = useThemeDetail(name)
-  const { data: stocks } = useThemeStocks(name)
-  const { data: newsDetails } = useThemeNews(name)
+  const { data: theme, loading, error, refetch } = useThemeDetail(id)
+  const { data: stocks } = useThemeStocks(id)
+  const { data: newsDetails } = useThemeNews(id)
 
   const dates = useMemo(() => candleDates(period), [period])
   const issues = useMemo(
@@ -46,7 +47,7 @@ export default function ThemeDetailPage() {
 
   useEffect(() => {
     setSelectedIndex(CANDLE_COUNTS[period] - 1)
-  }, [period, name])
+  }, [period, id])
 
   const clearSelection = useCallback(() => setSelectedIndex(null), [])
 
@@ -77,7 +78,7 @@ export default function ThemeDetailPage() {
           </h1>
           <p className="text-body text-muted-foreground">
             {error.isNotFound
-              ? `"${name}" 테마를 찾을 수 없습니다.`
+              ? '요청하신 테마를 찾을 수 없습니다.'
               : error.isRetryable
                 ? '일시적으로 데이터를 불러올 수 없습니다.'
                 : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}

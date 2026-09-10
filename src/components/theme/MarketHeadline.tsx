@@ -28,7 +28,7 @@ export function MarketHeadline({ themes }: MarketHeadlineProps) {
         <>
           {' — '}오늘 가장 뜨거운 테마는{' '}
           <Link
-            to={`/theme/${encodeURIComponent(headline.topTheme.name)}`}
+            to={`/theme/${headline.topTheme.id}`}
             state={fromState(pathname)}
             className="font-semibold hover:text-primary"
           >

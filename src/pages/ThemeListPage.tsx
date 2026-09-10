@@ -25,6 +25,7 @@ const GRID =
 type SortKey = 'name' | 'change' | 'w1' | 'm1' | 'm3' | 'tradingValue' | 'stockCount'
 
 interface ThemeRow {
+  id: number
   name: string
   change: number | null
   w1: number | null
@@ -57,6 +58,7 @@ export default function ThemeListPage() {
   const allRows: ThemeRow[] = useMemo(
     () =>
       (themes ?? []).map((theme) => ({
+        id: theme.id,
         name: theme.name,
         change: theme.change,
         w1: theme.w1,
@@ -141,10 +143,10 @@ export default function ThemeListPage() {
 
                 {pageRows.map((row, index) => (
                   <button
-                    key={row.name}
+                    key={row.id}
                     type="button"
                     onClick={() =>
-                      navigate(`/theme/${encodeURIComponent(row.name)}`, {
+                      navigate(`/theme/${row.id}`, {
                         state: fromState(pathname),
                       })
                     }
