@@ -58,8 +58,8 @@ export default function ThemeDashboardPage() {
     () => (themes ?? []).find((t) => t.name === selectedName) ?? treemapThemes[0] ?? null,
     [themes, selectedName, treemapThemes],
   )
-  const { data: themeStocks } = useThemeStocks(selected?.name ?? null)
-  const { data: newsDetails } = useThemeNews(selected?.name ?? null)
+  const { data: themeStocks } = useThemeStocks(selected?.id ?? null)
+  const { data: newsDetails } = useThemeNews(selected?.id ?? null)
   const news = useMemo(() => (newsDetails ?? []).map(toNewsItem), [newsDetails])
 
   return (
@@ -176,6 +176,7 @@ export default function ThemeDashboardPage() {
                 className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 [&>section]:h-full"
               >
                 <StockSection
+                  id={selected.id}
                   name={selected.name}
                   change={selected.change}
                   stocks={themeStocks ?? []}
