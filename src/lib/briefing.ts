@@ -1,12 +1,14 @@
 import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
 
 export interface HeadlineTopTheme {
+  id: number
   name: string
   change: number
   leader: string | null
 }
 
 export interface HeadlineBottomTheme {
+  id: number
   name: string
   change: number
 }
@@ -21,6 +23,7 @@ export interface MarketHeadline {
 }
 
 export interface TopValueTheme {
+  id: number
   name: string
   tradingValue: number
   change: number | null
@@ -91,12 +94,15 @@ export function buildMarketHeadline(
     flat,
     topTheme: top
       ? {
+          id: top.id,
           name: top.name,
           change: top.change ?? 0,
           leader: top.topStocks[0]?.name ?? null,
         }
       : null,
-    bottomTheme: bottom ? { name: bottom.name, change: bottom.change ?? 0 } : null,
+    bottomTheme: bottom
+      ? { id: bottom.id, name: bottom.name, change: bottom.change ?? 0 }
+      : null,
   }
 }
 
@@ -117,6 +123,7 @@ export function buildBriefingParagraph(
     upRatio,
     topValueTheme: topValue
       ? {
+          id: topValue.id,
           name: topValue.name,
           tradingValue: topValue.tradingValue ?? 0,
           change: topValue.change,
