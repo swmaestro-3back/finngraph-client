@@ -185,8 +185,8 @@ export function NavBar() {
                   <span className="shrink-0 font-mono text-caption text-muted-foreground">
                     {stock.ticker}
                   </span>
-                  {stock.themeName !== null && (
-                    <ThemeBadge name={stock.themeName} className="ml-auto max-w-28" />
+                  {stock.themeId !== null && stock.themeName !== null && (
+                    <ThemeBadge id={stock.themeId} name={stock.themeName} className="ml-auto max-w-28" />
                   )}
                 </button>
               ))}

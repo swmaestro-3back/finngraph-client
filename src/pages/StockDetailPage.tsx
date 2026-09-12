@@ -118,11 +118,11 @@ export default function StockDetailPage() {
         <Link to={back.to} className="text-xs font-semibold leading-none text-primary">
           ← {back.label}
         </Link>
-        {stock?.themeName && (
+        {stock?.themeId != null && stock.themeName && (
           <>
             <span className="text-caption text-foreground-tertiary">/</span>
             <Link
-              to={`/theme/${encodeURIComponent(stock.themeName)}`}
+              to={`/theme/${stock.themeId}`}
               state={fromState(pathname)}
               className="text-caption text-muted-foreground hover:text-primary hover:underline"
             >

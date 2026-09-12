@@ -38,9 +38,9 @@ function MoverCard({ stock }: MoverCardProps) {
           {formatChangeOrDash(stock.change)}
         </span>
       </div>
-      {stock.themeName && (
+      {stock.themeId !== null && stock.themeName && (
         <div className="flex">
-          <ThemeBadge name={stock.themeName} />
+          <ThemeBadge id={stock.themeId} name={stock.themeName} />
         </div>
       )}
       {reason && (
