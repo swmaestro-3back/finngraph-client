@@ -61,6 +61,7 @@ export interface StockRowRes {
   pbr: number | null
   roe: number | null
   dividendYield: number | null
+  themeId: number | null
   themeName: string | null
 }
 
@@ -70,6 +71,7 @@ export interface StockDetailRes {
   market: string
   price: number | null
   change: number | null
+  themeId: number | null
   themeName: string | null
   marketCap: number | null
   per: number | null
