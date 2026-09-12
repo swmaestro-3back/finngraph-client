@@ -3,6 +3,7 @@ import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
 interface Props {
+  id: number
   name: string
   className?: string
   // stopPropagation이 부모 Link의 onClick(모달 닫기 등)까지 막으므로, 필요한 정리는 콜백으로 직접 받는다
@@ -10,7 +11,7 @@ interface Props {
 }
 
 // 부모 행이 <a>/<button>인 곳에 중첩되므로 anchor 대신 span role="button" (중첩 anchor 방지)
-export function ThemeBadge({ name, className, onNavigate }: Props) {
+export function ThemeBadge({ id, name, className, onNavigate }: Props) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
@@ -18,7 +19,7 @@ export function ThemeBadge({ name, className, onNavigate }: Props) {
     e.stopPropagation()
     e.preventDefault()
     onNavigate?.()
-    navigate(`/theme/${encodeURIComponent(name)}`, { state: fromState(pathname) })
+    navigate(`/theme/${id}`, { state: fromState(pathname) })
   }
 
   return (
