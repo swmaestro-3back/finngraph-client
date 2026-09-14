@@ -32,7 +32,9 @@ export function RelatedStocks({ stocks, onNavigate }: Props) {
             </span>
           )
         }
-        const themeName = stockIndex?.get(stock.ticker)?.themeName ?? null
+        const indexed = stockIndex?.get(stock.ticker)
+        const themeId = indexed?.themeId ?? null
+        const themeName = indexed?.themeName ?? null
         return (
           <Link
             key={stock.ticker}
@@ -55,8 +57,8 @@ export function RelatedStocks({ stocks, onNavigate }: Props) {
             >
               {formatChangeOrDash(stock.change)}
             </span>
-            {themeName !== null && (
-              <ThemeBadge name={themeName} className="max-w-32" onNavigate={onNavigate} />
+            {themeId !== null && themeName !== null && (
+              <ThemeBadge id={themeId} name={themeName} className="max-w-32" onNavigate={onNavigate} />
             )}
           </Link>
         )
