@@ -55,28 +55,3 @@ export function rankSignals(themes: ThemeRes[], limit = 3): ThemeRes[] {
     )
     .slice(0, limit)
 }
-
-export function rankEvidence(
-  nodes: GraphNode[],
-  links: GraphLink[],
-  limit = 3,
-): EvidenceEntry[] {
-  const nodeOf = new Map(nodes.map((n) => [n.id, n]))
-  return links
-    .filter((l) => !!l.news_id)
-    .sort((a, b) => b.mentioned_count - a.mentioned_count)
-    .slice(0, limit)
-    .map((l) => {
-      const source = nodeOf.get(endId(l.source))
-      const target = nodeOf.get(endId(l.target))
-      return {
-        sourceLabel: source?.label ?? endId(l.source),
-        sourceType: source?.type ?? 'company',
-        predicate: l.type,
-        targetLabel: target?.label ?? endId(l.target),
-        targetType: target?.type ?? 'company',
-        mentionedCount: l.mentioned_count,
-        newsId: l.news_id!,
-      }
-    })
-}
