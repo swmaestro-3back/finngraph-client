@@ -73,16 +73,6 @@ export function rankSignals(themes: ThemeRes[], limit = 3): ThemeRes[] {
     .slice(0, limit)
 }
 
-export function selectTreemapThemes(themes: ThemeRes[], count: number): ThemeRes[] {
-  const ups = themes
-    .filter((t) => (t.change ?? 0) > 0)
-    .sort((a, b) => (b.change ?? 0) - (a.change ?? 0))
-  const downs = themes
-    .filter((t) => (t.change ?? 0) < 0)
-    .sort((a, b) => (a.change ?? 0) - (b.change ?? 0))
-  return [...ups.slice(0, Math.ceil(count / 2)), ...downs.slice(0, Math.floor(count / 2))]
-}
-
 export function rankEvidence(
   nodes: GraphNode[],
   links: GraphLink[],
