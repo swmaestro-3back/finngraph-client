@@ -14,7 +14,7 @@ import { FilterChip } from '@/components/ui/filter-chip'
 import { toNewsItem } from '@/lib/apiMappers'
 import { pickMovers } from '@/lib/briefing'
 import { formatCompactKrw } from '@/lib/format'
-import { selectTreemapThemes } from '@/lib/momentum'
+import { useHotThemes } from '@/lib/queries/useHotThemes'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
@@ -31,14 +31,12 @@ export default function ThemeDashboardPage() {
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const { data: themes, loading, error, refetch } = useThemes()
+  const { data: hotThemes } = useHotThemes(themeCount)
   const { data: allStocks, error: stocksError } = useStocksCached()
 
   const movers = useMemo(() => pickMovers(allStocks ?? [], 6), [allStocks])
 
-  const treemapThemes = useMemo(
-    () => selectTreemapThemes(themes ?? [], themeCount),
-    [themes, themeCount],
-  )
+  const treemapThemes = useMemo(() => hotThemes ?? [], [hotThemes])
   const treemapItems: TreemapItem[] = useMemo(
     () =>
       treemapThemes
