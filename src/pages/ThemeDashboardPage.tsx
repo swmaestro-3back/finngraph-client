@@ -160,7 +160,6 @@ export default function ThemeDashboardPage() {
           <InsightStrip
             themes={themes}
             onSelectTheme={setSelectedName}
-            onOpenNews={setOpenNewsId}
           />
 
           <Treemap

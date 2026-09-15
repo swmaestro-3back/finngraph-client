@@ -1,10 +1,3 @@
-import {
-  endId,
-  type EntityType,
-  type GraphLink,
-  type GraphNode,
-  type Predicate,
-} from '@/data/graphTypes'
 import type { ThemeRes } from '@/lib/apiTypes'
 
 export type MomentumBadge = 'trend' | 'spike' | null
@@ -16,16 +9,6 @@ export interface MomentumEntry {
   m1: number
   m3: number
   badge: MomentumBadge
-}
-
-export interface EvidenceEntry {
-  sourceLabel: string
-  sourceType: EntityType
-  predicate: Predicate
-  targetLabel: string
-  targetType: EntityType
-  mentionedCount: number
-  newsId: string
 }
 
 export function momentumBadge(
@@ -81,29 +64,4 @@ export function selectTreemapThemes(themes: ThemeRes[], count: number): ThemeRes
     .filter((t) => (t.change ?? 0) < 0)
     .sort((a, b) => (a.change ?? 0) - (b.change ?? 0))
   return [...ups.slice(0, Math.ceil(count / 2)), ...downs.slice(0, Math.floor(count / 2))]
-}
-
-export function rankEvidence(
-  nodes: GraphNode[],
-  links: GraphLink[],
-  limit = 3,
-): EvidenceEntry[] {
-  const nodeOf = new Map(nodes.map((n) => [n.id, n]))
-  return links
-    .filter((l) => !!l.news_id)
-    .sort((a, b) => b.mentioned_count - a.mentioned_count)
-    .slice(0, limit)
-    .map((l) => {
-      const source = nodeOf.get(endId(l.source))
-      const target = nodeOf.get(endId(l.target))
-      return {
-        sourceLabel: source?.label ?? endId(l.source),
-        sourceType: source?.type ?? 'company',
-        predicate: l.type,
-        targetLabel: target?.label ?? endId(l.target),
-        targetType: target?.type ?? 'company',
-        mentionedCount: l.mentioned_count,
-        newsId: l.news_id!,
-      }
-    })
 }

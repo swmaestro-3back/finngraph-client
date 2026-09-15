@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { CATEGORY_COLORS, PREDICATE_LABELS, nodeColor } from '@/data/graphTypes'
-import type { NewsRelation } from '@/data/graphNews'
+import type { NewsRelation } from '@/lib/useNewsGraph'
 import { EntityChip } from '@/components/graph/DetailParts'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
