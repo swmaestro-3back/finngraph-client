@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
 import {
-  CANDLE_COUNTS,
   SUPPLY_RANGES,
   SUPPLY_RANGE_LIMITS,
   type CandlePeriod,
@@ -48,7 +47,7 @@ export default function StockDetailPage() {
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [supplyRange, setSupplyRange] = useState<SupplyRange>('3M')
   const [annualOpen, setAnnualOpen] = useState(true)
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(CANDLE_COUNTS.D - 1)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const { data: stock, loading, error, refetch } = useStockDetail(code)
@@ -106,9 +105,10 @@ export default function StockDetailPage() {
     ]
   }, [stock])
 
+  // 백엔드가 요청한 개수보다 적게 줄 수 있으므로(주봉·월봉 적재 이력이 짧음) 실제 마지막 캔들을 고른다
   useEffect(() => {
-    setSelectedIndex(CANDLE_COUNTS[period] - 1)
-  }, [period, code])
+    setSelectedIndex(candles.length > 0 ? candles.length - 1 : null)
+  }, [candles, period, code])
 
   const clearSelection = useCallback(() => setSelectedIndex(null), [])
 
@@ -222,7 +222,8 @@ export default function StockDetailPage() {
           <SupplyStreakBadges flows={flowRes ?? []} />
           <ThemePeerComparison stock={stock} />
 
-          {candles.length > 0 ? (
+          {/* 캔들이 뉴스보다 먼저 오면 issues가 빈 배열이라 이슈 레인이 days[0]에서 깨진다 — 둘 다 준비되면 그린다 */}
+          {candles.length > 0 && issues.length > 0 ? (
             <PriceIssueCard
               key={`${stock.ticker}-${period}`}
               candles={candles}
