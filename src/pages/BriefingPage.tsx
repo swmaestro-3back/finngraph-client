@@ -18,11 +18,11 @@ import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemes } from '@/lib/queries/useThemes'
 import { cn } from '@/lib/utils'
 
-function ThemeLink({ name }: { name: string }) {
+function ThemeLink({ id, name }: { id: number; name: string }) {
   const { pathname } = useLocation()
   return (
     <Link
-      to={`/theme/${encodeURIComponent(name)}`}
+      to={`/theme/${id}`}
       state={fromState(pathname)}
       className="font-medium text-primary hover:underline"
     >
@@ -64,7 +64,8 @@ function MarketParagraph({ briefing }: { briefing: BriefingParagraph }) {
         입니다.
         {briefing.topTheme && (
           <>
-            {' '}오늘 가장 강한 테마는 <ThemeLink name={briefing.topTheme.name} />(
+            {' '}오늘 가장 강한 테마는{' '}
+            <ThemeLink id={briefing.topTheme.id} name={briefing.topTheme.name} />(
             <ChangeNum value={briefing.topTheme.change} />)
             {briefing.topTheme.leader ? (
               <>
@@ -78,13 +79,15 @@ function MarketParagraph({ briefing }: { briefing: BriefingParagraph }) {
         )}
         {briefing.bottomTheme && (
           <>
-            {' '}가장 부진한 테마는 <ThemeLink name={briefing.bottomTheme.name} />(
+            {' '}가장 부진한 테마는{' '}
+            <ThemeLink id={briefing.bottomTheme.id} name={briefing.bottomTheme.name} />(
             <ChangeNum value={briefing.bottomTheme.change} />)입니다.
           </>
         )}
         {briefing.topValueTheme && (
           <>
-            {' '}거래대금은 <ThemeLink name={briefing.topValueTheme.name} /> 테마에{' '}
+            {' '}거래대금은{' '}
+            <ThemeLink id={briefing.topValueTheme.id} name={briefing.topValueTheme.name} /> 테마에{' '}
             <span className="font-mono font-semibold">
               {formatCompactKrw(briefing.topValueTheme.tradingValue)}
             </span>
@@ -99,7 +102,7 @@ function MarketParagraph({ briefing }: { briefing: BriefingParagraph }) {
 
 function SpotlightCard({ theme }: { theme: ThemeRes }) {
   const { pathname } = useLocation()
-  const { data: news, loading } = useThemeNews(theme.name)
+  const { data: news, loading } = useThemeNews(theme.id)
   const headlines = (news ?? []).slice(0, 2)
   const leader = theme.topStocks[0]?.name ?? null
 
@@ -107,7 +110,7 @@ function SpotlightCard({ theme }: { theme: ThemeRes }) {
     <div className="card-surface flex flex-col gap-2 p-4">
       <div className="flex items-baseline justify-between gap-2">
         <Link
-          to={`/theme/${encodeURIComponent(theme.name)}`}
+          to={`/theme/${theme.id}`}
           state={fromState(pathname)}
           className="truncate text-body font-semibold text-foreground hover:text-primary"
         >

@@ -14,7 +14,7 @@ import { FilterChip } from '@/components/ui/filter-chip'
 import { toNewsItem } from '@/lib/apiMappers'
 import { pickMovers } from '@/lib/briefing'
 import { formatCompactKrw } from '@/lib/format'
-import { selectTreemapThemes } from '@/lib/momentum'
+import { useHotThemes } from '@/lib/queries/useHotThemes'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
@@ -31,14 +31,12 @@ export default function ThemeDashboardPage() {
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const { data: themes, loading, error, refetch } = useThemes()
+  const { data: hotThemes } = useHotThemes(themeCount)
   const { data: allStocks, error: stocksError } = useStocksCached()
 
   const movers = useMemo(() => pickMovers(allStocks ?? [], 6), [allStocks])
 
-  const treemapThemes = useMemo(
-    () => selectTreemapThemes(themes ?? [], themeCount),
-    [themes, themeCount],
-  )
+  const treemapThemes = useMemo(() => hotThemes ?? [], [hotThemes])
   const treemapItems: TreemapItem[] = useMemo(
     () =>
       treemapThemes
@@ -58,8 +56,8 @@ export default function ThemeDashboardPage() {
     () => (themes ?? []).find((t) => t.name === selectedName) ?? treemapThemes[0] ?? null,
     [themes, selectedName, treemapThemes],
   )
-  const { data: themeStocks } = useThemeStocks(selected?.name ?? null)
-  const { data: newsDetails } = useThemeNews(selected?.name ?? null)
+  const { data: themeStocks } = useThemeStocks(selected?.id ?? null)
+  const { data: newsDetails } = useThemeNews(selected?.id ?? null)
   const news = useMemo(() => (newsDetails ?? []).map(toNewsItem), [newsDetails])
 
   return (
@@ -175,6 +173,7 @@ export default function ThemeDashboardPage() {
                 className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 [&>section]:h-full"
               >
                 <StockSection
+                  id={selected.id}
                   name={selected.name}
                   change={selected.change}
                   stocks={themeStocks ?? []}

@@ -17,6 +17,7 @@ const GRID =
   'grid gap-2 grid-cols-[minmax(0,1fr)_76px_78px_78px_62px] xl:gap-3 xl:grid-cols-[minmax(0,1fr)_80px_84px_84px_64px]'
 
 interface StockSectionProps {
+  id: number
   name: string
   change: number | null
   stocks: ThemeStockRes[]
@@ -24,7 +25,7 @@ interface StockSectionProps {
   listClassName?: string
 }
 
-export function StockSection({ name, change, stocks, className, listClassName }: StockSectionProps) {
+export function StockSection({ id, name, change, stocks, className, listClassName }: StockSectionProps) {
   const { pathname } = useLocation()
 
   const sorted = useMemo(
@@ -55,7 +56,7 @@ export function StockSection({ name, change, stocks, className, listClassName }:
           </span>
         </div>
         <Link
-          to={`/theme/${encodeURIComponent(name)}`}
+          to={`/theme/${id}`}
           state={fromState(pathname)}
           className="text-xs font-semibold leading-none text-primary"
         >

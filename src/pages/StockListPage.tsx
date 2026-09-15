@@ -62,6 +62,7 @@ interface StockRow {
   pbr: number | null
   roe: number | null
   dividendYield: number | null
+  themeId: number | null
   themeName: string | null
 }
 
