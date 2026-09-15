@@ -1,10 +1,3 @@
-import {
-  endId,
-  type EntityType,
-  type GraphLink,
-  type GraphNode,
-  type Predicate,
-} from '@/data/graphTypes'
 import type { ThemeRes } from '@/lib/apiTypes'
 
 export type MomentumBadge = 'trend' | 'spike' | null
@@ -16,16 +9,6 @@ export interface MomentumEntry {
   m1: number
   m3: number
   badge: MomentumBadge
-}
-
-export interface EvidenceEntry {
-  sourceLabel: string
-  sourceType: EntityType
-  predicate: Predicate
-  targetLabel: string
-  targetType: EntityType
-  mentionedCount: number
-  newsId: string
 }
 
 export function momentumBadge(

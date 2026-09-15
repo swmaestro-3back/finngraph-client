@@ -352,18 +352,16 @@ export function GraphView({ focus }: Props) {
             predicateCounts={predicateCounts}
           />
         </SidebarContent>
-        <SidebarFooter className="p-4 pt-3">
-          <div className="mt-6 rounded-xl border border-border bg-surface-inset p-3">
-            <div className="mb-1 text-caption font-semibold tracking-[0.5px] text-muted-foreground">
-              통계
-            </div>
+        {/* 통계 — 박스 없이 헤어라인 한 줄 아래 텍스트만. 상세 패널의 근거 목록과 같은 규칙(구조는 선으로) */}
+        <SidebarFooter className="px-4 pt-3 pb-4">
+          <div className="border-t border-border pt-3">
             <div className="text-body font-medium text-foreground">
               노드 <span className="font-mono">{data.metadata.stats.total_nodes}</span> · 관계{' '}
               <span className="font-mono">{data.metadata.stats.total_edges}</span>
             </div>
             {data.metadata.center && (
-              <div className="mt-1 text-caption text-muted-foreground">
-                중심: {data.metadata.center}
+              <div className="mt-0.5 text-caption text-muted-foreground">
+                중심 {data.metadata.center}
                 {!isTheme && ` · ${LENS_LABELS[lens]}`}
                 {scoped && ` · 범위 ${SCOPE_LABELS[scope]}`}
               </div>

@@ -1,7 +1,35 @@
 import type { Hop } from '@/components/graph/HopSelector'
-import type { NewsRelation } from '@/data/graphNews'
-import type { GraphData } from '@/data/graphTypes'
+import type { EntityType, GraphData, GraphLink, GraphNode } from '@/data/graphTypes'
 import type { NewsDetail } from '@/lib/apiTypes'
+
+export interface NewsRelation {
+  link: GraphLink
+  source: GraphNode
+  target: GraphNode
+}
+
+export interface NewsEntity {
+  label: string
+  type: EntityType
+  nodeId?: string
+}
+
+/** 관계 목록에서 등장 엔티티를 라벨 기준으로 중복 없이 뽑는다 (양끝 노드 우선, 링크 item은 뒤에) */
+export function newsEntities(relations: NewsRelation[]): NewsEntity[] {
+  const byLabel = new Map<string, NewsEntity>()
+  const add = (entity: NewsEntity) => {
+    if (!byLabel.has(entity.label)) byLabel.set(entity.label, entity)
+  }
+
+  relations.forEach(({ source, target }) => {
+    add({ label: source.label, type: source.type, nodeId: source.id })
+    add({ label: target.label, type: target.type, nodeId: target.id })
+  })
+  relations.forEach(({ link }) => {
+    if (link.item) add({ label: link.item.text, type: link.item.type })
+  })
+  return [...byLabel.values()]
+}
 
 export interface NewsGraphData {
   graph: GraphData

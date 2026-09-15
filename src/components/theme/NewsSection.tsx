@@ -1,5 +1,6 @@
 import type { NewsItem } from '@/lib/apiTypes'
 import { cn } from '@/lib/utils'
+import { NewsRelationBadge } from '@/components/news/NewsRelationBadge'
 
 interface NewsSectionProps {
   title: string
@@ -37,8 +38,11 @@ export function NewsSection({
       <div className={cn(listClassName)}>
         {items.map((item) => (
           <button key={item.id} type="button" onClick={() => onItemClick?.(item)} className={ROW}>
-            <span className="w-full truncate text-sm font-medium text-foreground">
-              {item.title}
+            <span className="flex w-full items-center gap-1.5">
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                {item.title}
+              </span>
+              <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
             </span>
             <span className="text-caption text-muted-foreground">{item.meta}</span>
           </button>

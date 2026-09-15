@@ -1,15 +1,7 @@
 import { useMemo } from 'react'
-import { MOCK_GRAPH } from '@/data/graph'
-import {
-  CATEGORY_COLORS,
-  CATEGORY_LABELS,
-  PREDICATE_LABELS,
-  type EntityType,
-} from '@/data/graphTypes'
 import type { ThemeRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChange } from '@/lib/format'
 import {
-  rankEvidence,
   rankMomentum,
   rankSignals,
   type MomentumBadge,
@@ -20,7 +12,6 @@ import { cn } from '@/lib/utils'
 interface InsightStripProps {
   themes: ThemeRes[]
   onSelectTheme: (name: string) => void
-  onOpenNews: (newsId: string) => void
 }
 
 const BADGE_LABEL: Record<Exclude<MomentumBadge, null>, string> = {
@@ -44,27 +35,18 @@ function MomentumBadgeChip({ badge }: { badge: MomentumBadge }) {
   )
 }
 
-/** 시드 근거 데이터에는 시장 정보가 없어 기업은 KOSPI 색으로 통일한다 */
-function EntityDot({ type }: { type: EntityType }) {
-  const category = type === 'theme' ? 'theme' : 'kospi'
-  return (
-    <span
-      aria-label={CATEGORY_LABELS[category]}
-      className="inline-block size-2 shrink-0 rounded-full"
-      style={{ backgroundColor: CATEGORY_COLORS[category] }}
-    />
-  )
-}
-
-function EvidenceCard({ themes, onSelectTheme, onOpenNews }: InsightStripProps) {
+function SignalCard({ themes, onSelectTheme }: InsightStripProps) {
   const signals = useMemo(() => rankSignals(themes, 3), [themes])
-  const evidence = useMemo(() => rankEvidence(MOCK_GRAPH.nodes, MOCK_GRAPH.links, 3), [])
-  const maxMentioned = Math.max(...evidence.map((e) => e.mentionedCount), 1)
 
   return (
     <section className="card-surface flex flex-col gap-2 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-body font-semibold text-foreground">오늘의 근거</h2>
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-body font-semibold text-foreground">오늘의 시그널</h2>
+        <span className="text-micro text-muted-foreground">등락폭 · 거래대금 상위</span>
+      </div>
+      {signals.length === 0 ? (
+        <p className="text-caption text-muted-foreground">오늘 집계된 테마 시그널이 없습니다.</p>
+      ) : (
         <div className="flex flex-wrap items-center gap-1.5">
           {signals.map((theme) => (
             <button
@@ -89,53 +71,7 @@ function EvidenceCard({ themes, onSelectTheme, onOpenNews }: InsightStripProps) 
             </button>
           ))}
         </div>
-      </div>
-      <div className="border-t border-surface-inset">
-        {evidence.length === 0 ? (
-          <p className="pt-2 text-caption text-muted-foreground">
-            오늘 수집된 근거 관계가 없습니다.
-          </p>
-        ) : (
-          evidence.map((e) => (
-            <button
-              key={e.newsId}
-              type="button"
-              onClick={() => onOpenNews(e.newsId)}
-              aria-label={`${e.sourceLabel} ${PREDICATE_LABELS[e.predicate]} ${e.targetLabel} 관련 뉴스 보기`}
-              className="grid w-full cursor-pointer grid-cols-[1fr_96px] items-center gap-3 border-b border-surface-inset py-1.5 text-left last:border-b-0 hover:bg-muted"
-            >
-              <span className="flex min-w-0 items-center gap-1.5">
-                <EntityDot type={e.sourceType} />
-                <span className="truncate text-caption font-medium text-foreground">
-                  {e.sourceLabel}
-                </span>
-                <span className="flex shrink-0 items-center gap-0.5 text-foreground-tertiary">
-                  <span aria-hidden>─</span>
-                  <span className="text-micro font-medium text-primary">
-                    {PREDICATE_LABELS[e.predicate]}
-                  </span>
-                  <span aria-hidden>→</span>
-                </span>
-                <EntityDot type={e.targetType} />
-                <span className="truncate text-caption font-medium text-foreground">
-                  {e.targetLabel}
-                </span>
-              </span>
-              <span className="flex items-center justify-end gap-1.5">
-                <span className="h-1 w-8 overflow-hidden rounded-full bg-surface-inset">
-                  <span
-                    className="block h-full rounded-full bg-primary/60"
-                    style={{ width: `${(e.mentionedCount / maxMentioned) * 100}%` }}
-                  />
-                </span>
-                <span className="shrink-0 font-mono text-micro text-muted-foreground">
-                  {e.mentionedCount}회
-                </span>
-              </span>
-            </button>
-          ))
-        )}
-      </div>
+      )}
     </section>
   )
 }
@@ -212,11 +148,11 @@ function MomentumBoard({ themes, onSelectTheme }: Pick<InsightStripProps, 'theme
   )
 }
 
-export function InsightStrip({ themes, onSelectTheme, onOpenNews }: InsightStripProps) {
+export function InsightStrip({ themes, onSelectTheme }: InsightStripProps) {
   return (
     <div className="mb-3 grid items-stretch gap-4 lg:grid-cols-[1.4fr_1fr]">
       <div className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 [&>section]:h-full">
-        <EvidenceCard themes={themes} onSelectTheme={onSelectTheme} onOpenNews={onOpenNews} />
+        <SignalCard themes={themes} onSelectTheme={onSelectTheme} />
       </div>
       <div className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:delay-75 motion-safe:[animation-fill-mode:backwards] [&>section]:h-full">
         <MomentumBoard themes={themes} onSelectTheme={onSelectTheme} />

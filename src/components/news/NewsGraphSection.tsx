@@ -15,7 +15,7 @@ import {
   type GraphLink,
   type GraphNode,
 } from '@/data/graphTypes'
-import type { NewsRelation } from '@/data/graphNews'
+import type { NewsRelation } from '@/lib/useNewsGraph'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 

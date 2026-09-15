@@ -1,4 +1,4 @@
-import type { NewsEntity } from '@/data/graphNews'
+import type { NewsEntity } from '@/lib/useNewsGraph'
 import { CATEGORY_COLORS } from '@/data/graphTypes'
 import { EntityChip } from '@/components/graph/DetailParts'
 

@@ -112,11 +112,6 @@ export function StockSection({ id, name, change, stocks, className, listClassNam
                 {stock.change === null ? '—' : formatChange(stock.change)}
               </span>
             </span>
-            {stock.reason && (
-              <span className="col-span-full line-clamp-1 text-caption text-muted-foreground">
-                {stock.reason}
-              </span>
-            )}
           </Link>
         ))}
       </div>
