@@ -1,6 +1,7 @@
 import { memo, useMemo, type ReactNode } from 'react'
 import type { IssueDay, IssueKind, IssueNews } from '@/lib/apiTypes'
 import { cn } from '@/lib/utils'
+import { NewsRelationBadge } from '@/components/news/NewsRelationBadge'
 
 
 interface IssueNewsPanelProps {
@@ -49,8 +50,11 @@ function KindColumn({
               onClick={() => onSelectNews(item.id)}
               className="w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
             >
-              <span className="block truncate text-sm font-medium text-foreground">
-                {item.title}
+              <span className="flex items-center gap-1.5">
+                <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                  {item.title}
+                </span>
+                <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
               </span>
               <span className="mt-0.5 block truncate text-caption text-muted-foreground">
                 {item.meta}

@@ -6,6 +6,7 @@ export interface NewsRes {
   originalUrl?: string | null
   publishedAt: string | null
   collectedAt: string | null
+  tripleExtracted?: boolean | null
 }
 
 export interface ThemeTopStockRes {
@@ -117,7 +118,12 @@ export interface AnnualFinancialsRes {
 
 export type CandlePeriod = 'D' | 'W' | 'M'
 
-export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 65, W: 52, M: 36 }
+/**
+ * 기간별 캔들 개수 — 일봉 6개월(≈120거래일). 백엔드 limit 상한은 500.
+ * 주봉·월봉은 ETL 적재 이력(STOCK_PERIOD_LOOKBACK_DAYS=120, 2026-05-18~)에 맞춘 값이라
+ * 백필 후에는 주봉 52(1년)·월봉 36(3년)으로 올린다.
+ */
+export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 120, W: 18, M: 7 }
 
 /** 투자자별 수급 조회 기간 — 백엔드는 거래일 개수(limit)만 받으므로 1개월 ≈ 20거래일로 환산한다 */
 export type SupplyRange = '1M' | '3M' | '6M' | '1Y'
@@ -155,12 +161,15 @@ export interface NewsDetail {
   summary: string
   url: string
   collectedAt: string
+  /** 트리플 추출 결과 관계가 있는 뉴스 — 상세 모달에 관계망이 그려진다. 응답에 없으면 null */
+  tripleExtracted: boolean | null
 }
 
 export interface NewsItem {
   id: string
   title: string
   meta: string
+  tripleExtracted: boolean | null
 }
 
 export type IssueKind = '호재' | '악재' | '중립'
