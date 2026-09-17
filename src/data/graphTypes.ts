@@ -118,10 +118,22 @@ export interface GraphData {
   };
 }
 
-export type NodeCategory = "kospi" | "kosdaq" | "theme" | "event";
+export type NodeCategory = "kospi" | "kosdaq" | "nasdaq" | "nyse" | "theme" | "event";
 
+/** 시장 코드 → 노드 분류. 시장을 모르거나(null) 아직 분류가 없는 시장은 KOSPI로 둔다 */
 export function marketCategory(market: string | null | undefined): NodeCategory {
-  return market === "KOSDAQ" ? "kosdaq" : "kospi";
+  switch (market) {
+    case "KOSPI":
+      return "kospi";
+    case "KOSDAQ":
+      return "kosdaq";
+    case "NASDAQ":
+      return "nasdaq";
+    case "NYSE":
+      return "nyse";
+    default:
+      return "kospi";
+  }
 }
 
 export function nodeCategory(node: Pick<GraphNode, "type" | "data">): NodeCategory {
@@ -129,10 +141,11 @@ export function nodeCategory(node: Pick<GraphNode, "type" | "data">): NodeCatego
   return node.type === "theme" ? "theme" : marketCategory(node.data.market);
 }
 
-// 이벤트는 중성 회색 — 기업(빨강·파랑)·테마(보라) 옆에서 정보성 부속물로 물러난다
+// 이벤트는 중성 회색 — 기업(빨강·파랑)·테마(보라) 옆에서 정보성 부속물로 물러난다.
+// 해외 시장은 국내 두 색과 겹치지 않게 청록(NASDAQ)·황토(NYSE)로 구분한다.
 const PALETTES = {
-  redGreen: { kospi: "#d96868", kosdaq: "#689d4b", theme: "#91ae6e", event: "#8a9099" },
-  redBlue: { kospi: "#e07a7a", kosdaq: "#6f9bd1", theme: "#b08bc9", event: "#8a9099" },
+  redGreen: { kospi: "#d96868", kosdaq: "#689d4b", nasdaq: "#5aa9b8", nyse: "#d4a24c", theme: "#91ae6e", event: "#8a9099" },
+  redBlue: { kospi: "#e07a7a", kosdaq: "#6f9bd1", nasdaq: "#5fb8a8", nyse: "#d9a441", theme: "#b08bc9", event: "#8a9099" },
 } satisfies Record<string, Record<NodeCategory, string>>;
 
 const ACTIVE_PALETTE: keyof typeof PALETTES = "redBlue";
@@ -142,11 +155,13 @@ export const CATEGORY_COLORS: Record<NodeCategory, string> = PALETTES[ACTIVE_PAL
 export const CATEGORY_LABELS: Record<NodeCategory, string> = {
   kospi: "KOSPI 기업",
   kosdaq: "KOSDAQ 기업",
+  nasdaq: "NASDAQ 기업",
+  nyse: "NYSE 기업",
   theme: "테마",
   event: "이벤트",
 };
 
-export const ALL_CATEGORIES: NodeCategory[] = ["kospi", "kosdaq", "theme", "event"];
+export const ALL_CATEGORIES: NodeCategory[] = ["kospi", "kosdaq", "nasdaq", "nyse", "theme", "event"];
 
 export function nodeColor(node: Pick<GraphNode, "type" | "data">): string {
   return CATEGORY_COLORS[nodeCategory(node)];

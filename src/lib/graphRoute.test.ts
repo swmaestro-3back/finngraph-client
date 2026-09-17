@@ -44,8 +44,8 @@ describe('graphRoute', () => {
   })
 
   it('개요만 테마를 기본으로 숨긴다', () => {
-    expect([...lensDefaultCategories('overview')]).toEqual(['kospi', 'kosdaq', 'event'])
-    expect([...lensDefaultCategories('supply')]).toEqual(['kospi', 'kosdaq', 'theme', 'event'])
-    expect([...lensDefaultCategories('events')]).toEqual(['kospi', 'kosdaq', 'theme', 'event'])
+    expect([...lensDefaultCategories('overview')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'event'])
+    expect([...lensDefaultCategories('supply')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
+    expect([...lensDefaultCategories('events')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
   })
 })

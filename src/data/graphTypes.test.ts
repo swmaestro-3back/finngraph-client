@@ -17,8 +17,14 @@ describe('graphTypes', () => {
     expect(nodeCategory({ type: 'theme', data: {} })).toBe('theme')
   })
 
+  it('해외 시장은 NASDAQ·NYSE로 나뉘고, 시장을 모르면 KOSPI로 둔다', () => {
+    expect(nodeCategory({ type: 'company', data: { market: 'NASDAQ' } })).toBe('nasdaq')
+    expect(nodeCategory({ type: 'company', data: { market: 'NYSE' } })).toBe('nyse')
+    expect(nodeCategory({ type: 'company', data: {} })).toBe('kospi')
+  })
+
   it('카테고리·서술어 목록과 라벨·색이 빠짐없이 짝을 이룬다', () => {
-    expect(ALL_CATEGORIES).toEqual(['kospi', 'kosdaq', 'theme', 'event'])
+    expect(ALL_CATEGORIES).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
     expect(ALL_ENTITY_TYPES).toEqual(['company', 'theme', 'event'])
     expect(ALL_PREDICATES).toEqual(['SUPPLIES_TO', 'ACQUIRES', 'INVESTS_IN', 'BELONGS_TO', 'HAS_EVENT'])
     ALL_CATEGORIES.forEach((c) => {
