@@ -47,6 +47,43 @@ export function useSyncedIndex(): SyncedIndex {
   return useMemo(() => ({ pinnedIndex, onChartClick, clear }), [pinnedIndex, onChartClick, clear])
 }
 
+/** recharts가 커스텀 커서 요소에 흘려주는 props 중 쓰는 것 — 세로선 양 끝점(플롯 위·아래) */
+interface AxisLabelCursorProps {
+  points?: { x: number; y: number }[]
+  className?: string
+}
+
+// x축 라벨 박스 치수 — 라벨은 플롯 아래 ~9px부터 13px 높이로 그려진다 (fontSize 10, dy 0.71em, tickMargin 6)
+const LABEL_BOX_W = 34
+const LABEL_BOX_H = 22
+const LABEL_BOX_GAP = 4
+
+/**
+ * 축 라벨 커서 — 세로 룰 + x축의 짚은 연도 글자를 감싸는 파란 박스 (ECharts axisPointer 라벨 느낌).
+ * 라벨 텍스트는 recharts가 더 위 레이어에 그리므로 박스는 그 밑에 깔린다.
+ */
+function AxisLabelCursor({ points, className }: AxisLabelCursorProps) {
+  if (!points || points.length < 2) return null
+  const [topPt, bottomPt] = points
+  return (
+    <g className={className} pointerEvents="none">
+      <line x1={topPt.x} y1={topPt.y} x2={bottomPt.x} y2={bottomPt.y} stroke={RULE} strokeWidth={1} />
+      <rect
+        x={topPt.x - LABEL_BOX_W / 2}
+        y={bottomPt.y + LABEL_BOX_GAP}
+        width={LABEL_BOX_W}
+        height={LABEL_BOX_H}
+        rx={3}
+        fill="var(--primary)"
+        fillOpacity={0.08}
+        stroke="var(--primary)"
+        strokeOpacity={0.55}
+        strokeWidth={1}
+      />
+    </g>
+  )
+}
+
 /**
  * 고정된 칸의 툴팁을 계속 띄우는 Tooltip props.
  * 고정이 없으면 빈 객체를 돌려줘 표시 여부를 recharts에 맡긴다
@@ -60,7 +97,7 @@ function pinnedTooltipProps(pinnedIndex: number | null) {
  * 동기화 차트 하나에 넣는 툴팁 + 고정 표시선.
  * 배열로 돌려줘 recharts가 차트의 직접 자식으로 인식하게 한다
  * (커스텀 컴포넌트로 감싸면 차트가 찾지 못한다).
- * `bar`는 막대 차트용 면 커서, 아니면 선 커서.
+ * `bar`는 막대 차트용 면 커서, `line`은 선 커서, `axis-label`은 선 커서에 x축 라벨 박스를 더한 것.
  */
 export function syncMarks(
   sync: SyncedIndex,
@@ -70,7 +107,8 @@ export function syncMarks(
     content,
     yAxisId,
   }: {
-    kind: 'bar' | 'line'
+    /** bar: 면 커서 / line: 선 커서 / axis-label: 선 커서 + x축 라벨 박스 */
+    kind: 'bar' | 'line' | 'axis-label'
     /** 고정된 인덱스 → 그 칸의 x축 값(라벨) */
     xForIndex: (index: number) => string
     /** 앱 톤 커스텀 툴팁 */
@@ -84,8 +122,14 @@ export function syncMarks(
       key="tooltip"
       isAnimationActive={false}
       cursor={
-        /* --foreground(#0a0b0d) 4% — recharts cursor는 객체 리터럴로만 받는다 */
-        kind === 'bar' ? { fill: 'rgba(10,11,13,0.04)' } : { stroke: RULE, strokeWidth: 1 }
+        kind === 'axis-label' ? (
+          <AxisLabelCursor />
+        ) : kind === 'bar' ? (
+          /* --foreground(#0a0b0d) 4% — recharts cursor는 객체 리터럴로만 받는다 */
+          { fill: 'rgba(10,11,13,0.04)' }
+        ) : (
+          { stroke: RULE, strokeWidth: 1 }
+        )
       }
       content={content}
       {...pinnedTooltipProps(sync.pinnedIndex)}

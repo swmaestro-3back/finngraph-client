@@ -152,7 +152,8 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
             onClick={sync.onChartClick}
           >
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
-            <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
+            {/* 순매수 막대 차트와 같은 band 스케일 — 네 차트의 커서가 같은 칸 중앙에 놓인다 */}
+            <XAxis dataKey="label" scale="band" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v.toFixed(1)}%`} domain={['dataMin - 0.5', 'dataMax + 0.5']} width={44} />
             {syncMarks(sync, {
               kind: 'line',

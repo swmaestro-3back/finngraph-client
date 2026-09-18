@@ -82,6 +82,12 @@ function AnnualTooltip({
   )
   if (!active || rows.length === 0) return null
 
+  // 자본구조(stacked)는 두 막대의 합이 곧 총자산 — 합계 행을 덧붙여 스택 높이를 숫자로 읽게 한다
+  const equity = rows.find((p) => p.dataKey === 'totalEquity')
+  const debt = rows.find((p) => p.dataKey === 'totalDebt')
+  const totalAssets =
+    equity && debt ? (equity.value as number) + (debt.value as number) : null
+
   return (
     <div className="pointer-events-none min-w-[148px] rounded-xl border border-border bg-background px-3 py-2 shadow-soft">
       <div className="mb-1 font-mono text-micro text-muted-foreground">{label}</div>
@@ -105,6 +111,12 @@ function AnnualTooltip({
           </div>
         )
       })}
+      {totalAssets !== null && (
+        <div className="mt-1 flex items-center justify-between gap-3 border-t border-border pt-1 text-caption leading-[1.7]">
+          <span className="text-muted-foreground">총자산</span>
+          <span className="font-mono font-semibold text-foreground">{formatTrillion(totalAssets)}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -128,10 +140,17 @@ function chartProps(sync: SyncedIndex, data: AnnualDatum[]) {
   }
 }
 
-/** 6개 카드가 같이 쓰는 연도 축 props — 연도가 많으면 라벨을 건너뛰어 겹치지 않게 한다 */
+/**
+ * 6개 카드가 같이 쓰는 연도 축 props — 연도가 많으면 라벨을 건너뛰어 겹치지 않게 한다.
+ * `scale: 'band'`: 선 차트도 막대 차트와 같은 밴드 스케일을 써서 점·커서·라벨이 연도 칸 정중앙에 온다.
+ * (기본값은 선 차트만 point 스케일이라 첫/끝 연도가 축 끝에 붙고 막대 차트와 x 기하가 어긋난다.)
+ */
 function yearAxisProps(count: number) {
   return {
     dataKey: 'yearLabel' as const,
+    scale: 'band' as const,
+    // 라벨을 기본(2px)보다 조금 내려 호버 라벨 박스(chartSync AxisLabelCursor)가 위아래 여유를 갖게 한다
+    tickMargin: 6,
     tick: axisTick,
     tickLine: false,
     axisLine: { stroke: GRID_EDGE },
@@ -139,15 +158,10 @@ function yearAxisProps(count: number) {
   }
 }
 
-/** 연간 축 전용 syncMarks — 툴팁 내용과 x 라벨만 이 파일 것으로 채운다 */
-function syncMarks(
-  sync: SyncedIndex,
-  kind: 'bar' | 'line',
-  data: AnnualDatum[],
-  yAxisId?: string,
-) {
+/** 연간 축 전용 syncMarks — 세로 룰과 함께 x축의 짚은 연도 라벨을 파란 박스로 감싼다 */
+function syncMarks(sync: SyncedIndex, data: AnnualDatum[], yAxisId?: string) {
   return sharedSyncMarks(sync, {
-    kind,
+    kind: 'axis-label',
     xForIndex: (i) => data[i].yearLabel,
     content: <AnnualTooltip />,
     yAxisId,
@@ -228,7 +242,7 @@ function RevenueChart({ sync, data }: ChartCtx) {
             <Cell key={d.year} fill={GRAY} fillOpacity={d.estimated ? 0.45 : 1} />
           ))}
         </Bar>
-        {syncMarks(sync, 'bar', data)}
+        {syncMarks(sync, data)}
       </ComposedChart>
     </MetricCard>
   )
@@ -248,9 +262,11 @@ function MarginRoeChart({ sync, data }: ChartCtx) {
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis {...yearAxisProps(data.length)} />
         <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick()} domain={['auto', 'auto']} width={44} />
+        {/* 0% 기준선 — 적자/흑자 해가 한눈에 갈린다 (domain 밖이면 recharts가 알아서 생략) */}
+        <ReferenceLine y={0} stroke={GRID_EDGE} strokeDasharray="4 4" label={{ value: '0%', position: 'insideRight', fontSize: 9, fill: 'var(--muted-foreground)', dy: -6 }} />
         <Line isAnimationActive={false} type="monotone" dataKey="operatingMargin" stroke={TEAL} strokeWidth={2} dot={{ r: 3, fill: TEAL, strokeWidth: 0 }} />
         <Line isAnimationActive={false} type="monotone" dataKey="roe" stroke={GRAY} strokeWidth={2} dot={{ r: 3, fill: GRAY, strokeWidth: 0 }} />
-        {syncMarks(sync, 'line', data)}
+        {syncMarks(sync, data)}
       </ComposedChart>
     </MetricCard>
   )
@@ -280,7 +296,7 @@ function EpsDividendChart({ sync, data }: ChartCtx) {
         </Bar>
         <Bar isAnimationActive={false} yAxisId="won" dataKey="dps" maxBarSize={16} radius={[2, 2, 0, 0]} fill={PURPLE} />
         <Line isAnimationActive={false} yAxisId="pct" type="monotone" dataKey="payoutRatio" stroke={LIGHT_PURPLE} strokeWidth={2} dot={{ r: 3, fill: LIGHT_PURPLE, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'bar', data, 'won')}
+        {syncMarks(sync, data, 'won')}
       </ComposedChart>
     </MetricCard>
   )
@@ -307,7 +323,7 @@ function PbrPerChart({ sync, data }: ChartCtx) {
         <ReferenceLine yAxisId="per" y={10} stroke={GRAY} strokeDasharray="4 4" label={{ value: 'PER=10', position: 'insideRight', fontSize: 9, fill: GRAY, dy: 10 }} />
         <Line isAnimationActive={false} yAxisId="pbr" type="monotone" dataKey="pbr" stroke={TEAL} strokeWidth={2} dot={{ r: 3, fill: TEAL, strokeWidth: 0 }} connectNulls={false} />
         <Line isAnimationActive={false} yAxisId="per" type="monotone" dataKey="per" stroke={GRAY} strokeWidth={2} dot={{ r: 3, fill: GRAY, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'line', data, 'pbr')}
+        {syncMarks(sync, data, 'pbr')}
       </ComposedChart>
     </MetricCard>
   )
@@ -329,7 +345,7 @@ function CapitalStructureChart({ sync, data }: ChartCtx) {
         <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={formatTrillion} domain={[0, 'auto']} width={48} />
         <Bar isAnimationActive={false} dataKey="totalEquity" stackId="capital" maxBarSize={32} fill={TEAL} />
         <Bar isAnimationActive={false} dataKey="totalDebt" stackId="capital" maxBarSize={32} radius={[2, 2, 0, 0]} fill={PINK} />
-        {syncMarks(sync, 'bar', data)}
+        {syncMarks(sync, data)}
       </ComposedChart>
     </MetricCard>
   )
@@ -349,9 +365,12 @@ function DebtRatioChart({ sync, data }: ChartCtx) {
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
         <XAxis {...yearAxisProps(data.length)} />
         <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick(0)} domain={[0, 'auto']} width={40} />
+        {/* 100% 주의 / 200% 위험 기준선 — 값이 그 아래에만 머물면 recharts가 생략한다 */}
+        <ReferenceLine y={100} stroke={GRID_EDGE} strokeDasharray="4 4" label={{ value: '100%', position: 'insideRight', fontSize: 9, fill: 'var(--muted-foreground)', dy: -6 }} />
+        <ReferenceLine y={200} stroke={PINK} strokeDasharray="4 4" label={{ value: '200%', position: 'insideRight', fontSize: 9, fill: PINK, dy: -6 }} />
         <Area isAnimationActive={false} type="monotone" dataKey="debtRatio" stroke="none" fill="url(#debtGradient)" connectNulls={false} />
         <Line isAnimationActive={false} type="monotone" dataKey="debtRatio" stroke={PINK} strokeWidth={2} dot={{ r: 3, fill: PINK, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'line', data)}
+        {syncMarks(sync, data)}
       </ComposedChart>
     </MetricCard>
   )
