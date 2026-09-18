@@ -13,6 +13,13 @@ import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
 import {
+  ANNUAL_PERIODS,
+  DEFAULT_ANNUAL_PERIOD,
+  sliceRecentYears,
+  yearsFor,
+  type AnnualPeriod,
+} from '@/lib/annualPeriod'
+import {
   SUPPLY_RANGES,
   SUPPLY_RANGE_LIMITS,
   type CandlePeriod,
@@ -39,14 +46,19 @@ interface StatTile {
   value: string
 }
 
+// 섹션 사이 구분선 — 접힌 상태에서도 남아 어디서 다음 섹션이 시작하는지 보여준다
+const SECTION_HEADER = 'mb-[9px] mt-6 border-t border-border pt-6'
+
 export default function StockDetailPage() {
   const { stockCode } = useParams()
   const code = stockCode ?? ''
   const { pathname } = useLocation()
   const back = useBackTarget({ to: '/stocks', label: '주식 목록' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
-  const [supplyRange, setSupplyRange] = useState<SupplyRange>('3M')
+  const [supplyRange, setSupplyRange] = useState<SupplyRange>('6M')
+  const [supplyOpen, setSupplyOpen] = useState(true)
   const [annualOpen, setAnnualOpen] = useState(true)
+  const [annualPeriod, setAnnualPeriod] = useState<AnnualPeriod>(DEFAULT_ANNUAL_PERIOD)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
@@ -69,6 +81,11 @@ export default function StockDetailPage() {
     [candleRes, newsRows, newsLoading, period],
   )
   const supply = useMemo(() => (flowRes ?? []).map(toSupplyPoint), [flowRes])
+  // 연간 실적 차트가 보는 연도 범위 — memo 자식이 헛돌지 않도록 참조를 유지 (표는 항상 전체 기간)
+  const annualRows = useMemo(
+    () => sliceRecentYears(financialRows ?? [], yearsFor(annualPeriod)),
+    [financialRows, annualPeriod],
+  )
 
   // 뉴스 응답의 정렬이 보장되지 않으므로 수집 시각 기준 최신 1건을 직접 고른다
   // 로딩 중에는 null — 종목 전환 직후 이전 종목의 뉴스가 '최근 이슈'로 노출되는 것을 막는다
@@ -237,7 +254,7 @@ export default function StockDetailPage() {
             <div className="h-72 animate-pulse rounded-2xl bg-muted" />
           )}
 
-          <div className="mb-[9px] mt-7 flex items-center gap-2">
+          <div className={`${SECTION_HEADER} flex items-center gap-2`}>
             <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
               이슈 타임라인
             </h2>
@@ -251,54 +268,85 @@ export default function StockDetailPage() {
             />
           )}
 
-          <div className="mb-[9px] mt-7 flex items-center justify-between">
+          <div className={`${SECTION_HEADER} flex items-center justify-between`}>
             <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
               투자자별 수급
             </h2>
-            <div className="flex gap-1.5">
-              {SUPPLY_RANGES.map((r) => (
-                <FilterChip
-                  key={r.key}
-                  active={supplyRange === r.key}
-                  onClick={() => setSupplyRange(r.key)}
-                >
-                  {r.label}
-                </FilterChip>
-              ))}
+            <div className="flex items-center gap-3">
+              {supplyOpen && (
+                <div className="flex gap-1.5">
+                  {SUPPLY_RANGES.map((r) => (
+                    <FilterChip
+                      key={r.key}
+                      active={supplyRange === r.key}
+                      onClick={() => setSupplyRange(r.key)}
+                    >
+                      {r.label}
+                    </FilterChip>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setSupplyOpen((open) => !open)}
+                className="cursor-pointer text-muted-foreground"
+                aria-label={supplyOpen ? '투자자별 수급 접기' : '투자자별 수급 펼치기'}
+              >
+                <ChevronUp
+                  className={cn('size-4 transition-transform', !supplyOpen && 'rotate-180')}
+                />
+              </button>
             </div>
           </div>
-          {supply.length > 0 ? (
-            // 기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록
-            <SupplyDemandCharts key={supplyRange} points={supply} />
-          ) : (
-            <p className="text-caption text-muted-foreground">수급 데이터가 없습니다.</p>
-          )}
+          {supplyOpen &&
+            (supply.length > 0 ? (
+              // 기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록
+              <SupplyDemandCharts key={supplyRange} points={supply} />
+            ) : (
+              <p className="text-caption text-muted-foreground">수급 데이터가 없습니다.</p>
+            ))}
 
-          <div className="mb-[9px] mt-7 flex items-center justify-between">
+          <div className={`${SECTION_HEADER} flex items-center justify-between`}>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
                 연간 실적
               </h2>
             </div>
-            <button
-              type="button"
-              onClick={() => setAnnualOpen((open) => !open)}
-              className="cursor-pointer text-muted-foreground"
-              aria-label={annualOpen ? '연간 실적 접기' : '연간 실적 펼치기'}
-            >
-              <ChevronUp
-                className={cn('size-4 transition-transform', !annualOpen && 'rotate-180')}
-              />
-            </button>
+            <div className="flex items-center gap-3">
+              {annualOpen && (
+                <div className="flex gap-1.5">
+                  {ANNUAL_PERIODS.map((p) => (
+                    <FilterChip
+                      key={p.key}
+                      active={annualPeriod === p.key}
+                      onClick={() => setAnnualPeriod(p.key)}
+                    >
+                      {p.label}
+                    </FilterChip>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setAnnualOpen((open) => !open)}
+                className="cursor-pointer text-muted-foreground"
+                aria-label={annualOpen ? '연간 실적 접기' : '연간 실적 펼치기'}
+              >
+                <ChevronUp
+                  className={cn('size-4 transition-transform', !annualOpen && 'rotate-180')}
+                />
+              </button>
+            </div>
           </div>
           {annualOpen &&
-            (financialRows && financialRows.length > 0 ? (
-              <AnnualCharts rows={financialRows} />
+            (annualRows.length > 0 ? (
+              // 종목·기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록
+              <AnnualCharts key={`${code}-${annualPeriod}`} rows={annualRows} />
             ) : (
               <p className="text-caption text-muted-foreground">연간 실적 데이터가 없습니다.</p>
             ))}
 
-          <div className="mb-[9px] mt-7 flex items-center gap-2">
+          <div className={`${SECTION_HEADER} flex items-center gap-2`}>
             <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
               재무 지표 요약
             </h2>

@@ -66,3 +66,12 @@ export const DATE_TICK_POSITIONS = [0, 33, 66, 99] as const
 export function dateTickIndexes(count: number): number[] {
   return DATE_TICK_POSITIONS.map((pos) => Math.round((pos / 100) * (count - 1)))
 }
+
+/**
+ * 연간 축 라벨 간격 — 슬롯이 목표 라벨 수 이하면 전부 표시(0),
+ * 넘으면 라벨이 목표 수 안팎만 남도록 건너뛸 칸 수를 돌려준다 (recharts XAxis interval).
+ */
+export function annualTickInterval(count: number, maxLabels = 12): number {
+  if (count <= maxLabels) return 0
+  return Math.ceil(count / maxLabels) - 1
+}
