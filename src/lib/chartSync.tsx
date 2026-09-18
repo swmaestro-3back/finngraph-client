@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { ReferenceLine, Tooltip } from 'recharts'
+import type { SyncMethod } from 'recharts/types/synchronisation/types'
 import { RULE } from '@/lib/chartAxis'
 
 // 같은 x축을 쓰는 차트 묶음이 한 지점을 함께 가리키게 한다.
@@ -11,6 +12,14 @@ import { RULE } from '@/lib/chartAxis'
 interface ChartMouseState {
   activeTooltipIndex?: number | string | null
 }
+
+/**
+ * 같은 칸(인덱스)을 가리키되 커서 위치는 대상 차트 자신의 눈금에서 얻는다.
+ * 기본 `'index'`는 원본 차트의 커서 x좌표를 대상 차트 폭에 비례해 그대로 옮기는데,
+ * 막대 차트(눈금이 밴드 중앙)와 선 차트(눈금이 양 끝)는 축 기하가 달라 가장자리 칸일수록 어긋난다.
+ */
+export const SYNC_BY_INDEX: SyncMethod = (_ticks, { activeTooltipIndex }) =>
+  activeTooltipIndex == null ? -1 : Number(activeTooltipIndex)
 
 export interface SyncedIndex {
   /** 클릭으로 고정된 칸 — 커서가 떠나도 남는다 */
@@ -59,12 +68,15 @@ export function syncMarks(
     kind,
     xForIndex,
     content,
+    yAxisId,
   }: {
     kind: 'bar' | 'line'
     /** 고정된 인덱스 → 그 칸의 x축 값(라벨) */
     xForIndex: (index: number) => string
     /** 앱 톤 커스텀 툴팁 */
     content: React.ReactElement
+    /** 차트의 YAxis에 커스텀 id를 줬다면 그중 하나 — 없으면 ReferenceLine이 기본 축(0)을 못 찾아 그려지지 않는다 */
+    yAxisId?: string | number
   },
 ) {
   return [
@@ -82,6 +94,7 @@ export function syncMarks(
       <ReferenceLine
         key="pin"
         x={xForIndex(sync.pinnedIndex)}
+        yAxisId={yAxisId}
         stroke={RULE}
         strokeDasharray="4 4"
       />

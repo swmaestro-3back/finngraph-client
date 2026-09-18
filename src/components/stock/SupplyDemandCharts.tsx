@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import type { SupplyPoint } from '@/lib/apiTypes'
 import { DOWN, UP } from '@/lib/chartAxis'
-import { syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/lib/chartSync'
+import { SYNC_BY_INDEX, syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/lib/chartSync'
 import { cn } from '@/lib/utils'
 
 // 투자자별 수급 4카드 (design-specs/stock-detail.md §1-6)
@@ -93,6 +93,7 @@ function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: Synced
       data={points}
       margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
       syncId={SYNC_ID}
+      syncMethod={SYNC_BY_INDEX}
       onClick={sync.onChartClick}
     >
       <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
@@ -147,6 +148,7 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
             data={points}
             margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
             syncId={SYNC_ID}
+            syncMethod={SYNC_BY_INDEX}
             onClick={sync.onChartClick}
           >
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />

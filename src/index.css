@@ -152,6 +152,12 @@
   html {
     @apply font-sans;
   }
+  /* recharts 3 접근성 레이어가 SVG 표면(tabIndex=0)과 내부 zIndex 레이어 g(tabIndex=-1)에 포커스를 허용해
+     차트나 막대를 클릭하면 포커스 링(파란 박스)이 그려진다. 차트 클릭은 칸 선택 동작이므로 포커스 표시를 끈다. */
+  .recharts-wrapper :focus,
+  .recharts-wrapper :focus-visible {
+    outline: none;
+  }
 }
 
 /* 레이아웃 스케일 기준: 1440px 뷰포트

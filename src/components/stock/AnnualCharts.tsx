@@ -12,6 +12,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import {
+  SYNC_BY_INDEX,
   syncMarks as sharedSyncMarks,
   SyncPinHeader,
   useSyncedIndex,
@@ -122,6 +123,7 @@ function chartProps(sync: SyncedIndex, data: AnnualDatum[]) {
     margin: { top: 8, right: 8, left: 4, bottom: 0 },
     barCategoryGap: barCategoryGapFor(data.length),
     syncId: SYNC_ID,
+    syncMethod: SYNC_BY_INDEX,
     onClick: sync.onChartClick,
   }
 }
@@ -138,11 +140,17 @@ function yearAxisProps(count: number) {
 }
 
 /** 연간 축 전용 syncMarks — 툴팁 내용과 x 라벨만 이 파일 것으로 채운다 */
-function syncMarks(sync: SyncedIndex, kind: 'bar' | 'line', data: AnnualDatum[]) {
+function syncMarks(
+  sync: SyncedIndex,
+  kind: 'bar' | 'line',
+  data: AnnualDatum[],
+  yAxisId?: string,
+) {
   return sharedSyncMarks(sync, {
     kind,
     xForIndex: (i) => data[i].yearLabel,
     content: <AnnualTooltip />,
+    yAxisId,
   })
 }
 
@@ -272,7 +280,7 @@ function EpsDividendChart({ sync, data }: ChartCtx) {
         </Bar>
         <Bar isAnimationActive={false} yAxisId="won" dataKey="dps" maxBarSize={16} radius={[2, 2, 0, 0]} fill={PURPLE} />
         <Line isAnimationActive={false} yAxisId="pct" type="monotone" dataKey="payoutRatio" stroke={LIGHT_PURPLE} strokeWidth={2} dot={{ r: 3, fill: LIGHT_PURPLE, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'bar', data)}
+        {syncMarks(sync, 'bar', data, 'won')}
       </ComposedChart>
     </MetricCard>
   )
@@ -299,7 +307,7 @@ function PbrPerChart({ sync, data }: ChartCtx) {
         <ReferenceLine yAxisId="per" y={10} stroke={GRAY} strokeDasharray="4 4" label={{ value: 'PER=10', position: 'insideRight', fontSize: 9, fill: GRAY, dy: 10 }} />
         <Line isAnimationActive={false} yAxisId="pbr" type="monotone" dataKey="pbr" stroke={TEAL} strokeWidth={2} dot={{ r: 3, fill: TEAL, strokeWidth: 0 }} connectNulls={false} />
         <Line isAnimationActive={false} yAxisId="per" type="monotone" dataKey="per" stroke={GRAY} strokeWidth={2} dot={{ r: 3, fill: GRAY, strokeWidth: 0 }} connectNulls={false} />
-        {syncMarks(sync, 'line', data)}
+        {syncMarks(sync, 'line', data, 'pbr')}
       </ComposedChart>
     </MetricCard>
   )
