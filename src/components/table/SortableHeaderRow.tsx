@@ -60,7 +60,10 @@ export function SortableHeaderRow<K extends string>({
             className={cn(base, 'cursor-pointer', isActive ? activeClassName : inactiveClassName)}
           >
             {col.label}
-            {isActive && (sortDesc ? ' ↓' : ' ↑')}
+            {/* 비활성 컬럼도 화살표 폭을 항상 차지해서 정렬 전환 시 라벨이 밀리지 않게 한다 */}
+            <span aria-hidden={!isActive} className={cn(!isActive && 'invisible')}>
+              {sortDesc ? ' ↓' : ' ↑'}
+            </span>
           </button>
         )
       })}

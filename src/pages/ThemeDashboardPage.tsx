@@ -189,6 +189,7 @@ export default function ThemeDashboardPage() {
                   title={`${selected.name} 관련 뉴스`}
                   items={news}
                   listClassName={LIST_CLASS}
+                  relationFilter
                   onItemClick={(item) => setOpenNewsId(item.id)}
                 />
               </div>

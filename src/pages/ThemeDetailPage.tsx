@@ -160,6 +160,7 @@ export default function ThemeDetailPage() {
             title={`${theme.name} 관련 뉴스`}
             items={news}
             className="mt-4"
+            relationFilter
             onItemClick={(item) => setOpenNewsId(item.id)}
           />
         </>
