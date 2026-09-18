@@ -18,6 +18,7 @@ import {
   type SyncedIndex,
 } from '@/lib/chartSync'
 import type { AnnualFinancials } from '@/lib/apiTypes'
+import { annualTickInterval } from '@/lib/chartAxis'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 
 // 차트 계열색 — index.css의 --chart-* 토큰을 그대로 소비한다 (SVG 속성에서 var() 해석됨)
@@ -107,13 +108,32 @@ function AnnualTooltip({
   )
 }
 
+/** 연도가 적을수록 슬롯이 넓어져 막대 사이가 붕 뜬다 — 칸 사이 여백을 줄여 촘촘하게 */
+function barCategoryGapFor(count: number): string {
+  if (count <= 5) return '8%'
+  if (count <= 10) return '14%'
+  return '20%'
+}
+
 /** 모든 카드가 공유하는 차트 props — 축이 같아야 동기화가 의미를 갖는다 */
 function chartProps(sync: SyncedIndex, data: AnnualDatum[]) {
   return {
     data,
     margin: { top: 8, right: 8, left: 4, bottom: 0 },
+    barCategoryGap: barCategoryGapFor(data.length),
     syncId: SYNC_ID,
     onClick: sync.onChartClick,
+  }
+}
+
+/** 6개 카드가 같이 쓰는 연도 축 props — 연도가 많으면 라벨을 건너뛰어 겹치지 않게 한다 */
+function yearAxisProps(count: number) {
+  return {
+    dataKey: 'yearLabel' as const,
+    tick: axisTick,
+    tickLine: false,
+    axisLine: { stroke: GRID_EDGE },
+    interval: annualTickInterval(count),
   }
 }
 
@@ -174,7 +194,6 @@ function MetricCard({
   )
 }
 
-const trillionTick = (v: number) => (v === 0 ? '0억' : `${v.toFixed(1)}조`)
 const pctTick = (digits = 1) => (v: number) => `${v.toFixed(digits)}%`
 
 /** 매출액 / 영업이익 — grouped bar */
@@ -189,14 +208,14 @@ function RevenueChart({ sync, data }: ChartCtx) {
     >
       <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
-        <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={trillionTick} domain={[0, 'auto']} width={48} />
-        <Bar isAnimationActive={false} dataKey="revenue" barSize={9} radius={[2, 2, 0, 0]}>
+        <XAxis {...yearAxisProps(data.length)} />
+        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={formatTrillion} domain={[0, 'auto']} width={48} />
+        <Bar isAnimationActive={false} dataKey="revenue" maxBarSize={20} radius={[2, 2, 0, 0]}>
           {data.map((d) => (
             <Cell key={d.year} fill={TEAL} fillOpacity={d.estimated ? 0.45 : 1} />
           ))}
         </Bar>
-        <Bar isAnimationActive={false} dataKey="operatingProfit" barSize={9} radius={[2, 2, 0, 0]}>
+        <Bar isAnimationActive={false} dataKey="operatingProfit" maxBarSize={20} radius={[2, 2, 0, 0]}>
           {data.map((d) => (
             <Cell key={d.year} fill={GRAY} fillOpacity={d.estimated ? 0.45 : 1} />
           ))}
@@ -219,7 +238,7 @@ function MarginRoeChart({ sync, data }: ChartCtx) {
     >
       <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
-        <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
+        <XAxis {...yearAxisProps(data.length)} />
         <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick()} domain={['auto', 'auto']} width={44} />
         <Line isAnimationActive={false} type="monotone" dataKey="operatingMargin" stroke={TEAL} strokeWidth={2} dot={{ r: 3, fill: TEAL, strokeWidth: 0 }} />
         <Line isAnimationActive={false} type="monotone" dataKey="roe" stroke={GRAY} strokeWidth={2} dot={{ r: 3, fill: GRAY, strokeWidth: 0 }} />
@@ -243,15 +262,15 @@ function EpsDividendChart({ sync, data }: ChartCtx) {
     >
       <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
-        <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
+        <XAxis {...yearAxisProps(data.length)} />
         <YAxis yAxisId="won" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toLocaleString('ko-KR')} domain={[0, 'auto']} width={52}/>
         <YAxis yAxisId="pct" orientation="right" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick(0)} domain={[0, 'auto']} width={40} />
-        <Bar isAnimationActive={false} yAxisId="won" dataKey="eps" barSize={7} radius={[2, 2, 0, 0]}>
+        <Bar isAnimationActive={false} yAxisId="won" dataKey="eps" maxBarSize={16} radius={[2, 2, 0, 0]}>
           {data.map((d) => (
             <Cell key={d.year} fill={TEAL} fillOpacity={d.estimated ? 0.45 : 1} />
           ))}
         </Bar>
-        <Bar isAnimationActive={false} yAxisId="won" dataKey="dps" barSize={7} radius={[2, 2, 0, 0]} fill={PURPLE} />
+        <Bar isAnimationActive={false} yAxisId="won" dataKey="dps" maxBarSize={16} radius={[2, 2, 0, 0]} fill={PURPLE} />
         <Line isAnimationActive={false} yAxisId="pct" type="monotone" dataKey="payoutRatio" stroke={LIGHT_PURPLE} strokeWidth={2} dot={{ r: 3, fill: LIGHT_PURPLE, strokeWidth: 0 }} connectNulls={false} />
         {syncMarks(sync, 'bar', data)}
       </ComposedChart>
@@ -273,7 +292,7 @@ function PbrPerChart({ sync, data }: ChartCtx) {
     >
       <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
-        <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
+        <XAxis {...yearAxisProps(data.length)} />
         <YAxis yAxisId="pbr" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toFixed(2)} domain={[0, 'auto']} width={40}/>
         <YAxis yAxisId="per" orientation="right" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => v.toFixed(1)} domain={[0, 'auto']} width={40}/>
         <ReferenceLine yAxisId="pbr" y={1} stroke={TEAL} strokeDasharray="4 4" label={{ value: 'PBR=1', position: 'insideRight', fontSize: 9, fill: TEAL, dy: -8 }} />
@@ -298,10 +317,10 @@ function CapitalStructureChart({ sync, data }: ChartCtx) {
     >
       <ComposedChart {...chartProps(sync, data)}>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
-        <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
-        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={trillionTick} domain={[0, 'auto']} width={48} />
-        <Bar isAnimationActive={false} dataKey="totalEquity" stackId="capital" barSize={14} fill={TEAL} />
-        <Bar isAnimationActive={false} dataKey="totalDebt" stackId="capital" barSize={14} radius={[2, 2, 0, 0]} fill={PINK} />
+        <XAxis {...yearAxisProps(data.length)} />
+        <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={formatTrillion} domain={[0, 'auto']} width={48} />
+        <Bar isAnimationActive={false} dataKey="totalEquity" stackId="capital" maxBarSize={32} fill={TEAL} />
+        <Bar isAnimationActive={false} dataKey="totalDebt" stackId="capital" maxBarSize={32} radius={[2, 2, 0, 0]} fill={PINK} />
         {syncMarks(sync, 'bar', data)}
       </ComposedChart>
     </MetricCard>
@@ -320,7 +339,7 @@ function DebtRatioChart({ sync, data }: ChartCtx) {
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 3" />
-        <XAxis dataKey="yearLabel" tick={axisTick} tickLine={false} axisLine={{ stroke: GRID_EDGE }} interval={0} />
+        <XAxis {...yearAxisProps(data.length)} />
         <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={pctTick(0)} domain={[0, 'auto']} width={40} />
         <Area isAnimationActive={false} type="monotone" dataKey="debtRatio" stroke="none" fill="url(#debtGradient)" connectNulls={false} />
         <Line isAnimationActive={false} type="monotone" dataKey="debtRatio" stroke={PINK} strokeWidth={2} dot={{ r: 3, fill: PINK, strokeWidth: 0 }} connectNulls={false} />

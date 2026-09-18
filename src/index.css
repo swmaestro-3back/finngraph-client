@@ -67,8 +67,9 @@
   --stock-up-soft: #fdeaec;
   --stock-down: #0052ff;
 
-  /* 재무 지표 연속 추세 강조 (긍정 지표만 표시 모드) */
+  /* 재무 지표 연속 추세 강조 — 개선=초록, 악화=빨강. 시세 색(상승=빨강)과는 뜻이 달라 토큰을 따로 둔다 */
   --trend-positive: #15803d;
+  --trend-negative: #b91c1c;
 }
 
 @theme inline {
@@ -117,6 +118,7 @@
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-trend-positive: var(--trend-positive);
+  --color-trend-negative: var(--trend-negative);
   --color-stock-up: var(--stock-up);
   --color-stock-down: var(--stock-down);
   --color-surface-inset: var(--surface-inset);
