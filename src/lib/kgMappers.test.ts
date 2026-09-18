@@ -15,9 +15,11 @@ import {
   toThemeGraph,
 } from '@/lib/kgMappers'
 
-function company(id: string, ticker: string, name: string, market = 'KOSPI'): KgCompanyNode {
+function company(
+  id: string, ticker: string, name: string, market = 'KOSPI', country: string | null = 'KR',
+): KgCompanyNode {
   return {
-    id, ticker, name, market, country: 'KR', is_listed: true, company_id: 1, corp_code: null,
+    id, ticker, name, market, country, is_listed: true, company_id: 1, corp_code: null,
     krx100: false, krx300: false, kosdaq150: false,
   }
 }
@@ -58,6 +60,15 @@ describe('toCompanyOverviewGraph', () => {
     expect(graph.metadata.centerId).toBe('c1')
     expect(graph.metadata.center).toBe('LG전자')
     expect(graph.metadata.stats).toEqual({ total_nodes: 5, total_edges: 4 })
+  })
+
+  it('기업 노드에 시장과 국가 코드를 실어 종목 상세 가능 여부를 판별할 수 있게 한다', () => {
+    const foreign = toCompanyOverviewGraph(
+      { companies: [company('c9', 'NVDA', '엔비디아', 'NASDAQ', null)], themes: [], events: [], relationships: [] },
+      'NVDA',
+    )
+    expect(graph.nodes[0].data).toMatchObject({ ticker: '066570', market: 'KOSPI', country: 'KR' })
+    expect(foreign.nodes[0].data).toMatchObject({ ticker: 'NVDA', market: 'NASDAQ', country: undefined })
   })
 
   it('관계 타입을 응답 그대로 보존한다', () => {

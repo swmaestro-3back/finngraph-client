@@ -21,6 +21,8 @@ export interface GraphNode {
     aliases?: string[];
     ticker?: string;
     market?: string;
+    /** ISO 국가 코드 — 국내 상장사는 "KR", 해외 기업은 서버가 비워 보낸다 */
+    country?: string;
     krx100?: boolean;
     krx300?: boolean;
     kosdaq150?: boolean;
@@ -153,10 +155,10 @@ const ACTIVE_PALETTE: keyof typeof PALETTES = "redBlue";
 export const CATEGORY_COLORS: Record<NodeCategory, string> = PALETTES[ACTIVE_PALETTE];
 
 export const CATEGORY_LABELS: Record<NodeCategory, string> = {
-  kospi: "KOSPI 기업",
-  kosdaq: "KOSDAQ 기업",
-  nasdaq: "NASDAQ 기업",
-  nyse: "NYSE 기업",
+  kospi: "KOSPI",
+  kosdaq: "KOSDAQ",
+  nasdaq: "NASDAQ",
+  nyse: "NYSE",
   theme: "테마",
   event: "이벤트",
 };

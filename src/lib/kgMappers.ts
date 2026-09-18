@@ -28,6 +28,7 @@ function toCompanyNode(c: KgCompanyNode): GraphNode {
     data: {
       ticker: c.ticker ?? undefined,
       market: c.market ?? undefined,
+      country: c.country ?? undefined,
       krx100: c.krx100,
       krx300: c.krx300,
       kosdaq150: c.kosdaq150,

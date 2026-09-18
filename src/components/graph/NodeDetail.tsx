@@ -17,9 +17,14 @@ import {
 import { EntityChip, Section, TypeBadge } from '@/components/graph/DetailParts'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 const MAX_CONNECTED = 16
+
+/** 종목 상세 페이지는 국내 상장사(country=KR)만 있다 — 해외 기업은 버튼을 비활성 처리하고 이 문구로 안내한다 */
+const FOREIGN_DETAIL_NOTICE = '해외 기업 종목 상세는 준비 중입니다'
 
 /** 지수 편입 플래그 → 칩 라벨 */
 const INDEX_FLAGS = [
@@ -98,6 +103,7 @@ export function NodeDetail({
   onThemeOpen,
   centerShortcuts,
 }: Props) {
+  const isMobile = useIsMobile()
   const isTheme = node.type === 'theme'
   const ticker = node.data.ticker
   const indexChips = INDEX_FLAGS.filter((f) => node.data[f.key])
@@ -107,6 +113,10 @@ export function NodeDetail({
     : ticker
       ? `/stock/${ticker}`
       : null
+  const detailAvailable = isTheme || node.data.country === 'KR'
+  // 모바일은 hover가 없어 툴팁 대신 버튼 줄 아래에 같은 문구를 상시로 보인다
+  const showDetailNotice = detailPath !== null && !detailAvailable && isMobile
+  const actionsMargin = isCenter && centerShortcuts ? 'mb-3' : 'mb-5'
 
   return (
     <>
@@ -149,7 +159,7 @@ export function NodeDetail({
         </p>
       )}
 
-      <div className={cn('flex flex-wrap gap-2', isCenter && centerShortcuts ? 'mb-3' : 'mb-5')}>
+      <div className={cn('flex flex-wrap gap-2', showDetailNotice ? 'mb-1.5' : actionsMargin)}>
         {isCenter ? (
           <Button size="sm" className="flex-1" disabled>
             <Crosshair data-icon="inline-start" />
@@ -163,15 +173,39 @@ export function NodeDetail({
             </Button>
           )
         )}
-        {detailPath && (
-          <Button variant="outline" size="sm" asChild>
-            <Link to={detailPath}>
-              {isTheme ? '테마 상세' : '종목 상세'}
+        {detailPath &&
+          (detailAvailable ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link to={detailPath}>
+                {isTheme ? '테마 상세' : '종목 상세'}
+                <ExternalLink data-icon="inline-end" />
+              </Link>
+            </Button>
+          ) : isMobile ? (
+            <Button variant="outline" size="sm" disabled>
+              종목 상세
               <ExternalLink data-icon="inline-end" />
-            </Link>
-          </Button>
-        )}
+            </Button>
+          ) : (
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                {/* 비활성 버튼은 포인터 이벤트를 받지 않으므로 감싼 span이 hover·focus를 대신 받는다 */}
+                <TooltipTrigger asChild>
+                  <span tabIndex={0} className="inline-flex rounded-lg outline-none">
+                    <Button variant="outline" size="sm" disabled>
+                      종목 상세
+                      <ExternalLink data-icon="inline-end" />
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">{FOREIGN_DETAIL_NOTICE}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
       </div>
+      {showDetailNotice && (
+        <p className={cn('mt-0 text-caption text-muted-foreground', actionsMargin)}>{FOREIGN_DETAIL_NOTICE}</p>
+      )}
 
       {/* 개요에서 더 깊이 — 공급망은 hop·범위로, 이벤트는 공유 기업으로 이어진다 */}
       {isCenter && centerShortcuts && (
