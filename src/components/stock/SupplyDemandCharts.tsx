@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import type { SupplyPoint } from '@/lib/apiTypes'
 import { DOWN, UP } from '@/lib/chartAxis'
-import { syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/lib/chartSync'
+import { SYNC_BY_INDEX, syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/lib/chartSync'
 import { cn } from '@/lib/utils'
 
 // 투자자별 수급 4카드 (design-specs/stock-detail.md §1-6)
@@ -93,6 +93,7 @@ function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: Synced
       data={points}
       margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
       syncId={SYNC_ID}
+      syncMethod={SYNC_BY_INDEX}
       onClick={sync.onChartClick}
     >
       <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
@@ -147,10 +148,12 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
             data={points}
             margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
             syncId={SYNC_ID}
+            syncMethod={SYNC_BY_INDEX}
             onClick={sync.onChartClick}
           >
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
-            <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
+            {/* 순매수 막대 차트와 같은 band 스케일 — 네 차트의 커서가 같은 칸 중앙에 놓인다 */}
+            <XAxis dataKey="label" scale="band" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v.toFixed(1)}%`} domain={['dataMin - 0.5', 'dataMax + 0.5']} width={44} />
             {syncMarks(sync, {
               kind: 'line',

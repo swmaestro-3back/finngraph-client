@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { PREDICATE_LABELS, type GraphLink, type GraphNode } from '@/data/graphTypes'
 import { EntityPill, Section, TypeBadge } from '@/components/graph/DetailParts'
+import { buildEvidenceRows, type EvidenceKind } from '@/lib/edgeEvidence'
 import { Badge } from '@/components/ui/badge'
 import { T } from '@/lib/graphTheme'
 import { cn } from '@/lib/utils'
@@ -13,42 +14,10 @@ interface Props {
   onNodeSelect?: (node: GraphNode) => void
 }
 
-type EvidenceKind = 'news' | 'disclosure'
-
-/** 근거 한 행 — 같은 품목 텍스트는 한 행으로 합치고 횟수만 센다 */
-interface EvidenceRow {
-  kind: EvidenceKind
-  text: string
-  count: number
-  /** 공시 접수번호들 (뉴스는 비어 있다) */
-  ids: string[]
-}
-
 const KIND_LABEL: Record<EvidenceKind, string> = { news: '뉴스', disclosure: '공시' }
 
 function toDate(iso: string): string {
   return iso.slice(0, 10)
-}
-
-/**
- * 뉴스·공시 근거를 한 목록으로 합친다. 개별 근거에는 날짜가 없어 뉴스 먼저, 공시 나중 순서다.
- * 같은 품목이 여러 기사에 나오면 행 하나에 ×N으로 접는다 — "부품" 카드가 두 장 나란히 서는 것을 막는다.
- */
-function buildRows(link: GraphLink): EvidenceRow[] {
-  const rows = new Map<string, EvidenceRow>()
-  const add = (kind: EvidenceKind, text: string, id?: string) => {
-    const key = `${kind}:${text}`
-    const row = rows.get(key)
-    if (row) {
-      row.count += 1
-      if (id) row.ids.push(id)
-      return
-    }
-    rows.set(key, { kind, text, count: 1, ids: id ? [id] : [] })
-  }
-  link.news?.forEach((n) => add('news', n.item ?? '품목 정보 없음'))
-  link.disclosures?.forEach((d) => add('disclosure', d.item ?? '공시 항목 정보 없음', d.rcept_no))
-  return [...rows.values()]
 }
 
 /** 출처 표시 — 문서에 찍는 도장처럼 각지게. 뉴스는 프라이머리 톤, 공시는 잉크 톤 */
@@ -72,7 +41,7 @@ function SourceBadge({ kind }: { kind: EvidenceKind }) {
  * 테마 소속 관계는 분류 근거 문장만 갖는다. 이벤트 간선(HAS_EVENT)은 선택되지 않으므로 여기 오지 않는다.
  */
 export function EdgeDetail({ link, source, target, onNodeSelect }: Props) {
-  const rows = buildRows(link)
+  const rows = buildEvidenceRows(link)
   const newsCount = link.news_mention_count ?? link.news?.length ?? 0
   const disclosureCount = link.disclosure_count ?? link.disclosures?.length ?? 0
   // 0건인 종류는 말하지 않는다 — "공시 0건"은 없는 것을 알리는 노이즈다
@@ -103,15 +72,16 @@ export function EdgeDetail({ link, source, target, onNodeSelect }: Props) {
       )}
 
       {rows.length > 0 && (
-        <Section title="근거" meta={countMeta || undefined}>
+        <Section title="관련 뉴스·공시" meta={countMeta || undefined}>
           <ul className="m-0 list-none divide-y divide-border rounded-md border border-border p-0">
             {rows.map((row) => (
               <li key={`${row.kind}:${row.text}`} className="flex items-start gap-3 px-3 py-2.5">
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-body leading-snug text-foreground">
                     {row.text}
+                    {/* 반복 횟수는 이 관계의 무게다 — 시세 상승과 같은 빨강으로 눈에 띄게 */}
                     {row.count > 1 && (
-                      <span className="ml-1.5 font-mono text-caption text-muted-foreground">
+                      <span className="ml-1.5 inline-block rounded-sm bg-stock-up-soft px-1 py-px font-mono text-caption font-semibold text-stock-up">
                         ×{row.count}
                       </span>
                     )}
@@ -131,9 +101,9 @@ export function EdgeDetail({ link, source, target, onNodeSelect }: Props) {
 
       {(link.first_mentioned_at || link.last_mentioned_at) && (
         <div className="mt-2 font-mono text-caption text-muted-foreground">
-          {link.first_mentioned_at && <>첫 언급 {toDate(link.first_mentioned_at)}</>}
+          {link.first_mentioned_at && <>최초 언급 {toDate(link.first_mentioned_at)}</>}
           {link.first_mentioned_at && link.last_mentioned_at && ' · '}
-          {link.last_mentioned_at && <>마지막 언급 {toDate(link.last_mentioned_at)}</>}
+          {link.last_mentioned_at && <>최근 언급 {toDate(link.last_mentioned_at)}</>}
         </div>
       )}
     </>

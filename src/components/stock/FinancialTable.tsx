@@ -1,9 +1,11 @@
 import { memo, useMemo, useState } from 'react'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { fillYearRange } from '@/lib/annualPeriod'
 import type { AnnualFinancials } from '@/lib/apiTypes'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 import { computeTrendTones, MIN_TREND_RUN } from '@/lib/trend'
+import { useOverflowFade } from '@/lib/useOverflowFade'
 import type { MetricDirection, TrendTone } from '@/lib/trend'
 import { cn } from '@/lib/utils'
 
@@ -47,44 +49,53 @@ const ROWS: RowDef[] = [
 
 type HighlightMode = 'none' | 'trend' | 'improving'
 
+// 표는 차트의 기간 칩과 무관하게 항상 이 해부터 마지막 데이터 연도까지 보여준다.
+// 종목마다 열 수가 달라지지 않도록 — 늦게 상장한 종목은 그 전 연도가 '-'로 채워진다
+const TABLE_START_YEAR = 2007
+
+// 열 폭 고정 — 연도가 적다고 칸이 늘어나거나, 많다고 눌리지 않는다. 넘치면 가로 스크롤
+const LABEL_COL_WIDTH = 84
+const YEAR_COL_WIDTH = 64
+
 /** 선택된 버튼을 다시 누르면 'none'(표시 안 함)으로 돌아간다 */
+// 덜 칠하는 쪽이 먼저 — '개선'만 보다가 한 단계 더 켜면 악화까지 보인다
 const MODES: {
   key: Exclude<HighlightMode, 'none'>
   label: string
   legend: { swatchClass: string; text: string }[]
 }[] = [
   {
-    key: 'trend',
-    label: '개선/악화',
-    legend: [
-      { swatchClass: 'bg-stock-up/25', text: `${MIN_TREND_RUN}회 연속 개선` },
-      { swatchClass: 'bg-stock-down/25', text: `${MIN_TREND_RUN}회 연속 악화` },
-    ],
-  },
-  {
     key: 'improving',
-    label: '개선만',
+    label: '개선',
     legend: [
       { swatchClass: 'bg-trend-positive/25', text: `${MIN_TREND_RUN}회 연속 개선` },
     ],
   },
+  {
+    key: 'trend',
+    label: '개선/악화',
+    legend: [
+      { swatchClass: 'bg-trend-positive/25', text: `${MIN_TREND_RUN}회 연속 개선` },
+      { swatchClass: 'bg-trend-negative/25', text: `${MIN_TREND_RUN}회 연속 악화` },
+    ],
+  },
 ]
 
-/** 모드별 셀 색 — 배경은 opacity 10~12%로 연하게, 숫자에만 색 포인트 */
+/** 모드별 셀 색 — 배경은 opacity 12%로 연하게, 숫자에만 색 포인트. 개선은 두 모드에서 같은 초록 */
 function toneClass(mode: HighlightMode, tone: TrendTone | null): string | undefined {
   if (mode === 'none' || tone === null) return undefined
-  if (mode === 'improving') {
-    return tone === 'improving' ? 'bg-trend-positive/12 text-trend-positive' : undefined
-  }
-  return tone === 'improving'
-    ? 'bg-stock-up/10 text-stock-up'
-    : 'bg-stock-down/10 text-stock-down'
+  if (tone === 'improving') return 'bg-trend-positive/12 text-trend-positive'
+  return mode === 'trend' ? 'bg-trend-negative/12 text-trend-negative' : undefined
 }
 
-export const FinancialTable = memo(function FinancialTable({ rows }: { rows: AnnualFinancials[] }) {
+export const FinancialTable = memo(function FinancialTable({ rows: source }: { rows: AnnualFinancials[] }) {
   const [mode, setMode] = useState<HighlightMode>('none')
+  const rows = useMemo(() => fillYearRange(source, TABLE_START_YEAR), [source])
+  const { scrollRef, showFade } = useOverflowFade<HTMLDivElement>([rows.length])
 
-  const gridCols = { gridTemplateColumns: `84px repeat(${rows.length}, minmax(44px, 1fr))` }
+  const gridCols = {
+    gridTemplateColumns: `${LABEL_COL_WIDTH}px repeat(${rows.length}, ${YEAR_COL_WIDTH}px)`,
+  }
   const trendTones = useMemo(
     () =>
       ROWS.map((row) =>
@@ -136,14 +147,22 @@ export const FinancialTable = memo(function FinancialTable({ rows }: { rows: Ann
         ))}
       </div>
 
-      <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="min-w-[1080px]">
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {/* 행 박스를 열 전체 폭으로 — 안 그러면 스크롤 영역 밖 열에 줄무늬 배경이 안 칠해진다 */}
+          <div className="min-w-max">
           {/* 헤더 행 */}
           <div
             className="grid gap-1 rounded-t-lg border-b border-border bg-surface-inset px-1 py-2"
             style={gridCols}
           >
-            <span className="pl-1 text-caption text-foreground-secondary">항목</span>
+            {/* 항목 열은 스크롤해도 제자리 — sticky 칸은 뒤로 지나가는 셀을 가리도록 배경을 직접 가진다 */}
+            <span className="sticky left-0 z-10 rounded-tl-lg bg-surface-inset pl-1 text-caption text-foreground-secondary">
+              항목
+            </span>
             {rows.map((f) => (
               <span
                 key={f.year}
@@ -163,12 +182,17 @@ export const FinancialTable = memo(function FinancialTable({ rows }: { rows: Ann
             <div
               key={row.label}
               className={cn(
-                'grid items-center gap-1 rounded-md border-b border-secondary px-1 py-[7px] hover:bg-surface-inset',
+                'group grid items-center gap-1 rounded-md border-b border-secondary px-1 py-[7px] hover:bg-surface-inset',
                 rowIndex % 2 === 0 && 'bg-muted',
               )}
               style={gridCols}
             >
-              <span className="pl-1 text-caption font-semibold leading-[1.4] text-foreground">
+              <span
+                className={cn(
+                  'sticky left-0 z-10 pl-1 text-caption font-semibold leading-[1.4] text-foreground group-hover:bg-surface-inset',
+                  rowIndex % 2 === 0 ? 'bg-muted' : 'bg-background',
+                )}
+              >
                 {row.label}
               </span>
               {rows.map((f, colIndex) => {
@@ -195,7 +219,15 @@ export const FinancialTable = memo(function FinancialTable({ rows }: { rows: Ann
               })}
             </div>
           ))}
+          </div>
         </div>
+        {/* 오른쪽에 더 볼 연도가 남았을 때만 — 스크롤바를 숨겼으니 이게 유일한 단서 */}
+        {showFade && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent"
+          />
+        )}
       </div>
     </div>
   )

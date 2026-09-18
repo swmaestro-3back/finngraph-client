@@ -130,8 +130,9 @@ export function toSupplyPoint(res: InvestorFlowRes): SupplyPoint {
 
 const TRILLION = 1e12
 
+/** 원 → 조. 1억(0.0001조) 자리까지 남겨 1조 미만은 억으로 표시할 수 있게 한다 */
 function toTrillion(won: number | null): number | null {
-  return won === null ? null : Math.round((won / TRILLION) * 100) / 100
+  return won === null ? null : Math.round((won / TRILLION) * 1e4) / 1e4
 }
 
 export function toAnnualFinancials(res: AnnualFinancialsRes): AnnualFinancials {

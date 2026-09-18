@@ -67,8 +67,9 @@
   --stock-up-soft: #fdeaec;
   --stock-down: #0052ff;
 
-  /* 재무 지표 연속 추세 강조 (긍정 지표만 표시 모드) */
+  /* 재무 지표 연속 추세 강조 — 개선=초록, 악화=빨강. 시세 색(상승=빨강)과는 뜻이 달라 토큰을 따로 둔다 */
   --trend-positive: #15803d;
+  --trend-negative: #b91c1c;
 }
 
 @theme inline {
@@ -117,6 +118,7 @@
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-trend-positive: var(--trend-positive);
+  --color-trend-negative: var(--trend-negative);
   --color-stock-up: var(--stock-up);
   --color-stock-down: var(--stock-down);
   --color-surface-inset: var(--surface-inset);
@@ -149,6 +151,12 @@
   }
   html {
     @apply font-sans;
+  }
+  /* recharts 3 접근성 레이어가 SVG 표면(tabIndex=0)과 내부 zIndex 레이어 g(tabIndex=-1)에 포커스를 허용해
+     차트나 막대를 클릭하면 포커스 링(파란 박스)이 그려진다. 차트 클릭은 칸 선택 동작이므로 포커스 표시를 끈다. */
+  .recharts-wrapper :focus,
+  .recharts-wrapper :focus-visible {
+    outline: none;
   }
 }
 

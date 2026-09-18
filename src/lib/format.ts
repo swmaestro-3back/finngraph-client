@@ -24,10 +24,16 @@ export function changeColorClass(value: number): string {
   return 'text-foreground'
 }
 
-/** 조 단위 금액 (예: 228.7조) */
+/**
+ * 조 단위 숫자(AnnualFinancials 금액 필드)를 읽기 좋은 단위로 —
+ * 1조 이상은 소수 첫째 자리 조(228.7조), 1조 미만은 정수 억(9,999억)
+ */
 export function formatTrillion(value: number | null): string {
   if (value === null) return '-'
-  return `${value.toFixed(1)}조`
+  const eok = Math.round(value * 1e4)
+  // 억으로 반올림해서 1조에 닿으면 조로 올린다 (9,999.6억 → 1.0조)
+  if (Math.abs(eok) >= 1e4) return `${value.toFixed(1)}조`
+  return `${eok.toLocaleString('ko-KR')}억`
 }
 
 export function formatPercent(value: number | null, digits = 2): string {
