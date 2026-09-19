@@ -48,17 +48,13 @@ function KindColumn({
               key={`${item.id}-${i}`}
               type="button"
               onClick={() => onSelectNews(item.id)}
-              className="w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
+              className="flex w-full items-center gap-2 border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
             >
-              <span className="flex items-center gap-1.5">
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                  {item.title}
-                </span>
-                <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
+                <span className="truncate text-caption text-muted-foreground">{item.meta}</span>
               </span>
-              <span className="mt-0.5 block truncate text-caption text-muted-foreground">
-                {item.meta}
-              </span>
+              <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
             </button>
           ))}
         </div>

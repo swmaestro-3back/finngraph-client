@@ -9,7 +9,7 @@ export function NewsRelationBadge({ tripleExtracted }: { tripleExtracted: boolea
   return (
     <Badge
       variant="outline"
-      className="h-5 shrink-0 rounded-sm border-trend-positive/25 bg-trend-positive/8 px-2 text-caption font-semibold tracking-[0.2px] text-trend-positive/85"
+      className="h-6 shrink-0 rounded-sm border-trend-positive/25 bg-trend-positive/8 px-2.5 text-xs font-semibold tracking-[0.2px] text-trend-positive/85"
     >
       분석
     </Badge>
