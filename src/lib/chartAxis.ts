@@ -75,3 +75,25 @@ export function annualTickInterval(count: number, maxLabels = 12): number {
   if (count <= maxLabels) return 0
   return Math.ceil(count / maxLabels) - 1
 }
+
+/** 이슈 막대의 최소 높이(px) — 1건도 "있다"는 것은 보여야 한다 */
+export const ISSUE_BAR_MIN_PX = 2
+
+/**
+ * 이슈 막대 높이 비율(0~1) — 제곱근 척도.
+ * 건수는 한 칸에 수십 건이 몰리는 꼬리가 길어서, 선형이면 2건이 77건 옆에서 1px도 못 된다.
+ * 제곱근은 순서를 지키면서 작은 값을 끌어올린다 (2/77 → 0.16, 10/77 → 0.36).
+ */
+export function issueBarRatio(count: number, maxSide: number): number {
+  if (count <= 0 || maxSide <= 0) return 0
+  return Math.sqrt(Math.min(1, count / maxSide))
+}
+
+/**
+ * 이슈 막대 CSS height — 레인 절반(50%)에 비율을 곱하고, 0선과 겹치지 않게 0.5px를 뺀 뒤
+ * 최소 높이를 보장한다. 최대값은 그대로 절반을 채운다.
+ */
+export function issueBarHeight(count: number, maxSide: number): string {
+  const pct = issueBarRatio(count, maxSide) * 50
+  return `max(${ISSUE_BAR_MIN_PX}px, calc(${pct}% - 0.5px))`
+}
