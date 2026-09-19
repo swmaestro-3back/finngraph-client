@@ -31,8 +31,8 @@ describe('buildEvidenceRows', () => {
     expect(rows[0].ids).toEqual(['2026-1', '2026-2'])
   })
 
-  it('품목이 비어 있으면 대체 문구로 묶는다', () => {
+  it('품목이 비어 있으면 대체 문구로 묶고 뉴스 id는 유지한다', () => {
     const rows = buildEvidenceRows({ news: [news(null), news(null)] })
-    expect(rows).toEqual([{ kind: 'news', text: '품목 정보 없음', count: 2, ids: [] }])
+    expect(rows).toEqual([{ kind: 'news', text: '품목 정보 없음', count: 2, ids: ['1', '1'] }])
   })
 })

@@ -7,7 +7,7 @@ export interface EvidenceRow {
   kind: EvidenceKind
   text: string
   count: number
-  /** 공시 접수번호들 (뉴스는 비어 있다) */
+  /** 근거 문서 id — 뉴스는 news_id, 공시는 DART 접수번호 */
   ids: string[]
 }
 
@@ -28,7 +28,7 @@ export function buildEvidenceRows(link: Pick<GraphLink, 'news' | 'disclosures'>)
     }
     rows.set(key, { kind, text, count: 1, ids: id ? [id] : [] })
   }
-  link.news?.forEach((n) => add('news', n.item ?? '품목 정보 없음'))
+  link.news?.forEach((n) => add('news', n.item ?? '품목 정보 없음', n.news_id))
   link.disclosures?.forEach((d) => add('disclosure', d.item ?? '공시 항목 정보 없음', d.rcept_no))
   // Array.prototype.sort는 안정 정렬이라 동률의 삽입 순서가 유지된다
   return [...rows.values()].sort((a, b) => b.count - a.count)

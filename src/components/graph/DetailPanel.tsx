@@ -52,6 +52,7 @@ export function DetailPanel({
         source={selection.source}
         target={selection.target}
         onNodeSelect={onNodeSelect}
+        onOpenNews={onOpenNews}
       />
     ) : selection.node.type === 'event' ? (
       <EventDetail

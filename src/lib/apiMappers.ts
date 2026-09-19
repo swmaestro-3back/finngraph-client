@@ -50,6 +50,7 @@ export function toNewsItem(news: NewsDetail): NewsItem {
     id: news.id,
     title: news.title,
     meta: `${pressOf(news.url)} · ${formatRelativeTime(news.collectedAt)}`,
+    url: news.url || null,
     tripleExtracted: news.tripleExtracted,
   }
 }
