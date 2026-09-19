@@ -43,24 +43,42 @@ function KindColumn({
         </p>
       ) : (
         <div className="max-h-[240px] overflow-y-auto">
-          {items.map((item, i) => (
-            <button
-              key={`${item.id}-${i}`}
-              type="button"
-              onClick={() => onSelectNews(item.id)}
-              className="w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                  {item.title}
+          {items.map((item, i) => {
+            const row = (
+              <>
+                <span className="flex items-center gap-1.5">
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                    {item.title}
+                  </span>
+                  <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
                 </span>
-                <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
-              </span>
-              <span className="mt-0.5 block truncate text-caption text-muted-foreground">
-                {item.meta}
-              </span>
-            </button>
-          ))}
+                <span className="mt-0.5 block truncate text-caption text-muted-foreground">
+                  {item.meta}
+                </span>
+              </>
+            )
+            // 미분석 뉴스는 상세에 그릴 관계가 없다 — 모달 대신 원문으로 바로 보낸다
+            return item.tripleExtracted !== true && item.url ? (
+              <a
+                key={`${item.id}-${i}`}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
+              >
+                {row}
+              </a>
+            ) : (
+              <button
+                key={`${item.id}-${i}`}
+                type="button"
+                onClick={() => onSelectNews(item.id)}
+                className="w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
+              >
+                {row}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
