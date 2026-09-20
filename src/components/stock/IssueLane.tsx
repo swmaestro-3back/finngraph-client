@@ -9,6 +9,7 @@ import {
   UP,
   dateTickIndexes,
   emphasis,
+  issueBarHeight,
   slotPct,
 } from '@/lib/chartAxis'
 import { cn } from '@/lib/utils'
@@ -47,6 +48,7 @@ export function IssueLane({
 
   // 위아래 절반이 같은 척도를 써야 호재 3건과 악재 3건이 같은 길이로 보인다
   // (hover마다 리렌더되는 컴포넌트라 days가 바뀔 때만 스캔한다)
+  // 높이는 제곱근 척도 + 최소 2px — 한 칸에 77건이 몰려도 2건짜리가 사라지지 않는다 (chartAxis.issueBarHeight)
   const maxSide = useMemo(
     () => Math.max(1, ...days.map((d) => Math.max(d.good, d.bad, d.neutral))),
     [days],
@@ -147,7 +149,7 @@ export function IssueLane({
                   className="absolute bottom-1/2 rounded-t-[2px]"
                   style={{
                     ...bar,
-                    height: `calc(${(day.good / maxSide) * 50}% - 0.5px)`,
+                    height: issueBarHeight(day.good, maxSide),
                     backgroundColor: UP,
                     opacity,
                   }}
@@ -159,7 +161,7 @@ export function IssueLane({
                   className="absolute top-1/2 rounded-b-[2px]"
                   style={{
                     ...bar,
-                    height: `calc(${(day.bad / maxSide) * 50}% - 0.5px)`,
+                    height: issueBarHeight(day.bad, maxSide),
                     backgroundColor: DOWN,
                     opacity,
                   }}
@@ -170,7 +172,7 @@ export function IssueLane({
                   className="absolute bottom-1/2 rounded-t-[2px]"
                   style={{
                     ...bar,
-                    height: `calc(${(day.neutral / maxSide) * 50}% - 0.5px)`,
+                    height: issueBarHeight(day.neutral, maxSide),
                     backgroundColor: NEUTRAL,
                     opacity,
                   }}

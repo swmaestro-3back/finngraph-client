@@ -56,9 +56,9 @@ export function lensControls(lens: Lens): { hop: boolean; scope: boolean } {
   }
 }
 
-/** 렌즈별 노드 종류 필터 기본값 — 개요는 테마가 수십 개라 공급망이 묻히므로 숨기고 시작한다 */
-export function lensDefaultCategories(lens: Lens): Set<NodeCategory> {
-  return new Set(lens === 'overview' ? ALL_CATEGORIES.filter((c) => c !== 'theme') : ALL_CATEGORIES)
+/** 렌즈별 노드 종류 필터 기본값 — 모든 렌즈에서 전체 종류를 켜고 시작한다(개요는 1홉 이웃을 빠짐없이 보여야 한다) */
+export function lensDefaultCategories(_lens: Lens): Set<NodeCategory> {
+  return new Set(ALL_CATEGORIES)
 }
 
 function isMarket(v: string | null | undefined): v is KgMarket {

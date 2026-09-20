@@ -14,8 +14,9 @@ interface NewsSectionProps {
   relationFilter?: boolean
 }
 
+// 왼쪽은 제목+메타 세로 묶음, 오른쪽 분석 뱃지는 행 전체 높이 기준 세로 중앙
 const ROW =
-  'flex w-full flex-col items-start gap-0.5 border-b border-surface-inset py-2.5 text-left hover:bg-muted'
+  'flex w-full items-center gap-2 border-b border-surface-inset py-2.5 text-left hover:bg-muted'
 
 export function NewsSection({
   title,
@@ -53,13 +54,11 @@ export function NewsSection({
         {visible.map((item) => {
           const row = (
             <>
-              <span className="flex w-full items-center gap-1.5">
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                  {item.title}
-                </span>
-                <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
+                <span className="text-caption text-muted-foreground">{item.meta}</span>
               </span>
-              <span className="text-caption text-muted-foreground">{item.meta}</span>
+              <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
             </>
           )
           // 미분석 뉴스는 상세에 그릴 관계가 없다 — 모달 대신 원문으로 바로 보낸다

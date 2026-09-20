@@ -46,17 +46,15 @@ function KindColumn({
           {items.map((item, i) => {
             const row = (
               <>
-                <span className="flex items-center gap-1.5">
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                    {item.title}
-                  </span>
-                  <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
+                  <span className="truncate text-caption text-muted-foreground">{item.meta}</span>
                 </span>
-                <span className="mt-0.5 block truncate text-caption text-muted-foreground">
-                  {item.meta}
-                </span>
+                <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
               </>
             )
+            const rowClassName =
+              'flex w-full items-center gap-2 border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted'
             // 미분석 뉴스는 상세에 그릴 관계가 없다 — 모달 대신 원문으로 바로 보낸다
             return item.tripleExtracted !== true && item.url ? (
               <a
@@ -64,7 +62,7 @@ function KindColumn({
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
+                className={rowClassName}
               >
                 {row}
               </a>
@@ -73,7 +71,7 @@ function KindColumn({
                 key={`${item.id}-${i}`}
                 type="button"
                 onClick={() => onSelectNews(item.id)}
-                className="w-full border-b border-surface-inset py-2 text-left last:border-0 hover:bg-muted"
+                className={rowClassName}
               >
                 {row}
               </button>

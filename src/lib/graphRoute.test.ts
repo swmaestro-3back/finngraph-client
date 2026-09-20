@@ -43,8 +43,8 @@ describe('graphRoute', () => {
     expect(lensControls('events')).toEqual({ hop: true, scope: false })
   })
 
-  it('개요만 테마를 기본으로 숨긴다', () => {
-    expect([...lensDefaultCategories('overview')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'event'])
+  it('모든 렌즈에서 전체 종류를 기본으로 켠다', () => {
+    expect([...lensDefaultCategories('overview')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
     expect([...lensDefaultCategories('supply')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
     expect([...lensDefaultCategories('events')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
   })

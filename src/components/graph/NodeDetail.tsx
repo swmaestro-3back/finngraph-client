@@ -51,7 +51,7 @@ interface Props {
   onNodeSelect?: (node: GraphNode) => void
   /** 이 노드를 새 중심으로 다시 조회 */
   onRecenter?: (node: GraphNode) => void
-  /** 테마 칩 — 캔버스에 숨겨져 있을 수 있어 선택이 아니라 테마 그래프로 이동한다 */
+  /** 테마 칩 — 필터로 캔버스에서 꺼져 있을 수 있어 선택이 아니라 테마 그래프로 이동한다 */
   onThemeOpen?: (node: GraphNode) => void
   /** 중심 기업 + 개요 렌즈일 때만 넘어온다 */
   centerShortcuts?: CenterShortcuts
@@ -243,7 +243,7 @@ export function NodeDetail({
           <NeighborSection title="피인수" meta="이 기업을 인수" nodes={neighbors.acquirers} onNodeSelect={onNodeSelect} />
           <NeighborSection title="투자" meta="이 기업이 투자" nodes={neighbors.investees} onNodeSelect={onNodeSelect} />
           <NeighborSection title="피투자" meta="이 기업에 투자" nodes={neighbors.investors} onNodeSelect={onNodeSelect} />
-          {/* 테마는 개요 캔버스에서 기본 숨김이라 응답 전체(필터 전)에서 채우고, 누르면 테마 그래프로 간다 */}
+          {/* 테마는 필터로 꺼져 있을 수 있어 응답 전체(필터 전)에서 채우고, 누르면 테마 그래프로 간다 */}
           <NeighborSection title="소속 테마" nodes={neighbors.themes} onNodeSelect={onThemeOpen ?? onNodeSelect} />
           <NeighborSection title="관련 이벤트" nodes={neighbors.events} onNodeSelect={onNodeSelect} />
         </>

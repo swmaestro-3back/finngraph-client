@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/sidebar'
 import {
   endId,
-  ALL_CATEGORIES,
   ALL_PREDICATES,
   isEventLink,
   nodeCategory,
@@ -85,7 +84,7 @@ export function GraphView({ focus }: Props) {
   // 선택이 유일한 출처 — 캔버스 하이라이트도 여기서 파생된다
   const [selection, setSelection] = useState<GraphSelection | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<Set<NodeCategory>>(() =>
-    isTheme ? new Set(ALL_CATEGORIES) : lensDefaultCategories(lens),
+    lensDefaultCategories(lens),
   )
   const [selectedPredicates, setSelectedPredicates] = useState<Set<Predicate>>(
     new Set(ALL_PREDICATES),
@@ -96,11 +95,11 @@ export function GraphView({ focus }: Props) {
     setSelection(null)
   }, [focus.kind, focusKey])
 
-  // 렌즈를 바꾸면 필터는 그 렌즈의 기본값으로 돌아간다 — 개요에서 숨긴 테마가 공급망 렌즈까지 따라오지 않도록
+  // 렌즈를 바꾸면 필터는 그 렌즈의 기본값으로 돌아간다 — 한 렌즈에서 끈 종류가 다른 렌즈까지 따라오지 않도록
   useEffect(() => {
-    setSelectedCategories(isTheme ? new Set(ALL_CATEGORIES) : lensDefaultCategories(lens))
+    setSelectedCategories(lensDefaultCategories(lens))
     setSelectedPredicates(new Set(ALL_PREDICATES))
-  }, [lens, isTheme])
+  }, [lens])
 
   const nodeById = useMemo(() => {
     const map = new Map<string, GraphNode>()
@@ -273,7 +272,7 @@ export function GraphView({ focus }: Props) {
   const handleReset = () => {
     graphRef.current?.resetZoom()
     clearSelection()
-    setSelectedCategories(isTheme ? new Set(ALL_CATEGORIES) : lensDefaultCategories('overview'))
+    setSelectedCategories(lensDefaultCategories('overview'))
     setSelectedPredicates(new Set(ALL_PREDICATES))
     updateQuery({ hop: 1, scope: 'all', lens: 'overview' })
   }
