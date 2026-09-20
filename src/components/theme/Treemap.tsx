@@ -41,6 +41,12 @@ function shade(rgb: number[], amt: number): string {
   return `rgb(${r},${g},${b})`
 }
 
+function splitParen(name: string): [string, string | null] {
+  const i = name.indexOf('(')
+  if (i <= 0) return [name, null]
+  return [name.slice(0, i).trim(), name.slice(i).trim()]
+}
+
 interface TreemapProps {
   items: TreemapItem[]
   selectedId: string | null
@@ -115,7 +121,10 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
         const pctSize = small ? 9 : w < 130 ? 10 : w < 200 ? 11 : 13
         const showPct = h >= 34 && w >= 46
         const singleLine = h < 56
-        const showDetail = h >= 88 && w >= 150
+        const [mainName, parenName] = splitParen(theme.name)
+        const splitName = !singleLine && parenName !== null
+        // 시총·대표종목 줄: 이름+등락률 아래 한 줄이 들어갈 높이와 최소 가독 너비만 요구
+        const showDetail = h >= 64 && w >= 96
 
         return (
           <button
@@ -154,11 +163,19 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
                 fontSize: nameSize,
                 display: '-webkit-box',
                 WebkitBoxOrient: 'vertical',
-                WebkitLineClamp: singleLine ? 1 : 2,
+                WebkitLineClamp: singleLine || splitName ? 1 : 2,
               }}
             >
-              {theme.name}
+              {splitName ? mainName : theme.name}
             </span>
+            {splitName && (
+              <span
+                className="max-w-full overflow-hidden font-medium leading-[1.2] break-keep text-ellipsis whitespace-nowrap opacity-85"
+                style={{ fontSize: Math.max(9, nameSize - 3) }}
+              >
+                {parenName}
+              </span>
+            )}
             {showPct && (
               <span
                 className="font-mono font-medium opacity-95"
@@ -170,7 +187,7 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
             )}
             {showDetail && theme.detail && (
               <span
-                className="flex max-w-full items-baseline gap-1.5 overflow-hidden font-mono whitespace-nowrap opacity-75"
+                className="block max-w-full overflow-hidden font-mono text-ellipsis whitespace-nowrap opacity-75"
                 style={{ fontSize: Math.max(9, pctSize - 2) }}
               >
                 {theme.detail}
