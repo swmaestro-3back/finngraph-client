@@ -8,6 +8,7 @@ import { MoverFeed } from '@/components/theme/MoverFeed'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { StockSection } from '@/components/theme/StockSection'
 import { ThemeTopMovers } from '@/components/theme/ThemeTopMovers'
+import { MarketClock } from '@/components/theme/MarketClock'
 import { Treemap, type TreemapItem } from '@/components/theme/Treemap'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
@@ -20,7 +21,7 @@ import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { useThemes } from '@/lib/queries/useThemes'
 
-const THEME_COUNTS = [20, 30, 40]
+const THEME_COUNTS = [10, 20, 30]
 
 const LIST_CLASS =
   'h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
@@ -40,12 +41,12 @@ export default function ThemeDashboardPage() {
   const treemapItems: TreemapItem[] = useMemo(
     () =>
       treemapThemes
-        .filter((t) => (t.marketCap ?? 0) > 0)
         .map((t) => ({
           id: t.name,
           name: t.name,
           change: t.change ?? 0,
-          size: t.marketCap ?? 0,
+          // 면적은 등락률 절댓값 기준. 0%대 테마도 보이도록 최소 0.5%p 확보
+          size: Math.max(Math.abs(t.change ?? 0), 0.5),
           detail: `${formatCompactKrw(t.marketCap)}${
             t.topStocks[0] ? ` · ${t.topStocks[0].name}` : ''
           }`,
@@ -63,14 +64,7 @@ export default function ThemeDashboardPage() {
   return (
     <div className="page-container pb-12 pt-7">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-[9px]">
-          <span className="flex h-7 items-center rounded-md bg-stock-up-soft px-2.5 text-xs font-semibold whitespace-nowrap text-stock-up">
-            장마감
-          </span>
-          <span className="font-mono text-base font-medium tracking-[-0.4px] whitespace-nowrap text-foreground">
-            2026-07-31 (금) 15:39:50
-          </span>
-        </div>
+        <MarketClock />
         <div className="flex items-center gap-1.5">
           <span className="mr-[3px] text-caption whitespace-nowrap text-muted-foreground">
             표시 테마 수
