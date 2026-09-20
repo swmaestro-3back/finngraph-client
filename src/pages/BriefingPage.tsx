@@ -1,3 +1,4 @@
+import { formatLocalDate } from '@/lib/marketClock'
 import { useMemo } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
@@ -191,7 +192,7 @@ export default function BriefingPage() {
         <h1 className="text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">
           데일리 브리핑
         </h1>
-        <span className="text-body text-muted-foreground">2026-07-31 (금) 장마감 기준</span>
+        <span className="text-body text-muted-foreground">{formatLocalDate(new Date())} 기준</span>
       </div>
 
       {loading && (
