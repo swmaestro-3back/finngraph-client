@@ -51,15 +51,27 @@ export function NewsSection({
       </div>
 
       <div className={cn(listClassName)}>
-        {visible.map((item) => (
-          <button key={item.id} type="button" onClick={() => onItemClick?.(item)} className={ROW}>
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
-              <span className="text-caption text-muted-foreground">{item.meta}</span>
-            </span>
-            <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
-          </button>
-        ))}
+        {visible.map((item) => {
+          const row = (
+            <>
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
+                <span className="text-caption text-muted-foreground">{item.meta}</span>
+              </span>
+              <NewsRelationBadge tripleExtracted={item.tripleExtracted} />
+            </>
+          )
+          // 미분석 뉴스는 상세에 그릴 관계가 없다 — 모달 대신 원문으로 바로 보낸다
+          return item.tripleExtracted !== true && item.url ? (
+            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className={ROW}>
+              {row}
+            </a>
+          ) : (
+            <button key={item.id} type="button" onClick={() => onItemClick?.(item)} className={ROW}>
+              {row}
+            </button>
+          )
+        })}
       </div>
     </section>
   )

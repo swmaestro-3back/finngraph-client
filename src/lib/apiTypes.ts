@@ -172,6 +172,8 @@ export interface NewsItem {
   id: string
   title: string
   meta: string
+  /** 원문 링크 — 미분석(tripleExtracted !== true) 뉴스는 상세 대신 이 링크로 바로 나간다 */
+  url: string | null
   tripleExtracted: boolean | null
 }
 

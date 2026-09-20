@@ -12,7 +12,11 @@ interface Props {
   target: GraphNode
   /** 양 끝 기업 칩을 누르면 그 노드로 선택을 옮긴다 — 거기서 재중심으로 이어진다 */
   onNodeSelect?: (node: GraphNode) => void
+  /** 근거 뉴스 id를 누르면 상세 모달로 — KG 근거 뉴스는 전부 삼중항 추출분이라 미분석 케이스가 없다 */
+  onOpenNews?: (newsId: string) => void
 }
+
+const DART_VIEWER = 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo='
 
 const KIND_LABEL: Record<EvidenceKind, string> = { news: '뉴스', disclosure: '공시' }
 
@@ -40,7 +44,7 @@ function SourceBadge({ kind }: { kind: EvidenceKind }) {
  * 엔티티는 캔버스의 노드처럼 둥근 알약, 근거는 종이 문서처럼 각진 목록 — 반경이 곧 종류 구분이다.
  * 테마 소속 관계는 분류 근거 문장만 갖는다. 이벤트 간선(HAS_EVENT)은 선택되지 않으므로 여기 오지 않는다.
  */
-export function EdgeDetail({ link, source, target, onNodeSelect }: Props) {
+export function EdgeDetail({ link, source, target, onNodeSelect, onOpenNews }: Props) {
   const rows = buildEvidenceRows(link)
   const newsCount = link.news_mention_count ?? link.news?.length ?? 0
   const disclosureCount = link.disclosure_count ?? link.disclosures?.length ?? 0
@@ -74,27 +78,54 @@ export function EdgeDetail({ link, source, target, onNodeSelect }: Props) {
       {rows.length > 0 && (
         <Section title="관련 뉴스·공시" meta={countMeta || undefined}>
           <ul className="m-0 list-none divide-y divide-border rounded-md border border-border p-0">
-            {rows.map((row) => (
-              <li key={`${row.kind}:${row.text}`} className="flex items-start gap-3 px-3 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="m-0 text-body leading-snug text-foreground">
-                    {row.text}
-                    {/* 반복 횟수는 이 관계의 무게다 — 시세 상승과 같은 빨강으로 눈에 띄게 */}
-                    {row.count > 1 && (
-                      <span className="ml-1.5 inline-block rounded-sm bg-stock-up-soft px-1 py-px font-mono text-caption font-semibold text-stock-up">
-                        ×{row.count}
-                      </span>
-                    )}
-                  </p>
-                  {row.ids.length > 0 && (
-                    <div className="mt-0.5 font-mono text-caption text-muted-foreground">
-                      {row.ids.join(', ')}
-                    </div>
+            {rows.map((row) => {
+              const title = (
+                <>
+                  {row.text}
+                  {/* 반복 횟수는 이 관계의 무게다 — 시세 상승과 같은 빨강으로 눈에 띄게 */}
+                  {row.count > 1 && (
+                    <span className="ml-1.5 inline-block rounded-sm bg-stock-up-soft px-1 py-px font-mono text-caption font-semibold text-stock-up">
+                      ×{row.count}
+                    </span>
                   )}
-                </div>
-                <SourceBadge kind={row.kind} />
-              </li>
-            ))}
+                </>
+              )
+              const primaryId = row.ids[0]
+              const titleClass = 'm-0 block text-body leading-snug text-foreground hover:underline'
+              return (
+                <li key={`${row.kind}:${row.text}`} className="flex items-start gap-3 px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    {/* 제목이 곧 링크다 — 공시는 DART 원문, 뉴스는 상세 모달 */}
+                    {primaryId && row.kind === 'disclosure' ? (
+                      <a
+                        href={`${DART_VIEWER}${primaryId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={titleClass}
+                      >
+                        {title}
+                      </a>
+                    ) : primaryId && onOpenNews ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpenNews(primaryId)}
+                        className={`${titleClass} w-full text-left`}
+                      >
+                        {title}
+                      </button>
+                    ) : (
+                      <p className="m-0 text-body leading-snug text-foreground">{title}</p>
+                    )}
+                    {row.ids.length > 0 && (
+                      <div className="mt-0.5 font-mono text-caption text-muted-foreground">
+                        {row.ids.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  <SourceBadge kind={row.kind} />
+                </li>
+              )
+            })}
           </ul>
         </Section>
       )}
