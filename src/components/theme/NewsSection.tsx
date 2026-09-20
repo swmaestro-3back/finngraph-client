@@ -12,6 +12,8 @@ interface NewsSectionProps {
   onItemClick?: (item: NewsItem) => void
   /** 제목 옆에 "분석만" 토글 칩을 붙여 관계 추출된(분석 뱃지) 뉴스만 걸러 볼 수 있게 한다 */
   relationFilter?: boolean
+  /** 카드 틀 없이 본문 안에 섹션으로 녹일 때 (뉴스 모달) — 제목도 작게 */
+  plain?: boolean
 }
 
 // 왼쪽은 제목+메타 세로 묶음, 오른쪽 분석 뱃지는 행 전체 높이 기준 세로 중앙
@@ -25,6 +27,7 @@ export function NewsSection({
   listClassName,
   onItemClick,
   relationFilter = false,
+  plain = false,
 }: NewsSectionProps) {
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
   const visible =
@@ -32,13 +35,17 @@ export function NewsSection({
 
   return (
     <section
-      className={cn(
-        'flex flex-col card-surface p-5',
-        className,
-      )}
+      className={cn('flex flex-col', !plain && 'card-surface p-5', className)}
     >
       <div className="mb-[9px] flex min-h-[30px] items-center justify-between gap-4">
-        <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">{title}</h2>
+        <h2
+          className={cn(
+            'text-foreground',
+            plain ? 'text-sm font-semibold' : 'text-lg font-medium tracking-[-0.5px]',
+          )}
+        >
+          {title}
+        </h2>
         {relationFilter && (
           <FilterChip active={analyzedOnly} onClick={() => setAnalyzedOnly((v) => !v)}>
             분석만

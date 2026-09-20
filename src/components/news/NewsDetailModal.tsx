@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CircleAlert, ExternalLink, RotateCw } from 'lucide-react'
+import { ArrowUpRight, CircleAlert, RotateCw } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -7,17 +7,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Section } from '@/components/graph/DetailParts'
 import type { Hop } from '@/components/graph/HopSelector'
 import { NewsEntityChips } from '@/components/news/NewsEntityChips'
 import { NewsGraphSection } from '@/components/news/NewsGraphSection'
-import { RelatedStocks } from '@/components/news/RelatedStocks'
+import { NewsSummary } from '@/components/news/NewsSummary'
+import { NewsStockChips } from '@/components/news/NewsStockChips'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { toNewsItem } from '@/lib/apiMappers'
-import { formatRelativeTime, pressOf } from '@/lib/format'
+import { formatDateTime, pressOf } from '@/lib/format'
 import { newsEntities, useNewsGraph } from '@/lib/useNewsGraph'
 import { useNewsCompanies } from '@/lib/queries/useNewsCompanies'
 import { useNewsDetail } from '@/lib/queries/useNewsDetail'
+import { cn } from '@/lib/utils'
 
 interface Props {
   newsId: string | null
@@ -55,32 +56,30 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="grid h-[min(90vh,860px)] grid-rows-[auto_minmax(0,1fr)] gap-0 p-0 sm:max-w-[1080px]">
+      <DialogContent className={cn(
+          'flex flex-col gap-0 overflow-hidden p-0 sm:max-w-[1080px]',
+          // 세로 중앙 대신 헤더(56px)와 기존 중앙 시작점 사이 절반인 100px에 상단 고정
+          'top-[100px] max-h-[calc(100vh-124px)] translate-y-0',
+        )}>
         {loading && (
-          <>
-            <div className="border-b border-border px-6 pt-5 pb-4">
-              <DialogTitle className="sr-only">뉴스 불러오는 중</DialogTitle>
-              <DialogDescription className="sr-only">
-                뉴스를 불러오고 있습니다
-              </DialogDescription>
-              <div className="h-3.5 w-40 animate-pulse rounded bg-muted" />
-              <div className="mt-3 h-6 w-3/4 animate-pulse rounded bg-muted" />
-            </div>
-            <div className="px-6 py-5">
-              <div className="h-32 animate-pulse rounded-lg bg-muted" />
-            </div>
-          </>
+          <div className="px-6 pt-9 pb-10 sm:px-10 sm:pt-10 sm:pb-12">
+            <DialogTitle className="sr-only">뉴스 불러오는 중</DialogTitle>
+            <DialogDescription className="sr-only">뉴스를 불러오고 있습니다</DialogDescription>
+            <div className="h-7 w-4/5 animate-pulse rounded bg-muted" />
+            <div className="mt-2.5 h-7 w-1/2 animate-pulse rounded bg-muted" />
+            <div className="mt-5 h-3.5 w-56 animate-pulse rounded bg-muted" />
+            <div className="my-6 border-t border-border" />
+            <div className="h-24 animate-pulse rounded-lg bg-muted" />
+          </div>
         )}
 
         {!loading && error && (
-          <>
-            <div className="border-b border-border px-6 pt-5 pb-4">
-              <DialogTitle className="text-xl leading-snug tracking-[-0.4px]">
-                {error.isNotFound ? '뉴스를 찾을 수 없습니다' : '일시적인 오류'}
-              </DialogTitle>
-              <DialogDescription className="sr-only">뉴스 조회 실패</DialogDescription>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+          <div className="px-6 pt-9 pb-10 sm:px-10 sm:pt-10 sm:pb-12">
+            <DialogTitle className="pr-8 text-[24px] leading-[1.35] font-bold tracking-[-0.6px]">
+              {error.isNotFound ? '뉴스를 찾을 수 없습니다' : '일시적인 오류'}
+            </DialogTitle>
+            <DialogDescription className="sr-only">뉴스 조회 실패</DialogDescription>
+            <div className="flex flex-col items-center justify-center gap-4 py-14 text-center">
               <CircleAlert className="size-8 text-muted-foreground" />
               <p className="text-body text-muted-foreground">
                 {error.isNotFound
@@ -100,76 +99,85 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
                 </Button>
               )}
             </div>
-          </>
+          </div>
         )}
 
         {!loading && !error && news && (
-          <>
-            <div className="border-b border-border px-6 pt-5 pb-4">
-              <DialogDescription className="text-caption">
-                {pressOf(news.url)} · {formatRelativeTime(news.collectedAt)}
-              </DialogDescription>
-
-              <div className="mt-1.5 mb-3 flex items-start justify-between gap-4 pr-8">
-                <DialogTitle className="text-xl leading-snug tracking-[-0.4px]">
-                  {news.title}
-                </DialogTitle>
-                <Button variant="outline" size="sm" asChild className="shrink-0">
-                  <a href={news.url} target="_blank" rel="noopener noreferrer">
-                    기사 보기
-                    <ExternalLink data-icon="inline-end" />
+          <div ref={bodyRef} className="min-h-0 overflow-y-auto px-6 pt-9 pb-10 sm:px-10 sm:pt-10 sm:pb-12">
+            <article>
+              <DialogTitle className="pr-8 text-[24px] leading-[1.35] font-bold tracking-[-0.6px] [text-wrap:balance]">
+                {news.title}
+              </DialogTitle>
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <DialogDescription className="flex items-center gap-2.5 text-caption text-muted-foreground">
+                  <span className="text-xs font-semibold text-foreground">{pressOf(news.url)}</span>
+                  <span aria-hidden className="h-3 w-px bg-border" />
+                  <span>입력 {formatDateTime(news.collectedAt)}</span>
+                </DialogDescription>
+                {news.url && (
+                  <a
+                    href={news.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    원문 보기
+                    <ArrowUpRight className="size-3.5" />
                   </a>
-                </Button>
+                )}
               </div>
 
-              <NewsEntityChips entities={entities} onHover={setHoveredNodeId} />
-            </div>
-
-            <div ref={bodyRef} className="overflow-y-auto px-6 py-5">
-              <Section title="요약">
-                <p className="text-body leading-[1.75] text-foreground [text-wrap:pretty]">
-                  {news.summary}
-                </p>
-              </Section>
-
-              {graphData && graphData.graph.metadata.stats.total_nodes > 0 && (
-                <Section
-                  title="기사 속 관계"
-                  meta={
-                    `엔티티 ${graphData.graph.metadata.stats.total_nodes} · 관계 ${graphData.graph.metadata.stats.total_edges}` +
-                    (hop > 1 ? ` · ${hop}Hop 확장` : '')
-                  }
-                >
-                  <NewsGraphSection
-                    graph={graphData.graph}
-                    relations={graphData.relations}
-                    expanded={graphData.expanded}
-                    seedIds={graphData.seedIds}
-                    hop={hop}
-                    onHopChange={setHop}
-                    hoveredNodeId={hoveredNodeId}
-                  />
-                </Section>
-              )}
+              <div className="my-6 border-t border-border" />
 
               {relatedStocks.length > 0 && (
-                <Section title="관련 종목">
-                  <RelatedStocks
-                    stocks={relatedStocks}
-                    onNavigate={() => onOpenChange(false)}
-                  />
-                </Section>
+                <div className="mb-6">
+                  <NewsStockChips stocks={relatedStocks} onNavigate={() => onOpenChange(false)} />
+                </div>
               )}
 
-              {similarItems.length > 0 && (
-                <NewsSection
-                  title="유사한 뉴스"
-                  items={similarItems}
-                  onItemClick={(item) => setCurrentId(item.id)}
+              <NewsSummary
+                summary={news.summary}
+                stocks={relatedStocks}
+                onNavigate={() => onOpenChange(false)}
+              />
+            </article>
+
+            {graphData && graphData.graph.metadata.stats.total_nodes > 0 && (
+              <section className="mt-10 border-t border-border pt-8">
+                <div className="mb-3 flex items-baseline justify-between gap-3">
+                  <h3 className="text-sm font-semibold text-foreground">기사 속 관계</h3>
+                  <span className="text-caption text-muted-foreground">
+                    {`엔티티 ${graphData.graph.metadata.stats.total_nodes} · 관계 ${graphData.graph.metadata.stats.total_edges}` +
+                      (hop > 1 ? ` · ${hop}Hop 확장` : '')}
+                  </span>
+                </div>
+                {entities.length > 0 && (
+                  <div className="mb-3">
+                    <NewsEntityChips entities={entities} onHover={setHoveredNodeId} />
+                  </div>
+                )}
+                <NewsGraphSection
+                  graph={graphData.graph}
+                  relations={graphData.relations}
+                  expanded={graphData.expanded}
+                  seedIds={graphData.seedIds}
+                  hop={hop}
+                  onHopChange={setHop}
+                  hoveredNodeId={hoveredNodeId}
                 />
-              )}
-            </div>
-          </>
+              </section>
+            )}
+
+            {similarItems.length > 0 && (
+              <NewsSection
+                plain
+                className="mt-10 border-t border-border pt-8"
+                title="유사한 뉴스"
+                items={similarItems}
+                onItemClick={(item) => setCurrentId(item.id)}
+              />
+            )}
+          </div>
         )}
       </DialogContent>
     </Dialog>

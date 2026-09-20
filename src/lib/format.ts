@@ -102,10 +102,13 @@ const PRESS_BY_HOST: Record<string, string> = {
   'www.fnnews.com': '파이낸셜뉴스',
   'biz.heraldcorp.com': '헤럴드경제',
   'www.thelec.kr': '디일렉',
-  'news.example.com': '데모경제',
-  'press.example.com': '샘플경제',
-  'wire.example.net': '목업뉴스',
-  'daily.example.org': '가상일보',
+  'n.news.naver.com': '네이버 뉴스',
+  'www.etoday.co.kr': '이투데이',
+  'www.ajunews.com': '아주경제',
+  'www.metroseoul.co.kr': '메트로신문',
+  'www.tokenpost.kr': '토큰포스트',
+  'www.ebn.co.kr': 'EBN',
+  'www.asiatime.co.kr': '아시아타임즈',
 }
 
 export function pressOf(url: string): string {
@@ -115,4 +118,12 @@ export function pressOf(url: string): string {
   } catch {
     return '출처 미상'
   }
+}
+
+/** 절대 시각 — 기사 입력 시각처럼 "2026. 09. 18. 09:11" (브라우저 시간대 기준). 파싱 실패면 빈 문자열 */
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const two = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}. ${two(d.getMonth() + 1)}. ${two(d.getDate())}. ${two(d.getHours())}:${two(d.getMinutes())}`
 }
