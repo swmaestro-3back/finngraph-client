@@ -219,3 +219,19 @@ export interface AnnualFinancials {
   dps: number | null
   payoutRatio: number | null
 }
+
+export type AuthProviderKind = 'EMAIL' | 'KAKAO'
+
+export interface MeRes {
+  nickname: string
+  email: string | null
+  provider: AuthProviderKind
+  joinedAt: string
+}
+
+export interface AuthTokenRes {
+  accessToken: string
+  expiresIn: number
+  isNewUser: boolean
+  user: MeRes
+}

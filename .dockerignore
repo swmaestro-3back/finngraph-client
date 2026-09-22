@@ -1,3 +1,5 @@
 node_modules
 dist
 .git
+# .env 하나만 빌드에 쓴다 — .env.production이 production 빌드에서 .env를 덮어쓰는 것을 막는다
+.env.*
