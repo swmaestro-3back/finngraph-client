@@ -42,7 +42,7 @@ function SourceBadge({ kind }: { kind: EvidenceKind }) {
 /**
  * 간선 상세. 근거(뉴스·공시)는 kg-api가 관계에 인라인으로 실어 보내므로 링크에서 바로 읽는다.
  * 엔티티는 캔버스의 노드처럼 둥근 알약, 근거는 종이 문서처럼 각진 목록 — 반경이 곧 종류 구분이다.
- * 테마 소속 관계는 분류 근거 문장만 갖는다. 이벤트 간선(HAS_EVENT)은 선택되지 않으므로 여기 오지 않는다.
+ * 테마 소속 관계는 편입 사유 문장만 갖는다. 이벤트 간선(HAS_EVENT)은 선택되지 않으므로 여기 오지 않는다.
  */
 export function EdgeDetail({ link, source, target, onNodeSelect, onOpenNews }: Props) {
   const rows = buildEvidenceRows(link)
@@ -70,7 +70,7 @@ export function EdgeDetail({ link, source, target, onNodeSelect, onOpenNews }: P
       </div>
 
       {link.reason && (
-        <Section title="분류 근거">
+        <Section title="편입 사유">
           <p className="m-0 text-body leading-relaxed text-foreground">{link.reason}</p>
         </Section>
       )}
