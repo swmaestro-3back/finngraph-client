@@ -3,6 +3,7 @@ import {
   ANNUAL_PERIODS,
   DEFAULT_ANNUAL_PERIOD,
   emptyFinancials,
+  fillYearsAnchoredRight,
   fillYearRange,
   sliceRecentYears,
   yearsFor,
@@ -52,6 +53,28 @@ describe('annualPeriod', () => {
 
   it('빈 배열은 빈 배열', () => {
     expect(sliceRecentYears([], 10)).toEqual([])
+  })
+
+  describe('fillYearsAnchoredRight', () => {
+    const row = (year: number, revenue: number) => ({ ...emptyFinancials(year), revenue })
+
+    it('데이터가 minCount보다 길면 첫 연도부터 마지막 연도까지 전부 만든다', () => {
+      const out = fillYearsAnchoredRight([row(2004, 1), row(2024, 2), row(2025, 3)], 3)
+      expect(out[0].year).toBe(2004)
+      expect(out[out.length - 1].year).toBe(2025)
+      expect(out).toHaveLength(22)
+      expect(out.map((r) => r.revenue).slice(-2)).toEqual([2, 3])
+    })
+
+    it('데이터가 minCount보다 짧으면 앞쪽을 빈 행으로 채워 minCount개를 맞춘다', () => {
+      const out = fillYearsAnchoredRight([row(2020, 1), row(2021, 2)], 5)
+      expect(out.map((r) => r.year)).toEqual([2017, 2018, 2019, 2020, 2021])
+      expect(out.map((r) => r.revenue)).toEqual([null, null, null, 1, 2])
+    })
+
+    it('빈 입력은 빈 배열', () => {
+      expect(fillYearsAnchoredRight([], 10)).toEqual([])
+    })
   })
 
   describe('fillYearRange', () => {

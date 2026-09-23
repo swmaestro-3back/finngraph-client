@@ -8,14 +8,22 @@ import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 're
  */
 export function useOverflowFade<T extends HTMLElement>(
   deps: readonly unknown[] = [],
-): { scrollRef: RefObject<T | null>; showFade: boolean } {
+): {
+  scrollRef: RefObject<T | null>
+  /** 오른쪽에 더 있음 */
+  showFade: boolean
+  /** 왼쪽에 더 있음 — 오른쪽 끝에서 시작하는 표는 이쪽이 먼저 켜진다 */
+  showLeftFade: boolean
+} {
   const scrollRef = useRef<T>(null)
   const [showFade, setShowFade] = useState(false)
+  const [showLeftFade, setShowLeftFade] = useState(false)
 
   const recompute = () => {
     const el = scrollRef.current
     if (!el) return
     setShowFade(el.scrollWidth - el.clientWidth - el.scrollLeft > 1)
+    setShowLeftFade(el.scrollLeft > 1)
   }
 
   // 내용이 바뀐 직후 페인트 전에 판정 — 페이드가 한 프레임 늦게 깜빡이지 않도록
@@ -33,5 +41,5 @@ export function useOverflowFade<T extends HTMLElement>(
     }
   }, [])
 
-  return { scrollRef, showFade }
+  return { scrollRef, showFade, showLeftFade }
 }

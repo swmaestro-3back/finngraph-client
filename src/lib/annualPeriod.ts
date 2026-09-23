@@ -64,3 +64,16 @@ export function fillYearRange(rows: AnnualFinancials[], fromYear: number): Annua
     return byYear.get(year) ?? emptyFinancials(year)
   })
 }
+
+/**
+ * 첫 데이터 연도부터 마지막 데이터 연도까지 전부 만들되, 열이 최소 minCount개는 되도록 앞쪽을 빈 행으로 채운다.
+ * 표에서 마지막 연도를 오른쪽 끝에 두고 minCount개를 보여준 뒤, 왼쪽으로 스크롤하면 그 이전 연도가 이어지게 하려는 것.
+ * 늦게 상장한 종목도 열이 minCount개 밑으로 줄지 않는다.
+ */
+export function fillYearsAnchoredRight(rows: AnnualFinancials[], minCount: number): AnnualFinancials[] {
+  if (rows.length === 0) return []
+  const years = rows.map((r) => r.year)
+  const toYear = Math.max(...years)
+  const fromYear = Math.min(Math.min(...years), toYear - minCount + 1)
+  return fillYearRange(rows, fromYear)
+}

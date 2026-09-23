@@ -1,7 +1,7 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useLayoutEffect, useMemo, useState } from 'react'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
-import { fillYearRange } from '@/lib/annualPeriod'
+import { fillYearsAnchoredRight } from '@/lib/annualPeriod'
 import type { AnnualFinancials } from '@/lib/apiTypes'
 import { formatMultiple, formatPercent, formatTrillion, formatWon } from '@/lib/format'
 import { computeTrendTones, MIN_TREND_RUN } from '@/lib/trend'
@@ -49,13 +49,15 @@ const ROWS: RowDef[] = [
 
 type HighlightMode = 'none' | 'trend' | 'improving'
 
-// 표는 차트의 기간 칩과 무관하게 항상 이 해부터 마지막 데이터 연도까지 보여준다.
-// 종목마다 열 수가 달라지지 않도록 — 늦게 상장한 종목은 그 전 연도가 '-'로 채워진다
-const TABLE_START_YEAR = 2007
+// 표는 차트의 기간 칩과 무관하게 마지막 데이터 연도를 오른쪽 끝에 두고 한 화면에 이만큼 보여준다.
+// 그 이전 연도는 왼쪽으로 스크롤하면 이어진다. 늦게 상장한 종목은 앞쪽이 '-'로 채워져 열 수가 이 밑으로 줄지 않는다
+const VISIBLE_YEARS = 12
 
-// 열 폭 고정 — 연도가 적다고 칸이 늘어나거나, 많다고 눌리지 않는다. 넘치면 가로 스크롤
+// 항목 열은 스크롤 밖의 고정 패널 — 연도 패널과 행 높이를 같은 상수로 맞춰 줄이 어긋나지 않게 한다
 const LABEL_COL_WIDTH = 84
-const YEAR_COL_WIDTH = 64
+const YEAR_COL_MIN_WIDTH = 64
+const HEADER_ROW = 'h-9'
+const BODY_ROW = 'h-9'
 
 /** 선택된 버튼을 다시 누르면 'none'(표시 안 함)으로 돌아간다 */
 // 덜 칠하는 쪽이 먼저 — '개선'만 보다가 한 단계 더 켜면 악화까지 보인다
@@ -90,11 +92,19 @@ function toneClass(mode: HighlightMode, tone: TrendTone | null): string | undefi
 
 export const FinancialTable = memo(function FinancialTable({ rows: source }: { rows: AnnualFinancials[] }) {
   const [mode, setMode] = useState<HighlightMode>('none')
-  const rows = useMemo(() => fillYearRange(source, TABLE_START_YEAR), [source])
-  const { scrollRef, showFade } = useOverflowFade<HTMLDivElement>([rows.length])
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const rows = useMemo(() => fillYearsAnchoredRight(source, VISIBLE_YEARS), [source])
+  const { scrollRef, showFade, showLeftFade } = useOverflowFade<HTMLDivElement>([rows.length])
 
-  const gridCols = {
-    gridTemplateColumns: `${LABEL_COL_WIDTH}px repeat(${rows.length}, ${YEAR_COL_WIDTH}px)`,
+  // 처음엔 최신 연도가 보이도록 오른쪽 끝으로 — 넘치지 않으면 scrollLeft가 0으로 고정되니 무해하다
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollLeft = el.scrollWidth
+  }, [scrollRef, rows])
+
+  // 100cqw = 연도 패널 폭(container-type: inline-size). 열 수와 무관하게 정확히 VISIBLE_YEARS개가 한 화면에 들어간다
+  const yearCols = {
+    gridTemplateColumns: `repeat(${rows.length}, max(${YEAR_COL_MIN_WIDTH}px, calc(100cqw / ${VISIBLE_YEARS})))`,
   }
   const trendTones = useMemo(
     () =>
@@ -106,6 +116,10 @@ export const FinancialTable = memo(function FinancialTable({ rows: source }: { r
       ),
     [rows],
   )
+
+  /** 줄무늬·호버는 두 패널이 같은 규칙으로 칠해야 한 행으로 보인다 */
+  const rowBg = (rowIndex: number) =>
+    hoveredRow === rowIndex ? 'bg-surface-inset' : rowIndex % 2 === 0 ? 'bg-muted' : undefined
 
   return (
     <div className="card-surface px-5 pb-5 pt-3">
@@ -147,87 +161,107 @@ export const FinancialTable = memo(function FinancialTable({ rows: source }: { r
         ))}
       </div>
 
-      <div className="relative">
-        <div
-          ref={scrollRef}
-          className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {/* 행 박스를 열 전체 폭으로 — 안 그러면 스크롤 영역 밖 열에 줄무늬 배경이 안 칠해진다 */}
-          <div className="min-w-max">
-          {/* 헤더 행 */}
+      {/* 고정 열 + 스크롤 패널. 항목 열은 스크롤 컨테이너 밖이라 트랙패드 튕김에도 움직이지 않는다 */}
+      <div className="flex overflow-hidden rounded-lg" onMouseLeave={() => setHoveredRow(null)}>
+        {/* 항목 열 — 항상 같은 자리에 같은 경계선 */}
+        <div className="shrink-0 border-r border-border" style={{ width: LABEL_COL_WIDTH }}>
           <div
-            className="grid gap-1 rounded-t-lg border-b border-border bg-surface-inset px-1 py-2"
-            style={gridCols}
+            className={cn(
+              HEADER_ROW,
+              'flex items-center border-b border-border bg-surface-inset pl-2 text-caption text-foreground-secondary',
+            )}
           >
-            {/* 항목 열은 스크롤해도 제자리 — sticky 칸은 뒤로 지나가는 셀을 가리도록 배경을 직접 가진다 */}
-            <span className="sticky left-0 z-10 rounded-tl-lg bg-surface-inset pl-1 text-caption text-foreground-secondary">
-              항목
-            </span>
-            {rows.map((f) => (
-              <span
-                key={f.year}
-                className="flex items-center justify-end gap-1 pr-1 text-right font-mono text-caption font-medium text-foreground"
-              >
-                {f.year}
-                {f.estimated && (
-                  <span className="inline-flex size-[14px] items-center justify-center rounded-[4px] bg-accent-warm-bg text-[9px] font-semibold text-accent-warm">
-                    E
-                  </span>
-                )}
-              </span>
-            ))}
+            항목
           </div>
-
           {ROWS.map((row, rowIndex) => (
             <div
               key={row.label}
+              onMouseEnter={() => setHoveredRow(rowIndex)}
               className={cn(
-                'group grid items-center gap-1 rounded-md border-b border-secondary px-1 py-[7px] hover:bg-surface-inset',
-                rowIndex % 2 === 0 && 'bg-muted',
+                BODY_ROW,
+                'flex items-center border-b border-secondary pl-2 text-caption font-semibold text-foreground',
+                rowBg(rowIndex),
               )}
-              style={gridCols}
             >
-              <span
-                className={cn(
-                  'sticky left-0 z-10 pl-1 text-caption font-semibold leading-[1.4] text-foreground group-hover:bg-surface-inset',
-                  rowIndex % 2 === 0 ? 'bg-muted' : 'bg-background',
-                )}
-              >
-                {row.label}
-              </span>
-              {rows.map((f, colIndex) => {
-                const text = row.value(f)
-                const highlighted = text !== '-' && row.highlight?.(f)
-                const tone = toneClass(mode, trendTones[rowIndex][colIndex])
-                return (
-                  <span
-                    key={f.year}
-                    className={cn(
-                      'rounded-[4px] py-[3px] pr-1 text-right font-mono text-caption font-medium leading-[1.4]',
-                      text === '-'
-                        ? 'text-muted-foreground'
-                        : highlighted
-                          ? 'font-semibold text-accent-warm'
-                          : 'text-foreground-numeric',
-                      // 추세 톤이 있으면 배경 + 숫자 색을 덮어쓴다
-                      tone && `${tone} font-semibold`,
-                    )}
-                  >
-                    {text}
-                  </span>
-                )
-              })}
+              {row.label}
             </div>
           ))}
-          </div>
         </div>
-        {/* 오른쪽에 더 볼 연도가 남았을 때만 — 스크롤바를 숨겼으니 이게 유일한 단서 */}
-        {showFade && (
+
+        {/* 연도 패널 */}
+        <div className="relative min-w-0 flex-1">
           <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent"
-          />
-        )}
+            ref={scrollRef}
+            className="overflow-x-auto overscroll-x-contain [container-type:inline-size] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="min-w-max">
+              <div
+                className={cn(HEADER_ROW, 'grid border-b border-border bg-surface-inset')}
+                style={yearCols}
+              >
+                {rows.map((f) => (
+                  <span
+                    key={f.year}
+                    className="flex items-center justify-end gap-1 pr-2 font-mono text-caption font-medium text-foreground"
+                  >
+                    {f.year}
+                    {f.estimated && (
+                      <span className="inline-flex size-[14px] items-center justify-center rounded-[4px] bg-accent-warm-bg text-[9px] font-semibold text-accent-warm">
+                        E
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+
+              {ROWS.map((row, rowIndex) => (
+                <div
+                  key={row.label}
+                  onMouseEnter={() => setHoveredRow(rowIndex)}
+                  className={cn(BODY_ROW, 'grid items-center border-b border-secondary', rowBg(rowIndex))}
+                  style={yearCols}
+                >
+                  {rows.map((f, colIndex) => {
+                    const text = row.value(f)
+                    const highlighted = text !== '-' && row.highlight?.(f)
+                    const tone = toneClass(mode, trendTones[rowIndex][colIndex])
+                    return (
+                      <span
+                        key={f.year}
+                        className={cn(
+                          'mx-0.5 rounded-[4px] py-[3px] pr-1.5 text-right font-mono text-caption font-medium leading-[1.4]',
+                          text === '-'
+                            ? 'text-muted-foreground'
+                            : highlighted
+                              ? 'font-semibold text-accent-warm'
+                              : 'text-foreground-numeric',
+                          // 추세 톤이 있으면 배경 + 숫자 색을 덮어쓴다
+                          tone && `${tone} font-semibold`,
+                        )}
+                      >
+                        {text}
+                      </span>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 스크롤바를 숨겼으니 페이드가 "더 있다"는 단서. 왼쪽은 경계선 바로 오른쪽에 그림자처럼 얹힌다 */}
+          {showLeftFade && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-foreground/8 to-transparent"
+            />
+          )}
+          {showFade && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent"
+            />
+          )}
+        </div>
       </div>
     </div>
   )
