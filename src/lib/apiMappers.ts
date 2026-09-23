@@ -17,7 +17,8 @@ import {
 } from '@/lib/apiTypes'
 
 function calendarDate(index: number, count: number, period: CandlePeriod): CandleDate {
-  const base = new Date(2026, 6, 31)
+  const now = new Date()
+  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const stepDays = period === 'D' ? 1 : period === 'W' ? 7 : 30
   const d = new Date(base)
   d.setDate(base.getDate() - (count - 1 - index) * stepDays)
