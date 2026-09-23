@@ -71,6 +71,7 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
 
   const { nodes, maxUp, maxDown } = useMemo(() => {
     type TreeDatum = { children?: TreemapItem[] } & Partial<TreemapItem>
+    if (items.length === 0) return { nodes: [], maxUp: 0.01, maxDown: 0.01 }
     const root = hierarchy<TreeDatum>({ children: items })
       .sum((d) => d.size ?? 0)
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
@@ -102,6 +103,17 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
         className="relative w-full rounded-2xl bg-surface-inset"
         style={{ aspectRatio: `${DESIGN_W} / ${DESIGN_H}` }}
       >
+      {nodes.length === 0 && (
+        <div
+          role="status"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center"
+        >
+          <span className="text-sm font-medium text-foreground">핫테마 집계 중</span>
+          <span className="text-xs text-muted-foreground">
+            테마 등락률이 준비되면 자동으로 표시됩니다
+          </span>
+        </div>
+      )}
       {nodes.map(({ theme, change, x0, y0, x1, y1 }, i) => {
         const w = (x1 - x0) * scale
         const h = (y1 - y0) * scaleY
