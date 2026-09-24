@@ -99,14 +99,38 @@ export interface KgHasEventRelRes {
   end: string
 }
 
-export type KgCompanyRelRes = KgSupplyRelRes | KgBelongsToRelRes | KgHasEventRelRes
+/**
+ * GET /v1/news/{news_id}/graph?hop= — 뉴스 한 건을 근거로 추출된 기업 간 관계(시드)와 hop 확장.
+ * 테마·이벤트는 오지 않는다. seed_* 로 기사에서 온 것과 확장으로 딸려온 것을 나눈다.
+ */
+export interface KgNewsGraphRes {
+  companies: KgCompanyNode[]
+  relationships: KgSupplyRelRes[]
+  /** 이 뉴스를 근거로 가진 관계 id */
+  seed_relationship_ids: string[]
+  /** 시드 관계의 양끝 기업 id — 기사에 등장한 기업 */
+  seed_company_ids: string[]
+  /** 서버 노드 상한에 걸려 확장 이웃 일부를 버렸는가 */
+  truncated: boolean
+}
 
-/** GET /v1/companies/{ticker} — 중심 기업의 1홉 전체. center 필드는 없다 */
+export type KgCompanyRelRes = KgSupplyRelRes | KgHasEventRelRes
+
+/**
+ * GET /v1/companies/{ticker} — 중심 기업의 1홉 이웃(기업·이벤트). center 필드는 없다.
+ * 테마(BELONGS_TO)는 빠진다 — /companies/{ticker}/themes 가 따로 책임진다.
+ */
 export interface KgCompanyRes {
   companies: KgCompanyNode[]
-  themes: KgThemeNode[]
   events: KgEventNode[]
   relationships: KgCompanyRelRes[]
+}
+
+/** GET /v1/companies/{ticker}/themes — 중심 기업 + 소속 테마 */
+export interface KgCompanyThemesRes {
+  company: KgCompanyNode
+  themes: KgThemeNode[]
+  relationships: KgBelongsToRelRes[]
 }
 
 /** GET /v1/companies/{ticker}/events — 기업과 이벤트가 번갈아 나오는 서브그래프 */

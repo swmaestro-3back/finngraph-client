@@ -205,7 +205,7 @@ export function GraphView({ focus }: Props) {
     [centerId, navigate, query],
   )
 
-  /** 테마 칩 → 테마 그래프. 개요 캔버스에서는 테마가 숨겨져 있어 선택 대신 이동한다 */
+  /** 소속 테마 칩 → 테마 그래프. 선택 대신 이동한다 — 테마의 소속 기업은 테마 원점에서만 보인다 */
   const openTheme = useCallback(
     (node: GraphNode) => navigate(graphPath({ kind: 'theme', name: node.label }, query)),
     [navigate, query],
@@ -415,20 +415,24 @@ export function GraphView({ focus }: Props) {
                     ? '이 테마에 속한 기업이 없습니다'
                     : lens === 'events'
                       ? '아직 수집된 이벤트가 없습니다'
-                      : scoped
-                        ? `${SCOPE_LABELS[scope]} 범위에 연결된 관계가 없습니다`
-                        : '연결된 관계가 없습니다'}
+                      : lens === 'themes'
+                        ? '이 기업이 속한 테마가 없습니다'
+                        : scoped
+                          ? `${SCOPE_LABELS[scope]} 범위에 연결된 관계가 없습니다`
+                          : '연결된 관계가 없습니다'}
                 </p>
                 <p className="text-caption text-muted-foreground">
                   {isTheme
                     ? '다른 테마나 종목을 검색해 보세요.'
                     : lens === 'events'
                       ? '뉴스가 쌓이면 여기에 이벤트가 나타납니다.'
-                      : scoped
-                        ? '범위를 전체로 넓히거나 홉을 늘려 보세요.'
-                        : '다른 종목을 검색하거나 홉을 넓혀 보세요.'}
+                      : lens === 'themes'
+                        ? '공급망에서 연결된 기업을 살펴보세요.'
+                        : scoped
+                          ? '범위를 전체로 넓히거나 홉을 늘려 보세요.'
+                          : '다른 종목을 검색하거나 홉을 넓혀 보세요.'}
                 </p>
-                {lens === 'events' && !isTheme && (
+                {(lens === 'events' || lens === 'themes') && !isTheme && (
                   <Button
                     variant="outline"
                     size="sm"
