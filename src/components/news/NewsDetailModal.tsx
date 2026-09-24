@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight, CircleAlert, RotateCw } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import {
   Dialog,
   DialogContent,
@@ -8,14 +9,13 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import type { Hop } from '@/components/graph/HopSelector'
-import { NewsEntityChips } from '@/components/news/NewsEntityChips'
 import { NewsGraphSection } from '@/components/news/NewsGraphSection'
 import { NewsSummary } from '@/components/news/NewsSummary'
 import { NewsStockChips } from '@/components/news/NewsStockChips'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { toNewsItem } from '@/lib/apiMappers'
 import { formatDateTime, pressOf } from '@/lib/format'
-import { newsEntities, useNewsGraph } from '@/lib/useNewsGraph'
+import { useNewsGraph } from '@/lib/useNewsGraph'
 import { useNewsCompanies } from '@/lib/queries/useNewsCompanies'
 import { useNewsDetail } from '@/lib/queries/useNewsDetail'
 import { cn } from '@/lib/utils'
@@ -45,12 +45,26 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
   const { data: companies } = useNewsCompanies(currentId)
   const { data: graphData, similar } = useNewsGraph(currentId, hop)
 
-  const entities = useMemo(
-    () => (graphData ? newsEntities(graphData.relations) : []),
+  const relatedStocks = companies ?? []
+  // 종목 칩에 올리면 아래 그래프에서 그 기업 노드를 켠다 — 칩(시세)과 그래프(관계)가 같은 기업으로 이어진다
+  const nodeIdByTicker = useMemo(
+    () =>
+      new Map(
+        (graphData?.graph.nodes ?? []).flatMap((n) => (n.data.ticker ? [[n.data.ticker, n.id] as const] : [])),
+      ),
     [graphData],
   )
-  const relatedStocks = companies ?? []
+  const hoverStock = useCallback(
+    (ticker: string | null) => setHoveredNodeId(ticker ? (nodeIdByTicker.get(ticker) ?? null) : null),
+    [nodeIdByTicker],
+  )
+  const relatedTickers = useMemo(
+    () => (companies ?? []).flatMap((s) => (s.ticker ? [s.ticker] : [])),
+    [companies],
+  )
   const similarItems = useMemo(() => similar.map(toNewsItem), [similar])
+  /** "기업 그래프에서 보기"의 원점 — 관련 종목 중 ticker가 있는 첫 기업 */
+  const graphTicker = relatedTickers[0] ?? null
 
   const open = newsId !== null
 
@@ -58,8 +72,8 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
           'flex flex-col gap-0 overflow-hidden p-0 sm:max-w-[1080px]',
-          // 세로 중앙 대신 헤더(56px)와 기존 중앙 시작점 사이 절반인 100px에 상단 고정
-          'top-[100px] max-h-[calc(100vh-124px)] translate-y-0',
+          // 오버레이가 헤더까지 덮으므로 헤더 아래가 아니라 화면 위 32px에 상단 고정 — 요약과 관계 그래프가 한 화면에 들어온다
+          'top-8 max-h-[calc(100vh-56px)] translate-y-0',
         )}>
         {loading && (
           <div className="px-6 pt-9 pb-10 sm:px-10 sm:pt-10 sm:pb-12">
@@ -129,9 +143,16 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
 
               <div className="my-6 border-t border-border" />
 
+              {/* 두 덩어리(요약·그래프)가 같은 폭·같은 여백이라 제목이 없으면 경계가 안 읽힌다 */}
+              <h3 className="mb-4 text-sm font-semibold text-foreground">기사 요약</h3>
+
               {relatedStocks.length > 0 && (
-                <div className="mb-6">
-                  <NewsStockChips stocks={relatedStocks} onNavigate={() => onOpenChange(false)} />
+                <div className="mb-5">
+                  <NewsStockChips
+                    stocks={relatedStocks}
+                    onNavigate={() => onOpenChange(false)}
+                    onHover={hoverStock}
+                  />
                 </div>
               )}
 
@@ -143,27 +164,27 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
             </article>
 
             {graphData && graphData.graph.metadata.stats.total_nodes > 0 && (
-              <section className="mt-10 border-t border-border pt-8">
-                <div className="mb-3 flex items-baseline justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-foreground">기사 속 관계</h3>
-                  <span className="text-caption text-muted-foreground">
-                    {`엔티티 ${graphData.graph.metadata.stats.total_nodes} · 관계 ${graphData.graph.metadata.stats.total_edges}` +
-                      (hop > 1 ? ` · ${hop}Hop 확장` : '')}
-                  </span>
+              <section className="mt-8 border-t border-border pt-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold text-foreground">관계 그래프</h3>
+                  {/* 종목 상세 페이지의 "지식그래프에서 보기"와 같은 버튼 — 첫 관련 종목을 중심으로 연다 */}
+                  {graphTicker && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/graph/${graphTicker}`} onClick={() => onOpenChange(false)}>
+                        기업 그래프에서 보기
+                      </Link>
+                    </Button>
+                  )}
                 </div>
-                {entities.length > 0 && (
-                  <div className="mb-3">
-                    <NewsEntityChips entities={entities} onHover={setHoveredNodeId} />
-                  </div>
-                )}
                 <NewsGraphSection
                   graph={graphData.graph}
                   relations={graphData.relations}
-                  expanded={graphData.expanded}
                   seedIds={graphData.seedIds}
                   hop={hop}
                   onHopChange={setHop}
                   hoveredNodeId={hoveredNodeId}
+                  relatedTickers={relatedTickers}
+                  truncated={graphData.truncated}
                 />
               </section>
             )}

@@ -7,13 +7,15 @@ export type { Hop }
 interface Props {
   value: Hop
   onChange: (hop: Hop) => void
+  /** 각 홉에 표시할 글자 — 뉴스 모달은 기사를 0홉으로 세므로 { 1: '0', 2: '1', 3: '2' }를 준다 */
+  labels?: Record<Hop, string>
 }
 
 /**
  * 몇 홉까지 볼지 고르는 세그먼트 컨트롤.
  * 위치는 부모가 잡는다 — 범위 선택기 등 다른 컨트롤과 한 줄에 놓이기 때문이다.
  */
-export function HopSelector({ value, onChange }: Props) {
+export function HopSelector({ value, onChange, labels }: Props) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur">
       <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground">
@@ -35,11 +37,11 @@ export function HopSelector({ value, onChange }: Props) {
           <ToggleGroupItem
             key={hop}
             value={String(hop)}
-            aria-label={`${hop}홉`}
+            aria-label={`${labels ? labels[hop] : hop}홉`}
             // 켜짐 = 채운 배경 (그래프 관계 필터 칩과 같은 규칙)
             className="rounded-md px-2.5 font-mono text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
           >
-            {hop}
+            {labels ? labels[hop] : hop}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>

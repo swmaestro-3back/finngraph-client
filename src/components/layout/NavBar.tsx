@@ -211,8 +211,9 @@ export function NavBar() {
     </>
   )
 
+  // 다이얼로그·시트 오버레이(z-50)보다 아래 — 모달이 뜨면 헤더도 함께 흐려진다
   return (
-    <header className="sticky top-0 z-[60] h-14 border-b border-border bg-background">
+    <header className="sticky top-0 z-40 h-14 border-b border-border bg-background">
       <div className="relative flex h-full items-center gap-5 px-5">
         <Link
           to="/"
