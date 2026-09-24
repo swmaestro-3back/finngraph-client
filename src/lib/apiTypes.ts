@@ -235,3 +235,44 @@ export interface AuthTokenRes {
   isNewUser: boolean
   user: MeRes
 }
+
+export type FavoriteKind = 'STOCK' | 'THEME'
+
+export interface FavoriteRes {
+  type: FavoriteKind
+  key: string
+  createdAt: string
+}
+
+/** 목록 항목 — resolved=false면 ETL에서 사라진 대상이라 보강 필드가 비어 온다 */
+export interface FavoriteItemRes {
+  type: FavoriteKind
+  key: string
+  createdAt: string
+  resolved: boolean
+  stock: FavoriteStockRes | null
+  theme: FavoriteThemeRes | null
+}
+
+export interface FavoriteStockRes {
+  ticker: string
+  name: string
+  market: string
+  price: number | null
+  change: number | null
+  marketCap: number | null
+}
+
+export interface FavoriteThemeRes {
+  id: number
+  name: string
+  change: number | null
+  baseDate: string | null
+  stockCount: number
+}
+
+export interface FavoriteListRes {
+  count: number
+  limit: number
+  items: FavoriteItemRes[]
+}

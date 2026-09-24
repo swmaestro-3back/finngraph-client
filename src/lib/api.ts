@@ -221,6 +221,12 @@ export async function postData<T>(path: string, body?: unknown): Promise<T> {
   return (envelope?.data ?? undefined) as T
 }
 
+/** 즐겨찾기 등록 전용 — 멱등 PUT이라 본문 없이 경로만으로 상태를 만든다 */
+export async function putData<T>(path: string, body?: unknown): Promise<T> {
+  const envelope = await request<DataResponse<T> | undefined>(path, { method: 'PUT', body })
+  return (envelope?.data ?? undefined) as T
+}
+
 export async function patchData<T>(path: string, body?: unknown): Promise<T> {
   const envelope = await request<DataResponse<T> | undefined>(path, { method: 'PATCH', body })
   return (envelope?.data ?? undefined) as T
