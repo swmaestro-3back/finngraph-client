@@ -18,12 +18,13 @@ describe('graphRoute', () => {
     expect(graphSearch(DEFAULT_GRAPH_QUERY)).toBe('')
   })
 
-  it('렌즈는 supply·events만 적고 왕복한다', () => {
+  it('렌즈는 개요가 아닐 때만 적고 왕복한다', () => {
     const q = { hop: 2 as const, scope: 'KOSPI' as const, lens: 'supply' as const }
     const s = graphSearch(q)
     expect(s).toBe('?lens=supply&hop=2&market=KOSPI')
     expect(parseGraphQuery(new URLSearchParams(s))).toEqual(q)
     expect(graphSearch({ ...DEFAULT_GRAPH_QUERY, lens: 'events' })).toBe('?lens=events')
+    expect(parseGraphQuery(new URLSearchParams(graphSearch({ ...DEFAULT_GRAPH_QUERY, lens: 'themes' }))).lens).toBe('themes')
   })
 
   it('모르는 렌즈 값은 개요로 떨어진다', () => {
@@ -41,6 +42,7 @@ describe('graphRoute', () => {
     expect(lensControls('overview')).toEqual({ hop: false, scope: false })
     expect(lensControls('supply')).toEqual({ hop: true, scope: true })
     expect(lensControls('events')).toEqual({ hop: true, scope: false })
+    expect(lensControls('themes')).toEqual({ hop: false, scope: false })
   })
 
   it('모든 렌즈에서 전체 종류를 기본으로 켠다', () => {

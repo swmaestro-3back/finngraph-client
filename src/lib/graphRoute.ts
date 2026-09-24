@@ -28,14 +28,15 @@ export const SCOPE_LABELS: Record<Scope, string> = {
 
 /**
  * 렌즈 — 기업 원점을 어느 축으로 보는가. 렌즈마다 서버 엔드포인트가 다르다.
- * 개요는 1홉 전체(서버 고정), 공급망은 hop·범위, 이벤트는 hop만 받는다.
+ * 개요는 1홉 전체(서버 고정), 공급망은 hop·범위, 이벤트는 hop만 받는다. 테마는 소속 테마 1홉이라 파라미터가 없다.
  */
-export type Lens = 'overview' | 'supply' | 'events'
+export type Lens = 'overview' | 'themes' | 'supply' | 'events'
 
-export const LENS_VALUES: Lens[] = ['overview', 'supply', 'events']
+export const LENS_VALUES: Lens[] = ['overview', 'themes', 'supply', 'events']
 
 export const LENS_LABELS: Record<Lens, string> = {
   overview: '개요',
+  themes: '테마',
   supply: '공급망',
   events: '이벤트',
 }

@@ -68,7 +68,7 @@ export function EventDetail({ node, nodesByLabel, onNodeSelect, onShowSharing, o
         <Section title="키워드">
           <div className="flex flex-wrap gap-1.5">
             {keywords.map((k) => (
-              <Badge key={k} variant="secondary">
+              <Badge key={k} variant="secondary" className="rounded-lg">
                 {k}
               </Badge>
             ))}

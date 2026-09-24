@@ -4,12 +4,14 @@ import { getKgData } from '@/lib/kgApi'
 import type {
   KgCompanyEventsRes,
   KgCompanyRes,
+  KgCompanyThemesRes,
   KgSupplyChainRes,
   KgThemeRes,
 } from '@/lib/kgApiTypes'
 import {
   toCompanyEventsGraph,
   toCompanyOverviewGraph,
+  toCompanyThemesGraph,
   toSupplyChainGraph,
   toThemeGraph,
 } from '@/lib/kgMappers'
@@ -31,6 +33,8 @@ function fetchGraph(focus: GraphFocus, { hop, scope, lens }: GraphQuery): Promis
       return getKgData<KgCompanyEventsRes>(`${base}/events`, { hop }).then((res) =>
         toCompanyEventsGraph(res, focus.ticker),
       )
+    case 'themes':
+      return getKgData<KgCompanyThemesRes>(`${base}/themes`).then(toCompanyThemesGraph)
     default:
       // 개요는 서버가 1홉 고정 — hop·범위를 보내지 않는다
       return getKgData<KgCompanyRes>(base).then((res) => toCompanyOverviewGraph(res, focus.ticker))
@@ -39,7 +43,7 @@ function fetchGraph(focus: GraphFocus, { hop, scope, lens }: GraphQuery): Promis
 
 /**
  * 원점 종류와 렌즈에 따라 kg-api를 골라 GraphData로 매핑한다.
- * 테마는 파라미터 없는 소속 기업 조회, 기업은 렌즈별로 개요(1홉 전체)·공급망(hop·범위)·이벤트(hop)다.
+ * 테마는 파라미터 없는 소속 기업 조회, 기업은 렌즈별로 개요(1홉 기업·이벤트)·공급망(hop·범위)·이벤트(hop)·테마(소속 테마)다.
  */
 export function useKgGraph(focus: GraphFocus, query: GraphQuery): ApiState<GraphData> {
   const key = focus.kind === 'theme' ? focus.name : focus.ticker
