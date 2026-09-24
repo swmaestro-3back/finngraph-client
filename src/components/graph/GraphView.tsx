@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { GraphCanvas, type GraphCanvasRef, type GraphHighlight } from '@/components/graph/GraphCanvas'
-import { SearchBar } from '@/components/graph/SearchBar'
+import { SearchBar } from '@/components/search/SearchBar'
 import { FilterPanel } from '@/components/graph/FilterPanel'
 import { DetailPanel } from '@/components/graph/DetailPanel'
 import { Legend } from '@/components/graph/Legend'
@@ -282,7 +282,7 @@ export function GraphView({ focus }: Props) {
       <div className="flex h-full items-center justify-center bg-background">
         <div className="w-72 space-y-3">
           <div className="h-5 animate-pulse rounded bg-muted" />
-          <div className="h-40 animate-pulse rounded-xl bg-muted" />
+          <div className="h-40 animate-pulse rounded-lg bg-muted" />
           <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
         </div>
       </div>

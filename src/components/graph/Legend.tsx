@@ -15,7 +15,7 @@ interface Props {
   visibleCategories: Set<NodeCategory>
 }
 
-const PANEL = 'rounded-xl border border-border bg-background/95 px-3.5 py-2.5 shadow-soft backdrop-blur'
+const PANEL = 'rounded-lg border border-border bg-background/95 px-3.5 py-2.5 shadow-soft backdrop-blur'
 
 export function Legend({ visibleCategories }: Props) {
   const isMobile = useIsMobile()

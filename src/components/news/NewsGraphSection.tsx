@@ -116,7 +116,7 @@ export function NewsGraphSection({
   if (relations.length === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-border bg-surface-inset text-body text-muted-foreground"
+        className="flex items-center justify-center rounded-lg border border-border bg-surface-inset text-body text-muted-foreground"
         style={{ height: GRAPH_HEIGHT }}
       >
         이 기사에서 추출된 관계가 없습니다.
@@ -128,7 +128,7 @@ export function NewsGraphSection({
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-border"
+      className="relative overflow-hidden rounded-lg border border-border"
       style={{ height: GRAPH_HEIGHT }}
     >
       <GraphCanvas

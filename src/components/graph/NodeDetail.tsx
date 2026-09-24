@@ -123,7 +123,7 @@ export function NodeDetail({
       <div className="mb-4 flex flex-wrap items-center gap-1.5">
         <TypeBadge color={nodeColor(node)}>{CATEGORY_LABELS[nodeCategory(node)]}</TypeBadge>
         {indexChips.map((f) => (
-          <Badge key={f.key} variant="secondary" className="font-mono">
+          <Badge key={f.key} variant="secondary" className="rounded-lg font-mono">
             {f.label}
           </Badge>
         ))}

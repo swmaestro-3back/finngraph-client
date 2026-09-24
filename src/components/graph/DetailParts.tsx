@@ -29,7 +29,7 @@ export function Section({
 /** 엔티티 종류 색을 채운 배지 (색이 데이터라 style로 넣는다) */
 export function TypeBadge({ color, children }: { color: string; children: ReactNode }) {
   return (
-    <Badge className="rounded-full px-2.5 tracking-[0.2px]" style={{ background: color }}>
+    <Badge className="rounded-lg px-2.5 tracking-[0.2px]" style={{ background: color }}>
       {children}
     </Badge>
   )
@@ -60,7 +60,7 @@ export function EntityChip({
     </>
   )
   const className = cn(
-    'h-auto max-w-full gap-1.5 rounded-full',
+    'h-auto max-w-full gap-1.5 rounded-lg',
     size === 'md' ? 'px-3 py-[5px] text-body font-semibold text-foreground' : 'px-2.5 py-1 text-caption',
     onClick && 'cursor-pointer hover:bg-surface-inset',
   )

@@ -66,7 +66,7 @@ export function FilterPanel({
               <span className={cn('text-body', on ? 'text-foreground' : 'text-muted-foreground')}>
                 {CATEGORY_LABELS[category]}
               </span>
-              <span className="ml-auto rounded-full bg-surface-inset px-2 py-px font-mono text-caption text-muted-foreground">
+              <span className="ml-auto rounded-lg bg-surface-inset px-2 py-px font-mono text-caption text-muted-foreground">
                 {categoryCounts[category] ?? 0}
               </span>
             </label>
@@ -96,7 +96,7 @@ export function FilterPanel({
               active={on}
               title={predicate}
               onClick={() => onPredicatesChange(toggled(selectedPredicates, predicate))}
-              className={cn('inline-flex items-center gap-1.5 rounded-full', count === 0 && 'opacity-45')}
+              className={cn('inline-flex items-center gap-1.5 rounded-lg', count === 0 && 'opacity-45')}
             >
               {PREDICATE_LABELS[predicate]}
               <span className={cn('font-mono text-micro', on ? 'text-primary-foreground/85' : 'text-muted-foreground')}>
