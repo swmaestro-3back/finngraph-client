@@ -9,6 +9,7 @@ import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { SupplyStreakBadges } from '@/components/stock/SupplyStreakBadges'
 import { ThemePeerComparison } from '@/components/stock/ThemePeerComparison'
+import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
@@ -195,6 +196,7 @@ export default function StockDetailPage() {
             <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
               {stock.name}
             </h1>
+            <FavoriteStar type="STOCK" targetKey={stock.ticker} label={stock.name} />
             <span className="font-mono text-body text-muted-foreground">{stock.ticker}</span>
             <span className="font-mono text-title font-medium tracking-[-0.5px] text-foreground">
               {formatPriceOrDash(stock.price)}

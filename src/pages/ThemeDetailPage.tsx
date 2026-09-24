@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
+import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueLane } from '@/components/stock/IssueLane'
 import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
@@ -104,6 +105,7 @@ export default function ThemeDetailPage() {
             <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
               {theme.name}
             </h1>
+            <FavoriteStar type="THEME" targetKey={String(theme.id)} label={theme.name} />
             <span
               className={cn(
                 'font-mono text-base font-medium tracking-[-0.5px]',
