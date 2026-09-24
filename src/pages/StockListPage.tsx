@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockFilterBar } from '@/components/table/StockFilterBar'
 import { StockIdentity } from '@/components/table/StockIdentity'
 import { Button } from '@/components/ui/button'
+import { FilterChip } from '@/components/ui/filter-chip'
 import {
   Pagination,
   PaginationContent,
@@ -20,6 +22,8 @@ import {
   formatPriceOrDash,
   toEok,
 } from '@/lib/format'
+import { useAuth } from '@/lib/auth'
+import { useFavorites } from '@/lib/favorites'
 import { fromState } from '@/lib/navigation'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import {
@@ -34,7 +38,7 @@ import { cn } from '@/lib/utils'
 const PAGE_SIZE = 20
 
 const GRID =
-  'grid grid-cols-[36px_minmax(150px,1.6fr)_92px_70px_66px_66px_66px_90px_58px_54px_60px_62px_minmax(70px,1fr)] items-center gap-2'
+  'grid grid-cols-[36px_28px_minmax(150px,1.6fr)_92px_70px_66px_66px_66px_90px_58px_54px_60px_62px_minmax(70px,1fr)] items-center gap-2'
 
 type SortKey =
   | 'name'
@@ -68,6 +72,7 @@ interface StockRow {
 
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
+  { key: null, label: '', align: 'left' },
   { key: 'name', label: '종목명', align: 'left' },
   { key: null, label: '현재가', align: 'right' },
   { key: 'change', label: '등락률', align: 'right' },
@@ -87,11 +92,19 @@ export default function StockListPage() {
   const { pathname } = useLocation()
   const [page, setPage] = useState(1)
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
+  const [onlyFavorites, setOnlyFavorites] = useState(false)
+  const { status } = useAuth()
+  const { has } = useFavorites()
   const { data: stocks, loading, error, refetch } = useStocksCached()
 
   const allRows: StockRow[] = useMemo(() => stocks ?? [], [stocks])
   const filteredRows = useMemo(() => applyStockFilters(allRows, filter), [allRows, filter])
   const filterActive = isFilterActive(filter)
+  // 관심 필터는 FilterState 밖에 둔다 — stockFilter.ts는 순수 모듈이라 로그인 상태를 모른다
+  const visibleRows = useMemo(
+    () => (onlyFavorites ? filteredRows.filter((row) => has('STOCK', row.ticker)) : filteredRows),
+    [filteredRows, has, onlyFavorites],
+  )
 
   const handleFilterChange = (next: FilterState) => {
     setFilter(next)
@@ -99,7 +112,7 @@ export default function StockListPage() {
   }
 
   const { sorted, sortKey, sortDesc, handleSort } = useTableSort<StockRow, SortKey>(
-    filteredRows,
+    visibleRows,
     'w1',
   )
 
@@ -167,6 +180,27 @@ export default function StockListPage() {
 
       {!loading && !error && (
         <>
+          <div className="mb-2 flex items-center gap-2">
+            <FilterChip
+              active={onlyFavorites}
+              onClick={() => {
+                if (status !== 'authenticated') {
+                  navigate('/login', { state: { next: pathname } })
+                  return
+                }
+                setOnlyFavorites((prev) => !prev)
+                setPage(1)
+              }}
+            >
+              내 관심만
+            </FilterChip>
+            {onlyFavorites && (
+              <span className="text-caption text-muted-foreground">
+                관심 종목 {visibleRows.length}개
+              </span>
+            )}
+          </div>
+
           <StockFilterBar
             stocks={allRows}
             value={filter}
@@ -186,12 +220,19 @@ export default function StockListPage() {
                 />
 
                 {pageRows.map((row, index) => (
-                  <button
+                  // 별표가 행 안에 들어가 button 중첩이 되므로 행을 div+role로 바꿨다
+                  <div
                     key={row.ticker}
-                    type="button"
+                    role="link"
+                    tabIndex={0}
                     onClick={() =>
                       navigate(`/stock/${row.ticker}`, { state: fromState(pathname) })
                     }
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter' && event.key !== ' ') return
+                      event.preventDefault()
+                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname) })
+                    }}
                     className={cn(
                       GRID,
                       'w-full cursor-pointer border-b border-surface-inset px-4 py-2 text-left hover:bg-muted',
@@ -201,6 +242,13 @@ export default function StockListPage() {
                     <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">
                       {(page - 1) * PAGE_SIZE + index + 1}
                     </span>
+                    <FavoriteStar
+                      type="STOCK"
+                      targetKey={row.ticker}
+                      label={row.name}
+                      size="sm"
+                      className="-ml-1"
+                    />
                     <StockIdentity
                       name={row.name}
                       code={row.ticker}
@@ -238,7 +286,7 @@ export default function StockListPage() {
                     <span className="overflow-hidden text-right text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
                       {row.themeName ?? ''}
                     </span>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>

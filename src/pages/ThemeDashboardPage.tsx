@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { InsightStrip } from '@/components/theme/InsightStrip'
 import { MarketHeadline } from '@/components/theme/MarketHeadline'
@@ -13,6 +14,8 @@ import { Treemap, type TreemapItem } from '@/components/theme/Treemap'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { toNewsItem } from '@/lib/apiMappers'
+import { useAuth } from '@/lib/auth'
+import { useFavorites } from '@/lib/favorites'
 import { pickMovers } from '@/lib/briefing'
 import { formatCompactKrw } from '@/lib/format'
 import { useHotThemes } from '@/lib/queries/useHotThemes'
@@ -30,6 +33,10 @@ export default function ThemeDashboardPage() {
   const [themeCount, setThemeCount] = useState(20)
   const [selectedName, setSelectedName] = useState('철강')
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
+  const [onlyFavorites, setOnlyFavorites] = useState(false)
+  const navigate = useNavigate()
+  const { status } = useAuth()
+  const { has } = useFavorites()
 
   const { data: themes, loading, error, refetch } = useThemes()
   const { data: hotThemes } = useHotThemes(themeCount)
@@ -37,7 +44,11 @@ export default function ThemeDashboardPage() {
 
   const movers = useMemo(() => pickMovers(allStocks ?? [], 6), [allStocks])
 
-  const treemapThemes = useMemo(() => hotThemes ?? [], [hotThemes])
+  // 트리맵은 등락률 상위 테마만 담으므로, 관심 테마가 오늘 상위에 없으면 걸러진 뒤 비어 보인다
+  const treemapThemes = useMemo(() => {
+    const list = hotThemes ?? []
+    return onlyFavorites ? list.filter((t) => has('THEME', String(t.id))) : list
+  }, [has, hotThemes, onlyFavorites])
   const treemapItems: TreemapItem[] = useMemo(
     () =>
       treemapThemes
@@ -78,6 +89,19 @@ export default function ThemeDashboardPage() {
               {count}개
             </FilterChip>
           ))}
+          <FilterChip
+            active={onlyFavorites}
+            className="ml-1.5"
+            onClick={() => {
+              if (status !== 'authenticated') {
+                navigate('/login', { state: { next: '/' } })
+                return
+              }
+              setOnlyFavorites((prev) => !prev)
+            }}
+          >
+            내 관심만
+          </FilterChip>
         </div>
       </div>
 
@@ -154,11 +178,22 @@ export default function ThemeDashboardPage() {
             onSelectTheme={setSelectedName}
           />
 
-          <Treemap
-            items={treemapItems}
-            selectedId={selected?.name ?? null}
-            onSelect={setSelectedName}
-          />
+          {onlyFavorites && treemapItems.length === 0 ? (
+            <div className="card-surface flex h-[max(280px,31.667vw)] flex-col items-center justify-center gap-1">
+              <p className="text-body text-foreground">
+                오늘 등락률 상위 {themeCount}개 안에 관심 테마가 없어요
+              </p>
+              <p className="text-caption text-muted-foreground">
+                표시 테마 수를 늘리거나 관심 테마를 더 담아보세요
+              </p>
+            </div>
+          ) : (
+            <Treemap
+              items={treemapItems}
+              selectedId={selected?.name ?? null}
+              onSelect={setSelectedName}
+            />
+          )}
 
           {selected && (
             <div className="mt-5 grid items-stretch gap-4 lg:grid-cols-[1.08fr_0.92fr]">
