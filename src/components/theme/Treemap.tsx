@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { hierarchy, treemap, treemapSquarify } from 'd3-hierarchy'
 import { formatChange } from '@/lib/format'
+import { mixColor, shade } from '@/lib/treemapColor'
 import { cn } from '@/lib/utils'
 
 export interface TreemapItem {
@@ -15,31 +16,6 @@ const BASE_W = 1136
 const BASE_H = 520
 const DESIGN_W = 1200
 const DESIGN_H = 520
-
-const STOPS = {
-  up: [
-    [255, 240, 241],
-    [176, 22, 33],
-  ],
-  down: [
-    [235, 242, 255],
-    [0, 58, 176],
-  ],
-} as const
-
-function mixColor(dir: 'up' | 'down', t: number): { bg: string; k: number; rgb: number[] } {
-  const k = Math.min(1, Math.max(0.12, t))
-  const [a, b] = STOPS[dir]
-  const rgb = a.map((v, i) => Math.round(v + (b[i] - v) * k))
-  return { bg: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`, k, rgb }
-}
-
-function shade(rgb: number[], amt: number): string {
-  const target = amt > 0 ? 255 : 0
-  const f = Math.abs(amt)
-  const [r, g, b] = rgb.map((v) => Math.round(v + (target - v) * f))
-  return `rgb(${r},${g},${b})`
-}
 
 function splitParen(name: string): [string, string | null] {
   const i = name.indexOf('(')
