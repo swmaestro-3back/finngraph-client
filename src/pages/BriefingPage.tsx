@@ -2,6 +2,7 @@ import { formatLocalDate } from '@/lib/marketClock'
 import { useMemo } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { RecentContractsBoard } from '@/components/briefing/RecentContractsBoard'
 import { MoverFeed } from '@/components/theme/MoverFeed'
 import { Button } from '@/components/ui/button'
 import type { ThemeRes } from '@/lib/apiTypes'
@@ -254,6 +255,10 @@ export default function BriefingPage() {
             </h2>
             <MoverFeed movers={movers} />
           </section>
+
+          <div className="mt-8">
+            <RecentContractsBoard />
+          </div>
         </>
       )}
 

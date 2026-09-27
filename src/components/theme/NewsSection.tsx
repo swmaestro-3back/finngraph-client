@@ -54,7 +54,16 @@ export function NewsSection({
       </div>
 
       <div className="border-b border-border pb-1.5 text-caption text-muted-foreground">
-        최신순 · {visible.length}건
+        최신순 · <span className="font-mono tabular-nums">{visible.length}</span>건
+        {relationFilter && (
+          <>
+            {' · '}분석{' '}
+            <span className="font-mono tabular-nums">
+              {items.filter((item) => item.tripleExtracted === true).length}
+            </span>
+            건
+          </>
+        )}
       </div>
 
       <div className={cn(listClassName)}>

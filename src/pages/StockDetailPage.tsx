@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronUp, CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { AnnualCharts } from '@/components/stock/AnnualCharts'
+import { ContractSection } from '@/components/stock/ContractSection'
 import { FinancialTable } from '@/components/stock/FinancialTable'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
@@ -40,6 +41,7 @@ import { useFinancials } from '@/lib/queries/useFinancials'
 import { useInvestorFlows } from '@/lib/queries/useInvestorFlows'
 import { useStockDetail } from '@/lib/queries/useStockDetail'
 import { useStockNews } from '@/lib/queries/useStockNews'
+import { lastTradingDate } from '@/lib/referenceDate'
 import { cn } from '@/lib/utils'
 
 interface StatTile {
@@ -269,6 +271,14 @@ export default function StockDetailPage() {
               onClearSelection={clearSelection}
             />
           )}
+
+          <ContractSection
+            key={code}
+            ticker={code}
+            referenceDate={lastTradingDate(candleRes)}
+            from={pathname}
+            className={SECTION_HEADER}
+          />
 
           <div className={`${SECTION_HEADER} flex items-center justify-between`}>
             <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
