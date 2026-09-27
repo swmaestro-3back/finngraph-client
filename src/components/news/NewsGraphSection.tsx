@@ -7,6 +7,7 @@ import {
 import { HopSelector, type Hop } from '@/components/graph/HopSelector'
 import { Legend } from '@/components/graph/Legend'
 import { Toolbar } from '@/components/graph/Toolbar'
+import { MemberVeil } from '@/components/gate/MemberVeil'
 import {
   ALL_CATEGORIES,
   ALL_PREDICATES,
@@ -17,6 +18,7 @@ import {
   type NodeCategory,
 } from '@/data/graphTypes'
 import { primaryNodeIds, type NewsRelation } from '@/lib/useNewsGraph'
+import { useMemberGate } from '@/lib/memberGate'
 import { useIsMobile } from '@/hooks/use-mobile'
 
 // 모달에는 필터 UI가 없어 캔버스는 항상 전체를 그린다 (GraphCanvas가 참조 동일성으로 재렌더를 판단한다)
@@ -72,6 +74,8 @@ export function NewsGraphSection({
   truncated,
 }: Props) {
   const isMobile = useIsMobile()
+  const { locked, pending, promptLogin } = useMemberGate()
+  const gatedHop = locked && hop > 1 ? 1 : hop
   const canvasRef = useRef<GraphCanvasRef>(null)
   const [selected, setSelected] = useState<Selection | null>(null)
 
@@ -144,12 +148,26 @@ export function NewsGraphSection({
         seedLinkIds={seedLinkIds}
         linkTag={linkTag}
       />
+      {(locked || pending) && (
+        <MemberVeil
+          title="기사 속 관계는 로그인하면 열려요"
+          description="이 기사에서 추출한 기업 관계와 근거 문장을 그래프로 따라갈 수 있습니다."
+          pending={pending}
+          onLogin={promptLogin}
+        />
+      )}
       {/* 좌상단 캡션이 제목 역할 — 범위를 바꾸면 문장이 따라 바뀐다 */}
       <p className="pointer-events-none absolute top-4 left-4 z-10 rounded-md bg-background/90 px-2.5 py-1 text-caption font-medium text-foreground-secondary backdrop-blur">
-        {captionOf(hop, relations.length, neighborCount, truncated)}
+        {captionOf(gatedHop, relations.length, neighborCount, truncated)}
       </p>
       <div className="absolute top-4 right-4 z-10">
-        <HopSelector value={hop} onChange={onHopChange} labels={HOP_LABELS} />
+        <HopSelector
+          value={gatedHop}
+          onChange={onHopChange}
+          labels={HOP_LABELS}
+          lockedFrom={locked ? 2 : undefined}
+          onLockedSelect={promptLogin}
+        />
       </div>
       <Legend visibleCategories={presentCategories} />
       {/* 확대·축소는 휠로 충분하다 — 초기화만 우하단에 */}

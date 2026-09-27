@@ -1,6 +1,8 @@
 import { ArrowRight } from 'lucide-react'
 import { PREDICATE_LABELS, type GraphLink, type GraphNode } from '@/data/graphTypes'
 import { EntityPill, Section, TypeBadge } from '@/components/graph/DetailParts'
+import { MemberVeil } from '@/components/gate/MemberVeil'
+import { useMemberGate } from '@/lib/memberGate'
 import { buildEvidenceRows, type EvidenceKind } from '@/lib/edgeEvidence'
 import { Badge } from '@/components/ui/badge'
 import { T } from '@/lib/graphTheme'
@@ -45,6 +47,7 @@ function SourceBadge({ kind }: { kind: EvidenceKind }) {
  * 테마 소속 관계는 편입 사유 문장만 갖는다. 이벤트 간선(HAS_EVENT)은 선택되지 않으므로 여기 오지 않는다.
  */
 export function EdgeDetail({ link, source, target, onNodeSelect, onOpenNews }: Props) {
+  const { locked, pending, promptLogin } = useMemberGate()
   const rows = buildEvidenceRows(link)
   const newsCount = link.news_mention_count ?? link.news?.length ?? 0
   const disclosureCount = link.disclosure_count ?? link.disclosures?.length ?? 0
@@ -77,7 +80,19 @@ export function EdgeDetail({ link, source, target, onNodeSelect, onOpenNews }: P
 
       {rows.length > 0 && (
         <Section title="관련 뉴스·공시" meta={countMeta || undefined}>
-          <ul className="m-0 list-none divide-y divide-border rounded-md border border-border p-0">
+          <div className={cn('relative', (locked || pending) && 'min-h-34 overflow-hidden rounded-md')}>
+          {(locked || pending) && (
+            <MemberVeil
+              title="근거 문장은 로그인하면 열려요"
+              size="sm"
+              pending={pending}
+              onLogin={promptLogin}
+            />
+          )}
+          <ul
+            inert={locked || pending || undefined}
+            className="m-0 list-none divide-y divide-border rounded-md border border-border p-0"
+          >
             {rows.map((row) => {
               const title = (
                 <>
@@ -127,6 +142,7 @@ export function EdgeDetail({ link, source, target, onNodeSelect, onOpenNews }: P
               )
             })}
           </ul>
+          </div>
         </Section>
       )}
 
