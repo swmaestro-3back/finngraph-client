@@ -276,3 +276,41 @@ export interface FavoriteListRes {
   limit: number
   items: FavoriteItemRes[]
 }
+
+export type ContractRole = 'FILER' | 'COUNTERPARTY'
+
+export interface StockContractRes {
+  rceptNo: string
+  rceptDate: string
+  reportName: string
+  role: ContractRole
+  contractType: string | null
+  contractName: string | null
+  counterpartyName: string | null
+  counterpartyTicker: string | null
+  contractAmount: number | null
+  salesRatio: number | null
+  startDate: string | null
+  endDate: string | null
+  link: string
+  isCorrection: boolean
+}
+
+export interface RecentContractRes {
+  rceptNo: string
+  rceptDate: string
+  reportName: string
+  filerTicker: string | null
+  filerName: string
+  filerMarket: string | null
+  contractType: string | null
+  contractName: string | null
+  counterpartyName: string | null
+  counterpartyTicker: string | null
+  contractAmount: number | null
+  salesRatio: number | null
+  startDate: string | null
+  endDate: string | null
+  link: string
+  isCorrection: boolean
+}
