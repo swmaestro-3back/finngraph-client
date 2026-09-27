@@ -38,6 +38,7 @@ tsconfig.*.tsbuildinfo
 .env
 .env.*
 !.env.example
+!.env.dev
 
 # ---------------------------------------------
 # Logs
