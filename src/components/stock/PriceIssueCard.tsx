@@ -4,6 +4,7 @@ import { ChartCard } from '@/components/chart/ChartCard'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { IssueLane } from '@/components/stock/IssueLane'
 import type { Candle, CandlePeriod, IssueDay } from '@/lib/apiTypes'
+import { lockedIssueCount, useMemberGate } from '@/lib/memberGate'
 
 const PERIODS: { key: CandlePeriod; label: string; chartLabel: string }[] = [
   { key: 'D', label: '1일', chartLabel: '일봉' },
@@ -31,6 +32,15 @@ export const PriceIssueCard = memo(function PriceIssueCard({
   title = '주가',
 }: PriceIssueCardProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const { locked, promptLogin } = useMemberGate()
+  const lockedUntil = lockedIssueCount(issues.length, locked)
+  const selectOpen = (index: number | null) => {
+    if (index !== null && index < lockedUntil) {
+      promptLogin()
+      return
+    }
+    onSelect(index)
+  }
 
   const { rangeLow, rangeHigh, periodChange } = useMemo(() => {
     let low = Infinity
@@ -70,7 +80,7 @@ export const PriceIssueCard = memo(function PriceIssueCard({
         hoveredIndex={hoveredIndex}
         selectedIndex={selectedIndex}
         onHoverIndex={setHoveredIndex}
-        onSelect={onSelect}
+        onSelect={selectOpen}
         showDates={false}
       />
       <div className="mt-3 border-t border-border pt-3">
@@ -79,7 +89,7 @@ export const PriceIssueCard = memo(function PriceIssueCard({
           hoveredIndex={hoveredIndex}
           selectedIndex={selectedIndex}
           onHover={setHoveredIndex}
-          onSelect={onSelect}
+          onSelect={selectOpen}
         />
       </div>
     </ChartCard>

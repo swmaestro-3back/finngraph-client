@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Lock } from 'lucide-react'
 import { AxisRules, DateTicks } from '@/components/chart/AxisMarks'
 import type { IssueDay } from '@/lib/apiTypes'
 import {
@@ -12,6 +13,7 @@ import {
   issueBarHeight,
   slotPct,
 } from '@/lib/chartAxis'
+import { lockedIssueCount, useMemberGate } from '@/lib/memberGate'
 import { cn } from '@/lib/utils'
 
 // 이슈 레인 — 캔들 차트 아래에 같은 축으로 붙는 발산형 막대
@@ -42,6 +44,10 @@ export function IssueLane({
   onSelect,
 }: IssueLaneProps) {
   const count = days.length
+  const { locked, promptLogin } = useMemberGate()
+  const lockedUntil = lockedIssueCount(count, locked)
+  const fadeAt = (index: number) =>
+    lockedUntil <= 1 ? 0.34 : 0.18 + 0.24 * (index / (lockedUntil - 1))
   // 키보드 포커스는 선택과 별개로 움직인다 (←/→로 훑고 Enter로 고른다)
   // 기간이 바뀌면 부모가 key로 리마운트하므로 초기값(가장 최근 칸)으로 돌아온다
   const [focusIndex, setFocusIndex] = useState(count - 1)
@@ -56,7 +62,8 @@ export function IssueLane({
   const hasSentiment = useMemo(() => days.some((d) => d.good + d.bad > 0), [days])
   const tickIndexes = dateTickIndexes(count)
   // 캔들 차트와 같은 규칙: 크로스헤어는 짚는 대로 따라가고, 선택 룰은 그와 별개로 남는다
-  const activeIndex = hoveredIndex ?? selectedIndex
+  const pointed = hoveredIndex ?? selectedIndex
+  const activeIndex = pointed !== null && pointed < lockedUntil ? null : pointed
   // 막대는 슬롯 버튼 안에 놓이므로 슬롯 기준 비율을 쓴다 (컨테이너 기준 barLeft와 같은 자리)
   const bar = { left: `${BAR_INSET * 100}%`, width: `${BAR_FILL * 100}%` }
 
@@ -82,7 +89,8 @@ export function IssueLane({
         break
       case 'Enter':
       case ' ':
-        onSelect(selectedIndex === focusIndex ? null : focusIndex)
+        if (focusIndex < lockedUntil) promptLogin()
+        else onSelect(selectedIndex === focusIndex ? null : focusIndex)
         break
       case 'Escape':
         onSelect(null)
@@ -97,10 +105,26 @@ export function IssueLane({
     <div className={AXIS_GUTTER}>
       <div className="mb-1.5 flex items-baseline justify-between">
         <span className="text-xs font-semibold text-foreground">이슈</span>
-        <span className="text-caption text-muted-foreground">
-          {hasSentiment
-            ? '위 호재 · 아래 악재 · 막대를 누르면 아래에 그 구간 뉴스가 열립니다'
-            : '막대를 누르면 아래에 그 구간 뉴스가 열립니다'}
+        <span className="flex flex-wrap items-baseline justify-end gap-x-2 gap-y-0.5">
+          <span className="text-caption text-muted-foreground">
+            {lockedUntil > 0
+              ? hasSentiment
+                ? '위 호재 · 아래 악재'
+                : '막대를 누르면 그 구간 뉴스가 열립니다'
+              : hasSentiment
+                ? '위 호재 · 아래 악재 · 막대를 누르면 아래에 그 구간 뉴스가 열립니다'
+                : '막대를 누르면 아래에 그 구간 뉴스가 열립니다'}
+          </span>
+          {lockedUntil > 0 && (
+            <button
+              type="button"
+              onClick={promptLogin}
+              className="-mx-1 flex cursor-pointer items-center gap-1 rounded-sm px-1 text-caption text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <Lock className="size-3 shrink-0" strokeWidth={2.5} />
+              최근 {count - lockedUntil}개 구간만 열려 있어요 · 로그인하고 전체 보기
+            </button>
+          )}
         </span>
       </div>
 
@@ -123,7 +147,8 @@ export function IssueLane({
         {days.map((day, i) => {
           const total = day.good + day.bad + day.neutral
           const isSelected = selectedIndex === i
-          const opacity = emphasis(i, activeIndex, 0.85, 0.35)
+          const isLocked = i < lockedUntil
+          const opacity = isLocked ? fadeAt(i) : emphasis(i, activeIndex, 0.85, 0.35)
           return (
             <button
               key={day.date}
@@ -132,14 +157,16 @@ export function IssueLane({
               role="option"
               aria-selected={isSelected}
               aria-label={
-                hasSentiment
-                  ? `${day.date} 호재 ${day.good}건 악재 ${day.bad}건`
-                  : `${day.date} 뉴스 ${day.neutral}건`
+                isLocked
+                  ? `${day.date} — 회원 전용`
+                  : hasSentiment
+                    ? `${day.date} 호재 ${day.good}건 악재 ${day.bad}건`
+                    : `${day.date} 뉴스 ${day.neutral}건`
               }
               tabIndex={-1}
               onMouseEnter={() => onHover(i)}
               onFocus={() => setFocusIndex(i)}
-              onClick={() => onSelect(isSelected ? null : i)}
+              onClick={() => (isLocked ? promptLogin() : onSelect(isSelected ? null : i))}
               className="absolute inset-y-0 cursor-pointer outline-none"
               style={{ left: `${i * slotPct(count)}%`, width: `${slotPct(count)}%` }}
             >
@@ -178,7 +205,7 @@ export function IssueLane({
                   }}
                 />
               )}
-              <span className="sr-only">{total}건</span>
+              {!isLocked && <span className="sr-only">{total}건</span>}
             </button>
           )
         })}

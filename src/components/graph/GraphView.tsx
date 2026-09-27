@@ -13,6 +13,7 @@ import { ScopeSelector } from '@/components/graph/ScopeSelector'
 import { Toolbar } from '@/components/graph/Toolbar'
 import { HopSelector } from '@/components/graph/HopSelector'
 import { LensSelector } from '@/components/graph/LensSelector'
+import { MemberVeil } from '@/components/gate/MemberVeil'
 import { Button } from '@/components/ui/button'
 import {
   SidebarProvider,
@@ -44,6 +45,7 @@ import {
   lensDefaultCategories,
   useGraphQuery,
 } from '@/lib/graphRoute'
+import { useMemberGate } from '@/lib/memberGate'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
 import { useStocks } from '@/lib/queries/useStocks'
 import { useThemes } from '@/lib/queries/useThemes'
@@ -70,9 +72,12 @@ export function GraphView({ focus }: Props) {
   const { hop, scope, lens } = query
   // 테마 원점은 렌즈가 없다 — 컨트롤을 전부 숨기고 필터도 전체 켜짐으로 둔다
   const controls = isTheme ? { hop: false, scope: false } : lensControls(lens)
+  const { locked, pending, promptLogin } = useMemberGate()
+  const gatedHop = locked && hop > 1 ? 1 : hop
+  const gatedQuery = gatedHop === hop ? query : { ...query, hop: gatedHop }
   // 개요는 서버가 1홉 고정이라 URL에 hop이 남아 있어도 강조 범위는 1홉이다
-  const effectiveHop = controls.hop ? hop : 1
-  const { data, loading, error, refetch } = useKgGraph(focus, query)
+  const effectiveHop = controls.hop ? gatedHop : 1
+  const { data, loading, error, refetch } = useKgGraph(focus, gatedQuery)
   const { data: stocks } = useStocks()
   const { data: themes } = useThemes()
   const navigate = useNavigate()
@@ -392,6 +397,10 @@ export function GraphView({ focus }: Props) {
                 <div className="h-full w-1/3 animate-pulse bg-primary" />
               </div>
             )}
+            <div
+              inert={locked || pending || undefined}
+              className="absolute inset-0"
+            >
             <GraphCanvas
               ref={graphRef}
               data={data}
@@ -404,8 +413,17 @@ export function GraphView({ focus }: Props) {
               selectedCategories={selectedCategories}
               selectedPredicates={selectedPredicates}
             />
+            </div>
+            {(locked || pending) && (
+              <MemberVeil
+                title={`${noun} 관계 그래프는 로그인하면 열려요`}
+                description="공급·투자·인수 관계를 근거 뉴스와 공시까지 따라갈 수 있습니다."
+                pending={pending}
+                onLogin={promptLogin}
+              />
+            )}
             {/* 관계가 0개여도 캔버스와 중심 노드는 그대로 두고 안내만 얹는다 — 패널·통계와 화면이 어긋나지 않도록 */}
-            {data.links.length === 0 && (
+            {!locked && !pending && data.links.length === 0 && (
               <div
                 // 캔버스는 중심 노드 하나를 가운데에 그리고 있다 — 그 아래 빈자리에 겹쳐 두고, 노드 클릭·드래그는 통과시킨다
                 className="pointer-events-none absolute inset-x-0 top-[calc(50%+4.5rem)] z-10 flex flex-col items-center gap-2 px-4 text-center"
@@ -475,7 +493,14 @@ export function GraphView({ focus }: Props) {
                     </div>
                   </>
                 )}
-                {controls.hop && <HopSelector value={hop} onChange={(next) => updateQuery({ hop: next })} />}
+                {controls.hop && (
+                  <HopSelector
+                    value={gatedHop}
+                    onChange={(next) => updateQuery({ hop: next })}
+                    lockedFrom={locked ? 2 : undefined}
+                    onLockedSelect={promptLogin}
+                  />
+                )}
                 {/* 모바일은 폭이 없어 힌트를 숨긴다 — Hop 라벨은 남는다 */}
                 {lens === 'events' && !isMobile && (
                   <p className="m-0 w-full text-right text-micro text-muted-foreground">
@@ -491,7 +516,7 @@ export function GraphView({ focus }: Props) {
               isMobile={isMobile}
             />
           </div>
-          {selection && !isMobile && (
+          {selection && !locked && !pending && !isMobile && (
             <DetailPanel
               selection={selection}
               onClose={clearSelection}
@@ -510,7 +535,7 @@ export function GraphView({ focus }: Props) {
         </div>
       </SidebarInset>
 
-      {selection && isMobile && (
+      {selection && !locked && !pending && isMobile && (
         <DetailPanel
           selection={selection}
           onClose={clearSelection}
