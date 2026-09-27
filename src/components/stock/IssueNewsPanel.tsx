@@ -1,5 +1,7 @@
 import { memo, useMemo, type ReactNode } from 'react'
+import { Lock } from 'lucide-react'
 import type { IssueDay, IssueKind, IssueNews } from '@/lib/apiTypes'
+import { lockedIssueCount, useMemberGate } from '@/lib/memberGate'
 import { cn } from '@/lib/utils'
 import { NewsRelationBadge } from '@/components/news/NewsRelationBadge'
 
@@ -90,15 +92,22 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
   onClearSelection,
   extra,
 }: IssueNewsPanelProps) {
-  const selected = selectedIndex === null ? null : days[selectedIndex]
+  const { locked, promptLogin } = useMemberGate()
+  const lockedUntil = lockedIssueCount(days.length, locked)
+  const openDays = useMemo(
+    () => (lockedUntil > 0 ? days.slice(lockedUntil) : days),
+    [days, lockedUntil],
+  )
+  const selected =
+    selectedIndex === null || selectedIndex < lockedUntil ? null : days[selectedIndex]
   const all = useMemo(
     () => ({
-      items: days.flatMap((d) => d.items).reverse(),
-      good: days.reduce((n, d) => n + d.good, 0),
-      bad: days.reduce((n, d) => n + d.bad, 0),
-      neutral: days.reduce((n, d) => n + d.neutral, 0),
+      items: openDays.flatMap((d) => d.items).reverse(),
+      good: openDays.reduce((n, d) => n + d.good, 0),
+      bad: openDays.reduce((n, d) => n + d.bad, 0),
+      neutral: openDays.reduce((n, d) => n + d.neutral, 0),
     }),
-    [days],
+    [openDays],
   )
   const { items, good, bad }: { items: IssueNews[]; good: number; bad: number } =
     selected ?? all
@@ -112,13 +121,15 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
       <div className="mb-[9px] flex min-h-[30px] flex-wrap items-baseline justify-between gap-2">
         <div className="flex flex-wrap items-baseline gap-2">
           <h3 className="text-sm font-semibold text-foreground">
-            {selected ? selected.date : `${days[0].date} ~ ${days[days.length - 1].date}`}
+            {selected
+              ? selected.date
+              : `${openDays[0].date} ~ ${openDays[openDays.length - 1].date}`}
           </h3>
           <span className="text-caption text-muted-foreground">
             {neutralOnly ? `${items.length}건` : `${items.length}건 · 호재 ${good} / 악재 ${bad}`}
           </span>
         </div>
-        {selected && (
+        {selected ? (
           <button
             type="button"
             onClick={onClearSelection}
@@ -126,6 +137,17 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
           >
             전체 보기
           </button>
+        ) : (
+          lockedUntil > 0 && (
+            <button
+              type="button"
+              onClick={promptLogin}
+              className="-mx-1 flex cursor-pointer items-center gap-1 rounded-sm px-1 text-caption text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <Lock className="size-3 shrink-0" strokeWidth={2.5} />
+              이전 기간 뉴스는 로그인 후 볼 수 있어요
+            </button>
+          )
         )}
       </div>
 
