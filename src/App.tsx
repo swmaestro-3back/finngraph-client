@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { AuthLayout } from '@/components/layout/AuthLayout'
 import { SiteLayout } from '@/components/layout/SiteLayout'
 import { useAuth } from '@/lib/auth'
 import LoginPage from '@/pages/LoginPage'
 import KakaoCallbackPage from '@/pages/KakaoCallbackPage'
+import LegalPage from '@/pages/LegalPage'
 import MyPage from '@/pages/MyPage'
 import ThemeDashboardPage from '@/pages/ThemeDashboardPage'
 import ThemeDetailPage from '@/pages/ThemeDetailPage'
@@ -40,8 +42,8 @@ function App() {
         <Route path="/graph/theme/:name" element={<CorpGraphPage />} />
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="/briefing" element={<BriefingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/auth/kakao/callback" element={<KakaoCallbackPage />} />
+        <Route path="/terms" element={<LegalPage doc="terms" />} />
+        <Route path="/privacy" element={<LegalPage doc="privacy" />} />
         <Route
           path="/me"
           element={
@@ -51,6 +53,11 @@ function App() {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<LoginPage mode="signup" />} />
+        <Route path="/auth/kakao/callback" element={<KakaoCallbackPage />} />
       </Route>
     </Routes>
   )

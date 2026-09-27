@@ -2,7 +2,9 @@
 // 시퀀스 순서 고정: ① error 파라미터 ② state 대조 ③ 대조 성공 후에만 code POST.
 // state 검증이 유일한 콜백 위조 방어라 검증 전 POST는 금지다.
 import { useEffect, useRef, useState } from 'react'
+import { CircleAlert, LoaderCircle } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 import { postData } from '@/lib/api'
 import type { AuthTokenRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
@@ -47,16 +49,27 @@ export default function KakaoCallbackPage() {
   }, [params, login, navigate])
 
   return (
-    <div className="page-container flex flex-col items-center gap-3 pt-24 text-center">
+    <div role="status" aria-live="polite" className="flex flex-col items-center py-6 text-center">
       {failed ? (
         <>
-          <p className="text-body text-foreground">카카오 로그인에 실패했습니다.</p>
-          <Link to="/login" className="text-body text-primary hover:underline">
-            다시 시도하기
-          </Link>
+          <span className="flex size-14 items-center justify-center rounded-full bg-destructive/8 text-destructive">
+            <CircleAlert className="size-6" strokeWidth={2} />
+          </span>
+          <h1 className="mt-6 text-title font-semibold tracking-[-0.4px] text-foreground">
+            카카오 로그인에 실패했어요
+          </h1>
+          <p className="mt-2 text-body leading-relaxed text-foreground-secondary break-keep">
+            카카오에서 받은 인가 정보를 확인하지 못했어요. 다시 시도해 주세요.
+          </p>
+          <Button asChild size="lg" className="mt-8 h-10 w-full">
+            <Link to="/login">다시 시도하기</Link>
+          </Button>
         </>
       ) : (
-        <p className="text-body text-muted-foreground">카카오 로그인 처리 중…</p>
+        <>
+          <LoaderCircle className="size-6 animate-spin text-primary" strokeWidth={2} />
+          <p className="mt-4 text-body text-foreground-secondary">카카오 로그인 처리 중…</p>
+        </>
       )}
     </div>
   )
