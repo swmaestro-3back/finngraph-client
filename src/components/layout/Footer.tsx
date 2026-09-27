@@ -6,6 +6,8 @@ const FOOTER_LINKS = [
   { label: '테마 목록', to: '/themes' },
   { label: '주식 목록', to: '/stocks' },
   { label: '기업 그래프', to: '/graph' },
+  { label: '이용약관', to: '/terms' },
+  { label: '개인정보처리방침', to: '/privacy' },
 ]
 
 export function Footer() {
