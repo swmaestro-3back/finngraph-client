@@ -12,16 +12,20 @@ interface StockIdentityProps {
 export function StockIdentity({ name, code, market, className }: StockIdentityProps) {
   return (
     <StockHoverCard ticker={code}>
-      <span className={cn('flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5', className)}>
-        <span className="shrink-0 text-sm font-semibold whitespace-nowrap text-foreground">{name}</span>
-        <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">{code}</span>
-        <span
-          className={cn(
-            'shrink-0 rounded px-1.5 py-0.5 text-micro tracking-[0.4px] text-muted-foreground',
-            market === 'KOSPI' ? 'bg-surface-inset' : 'bg-muted',
-          )}
-        >
-          {market}
+      <span className={cn('flex min-w-0 flex-col gap-0.5', className)}>
+        <span className="text-sm font-semibold leading-tight whitespace-nowrap text-foreground">
+          {name}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="font-mono text-caption leading-none text-foreground-tertiary">{code}</span>
+          <span
+            className={cn(
+              'rounded px-1.5 py-0.5 text-micro leading-none tracking-[0.4px] text-muted-foreground',
+              market === 'KOSPI' ? 'bg-surface-inset' : 'bg-muted',
+            )}
+          >
+            {market}
+          </span>
         </span>
       </span>
     </StockHoverCard>
