@@ -82,6 +82,9 @@ export interface StockDetailRes {
   dividendYield: number | null
   foreignRatio: number | null
   revenueGrowth: number | null
+  description: string | null
+  descriptionSource: string | null
+  descriptionRceptNo: string | null
 }
 
 export interface InvestorFlowRes {

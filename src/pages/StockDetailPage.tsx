@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronUp, CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { AnnualCharts } from '@/components/stock/AnnualCharts'
+import { CompanyOverview } from '@/components/stock/CompanyOverview'
 import { ContractSection } from '@/components/stock/ContractSection'
 import { FinancialTable } from '@/components/stock/FinancialTable'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
@@ -215,6 +216,12 @@ export default function StockDetailPage() {
               <Link to={`/graph/${stock.ticker}`}>지식그래프에서 보기</Link>
             </Button>
           </div>
+
+          <CompanyOverview
+            description={stock.description}
+            source={stock.descriptionSource}
+            rceptNo={stock.descriptionRceptNo}
+          />
 
           {latestNews && (
             <div className="mb-3 flex min-w-0 items-baseline gap-1.5 text-caption text-muted-foreground">
