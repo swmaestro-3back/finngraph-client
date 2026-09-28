@@ -37,8 +37,10 @@ import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 20
 
+const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
+
 const GRID =
-  'grid grid-cols-[36px_28px_minmax(190px,1.6fr)_92px_70px_66px_66px_66px_90px_58px_54px_60px_62px_minmax(70px,1fr)] items-center gap-2'
+  'grid grid-cols-[36px_28px_minmax(190px,1fr)_92px_76px_76px_76px_76px_96px_64px_64px_64px_64px] items-center gap-2'
 
 type SortKey =
   | 'name'
@@ -74,17 +76,16 @@ const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
   { key: null, label: '', align: 'left' },
   { key: 'name', label: '종목명', align: 'left' },
-  { key: null, label: '현재가', align: 'right' },
-  { key: 'change', label: '등락률', align: 'right' },
-  { key: 'w1', label: '1주', align: 'right' },
-  { key: 'm1', label: '1개월', align: 'right' },
-  { key: 'm3', label: '3개월', align: 'right' },
-  { key: 'marketCap', label: '시가총액 (억)', align: 'right' },
-  { key: 'per', label: 'PER', align: 'right' },
-  { key: 'pbr', label: 'PBR', align: 'right' },
-  { key: 'roe', label: 'ROE', align: 'right' },
-  { key: 'dividendYield', label: '배당률', align: 'right' },
-  { key: null, label: '테마', align: 'right' },
+  { key: null, label: '현재가', align: 'center' },
+  { key: 'change', label: '등락률', align: 'center' },
+  { key: 'w1', label: '1주', align: 'center' },
+  { key: 'm1', label: '1개월', align: 'center' },
+  { key: 'm3', label: '3개월', align: 'center' },
+  { key: 'marketCap', label: '시가총액 (억)', align: 'center' },
+  { key: 'per', label: 'PER', align: 'center' },
+  { key: 'pbr', label: 'PBR', align: 'center' },
+  { key: 'roe', label: 'ROE', align: 'center' },
+  { key: 'dividendYield', label: '배당률', align: 'center' },
 ]
 
 export default function StockListPage() {
@@ -235,7 +236,7 @@ export default function StockListPage() {
                     }}
                     className={cn(
                       GRID,
-                      'w-full cursor-pointer border-b border-surface-inset px-4 py-2 text-left hover:bg-muted',
+                      'w-full cursor-pointer border-b border-surface-inset px-4 py-2.5 text-left hover:bg-muted',
                       index % 2 === 1 && 'bg-foreground/[0.016]',
                     )}
                   >
@@ -254,37 +255,35 @@ export default function StockListPage() {
                       code={row.ticker}
                       market={row.market === 'KOSDAQ' ? 'KOSDAQ' : 'KOSPI'}
                     />
-                    <span className="text-right font-mono text-sm font-medium text-foreground">
+                    <span className={cn(NUM, 'font-medium text-foreground')}>
                       {formatPriceOrDash(row.price)}
                     </span>
                     {(['change', 'w1', 'm1', 'm3'] as const).map((key) => (
                       <span
                         key={key}
                         className={cn(
-                          'text-right font-mono text-xs font-medium leading-[1.4]',
+                          NUM,
+                          'font-medium',
                           changeColorClass(row[key] ?? 0),
                         )}
                       >
                         {formatChangeOrDash(row[key])}
                       </span>
                     ))}
-                    <span className="text-right font-mono text-xs text-foreground">
+                    <span className={cn(NUM, 'text-foreground')}>
                       {formatAmountOrDash(toEok(row.marketCap))}
                     </span>
-                    <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
+                    <span className={cn(NUM, 'text-foreground-secondary')}>
                       {row.per === null ? '—' : row.per.toFixed(2)}
                     </span>
-                    <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
+                    <span className={cn(NUM, 'text-foreground-secondary')}>
                       {row.pbr === null ? '—' : row.pbr.toFixed(2)}
                     </span>
-                    <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
+                    <span className={cn(NUM, 'text-foreground-secondary')}>
                       {row.roe === null ? '—' : `${row.roe.toFixed(1)}%`}
                     </span>
-                    <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
+                    <span className={cn(NUM, 'text-foreground-secondary')}>
                       {row.dividendYield === null ? '—' : `${row.dividendYield.toFixed(2)}%`}
-                    </span>
-                    <span className="overflow-hidden text-right text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
-                      {row.themeName ?? ''}
                     </span>
                   </div>
                 ))}

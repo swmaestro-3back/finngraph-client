@@ -19,8 +19,10 @@ import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 20
 
+const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
+
 const GRID =
-  'grid grid-cols-[36px_minmax(0,1fr)_72px_72px_76px_76px_96px_68px_minmax(0,1.1fr)] items-center gap-2'
+  'grid grid-cols-[36px_minmax(180px,1fr)_76px_76px_76px_76px_96px_72px_minmax(200px,1.6fr)] items-center gap-2'
 
 type SortKey = 'name' | 'change' | 'w1' | 'm1' | 'm3' | 'tradingValue' | 'stockCount'
 
@@ -40,13 +42,13 @@ interface ThemeRow {
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
   { key: 'name', label: '테마명', align: 'left' },
-  { key: 'change', label: '전일', align: 'right' },
-  { key: 'w1', label: '1주', align: 'right' },
-  { key: 'm1', label: '1개월', align: 'right' },
-  { key: 'm3', label: '3개월', align: 'right' },
-  { key: 'tradingValue', label: '거래대금', align: 'right' },
-  { key: 'stockCount', label: '종목수', align: 'right' },
-  { key: null, label: '대표 종목', align: 'left' },
+  { key: 'change', label: '전일', align: 'center' },
+  { key: 'w1', label: '1주', align: 'center' },
+  { key: 'm1', label: '1개월', align: 'center' },
+  { key: 'm3', label: '3개월', align: 'center' },
+  { key: 'tradingValue', label: '거래대금', align: 'center' },
+  { key: 'stockCount', label: '종목수', align: 'center' },
+  { key: null, label: '대표 종목', align: 'left', className: 'pl-4' },
 ]
 
 export default function ThemeListPage() {
@@ -132,7 +134,7 @@ export default function ThemeListPage() {
         <>
           <div className="card-surface overflow-hidden">
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="min-w-[880px]">
+              <div className="min-w-[1000px]">
                 <SortableHeaderRow
                   columns={COLUMNS}
                   sortKey={sortKey}
@@ -152,7 +154,7 @@ export default function ThemeListPage() {
                     }
                     className={cn(
                       GRID,
-                      'w-full cursor-pointer border-b border-surface-inset px-4 py-[9px] text-left hover:bg-muted',
+                      'w-full cursor-pointer border-b border-surface-inset px-4 py-2.5 text-left hover:bg-muted',
                       index % 2 === 1 && 'bg-foreground/[0.016]',
                     )}
                   >
@@ -166,20 +168,21 @@ export default function ThemeListPage() {
                       <span
                         key={key}
                         className={cn(
-                          'text-right font-mono text-xs font-medium leading-[1.4]',
+                          NUM,
+                          'font-medium',
                           changeColorClass(row[key] ?? 0),
                         )}
                       >
                         {formatChangeOrDash(row[key])}
                       </span>
                     ))}
-                    <span className="text-right font-mono text-xs leading-[1.4] text-foreground">
+                    <span className={cn(NUM, 'text-foreground')}>
                       {row.tradingValueLabel}
                     </span>
-                    <span className="text-right font-mono text-xs leading-[1.4] text-muted-foreground">
+                    <span className={cn(NUM, 'text-foreground-secondary')}>
                       {row.stockCount}종목
                     </span>
-                    <span className="overflow-hidden text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
+                    <span className="overflow-hidden pl-4 text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
                       {row.topStocks}
                     </span>
                   </button>
