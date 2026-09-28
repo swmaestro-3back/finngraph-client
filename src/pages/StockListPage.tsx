@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils'
 const PAGE_SIZE = 20
 
 const GRID =
-  'grid grid-cols-[36px_28px_minmax(150px,1.6fr)_92px_70px_66px_66px_66px_90px_58px_54px_60px_62px_minmax(70px,1fr)] items-center gap-2'
+  'grid grid-cols-[36px_28px_minmax(190px,1.6fr)_92px_70px_66px_66px_66px_90px_58px_54px_60px_62px_minmax(70px,1fr)] items-center gap-2'
 
 type SortKey =
   | 'name'

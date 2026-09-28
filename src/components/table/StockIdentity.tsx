@@ -12,10 +12,8 @@ interface StockIdentityProps {
 export function StockIdentity({ name, code, market, className }: StockIdentityProps) {
   return (
     <StockHoverCard ticker={code}>
-      <span className={cn('flex min-w-0 items-center gap-2 overflow-hidden', className)}>
-        <span className="overflow-hidden text-sm font-semibold whitespace-nowrap text-ellipsis text-foreground">
-          {name}
-        </span>
+      <span className={cn('flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5', className)}>
+        <span className="shrink-0 text-sm font-semibold whitespace-nowrap text-foreground">{name}</span>
         <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">{code}</span>
         <span
           className={cn(
