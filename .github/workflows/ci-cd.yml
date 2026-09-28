@@ -34,8 +34,20 @@ jobs:
       - name: 테스트
         run: npm test
 
+      # 카카오 클라이언트 ID는 공개 식별자라 번들에 그대로 들어간다. 레포에 두지 않고
+      # 저장소 Variables(Settings → Secrets and variables → Actions → Variables)에서 주입한다.
+      # 셸 환경변수가 .env.dev 보다 우선하므로 파일에는 넣지 않는다.
+      - name: 빌드 변수 확인
+        if: github.event_name == 'push'
+        run: |
+          : "${VITE_KAKAO_CLIENT_ID:?VITE_KAKAO_CLIENT_ID 저장소 변수가 비어 있음}"
+        env:
+          VITE_KAKAO_CLIENT_ID: ${{ vars.VITE_KAKAO_CLIENT_ID }}
+
       - name: 빌드
         run: npm run build:dev
+        env:
+          VITE_KAKAO_CLIENT_ID: ${{ vars.VITE_KAKAO_CLIENT_ID }}
 
       - name: 빌드 산출물 업로드
         if: github.event_name == 'push'
