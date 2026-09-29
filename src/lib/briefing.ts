@@ -16,7 +16,6 @@ import type {
   RelationPartyRes,
   RiskKind,
   RiskRes,
-  StockRowRes,
   WatchKind,
 } from '@/lib/apiTypes'
 
@@ -71,13 +70,6 @@ const TENSE_BADGES: Record<string, string> = {
 const POLARITY_BADGES: Record<string, string> = {
   denied: '부인',
   terminated: '종료',
-}
-
-export function pickMovers(stocks: StockRowRes[], count: number): StockRowRes[] {
-  return stocks
-    .filter((s) => s.change !== null)
-    .sort((a, b) => Math.abs(b.change ?? 0) - Math.abs(a.change ?? 0))
-    .slice(0, count)
 }
 
 export function adjacentDates(

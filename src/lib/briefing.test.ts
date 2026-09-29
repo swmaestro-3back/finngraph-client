@@ -8,7 +8,6 @@ import type {
   RelationGraphRes,
   RelationLineRes,
   RiskRes,
-  StockRowRes,
 } from '@/lib/apiTypes'
 import {
   adjacentDates,
@@ -16,7 +15,6 @@ import {
   edgeIdOf,
   groupRisks,
   lockedTeaser,
-  pickMovers,
   relationDigestCaption,
   relationLineLabel,
   themeRadarSplit,
@@ -190,13 +188,3 @@ describe('toRelationGraphData', () => {
   })
 })
 
-describe('pickMovers', () => {
-  it('등락 절대값 순으로 뽑고 null은 제외한다', () => {
-    const rows = [
-      { ticker: '1', change: 1 },
-      { ticker: '2', change: -5 },
-      { ticker: '3', change: null },
-    ] as StockRowRes[]
-    expect(pickMovers(rows, 2).map((s) => s.ticker)).toEqual(['2', '1'])
-  })
-})
