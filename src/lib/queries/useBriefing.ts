@@ -1,4 +1,5 @@
 import { ApiError, getData } from '@/lib/api'
+import { useAuth } from '@/lib/auth'
 import type { BriefingRes, BriefingSummaryRes } from '@/lib/apiTypes'
 import { useApi, type ApiState } from '@/lib/queries/useApi'
 
@@ -14,17 +15,22 @@ export interface BriefingState {
   refetch: () => void
 }
 
+const PENDING: Promise<BriefingEnvelope> = new Promise(() => {})
+
 export function useBriefing(date: string | null): BriefingState {
+  const { status } = useAuth()
   const path = date ? `/v1/briefings/${encodeURIComponent(date)}` : '/v1/briefings/latest'
   const state = useApi<BriefingEnvelope>(
     () =>
-      getData<BriefingRes>(path)
-        .then((briefing) => ({ briefing }))
-        .catch((e: unknown) => {
-          if (e instanceof ApiError && e.isNotFound) return { briefing: null }
-          throw e
-        }),
-    [path],
+      status === 'loading'
+        ? PENDING
+        : getData<BriefingRes>(path)
+            .then((briefing) => ({ briefing }))
+            .catch((e: unknown) => {
+              if (e instanceof ApiError && e.isNotFound) return { briefing: null }
+              throw e
+            }),
+    [path, status],
   )
   return {
     data: state.data?.briefing ?? null,
