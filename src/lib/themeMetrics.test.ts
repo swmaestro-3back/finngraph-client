@@ -4,7 +4,6 @@ import {
   breadthLabel,
   changeStatusTag,
   excludedFromMeanLabel,
-  sourceTitle,
   trimmedTickers,
   compareNullLast,
   countLabel,
@@ -18,7 +17,6 @@ import {
   leaderColumnLabel,
   metricCaption,
   sensitivityLabel,
-  sourceLabel,
   tileDetail,
   tileDetailPlacement,
   tileLabel,
@@ -153,11 +151,6 @@ describe('거래대금 배율 문구', () => {
     expect(turnoverFact(null)).toBeNull()
   })
 
-  it('출처 칩', () => {
-    expect(sourceLabel(['naver', 'judal'])).toBe('네이버 · 주달')
-    expect(sourceLabel([])).toBeNull()
-    expect(sourceLabel(undefined)).toBeNull()
-  })
 })
 
 describe('주도주 표시', () => {
@@ -276,11 +269,6 @@ describe('changeStatusTag', () => {
     expect(excludedFromMeanLabel(0)).toBeNull()
   })
 
-  it('출처 툴팁은 전체 이름을 쓴다', () => {
-    expect(sourceTitle(['naver', 'judal'])).toBe('테마 구성 출처: 네이버 금융 테마, 주달 테마')
-    expect(sourceTitle(['etc'])).toBe('테마 구성 출처: etc')
-    expect(sourceTitle([])).toBeNull()
-  })
 })
 
 describe('compareNullLast', () => {

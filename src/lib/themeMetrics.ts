@@ -9,7 +9,7 @@ import { formatChange } from '@/lib/format'
 import { hasTurnoverRatio } from '@/lib/treemapColor'
 
 export const DATA_SOURCE_NOTICE =
-  '시세는 한국투자증권 API 장마감 일봉, 테마 구성은 네이버 금융·주달 테마를 병합한 데이터입니다. 참고용이며 투자 결과에 대한 책임은 지지 않습니다.'
+  '시세는 한국투자증권 API 장마감 일봉 기준입니다. 참고용이며 투자 결과에 대한 책임은 지지 않습니다.'
 
 export const METRIC_HELP_LINES = {
   universe: '집계 대상: 활성 보통주 · 거래정지·정리매매·시세 결손 제외',
@@ -190,13 +190,6 @@ export function hasThemeMetricsV2(
   return (themes ?? []).some((t) => t.pricedCount !== undefined)
 }
 
-const SOURCE_NAMES: Record<string, string> = { naver: '네이버', judal: '주달' }
-
-export function sourceLabel(sources: string[] | undefined): string | null {
-  if (!sources || sources.length === 0) return null
-  return sources.map((s) => SOURCE_NAMES[s] ?? s).join(' · ')
-}
-
 export function coverageBanner(
   coverage: number | null | undefined,
   hotCount: number | null,
@@ -256,13 +249,6 @@ export function trimmedTickers(
 
 export function excludedFromMeanLabel(count: number): string | null {
   return count > 0 ? `평균 계산 제외 ${count}` : null
-}
-
-const SOURCE_TITLES: Record<string, string> = { naver: '네이버 금융 테마', judal: '주달 테마' }
-
-export function sourceTitle(sources: string[] | undefined): string | null {
-  if (!sources || sources.length === 0) return null
-  return `테마 구성 출처: ${sources.map((s) => SOURCE_TITLES[s] ?? s).join(', ')}`
 }
 
 function isMissing(value: unknown): boolean {
