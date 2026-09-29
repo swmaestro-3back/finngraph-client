@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
+import { CircleAlert, Info, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { NewsSection } from '@/components/theme/NewsSection'
@@ -11,13 +11,18 @@ import { TreemapToolbar } from '@/components/theme/TreemapToolbar'
 import { Button } from '@/components/ui/button'
 import { toNewsItem } from '@/lib/apiMappers'
 import type { ThemeRes } from '@/lib/apiTypes'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
-import { formatCompactKrw } from '@/lib/format'
 import { useHotThemes } from '@/lib/queries/useHotThemes'
 import { useReferenceDate } from '@/lib/queries/useReferenceDate'
+import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
+import { coverageBanner, tileDetail, tileLabel } from '@/lib/themeMetrics'
+import { normalizeSizes, tileSize } from '@/lib/treemapColor'
+
+const DESKTOP_RATIO = 1200 / 520
 
 const LIST_CLASS =
   'h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
@@ -39,26 +44,33 @@ export default function ThemeDashboardPage() {
   const { pathname, search } = useLocation()
   const { status } = useAuth()
   const { has } = useFavorites()
+  const isMobile = useIsMobile()
 
   const { data: hotThemes, loading, error, refetch } = useHotThemes(themeCount)
-  const referenceDate = useReferenceDate(hotThemes?.[0]?.topStocks[0]?.ticker ?? null)
+  const { data: market, loading: marketLoading } = useThemeMarket()
+  const baseDate = market?.baseDate ?? null
+  const fallbackTicker =
+    !marketLoading && baseDate === null ? (hotThemes?.[0]?.topStocks[0]?.ticker ?? null) : null
+  const candleDate = useReferenceDate(fallbackTicker)
+  const referenceDate = baseDate ?? candleDate
+  const banner = coverageBanner(market?.coverage, hotThemes ? hotThemes.length : null)
 
   const treemapThemes = useMemo(() => {
     const list = hotThemes ?? []
     return onlyFavorites ? list.filter((t) => has('THEME', String(t.id))) : list
   }, [has, hotThemes, onlyFavorites])
 
-  const treemapItems: TreemapItem[] = useMemo(
-    () =>
-      treemapThemes.map((t) => ({
-        id: String(t.id),
-        name: t.name,
-        change: t.change ?? 0,
-        size: Math.max(Math.abs(t.change ?? 0), 0.5),
-        detail: `${formatCompactKrw(t.marketCap)}${t.topStocks[0] ? ` · ${t.topStocks[0].name}` : ''}`,
-      })),
-    [treemapThemes],
-  )
+  const treemapItems: TreemapItem[] = useMemo(() => {
+    const sizes = normalizeSizes(treemapThemes.map((t) => tileSize(t.change)))
+    return treemapThemes.map((t, i) => ({
+      id: String(t.id),
+      name: t.name,
+      change: t.change ?? 0,
+      size: sizes[i],
+      detail: tileDetail(t) ?? undefined,
+      label: tileLabel(t, baseDate),
+    }))
+  }, [treemapThemes, baseDate])
 
   const { maxUp, maxDown } = useMemo(() => {
     const ups = treemapThemes.map((t) => t.change ?? 0).filter((c) => c > 0)
@@ -87,6 +99,7 @@ export default function ThemeDashboardPage() {
     <div className="page-container pb-12 pt-7">
       <TreemapToolbar
         shownCount={treemapThemes.length}
+        market={market}
         referenceDate={referenceDate}
         themeCount={themeCount}
         onThemeCountChange={setThemeCount}
@@ -131,6 +144,15 @@ export default function ThemeDashboardPage() {
 
       {!loading && !error && hotThemes && (
         <>
+          {banner && (
+            <div
+              role="status"
+              className="mb-3 flex items-start gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-body text-foreground-secondary break-keep"
+            >
+              <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span>{banner}</span>
+            </div>
+          )}
           {onlyFavorites && treemapItems.length === 0 ? (
             <div className="card-surface flex h-[max(280px,31.667vw)] flex-col items-center justify-center gap-1 text-center">
               <p className="text-body text-foreground">
@@ -144,10 +166,14 @@ export default function ThemeDashboardPage() {
             <>
               <Treemap
                 items={treemapItems}
+                ratio={isMobile ? 1 : DESKTOP_RATIO}
                 selectedId={selected ? String(selected.id) : null}
                 onSelect={selectTheme}
               />
-              <TreemapLegend maxUp={maxUp} maxDown={maxDown} />
+              <TreemapLegend
+                maxUp={maxUp}
+                maxDown={maxDown}
+              />
             </>
           )}
 
@@ -156,13 +182,13 @@ export default function ThemeDashboardPage() {
               key={`focus-${selected.id}`}
               className="mt-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300"
             >
-              <ThemeFocus theme={selected} from={from} />
+              <ThemeFocus theme={selected} from={from} stocks={themeStocks ?? []} />
 
               <div className="mt-4 grid items-stretch gap-4 lg:grid-cols-[1.08fr_0.92fr]">
-                <div className="[&>section]:h-full">
+                <div className="min-w-0 [&>section]:h-full">
                   <StockSection stocks={themeStocks ?? []} from={from} listClassName={LIST_CLASS} />
                 </div>
-                <div className="[&>section]:h-full">
+                <div className="min-w-0 [&>section]:h-full">
                   <NewsSection
                     title="관련 뉴스"
                     items={news}

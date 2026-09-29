@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 export interface TableColumn<K extends string> {
   key: K | null
   label: string
-  align?: 'left' | 'right'
+  align?: 'left' | 'center' | 'right'
   /** 해당 컬럼에만 붙는 추가 클래스 (좌우 패딩 등) */
   className?: string
 }
@@ -38,7 +38,7 @@ export function SortableHeaderRow<K extends string>({
         const base = cn(
           'whitespace-nowrap',
           cellClassName,
-          col.align === 'right' ? 'text-right' : 'text-left',
+          col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
           col.className,
         )
 
@@ -57,13 +57,33 @@ export function SortableHeaderRow<K extends string>({
             key={col.label}
             type="button"
             onClick={() => onSort(sortKeyOfColumn)}
-            className={cn(base, 'cursor-pointer', isActive ? activeClassName : inactiveClassName)}
+            className={cn(
+              base,
+              'inline-flex cursor-pointer items-center gap-1',
+              col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start',
+              isActive ? activeClassName : inactiveClassName,
+            )}
           >
-            {col.label}
-            {/* 비활성 컬럼도 화살표 폭을 항상 차지해서 정렬 전환 시 라벨이 밀리지 않게 한다 */}
-            <span aria-hidden={!isActive} className={cn(!isActive && 'invisible')}>
-              {sortDesc ? ' ↓' : ' ↑'}
+            <span className={cn(col.align === 'center' && 'relative')}>
+              {col.label}
+              {col.align === 'center' && (
+                <span
+                  aria-hidden={!isActive}
+                  className={cn('absolute top-0 left-full pl-1', !isActive && 'invisible')}
+                >
+                  {sortDesc ? '↓' : '↑'}
+                </span>
+              )}
             </span>
+            {/* 비활성 컬럼도 화살표 폭을 항상 차지해서 정렬 전환 시 라벨이 밀리지 않게 한다 */}
+            {col.align !== 'center' && (
+              <span
+                aria-hidden={!isActive}
+                className={cn(!isActive && 'invisible', col.align === 'right' && 'order-first')}
+              >
+                {sortDesc ? '↓' : '↑'}
+              </span>
+            )}
           </button>
         )
       })}

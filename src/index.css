@@ -21,7 +21,7 @@
   --secondary: #eef0f3;
   --secondary-foreground: #0a0b0d;
   --muted: #f7f7f7;
-  --muted-foreground: #7c828a;
+  --muted-foreground: #6b7280;
   --accent: #eef0f3;
   --accent-foreground: #0a0b0d;
   --destructive: #cf202f;
@@ -52,9 +52,9 @@
   --primary-pressed: #003ecc;
   --surface-inset: #eef0f3;
 
-  /* 텍스트 회색 단계 — foreground(#0a0b0d) > secondary > muted-foreground(#7c828a) > tertiary */
+  /* 텍스트 회색 단계 — foreground(#0a0b0d) > secondary > muted-foreground(#6b7280) > tertiary */
   --foreground-secondary: #5b616e;
-  --foreground-tertiary: #a8acb3;
+  --foreground-tertiary: #8f949c;
   /* 재무 테이블 수치 전용 잉크 — 밀집 숫자를 순흑보다 한 단계 눌러 읽힌다 */
   --foreground-numeric: #2e394d;
 
@@ -76,7 +76,6 @@
   --font-sans: 'Inter Variable', 'Apple SD Gothic Neo', 'Pretendard', -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-heading: var(--font-sans);
   /* 브랜드 워드마크 — 발표 자료(.frontend-slides)와 동일한 Pretendard 800 로고타입 */
-  --font-wordmark: 'Pretendard Variable', var(--font-sans);
   --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -239,4 +238,46 @@
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
   animation: auth-draw 420ms cubic-bezier(0.16, 1, 0.3, 1) 220ms forwards;
+}
+
+@keyframes logo-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes logo-pop {
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes logo-ripple {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.3);
+  }
+}
+
+@utility logo-curve {
+  stroke-dasharray: 511;
+  stroke-dashoffset: 511;
+  animation: logo-draw 900ms cubic-bezier(0.3, 0, 0.1, 1) 250ms forwards;
+}
+
+@utility logo-node {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+  animation: logo-pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) 1050ms forwards;
+}
+
+@utility logo-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: logo-ripple 900ms cubic-bezier(0.2, 0.6, 0.3, 1) 1200ms forwards;
 }

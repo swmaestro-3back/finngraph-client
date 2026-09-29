@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { AuthBrandPanel } from '@/components/auth/AuthBrandPanel'
+import { Logo } from '@/components/brand/Logo'
 
 export function AuthLayout() {
   const { pathname } = useLocation()
@@ -14,11 +15,8 @@ export function AuthLayout() {
 
       <div className="flex min-h-screen flex-col">
         <header className="flex h-14 items-center justify-between px-6 lg:px-10">
-          <Link
-            to="/"
-            className="font-wordmark text-lg font-extrabold leading-tight tracking-[-0.05em] text-foreground lg:invisible"
-          >
-            Finn<span className="text-primary">graph</span>
+          <Link to="/" className="text-foreground lg:invisible">
+            <Logo height={24} />
           </Link>
           <Link
             to="/"

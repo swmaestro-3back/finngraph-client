@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
+import { DataNotice } from '@/components/layout/DataNotice'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueLane } from '@/components/stock/IssueLane'
@@ -8,6 +9,12 @@ import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { LeaderStockCard } from '@/components/theme/LeaderStockCard'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { RelatedStocksTable } from '@/components/theme/RelatedStocksTable'
+import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
+import {
+  CloseDate,
+  ThemeCountFacts,
+  ThemeMetricCaption,
+} from '@/components/theme/ThemeMetricSummary'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { CANDLE_COUNTS, type CandlePeriod } from '@/lib/apiTypes'
@@ -101,7 +108,7 @@ export default function ThemeDetailPage() {
 
       {!loading && !error && theme && (
         <>
-          <div className="mb-3 flex items-baseline gap-[9px]">
+          <div className="mb-2 flex flex-wrap items-baseline gap-x-[9px] gap-y-1">
             <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
               {theme.name}
             </h1>
@@ -109,12 +116,16 @@ export default function ThemeDetailPage() {
             <span
               className={cn(
                 'font-mono text-base font-medium tracking-[-0.5px]',
-                changeColorClass(theme.change ?? 0),
+                theme.change === null ? 'text-foreground-tertiary' : changeColorClass(theme.change),
               )}
             >
               {formatChangeOrDash(theme.change)}
             </span>
+            <CloseDate baseDate={theme.baseDate} />
+            <ThemeMetricHelp baseDate={theme.baseDate} className="self-center" />
           </div>
+          <ThemeCountFacts theme={theme} className="mb-1.5" />
+          <ThemeMetricCaption theme={theme} className="mb-3" />
 
           {theme.description && (
             <p className="mb-4 max-w-[820px] text-body leading-[1.7] text-muted-foreground [text-wrap:pretty]">
@@ -173,10 +184,7 @@ export default function ThemeDetailPage() {
         onOpenChange={(open) => !open && setOpenNewsId(null)}
       />
 
-      <p className="mt-5 text-caption text-muted-foreground">
-        표시된 시세·차트·뉴스는 데모용 시드 데이터입니다. 투자 판단의 근거로 사용할 수
-        없습니다.
-      </p>
+      <DataNotice className="mt-5" />
     </div>
   )
 }

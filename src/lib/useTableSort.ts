@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
+import { compareNullLast } from '@/lib/themeMetrics'
 
 /**
  * 테이블 정렬 상태 — 같은 컬럼 재클릭은 오름/내림 토글, 다른 컬럼은 내림차순부터 시작.
- * 문자열 값은 한국어 로캘 기준, 나머지는 숫자로 비교한다.
+ * 문자열 값은 한국어 로캘 기준, 나머지는 숫자로 비교한다. null·undefined는 방향과 무관하게 맨 뒤.
  *
  * K(정렬 가능한 컬럼 키)는 initialKey 하나로 좁혀지면 안 되므로 호출부에서 명시한다.
  * 예: useTableSort<StockListRow, SortKey>(rows, 'w1')
@@ -17,15 +18,7 @@ export function useTableSort<T, K extends Extract<keyof T, string>>(
 
   const sorted = useMemo(() => {
     const next = [...rows]
-    next.sort((a, b) => {
-      const av = a[sortKey]
-      const bv = b[sortKey]
-      const compared =
-        typeof av === 'string' && typeof bv === 'string'
-          ? av.localeCompare(bv, 'ko')
-          : Number(av) - Number(bv)
-      return sortDesc ? -compared : compared
-    })
+    next.sort((a, b) => compareNullLast(a[sortKey], b[sortKey], sortDesc))
     return next
   }, [rows, sortKey, sortDesc])
 

@@ -9,10 +9,17 @@ import {
   toEok,
   toMillion,
 } from '@/lib/format'
+import {
+  changeStatusTag,
+  excludedFromMeanLabel,
+  TRIMMED_TITLE,
+  trimmedTickers,
+} from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 const GRID =
-  'grid gap-2 grid-cols-[minmax(0,1fr)_76px_78px_78px_62px] xl:gap-3 xl:grid-cols-[minmax(0,1fr)_80px_84px_84px_64px]'
+  'grid gap-2 grid-cols-[minmax(0,1fr)_76px_72px] md:grid-cols-[minmax(0,1fr)_76px_78px_78px_62px] xl:gap-3 xl:grid-cols-[minmax(0,1fr)_80px_84px_84px_64px]'
+const DESKTOP_COL = 'hidden md:block'
 
 interface StockSectionProps {
   stocks: ThemeStockRes[]
@@ -32,6 +39,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
       }),
     [stocks],
   )
+  const excluded = excludedFromMeanLabel(trimmedTickers(stocks).size)
 
   return (
     <section className={cn('card-surface p-5', className)}>
@@ -39,14 +47,20 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
         <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">구성 종목</h2>
         <span className="text-caption text-muted-foreground">
           등락률순 · <span className="font-mono tabular-nums">{sorted.length}</span>개
+          {excluded && (
+            <span title={TRIMMED_TITLE}>
+              {' · '}
+              {excluded}
+            </span>
+          )}
         </span>
       </div>
 
       <div className={cn(GRID, 'border-b border-border pb-1.5 text-caption text-muted-foreground')}>
         <span className="truncate">종목명 · 편입 이유</span>
         <span className="whitespace-nowrap text-right">현재가</span>
-        <span className="whitespace-nowrap text-right">시가총액(억)</span>
-        <span className="whitespace-nowrap text-right">거래대금(백만)</span>
+        <span className={cn(DESKTOP_COL, 'whitespace-nowrap text-right')}>시가총액(억)</span>
+        <span className={cn(DESKTOP_COL, 'whitespace-nowrap text-right')}>거래대금(백만)</span>
         <span className="whitespace-nowrap text-right">등락률</span>
       </div>
 
@@ -58,7 +72,10 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
             테마 구성은 주 1회 갱신됩니다.
           </p>
         )}
-        {sorted.map((stock) => (
+        {sorted.map((stock) => {
+          const tag = changeStatusTag(stock.changeStatus)
+          const priced = stock.change !== null && (!tag || tag.keepsChange)
+          return (
           <Link
             key={stock.ticker}
             to={`/stock/${stock.ticker}`}
@@ -71,7 +88,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
             <span className="flex min-w-0 flex-col gap-0.5">
               <span className="flex items-center gap-[9px] overflow-hidden">
                 <span className="truncate text-sm font-semibold text-foreground">{stock.name}</span>
-                <span className="hidden font-mono text-caption text-foreground-tertiary xl:inline">
+                <span className="hidden font-mono text-caption text-muted-foreground xl:inline">
                   {stock.ticker}
                 </span>
               </span>
@@ -87,26 +104,35 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
             <span className="text-right font-mono text-sm font-medium text-foreground">
               {formatPriceOrDash(stock.price)}
             </span>
-            <span className="text-right font-mono text-xs text-foreground-secondary">
+            <span className={cn(DESKTOP_COL, 'text-right font-mono text-xs text-foreground-secondary')}>
               {formatAmountOrDash(toEok(stock.marketCap))}
             </span>
-            <span className="text-right font-mono text-xs text-foreground-secondary">
+            <span className={cn(DESKTOP_COL, 'text-right font-mono text-xs text-foreground-secondary')}>
               {formatAmountOrDash(toMillion(stock.tradingValue))}
             </span>
-            <span className="justify-self-end">
+            <span className="flex flex-col items-end gap-0.5 justify-self-end">
               <span
                 className={cn(
                   'inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs font-semibold',
-                  changeColorClass(stock.change ?? 0),
-                  (stock.change ?? 0) > 0 && 'bg-stock-up/10',
-                  (stock.change ?? 0) < 0 && 'bg-stock-down/10',
+                  priced ? changeColorClass(stock.change ?? 0) : 'text-muted-foreground',
+                  priced && (stock.change ?? 0) > 0 && 'bg-stock-up/[0.06]',
+                  priced && (stock.change ?? 0) < 0 && 'bg-stock-down/[0.06]',
                 )}
               >
                 {stock.change === null ? '—' : formatChange(stock.change)}
               </span>
+              {tag && (
+                <span
+                  title={tag.title}
+                  className="rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
+                >
+                  {tag.label}
+                </span>
+              )}
             </span>
           </Link>
-        ))}
+          )
+        })}
       </div>
     </section>
   )

@@ -47,7 +47,11 @@ export function NewsSection({
           {title}
         </h2>
         {relationFilter && (
-          <FilterChip active={analyzedOnly} onClick={() => setAnalyzedOnly((v) => !v)}>
+          <FilterChip
+            active={analyzedOnly}
+            onClick={() => setAnalyzedOnly((v) => !v)}
+            className="min-h-11 md:min-h-0"
+          >
             분석만
           </FilterChip>
         )}

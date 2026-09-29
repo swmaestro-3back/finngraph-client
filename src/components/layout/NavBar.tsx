@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Menu, Search, X } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Logo } from '@/components/brand/Logo'
 import { SearchBar } from '@/components/search/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -66,10 +67,12 @@ export function NavBar() {
 
   // 768px 미만에서 검색창을 숨기면 검색 기능 자체가 사라진다 — 아이콘으로 접어 두고 펼친다
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // 라우트가 바뀌면(행·배지 클릭 포함) 모바일 패널을 접는다 — 검색어는 key={pathname}으로 비운다
   useEffect(() => {
     setMobileSearchOpen(false)
+    setMobileMenuOpen(false)
   }, [pathname])
 
   const isActive = (to: string) => {
@@ -90,11 +93,8 @@ export function NavBar() {
   return (
     <header className="sticky top-0 z-40 h-14 border-b border-border bg-background">
       <div className="relative flex h-full items-center gap-5 px-5">
-        <Link
-          to="/"
-          className="shrink-0 font-wordmark text-lg font-extrabold leading-tight tracking-[-0.05em] text-foreground"
-        >
-          Finn<span className="text-primary">graph</span>
+        <Link to="/" className="shrink-0 text-foreground">
+          <Logo height={24} />
         </Link>
 
         <SearchBar
@@ -116,8 +116,11 @@ export function NavBar() {
           type="button"
           aria-label="검색"
           aria-expanded={mobileSearchOpen}
-          onClick={() => setMobileSearchOpen((v) => !v)}
-          className="shrink-0 cursor-pointer p-2 -m-2 text-muted-foreground md:hidden"
+          onClick={() => {
+            setMobileMenuOpen(false)
+            setMobileSearchOpen((v) => !v)
+          }}
+          className="shrink-0 cursor-pointer p-3 -m-3 text-muted-foreground md:hidden"
         >
           <Search className="size-5" />
         </button>
@@ -136,7 +139,7 @@ export function NavBar() {
           </div>
         )}
 
-        <nav className="flex h-full items-center gap-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="hidden h-full items-center gap-4 md:flex">
           {MENU_ITEMS.map((item) => (
             <Link
               key={item.label}
@@ -151,6 +154,39 @@ export function NavBar() {
             </Link>
           ))}
         </nav>
+
+        <button
+          type="button"
+          aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => {
+            setMobileSearchOpen(false)
+            setMobileMenuOpen((v) => !v)
+          }}
+          className="shrink-0 cursor-pointer p-3 -m-3 text-muted-foreground md:hidden"
+        >
+          {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
+
+        {mobileMenuOpen && (
+          <nav
+            aria-label="주요 메뉴"
+            className="absolute inset-x-0 top-full border-b border-border bg-background p-2 md:hidden"
+          >
+            {MENU_ITEMS.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                className={cn(
+                  'flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-foreground hover:bg-muted',
+                  isActive(item.to) && 'bg-muted text-primary',
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         <AuthSection />
       </div>
@@ -172,7 +208,7 @@ function AuthSection() {
   if (status === 'anonymous' || !user) {
     return (
       <Button
-        className="h-9 shrink-0 rounded-full px-5 font-semibold active:bg-primary-pressed"
+        className="h-11 shrink-0 rounded-full px-5 font-semibold active:bg-primary-pressed md:h-9"
         onClick={() => navigate('/login', { state: { next: location.pathname } })}
       >
         로그인

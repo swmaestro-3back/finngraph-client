@@ -1,26 +1,50 @@
 import { Link } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
-import type { ThemeRes } from '@/lib/apiTypes'
+import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
+import {
+  CloseDate,
+  ThemeCountFacts,
+  ThemeMetricCaption,
+} from '@/components/theme/ThemeMetricSummary'
+import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
+import {
+  hasBreadth,
+  sourceLabel,
+  sourceTitle,
+  TRIMMED_TITLE,
+  trimmedTickers,
+  turnoverFact,
+} from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 interface ThemeFocusProps {
   theme: ThemeRes
   from: string
+  stocks?: ThemeStockRes[]
 }
 
 interface FactProps {
   label: string
   value: string
   tone?: string
+  note?: { text: string; tone: string }
 }
 
-function Fact({ label, value, tone }: FactProps) {
+function Fact({ label, value, tone, note }: FactProps) {
   return (
     <div className="flex items-baseline gap-1.5">
       <dt className="text-caption text-muted-foreground">{label}</dt>
       <dd className={cn('font-mono text-sm font-medium tabular-nums text-foreground', tone)}>
         {value}
+        {note && (
+          <>
+            <span className="mx-1.5 text-foreground-tertiary" aria-hidden>
+              ·
+            </span>
+            <span className={cn('font-normal', note.tone)}>{note.text}</span>
+          </>
+        )}
       </dd>
     </div>
   )
@@ -32,9 +56,19 @@ const PERIODS: readonly { key: 'w1' | 'm1' | 'm3'; label: string }[] = [
   { key: 'm3', label: '3개월' },
 ]
 
-export function ThemeFocus({ theme, from }: ThemeFocusProps) {
+const CHIP =
+  'inline-flex min-h-11 items-center rounded-full border border-border px-2.5 py-1 text-caption font-medium text-foreground transition-colors hover:bg-muted md:min-h-0'
+const TEXT_LINK = 'flex min-h-11 items-center hover:underline md:min-h-0'
+
+export function ThemeFocus({ theme, from, stocks = [] }: ThemeFocusProps) {
   const state = { from }
   const periods = PERIODS.filter((p) => theme[p.key] !== null)
+  const leaders = (theme.leaders ?? []).slice(0, 2)
+  const trimmed = trimmedTickers(stocks)
+  const sources = sourceLabel(theme.sources)
+  const sourcesTitle = sourceTitle(theme.sources) ?? undefined
+  const changeTone = theme.change === null ? 'text-muted-foreground' : changeColorClass(theme.change)
+  const turnover = turnoverFact(theme.tradingValueRatio)
 
   return (
     <section aria-labelledby="theme-focus-title" className="card-surface p-5">
@@ -47,16 +81,24 @@ export function ThemeFocus({ theme, from }: ThemeFocusProps) {
             >
               {theme.name}
             </h2>
-            <span
-              className={cn(
-                'font-mono text-base font-medium tabular-nums',
-                changeColorClass(theme.change ?? 0),
-              )}
-            >
-              {formatChangeOrDash(theme.change)}
+            <span className="inline-flex items-baseline gap-1.5">
+              <span className={cn('font-mono text-base font-medium tabular-nums', changeTone)}>
+                {formatChangeOrDash(theme.change)}
+              </span>
+              <CloseDate baseDate={theme.baseDate} />
             </span>
+            <ThemeMetricHelp baseDate={theme.baseDate} className="-ml-1.5" />
             <FavoriteStar type="THEME" targetKey={String(theme.id)} label={theme.name} size="sm" />
+            {sources && (
+              <span
+                title={sourcesTitle}
+                className="rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground"
+              >
+                출처 {sources}
+              </span>
+            )}
           </div>
+          <ThemeMetricCaption theme={theme} className="mt-1" />
           {theme.description && (
             <p className="mt-1.5 max-w-[72ch] text-body leading-relaxed text-foreground-secondary break-keep [text-wrap:pretty]">
               {theme.description}
@@ -64,13 +106,13 @@ export function ThemeFocus({ theme, from }: ThemeFocusProps) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-4 text-xs font-semibold text-primary sm:pt-1">
-          <Link to={`/theme/${theme.id}`} state={state} className="hover:underline">
+          <Link to={`/theme/${theme.id}`} state={state} className={TEXT_LINK}>
             테마 상세 →
           </Link>
           <Link
             to={`/graph/theme/${encodeURIComponent(theme.name)}`}
             state={state}
-            className="hover:underline"
+            className={TEXT_LINK}
           >
             기업 그래프 →
           </Link>
@@ -79,9 +121,24 @@ export function ThemeFocus({ theme, from }: ThemeFocusProps) {
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-4">
         <dl className="flex flex-wrap gap-x-6 gap-y-2">
-          <Fact label="거래대금" value={formatCompactKrw(theme.tradingValue)} />
+          {hasBreadth(theme) ? (
+            <ThemeCountFacts theme={theme} className="contents" />
+          ) : (
+            <Fact label="구성 종목" value={`${theme.stockCount}개`} />
+          )}
+          <Fact
+            label="거래대금"
+            value={formatCompactKrw(theme.tradingValue)}
+            note={
+              turnover
+                ? {
+                    text: turnover.multiple,
+                    tone: turnover.emphasized ? 'text-foreground' : 'text-muted-foreground',
+                  }
+                : undefined
+            }
+          />
           <Fact label="시가총액" value={formatCompactKrw(theme.marketCap)} />
-          <Fact label="구성 종목" value={`${theme.stockCount}개`} />
           {periods.map((p) => {
             const value = theme[p.key] as number
             return (
@@ -94,21 +151,45 @@ export function ThemeFocus({ theme, from }: ThemeFocusProps) {
             )
           })}
         </dl>
-        {theme.topStocks.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-0.5 text-caption text-muted-foreground">대표 종목</span>
-            {theme.topStocks.slice(0, 3).map((stock) => (
-              <Link
-                key={stock.ticker}
-                to={`/stock/${stock.ticker}`}
-                state={state}
-                className="rounded-full border border-border px-2.5 py-1 text-caption font-medium text-foreground transition-colors hover:bg-muted"
-              >
-                {stock.name}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {leaders.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-caption text-muted-foreground">주도주</span>
+              {leaders.map((stock) => (
+                <Link key={stock.ticker} to={`/stock/${stock.ticker}`} state={state} className={CHIP}>
+                  {stock.name}
+                  {stock.change !== null && (
+                    <span
+                      className={cn(
+                        'ml-1.5 font-mono tabular-nums',
+                        changeColorClass(stock.change),
+                      )}
+                    >
+                      {formatChange(stock.change)}
+                    </span>
+                  )}
+                  {trimmed.has(stock.ticker) && (
+                    <span title={TRIMMED_TITLE} className="ml-1.5 font-normal text-muted-foreground">
+                      평균 제외
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+          {theme.topStocks.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-caption text-muted-foreground">
+                {leaders.length > 0 ? '시총 상위' : '대표 종목'}
+              </span>
+              {theme.topStocks.slice(0, 3).map((stock) => (
+                <Link key={stock.ticker} to={`/stock/${stock.ticker}`} state={state} className={CHIP}>
+                  {stock.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
