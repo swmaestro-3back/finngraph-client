@@ -8,7 +8,6 @@ import {
 import type {
   AnalyzedNewsRes,
   BriefingLockedRes,
-  BriefingThemeRes,
   CitationRes,
   CitationType,
   RelationGraphRes,
@@ -93,16 +92,6 @@ export function lockedTeaser(locked: BriefingLockedRes): string {
   ].filter((p): p is string => p !== null)
   if (parts.length === 0) return ''
   return `${parts.join(' · ')}은 로그인 후 볼 수 있습니다`
-}
-
-export function themeRadarSplit(themes: BriefingThemeRes[]): {
-  up: BriefingThemeRes[]
-  down: BriefingThemeRes[]
-} {
-  return {
-    up: themes.filter((t) => t.hotSide === 'UP'),
-    down: themes.filter((t) => t.hotSide === 'DOWN'),
-  }
 }
 
 export interface RiskGroup {

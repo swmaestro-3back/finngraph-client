@@ -7,7 +7,6 @@ import { IssueCard } from '@/components/briefing/IssueCard'
 import { RecentContractsBoard } from '@/components/briefing/RecentContractsBoard'
 import { RelationDigest } from '@/components/briefing/RelationDigest'
 import { RiskList } from '@/components/briefing/RiskList'
-import { ThemeRadar } from '@/components/briefing/ThemeRadar'
 import { WatchPointList } from '@/components/briefing/WatchPointList'
 import { DataNotice } from '@/components/layout/DataNotice'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
@@ -134,10 +133,6 @@ export default function BriefingPage() {
             onOpenNews={setOpenNewsId}
           />
 
-          <section aria-labelledby="briefing-themes-title">
-            <SectionTitle id="briefing-themes-title">테마 레이더</SectionTitle>
-            <ThemeRadar themes={briefing.themes} />
-          </section>
 
           <section aria-labelledby="briefing-watch-title">
             <SectionTitle id="briefing-watch-title">지켜볼 점</SectionTitle>
