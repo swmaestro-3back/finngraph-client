@@ -25,7 +25,7 @@ export function TreemapLegend({ maxUp, maxDown }: TreemapLegendProps) {
         {range && <span className="font-mono tabular-nums break-keep">{range}</span>}
       </div>
       <span className="break-keep">
-        칸 크기 = 등락률 크기 · ▲상승 ▼하락 종목 수 · 주도주 = 가장 크게 움직인 종목
+        칸 크기 = 등락률 크기 · ▲상승 ▼하락 종목 수
       </span>
     </div>
   )
