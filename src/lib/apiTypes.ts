@@ -14,6 +14,14 @@ export interface ThemeTopStockRes {
   name: string
 }
 
+export interface ThemeLeaderRes {
+  ticker: string
+  name: string
+  change: number | null
+}
+
+export type ThemeHotSide = 'UP' | 'DOWN'
+
 export interface ThemeRes {
   id: number
   name: string
@@ -26,7 +34,34 @@ export interface ThemeRes {
   marketCap: number | null
   stockCount: number
   topStocks: ThemeTopStockRes[]
+  baseDate?: string | null
+  pricedCount?: number
+  upCount?: number
+  downCount?: number
+  flatCount?: number
+  suspendedCount?: number
+  trimCount?: number
+  meanChange?: number | null
+  changeLower?: number | null
+  changeUpper?: number | null
+  sensitivity?: number | null
+  w1Count?: number
+  m1Count?: number
+  m3Count?: number
+  leaders?: ThemeLeaderRes[]
+  sources?: string[]
+  hotSide?: ThemeHotSide | null
+  avgTradingValue?: number | null
+  tradingValueRatio?: number | null
 }
+
+export type ThemeStockChangeStatus =
+  | 'PRICED'
+  | 'TRIMMED'
+  | 'SUSPENDED'
+  | 'DELISTING'
+  | 'NO_CANDLE'
+  | 'NO_PREV'
 
 export interface ThemeStockRes {
   ticker: string
@@ -37,6 +72,22 @@ export interface ThemeStockRes {
   tradingValue: number | null
   marketCap: number | null
   reason: string | null
+  changeStatus?: ThemeStockChangeStatus
+  tradingSuspended?: boolean
+  underAdministration?: boolean
+  delistingTrade?: boolean
+}
+
+export interface ThemeMarketRes {
+  baseDate: string | null
+  pricedCount: number
+  upCount: number
+  downCount: number
+  flatCount: number
+  medianChange: number | null
+  upRatio: number | null
+  downRatio: number | null
+  coverage: number | null
 }
 
 export interface CandleRes {
@@ -272,6 +323,7 @@ export interface FavoriteThemeRes {
   change: number | null
   baseDate: string | null
   stockCount: number
+  pricedCount?: number
 }
 
 export interface FavoriteListRes {

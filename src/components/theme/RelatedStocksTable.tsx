@@ -14,6 +14,12 @@ import {
   toMillion,
 } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
+import {
+  changeStatusTag,
+  excludedFromMeanLabel,
+  TRIMMED_TITLE,
+  trimmedTickers,
+} from '@/lib/themeMetrics'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
 
@@ -61,11 +67,23 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
 
   const visible = moreOpen ? sorted : sorted.slice(0, VISIBLE_ROWS)
   const hasMore = sorted.length > VISIBLE_ROWS
+  const excluded = excludedFromMeanLabel(trimmedTickers(sorted).size)
 
   return (
     <section className="mt-4 card-surface p-5">
       <div className="mb-[9px] flex items-center justify-between gap-4">
-        <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">관련 종목</h2>
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">관련 종목</h2>
+          <span className="text-caption text-muted-foreground">
+            <span className="font-mono tabular-nums">{sorted.length}</span>개
+            {excluded && (
+              <span title={TRIMMED_TITLE}>
+                {' · '}
+                {excluded}
+              </span>
+            )}
+          </span>
+        </div>
         <div className="flex gap-1.5">
           {MARKETS.map((market) => (
             <FilterChip
@@ -91,7 +109,10 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
             inactiveClassName=""
           />
 
-          {visible.map((stock) => (
+          {visible.map((stock) => {
+            const tag = changeStatusTag(stock.changeStatus)
+            const priced = stock.change !== null && (!tag || tag.keepsChange)
+            return (
             <button
               key={stock.ticker}
               type="button"
@@ -110,13 +131,23 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
               <span className="text-right font-mono text-body font-medium text-foreground">
                 {formatPriceOrDash(stock.price)}
               </span>
-              <span
-                className={cn(
-                  'text-right font-mono text-body font-medium',
-                  changeColorClass(stock.change ?? 0),
+              <span className="flex flex-col items-end gap-0.5">
+                <span
+                  className={cn(
+                    'text-right font-mono text-body font-medium',
+                    priced ? changeColorClass(stock.change ?? 0) : 'text-muted-foreground',
+                  )}
+                >
+                  {formatChangeOrDash(stock.change)}
+                </span>
+                {tag && (
+                  <span
+                    title={tag.title}
+                    className="rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
+                  >
+                    {tag.label}
+                  </span>
                 )}
-              >
-                {formatChangeOrDash(stock.change)}
               </span>
               <span className="text-right font-mono text-xs text-foreground-secondary">
                 {formatAmountOrDash(toMillion(stock.tradingValue))}
@@ -128,7 +159,8 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
                 {stock.reason ?? '—'}
               </span>
             </button>
-          ))}
+            )
+          })}
         </div>
       </div>
 

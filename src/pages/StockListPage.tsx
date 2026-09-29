@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { DataNotice } from '@/components/layout/DataNotice'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockFilterBar } from '@/components/table/StockFilterBar'
@@ -336,9 +337,7 @@ export default function StockListPage() {
         </>
       )}
 
-      <p className="mt-5 text-caption text-muted-foreground">
-        표시된 시세·재무지표는 데모용 시드 데이터입니다. 투자 판단의 근거로 사용할 수 없습니다.
-      </p>
+      <DataNotice className="mt-5" />
     </div>
   )
 }

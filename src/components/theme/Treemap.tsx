@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { hierarchy, treemap, treemapSquarify } from 'd3-hierarchy'
 import { formatChange } from '@/lib/format'
-import { mixColor, shade } from '@/lib/treemapColor'
+import { tileDetailPlacement } from '@/lib/themeMetrics'
+import { changeStrength, mixColor, tileInk } from '@/lib/treemapColor'
 import { cn } from '@/lib/utils'
 
 export interface TreemapItem {
@@ -10,12 +11,11 @@ export interface TreemapItem {
   change: number
   size: number
   detail?: string
+  label?: string
 }
 
 const BASE_W = 1136
-const BASE_H = 520
-const DESIGN_W = 1200
-const DESIGN_H = 520
+const DEFAULT_RATIO = 1200 / 520
 
 function splitParen(name: string): [string, string | null] {
   const i = name.indexOf('(')
@@ -27,10 +27,18 @@ interface TreemapProps {
   items: TreemapItem[]
   selectedId: string | null
   onSelect: (id: string) => void
+  ratio?: number
   className?: string
 }
 
-export function Treemap({ items, selectedId, onSelect, className }: TreemapProps) {
+export function Treemap({
+  items,
+  selectedId,
+  onSelect,
+  ratio = DEFAULT_RATIO,
+  className,
+}: TreemapProps) {
+  const baseH = BASE_W / ratio
   const containerRef = useRef<HTMLDivElement>(null)
   const [renderWidth, setRenderWidth] = useState(BASE_W)
 
@@ -45,39 +53,31 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
     return () => observer.disconnect()
   }, [])
 
-  const { nodes, maxUp, maxDown } = useMemo(() => {
+  const nodes = useMemo(() => {
     type TreeDatum = { children?: TreemapItem[] } & Partial<TreemapItem>
-    if (items.length === 0) return { nodes: [], maxUp: 0.01, maxDown: 0.01 }
+    if (items.length === 0) return []
     const root = hierarchy<TreeDatum>({ children: items })
       .sum((d) => d.size ?? 0)
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
 
-    const layout = treemap<TreeDatum>().tile(treemapSquarify).size([BASE_W, BASE_H]).paddingInner(3)
+    const layout = treemap<TreeDatum>().tile(treemapSquarify).size([BASE_W, baseH]).paddingInner(3)
 
-    const leaves = layout(root)
+    return layout(root)
       .leaves()
       .map((leaf) => {
         const theme = leaf.data as TreemapItem
         return { theme, change: theme.change, x0: leaf.x0, y0: leaf.y0, x1: leaf.x1, y1: leaf.y1 }
       })
-
-    const changes = items.map((t) => t.change)
-    return {
-      nodes: leaves,
-      maxUp: Math.max(...changes.filter((c) => c > 0), 0.01),
-      maxDown: Math.max(...changes.filter((c) => c < 0).map((c) => Math.abs(c)), 0.01),
-    }
-  }, [items])
+  }, [items, baseH])
 
   const scale = renderWidth / BASE_W
-  const scaleY = renderWidth / DESIGN_W
 
   return (
     <div className={cn('pb-3', className)}>
       <div
         ref={containerRef}
         className="relative w-full rounded-2xl bg-surface-inset"
-        style={{ aspectRatio: `${DESIGN_W} / ${DESIGN_H}` }}
+        style={{ aspectRatio: `${ratio}` }}
       >
       {nodes.length === 0 && (
         <div
@@ -92,27 +92,26 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
       )}
       {nodes.map(({ theme, change, x0, y0, x1, y1 }, i) => {
         const w = (x1 - x0) * scale
-        const h = (y1 - y0) * scaleY
+        const h = (y1 - y0) * scale
         const dir = change >= 0 ? 'up' : 'down'
-        const t = Math.abs(change) / (dir === 'up' ? maxUp : maxDown)
-        const { bg, k, rgb } = mixColor(dir, t)
-        const depth = 3 + Math.round(k * 6)
-        const blockShadows = [
-          `0 ${depth}px 0 ${shade(rgb, -0.32)}`,
-          `0 ${depth + 5}px 10px rgba(10,11,13,0.14)`,
-        ]
-        const textColor = k > 0.42 ? '#ffffff' : dir === 'up' ? '#7a0f18' : '#0b2a6b'
+        const { bg, rgb } = mixColor(dir, changeStrength(change))
+        const textColor = tileInk(rgb, dir)
         const isSelected = theme.id === selectedId
 
         const small = h < 40 || w < 72
         const nameSize = small ? 11 : w < 130 ? 13 : w < 200 ? 15 : 17
-        const pctSize = small ? 9 : w < 130 ? 10 : w < 200 ? 11 : 13
-        const showPct = h >= 34 && w >= 46
+        const pctSize = small ? 11 : w < 200 ? 12 : 13
+        const showPct = h >= 36 && w >= 52
         const singleLine = h < 56
         const [mainName, parenName] = splitParen(theme.name)
         const splitName = !singleLine && parenName !== null
-        // 시총·대표종목 줄: 이름+등락률 아래 한 줄이 들어갈 높이와 최소 가독 너비만 요구
-        const showDetail = h >= 64 && w >= 96
+        const [breadth, leader] = (theme.detail ?? '').split(' · ')
+        const detail = w >= 200 && leader ? `${breadth} · ${leader}` : breadth
+        const pctText = `${change > 0 ? '+' : '−'}${Math.abs(change).toFixed(2)}%`
+        const placement = tileDetailPlacement(w, h, pctText, detail)
+        const inlineDetail = placement === 'inline' ? breadth : null
+        const showDetail = placement === 'line'
+        const label = theme.label ?? `${theme.name} ${formatChange(change)}`
 
         return (
           <button
@@ -120,28 +119,25 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
             type="button"
             onClick={() => onSelect(theme.id)}
             aria-pressed={isSelected}
-            aria-label={`${theme.name} ${formatChange(change)}`}
+            aria-label={label}
+            title={label}
             className={cn(
               'absolute box-border flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[6px] text-center',
               'focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2',
               'hover:z-10 hover:-translate-y-0.5 hover:brightness-[1.04]',
-              'motion-safe:[transition:left_500ms_cubic-bezier(0.22,1,0.36,1),top_500ms_cubic-bezier(0.22,1,0.36,1),width_500ms_cubic-bezier(0.22,1,0.36,1),height_500ms_cubic-bezier(0.22,1,0.36,1),background-color_500ms_ease,box-shadow_500ms_ease,transform_180ms_ease-out,filter_180ms_ease-out]',
+              'motion-safe:[transition:left_500ms_cubic-bezier(0.22,1,0.36,1),top_500ms_cubic-bezier(0.22,1,0.36,1),width_500ms_cubic-bezier(0.22,1,0.36,1),height_500ms_cubic-bezier(0.22,1,0.36,1),background-color_500ms_ease,transform_180ms_ease-out,filter_180ms_ease-out]',
               'motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-400 motion-safe:[animation-timing-function:cubic-bezier(0.22,1,0.36,1)] motion-safe:[animation-fill-mode:backwards]',
             )}
             style={{
               left: `${(x0 / BASE_W) * 100}%`,
-              top: `${(y0 / BASE_H) * 100}%`,
+              top: `${(y0 / baseH) * 100}%`,
               width: `${((x1 - x0) / BASE_W) * 100}%`,
-              height: `${((y1 - y0) / BASE_H) * 100}%`,
+              height: `${((y1 - y0) / baseH) * 100}%`,
               backgroundColor: bg,
-              backgroundImage: `linear-gradient(180deg, ${shade(rgb, 0.07)} 0%, ${bg} 40%, ${shade(rgb, -0.07)} 100%)`,
               color: textColor,
               gap: small ? 0 : 2,
               padding: '4px 6px',
-              boxShadow: (isSelected
-                ? ['inset 0 0 0 3px var(--foreground)', ...blockShadows]
-                : blockShadows
-              ).join(', '),
+              boxShadow: isSelected ? 'inset 0 0 0 3px var(--foreground)' : undefined,
               animationDelay: `${Math.min(i * 22, 400)}ms`,
             }}
           >
@@ -158,27 +154,27 @@ export function Treemap({ items, selectedId, onSelect, className }: TreemapProps
             </span>
             {splitName && (
               <span
-                className="max-w-full overflow-hidden font-medium leading-[1.2] break-keep text-ellipsis whitespace-nowrap opacity-85"
-                style={{ fontSize: Math.max(9, nameSize - 3) }}
+                className="max-w-full overflow-hidden font-medium leading-[1.2] break-keep text-ellipsis whitespace-nowrap"
+                style={{ fontSize: Math.max(11, nameSize - 3) }}
               >
                 {parenName}
               </span>
             )}
             {showPct && (
               <span
-                className="font-mono font-medium opacity-95"
+                className="font-mono font-medium"
                 style={{ fontSize: pctSize, letterSpacing: '-0.3px' }}
               >
-                {change > 0 ? '+' : '−'}
-                {Math.abs(change).toFixed(2)}%
+                {pctText}
+                {inlineDetail && <span className="ml-1.5 font-normal">{inlineDetail}</span>}
               </span>
             )}
-            {showDetail && theme.detail && (
+            {showDetail && detail && (
               <span
-                className="block max-w-full overflow-hidden font-mono text-ellipsis whitespace-nowrap opacity-75"
-                style={{ fontSize: Math.max(9, pctSize - 2) }}
+                className="block max-w-full overflow-hidden font-mono text-ellipsis whitespace-nowrap"
+                style={{ fontSize: Math.max(11, pctSize - 1) }}
               >
-                {theme.detail}
+                {detail}
               </span>
             )}
           </button>

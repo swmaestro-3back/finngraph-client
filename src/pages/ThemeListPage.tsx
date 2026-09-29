@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { DataNotice } from '@/components/layout/DataNotice'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
+import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
+import { Breadth } from '@/components/theme/ThemeMetricSummary'
 import { Button } from '@/components/ui/button'
 import {
   Pagination,
@@ -11,9 +14,18 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemes } from '@/lib/queries/useThemes'
 import { fromState } from '@/lib/navigation'
-import { changeColorClass, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
+import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
+import {
+  formatShortDate,
+  hasThemeMetricsV2,
+  hotExclusionTitle,
+  leaderCellContent,
+  leaderColumnLabel,
+  type LeaderCellContent,
+} from '@/lib/themeMetrics'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
 
@@ -22,55 +34,119 @@ const PAGE_SIZE = 20
 const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
 
 const GRID =
-  'grid grid-cols-[36px_minmax(180px,1fr)_76px_76px_76px_76px_96px_72px_minmax(200px,1.6fr)] items-center gap-2'
+  'grid grid-cols-[36px_minmax(170px,1fr)_76px_96px_76px_76px_76px_96px_84px_minmax(220px,1.5fr)] items-center gap-2'
 
-type SortKey = 'name' | 'change' | 'w1' | 'm1' | 'm3' | 'tradingValue' | 'stockCount'
+type SortKey =
+  | 'name'
+  | 'change'
+  | 'breadth'
+  | 'w1'
+  | 'm1'
+  | 'm3'
+  | 'tradingValue'
+  | 'stockCount'
 
 interface ThemeRow {
   id: number
   name: string
   change: number | null
+  breadth: number | null
+  upCount: number | null
+  flatCount: number | null
+  downCount: number | null
   w1: number | null
   m1: number | null
   m3: number | null
   tradingValue: number | null
   tradingValueLabel: string
   stockCount: number
-  topStocks: string
+  pricedCount: number | null
+  leaderCell: LeaderCellContent
+  exclusionTitle: string | null
 }
 
-const COLUMNS: TableColumn<SortKey>[] = [
+const BASE_COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
   { key: 'name', label: '테마명', align: 'left' },
-  { key: 'change', label: '전일', align: 'center' },
+  { key: 'change', label: '등락률', align: 'center' },
+  { key: 'breadth', label: '등락 현황', align: 'center' },
   { key: 'w1', label: '1주', align: 'center' },
   { key: 'm1', label: '1개월', align: 'center' },
   { key: 'm3', label: '3개월', align: 'center' },
   { key: 'tradingValue', label: '거래대금', align: 'center' },
   { key: 'stockCount', label: '종목수', align: 'center' },
-  { key: null, label: '대표 종목', align: 'left', className: 'pl-4' },
 ]
+
+function LeaderCell({ content }: { content: LeaderCellContent }) {
+  if (content.kind === 'empty') {
+    return (
+      <span className="pl-4 text-caption text-foreground-tertiary" aria-label="주도주 없음">
+        —
+      </span>
+    )
+  }
+  if (content.kind === 'legacy') {
+    return (
+      <span className="overflow-hidden pl-4 text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
+        {content.text}
+      </span>
+    )
+  }
+  return (
+    <span className="flex items-center gap-3 overflow-hidden pl-4 text-caption whitespace-nowrap text-foreground-secondary">
+      {content.leaders.map((leader) => (
+        <span key={leader.ticker} className="inline-flex items-baseline gap-1 truncate">
+          <span className="truncate">{leader.name}</span>
+          {leader.change !== null && (
+            <span className={cn('font-mono tabular-nums', changeColorClass(leader.change))}>
+              {formatChange(leader.change)}
+            </span>
+          )}
+        </span>
+      ))}
+    </span>
+  )
+}
 
 export default function ThemeListPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [page, setPage] = useState(1)
   const { data: themes, loading, error, refetch } = useThemes()
+  const { data: market } = useThemeMarket()
+  const baseDate = market?.baseDate ?? themes?.[0]?.baseDate ?? null
+  const hasV2 = hasThemeMetricsV2(market, themes)
+  const columns = useMemo<TableColumn<SortKey>[]>(
+    () => [
+      ...BASE_COLUMNS,
+      { key: null, label: leaderColumnLabel(themes ?? []), align: 'left', className: 'pl-4' },
+    ],
+    [themes],
+  )
 
   const allRows: ThemeRow[] = useMemo(
     () =>
-      (themes ?? []).map((theme) => ({
-        id: theme.id,
-        name: theme.name,
-        change: theme.change,
-        w1: theme.w1,
-        m1: theme.m1,
-        m3: theme.m3,
-        tradingValue: theme.tradingValue,
-        tradingValueLabel: formatCompactKrw(theme.tradingValue),
-        stockCount: theme.stockCount,
-        topStocks: theme.topStocks.map((s) => s.name).join(' · '),
-      })),
+      (themes ?? []).map((theme) => {
+        const hasBreadthCounts = theme.upCount !== undefined && theme.downCount !== undefined
+        return {
+          id: theme.id,
+          name: theme.name,
+          change: theme.change,
+          breadth: hasBreadthCounts ? (theme.upCount as number) - (theme.downCount as number) : null,
+          upCount: theme.upCount ?? null,
+          flatCount: theme.flatCount ?? null,
+          downCount: theme.downCount ?? null,
+          w1: theme.w1,
+          m1: theme.m1,
+          m3: theme.m3,
+          tradingValue: theme.tradingValue,
+          tradingValueLabel: formatCompactKrw(theme.tradingValue),
+          stockCount: theme.stockCount,
+          pricedCount: theme.pricedCount ?? null,
+          leaderCell: leaderCellContent(theme.leaders, theme.topStocks),
+          exclusionTitle: hotExclusionTitle(theme),
+        }
+      }),
     [themes],
   )
 
@@ -132,11 +208,36 @@ export default function ThemeListPage() {
 
       {!loading && !error && (
         <>
+          <p className="mb-2 flex flex-wrap items-center gap-y-1 text-caption text-muted-foreground break-keep">
+            {baseDate && (
+              <>
+                <span>
+                  <span className="font-mono tabular-nums text-foreground-secondary">
+                    {formatShortDate(baseDate)}
+                  </span>{' '}
+                  종가 기준
+                </span>
+                <span className="mx-1.5 text-foreground-tertiary" aria-hidden>
+                  ·
+                </span>
+              </>
+            )}
+            {hasV2 && (
+              <>
+                <span>등락률 = 구성 종목 등락률의 절사평균</span>
+                <span className="mx-1.5 text-foreground-tertiary" aria-hidden>
+                  ·
+                </span>
+              </>
+            )}
+            <span>1주/1개월/3개월은 달력 기준</span>
+            <ThemeMetricHelp baseDate={baseDate} className="ml-1" />
+          </p>
           <div className="card-surface overflow-hidden">
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="min-w-[1000px]">
+              <div className="min-w-[1080px]">
                 <SortableHeaderRow
-                  columns={COLUMNS}
+                  columns={columns}
                   sortKey={sortKey}
                   sortDesc={sortDesc}
                   onSort={sortBy}
@@ -164,13 +265,38 @@ export default function ThemeListPage() {
                     <span className="overflow-hidden text-sm font-medium whitespace-nowrap text-ellipsis text-foreground">
                       {row.name}
                     </span>
-                    {(['change', 'w1', 'm1', 'm3'] as const).map((key) => (
+                    <span
+                      title={row.exclusionTitle ?? undefined}
+                      className={cn(
+                        NUM,
+                        'font-medium',
+                        row.change === null
+                          ? 'text-foreground-tertiary'
+                          : row.exclusionTitle
+                            ? 'text-foreground-tertiary'
+                            : changeColorClass(row.change),
+                      )}
+                    >
+                      {formatChangeOrDash(row.change)}
+                    </span>
+                    <span className={cn(NUM, 'font-medium')}>
+                      {row.upCount !== null && row.downCount !== null ? (
+                        <Breadth
+                          up={row.upCount}
+                          flat={row.flatCount ?? 0}
+                          down={row.downCount}
+                        />
+                      ) : (
+                        <span className="text-foreground-tertiary">—</span>
+                      )}
+                    </span>
+                    {(['w1', 'm1', 'm3'] as const).map((key) => (
                       <span
                         key={key}
                         className={cn(
                           NUM,
                           'font-medium',
-                          changeColorClass(row[key] ?? 0),
+                          row[key] === null ? 'text-foreground-tertiary' : changeColorClass(row[key]),
                         )}
                       >
                         {formatChangeOrDash(row[key])}
@@ -180,11 +306,18 @@ export default function ThemeListPage() {
                       {row.tradingValueLabel}
                     </span>
                     <span className={cn(NUM, 'text-foreground-secondary')}>
-                      {row.stockCount}종목
+                      {row.pricedCount !== null && row.pricedCount !== row.stockCount ? (
+                        <>
+                          <span className="text-foreground-tertiary">
+                            {row.pricedCount}/{row.stockCount}
+                          </span>
+                          종목
+                        </>
+                      ) : (
+                        `${row.stockCount}종목`
+                      )}
                     </span>
-                    <span className="overflow-hidden pl-4 text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
-                      {row.topStocks}
-                    </span>
+                    <LeaderCell content={row.leaderCell} />
                   </button>
                 ))}
               </div>
@@ -236,10 +369,7 @@ export default function ThemeListPage() {
         </>
       )}
 
-      <p className="mt-5 text-caption text-muted-foreground">
-        표시된 시세·등락률·거래대금은 데모용 시드 데이터입니다. 투자 판단의 근거로 사용할 수
-        없습니다.
-      </p>
+      <DataNotice className="mt-5" />
     </div>
   )
 }

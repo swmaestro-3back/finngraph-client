@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronUp, CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { DataNotice } from '@/components/layout/DataNotice'
 import { AnnualCharts } from '@/components/stock/AnnualCharts'
 import { CompanyOverview } from '@/components/stock/CompanyOverview'
 import { ContractSection } from '@/components/stock/ContractSection'
@@ -383,10 +384,7 @@ export default function StockDetailPage() {
         onOpenChange={(open) => !open && setOpenNewsId(null)}
       />
 
-      <p className="mt-5 text-caption text-muted-foreground">
-        표시된 시세·재무·수급 데이터는 데모용 시드 데이터입니다. 투자 판단의 근거로 사용할 수
-        없습니다.
-      </p>
+      <DataNotice className="mt-5" />
     </div>
   )
 }
