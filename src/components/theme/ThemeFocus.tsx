@@ -10,8 +10,6 @@ import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import {
   hasBreadth,
-  sourceLabel,
-  sourceTitle,
   TRIMMED_TITLE,
   trimmedTickers,
   turnoverFact,
@@ -65,8 +63,6 @@ export function ThemeFocus({ theme, from, stocks = [] }: ThemeFocusProps) {
   const periods = PERIODS.filter((p) => theme[p.key] !== null)
   const leaders = (theme.leaders ?? []).slice(0, 2)
   const trimmed = trimmedTickers(stocks)
-  const sources = sourceLabel(theme.sources)
-  const sourcesTitle = sourceTitle(theme.sources) ?? undefined
   const changeTone = theme.change === null ? 'text-muted-foreground' : changeColorClass(theme.change)
   const turnover = turnoverFact(theme.tradingValueRatio)
 
@@ -89,14 +85,6 @@ export function ThemeFocus({ theme, from, stocks = [] }: ThemeFocusProps) {
             </span>
             <ThemeMetricHelp baseDate={theme.baseDate} className="-ml-1.5" />
             <FavoriteStar type="THEME" targetKey={String(theme.id)} label={theme.name} size="sm" />
-            {sources && (
-              <span
-                title={sourcesTitle}
-                className="rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground"
-              >
-                출처 {sources}
-              </span>
-            )}
           </div>
           <ThemeMetricCaption theme={theme} className="mt-1" />
           {theme.description && (
