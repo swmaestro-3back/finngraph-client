@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Logo } from '@/components/brand/Logo'
 import { SearchBar } from '@/components/search/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -90,11 +91,8 @@ export function NavBar() {
   return (
     <header className="sticky top-0 z-40 h-14 border-b border-border bg-background">
       <div className="relative flex h-full items-center gap-5 px-5">
-        <Link
-          to="/"
-          className="shrink-0 font-wordmark text-lg font-extrabold leading-tight tracking-[-0.05em] text-foreground"
-        >
-          Finn<span className="text-primary">graph</span>
+        <Link to="/" className="shrink-0 text-foreground">
+          <Logo height={24} />
         </Link>
 
         <SearchBar

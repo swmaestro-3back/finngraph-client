@@ -1,5 +1,6 @@
 import { FileText, Star, Waypoints } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Logo } from '@/components/brand/Logo'
 
 const FEATURES = [
   {
@@ -27,11 +28,8 @@ export function AuthBrandPanel() {
       aria-label="finngraph 소개"
       className="hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:p-12 xl:p-14"
     >
-      <Link
-        to="/"
-        className="self-start font-wordmark text-title font-extrabold leading-tight tracking-[-0.05em]"
-      >
-        <span className="text-primary-foreground/70">Finn</span>graph
+      <Link to="/" className="self-start">
+        <Logo tone="onPrimary" height={28} />
       </Link>
 
       <div className="my-auto max-w-md py-16">
