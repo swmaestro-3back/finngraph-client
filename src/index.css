@@ -21,7 +21,7 @@
   --secondary: #eef0f3;
   --secondary-foreground: #0a0b0d;
   --muted: #f7f7f7;
-  --muted-foreground: #7c828a;
+  --muted-foreground: #6b7280;
   --accent: #eef0f3;
   --accent-foreground: #0a0b0d;
   --destructive: #cf202f;
@@ -52,9 +52,9 @@
   --primary-pressed: #003ecc;
   --surface-inset: #eef0f3;
 
-  /* 텍스트 회색 단계 — foreground(#0a0b0d) > secondary > muted-foreground(#7c828a) > tertiary */
+  /* 텍스트 회색 단계 — foreground(#0a0b0d) > secondary > muted-foreground(#6b7280) > tertiary */
   --foreground-secondary: #5b616e;
-  --foreground-tertiary: #a8acb3;
+  --foreground-tertiary: #8f949c;
   /* 재무 테이블 수치 전용 잉크 — 밀집 숫자를 순흑보다 한 단계 눌러 읽힌다 */
   --foreground-numeric: #2e394d;
 
