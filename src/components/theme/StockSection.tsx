@@ -57,7 +57,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
       </div>
 
       <div className={cn(GRID, 'border-b border-border pb-1.5 text-caption text-muted-foreground')}>
-        <span className="truncate">종목명 · 편입 이유</span>
+        <span className="truncate">종목명</span>
         <span className="whitespace-nowrap text-right">현재가</span>
         <span className={cn(DESKTOP_COL, 'whitespace-nowrap text-right')}>시가총액(억)</span>
         <span className={cn(DESKTOP_COL, 'whitespace-nowrap text-right')}>거래대금(백만)</span>
@@ -85,21 +85,11 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
               'min-h-[44px] items-center border-b border-surface-inset py-1.5 hover:bg-muted',
             )}
           >
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="flex items-center gap-[9px] overflow-hidden">
-                <span className="truncate text-sm font-semibold text-foreground">{stock.name}</span>
-                <span className="hidden font-mono text-caption text-muted-foreground xl:inline">
-                  {stock.ticker}
-                </span>
+            <span className="flex min-w-0 items-center gap-[9px] overflow-hidden">
+              <span className="truncate text-sm font-semibold text-foreground">{stock.name}</span>
+              <span className="shrink-0 font-mono text-caption text-muted-foreground">
+                {stock.ticker}
               </span>
-              {stock.reason && (
-                <span
-                  title={stock.reason}
-                  className="truncate text-caption text-muted-foreground"
-                >
-                  {stock.reason}
-                </span>
-              )}
             </span>
             <span className="text-right font-mono text-sm font-medium text-foreground">
               {formatPriceOrDash(stock.price)}
