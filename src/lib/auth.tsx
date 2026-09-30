@@ -19,7 +19,7 @@ interface AuthState {
   user: MeRes | null
   /** 로그인·가입·카카오 콜백이 받은 세션을 반영한다 */
   login: (session: AuthTokenRes) => void
-  logout: () => Promise<void>
+  logout: () => void
   /** 닉네임 수정 등 서버가 돌려준 최신 프로필 반영 */
   updateUser: (user: MeRes) => void
 }
@@ -61,19 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clear])
 
   const login = useCallback((session: AuthTokenRes) => {
-    setAccessToken(session.accessToken)
+    setAccessToken(session.accessToken, session.expiresIn)
     setUser(session.user)
     setStatus('authenticated')
   }, [])
 
-  const logout = useCallback(async () => {
-    // 서버 폐기가 실패해도 클라 세션은 끝낸다 — 로그아웃은 멱등이고 사용자를 붙잡지 않는다
-    try {
-      await postData<undefined>('/v1/auth/logout')
-    } catch {
-      /* noop */
-    }
+  const logout = useCallback(() => {
     clear()
+    void postData<undefined>('/v1/auth/logout').catch(() => undefined)
   }, [clear])
 
   const updateUser = useCallback((next: MeRes) => setUser(next), [])
