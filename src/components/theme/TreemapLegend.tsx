@@ -14,19 +14,16 @@ export function TreemapLegend({ maxUp, maxDown }: TreemapLegendProps) {
       : `오늘 ${maxDown === null ? '0.00%' : formatChange(-maxDown)} ~ ${maxUp === null ? '0.00%' : formatChange(maxUp)}`
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-caption text-muted-foreground">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="inline-flex items-center gap-2">
-          <span className="font-mono tabular-nums text-stock-down">−{COLOR_SATURATION_PCT}%</span>
-          <span aria-hidden className="h-2 w-28 rounded-full" style={{ backgroundImage: gradient }} />
-          <span className="font-mono tabular-nums text-stock-up">+{COLOR_SATURATION_PCT}%</span>
-        </span>
-        <span className="break-keep">색 = 등락률, ±{COLOR_SATURATION_PCT}%에서 가장 진함</span>
-        {range && <span className="font-mono tabular-nums break-keep">{range}</span>}
-      </div>
-      <span className="break-keep">
-        칸 크기 = 등락률 크기 · ▲상승 ▼하락 종목 수
+    <div className="mt-3 flex flex-col gap-1.5 border-t border-border pt-3 text-caption leading-relaxed text-foreground-secondary break-keep">
+      <p className="font-semibold text-foreground">트리맵 보는 법</p>
+      <span className="inline-flex items-center gap-2">
+        <span className="font-mono tabular-nums text-stock-down">−{COLOR_SATURATION_PCT}%</span>
+        <span aria-hidden className="h-2 w-28 rounded-full" style={{ backgroundImage: gradient }} />
+        <span className="font-mono tabular-nums text-stock-up">+{COLOR_SATURATION_PCT}%</span>
       </span>
+      {range && <span className="font-mono tabular-nums">{range}</span>}
+      <span>색 = 등락률, ±{COLOR_SATURATION_PCT}%에서 가장 진함</span>
+      <span>칸 크기 = 등락률 크기 · ▲상승 ▼하락 종목 수</span>
     </div>
   )
 }

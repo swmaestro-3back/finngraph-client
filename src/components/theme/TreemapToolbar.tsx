@@ -1,4 +1,5 @@
 import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
+import { TreemapLegend } from '@/components/theme/TreemapLegend'
 import { FilterChip } from '@/components/ui/filter-chip'
 import type { ThemeMarketRes } from '@/lib/apiTypes'
 import { formatLocalDate, formatLocalTime, useNow } from '@/lib/marketClock'
@@ -13,6 +14,8 @@ interface TreemapToolbarProps {
   onThemeCountChange: (count: number) => void
   onlyFavorites: boolean
   onToggleFavorites: () => void
+  maxUp: number | null
+  maxDown: number | null
 }
 
 function Divider() {
@@ -31,10 +34,11 @@ export function TreemapToolbar({
   onThemeCountChange,
   onlyFavorites,
   onToggleFavorites,
+  maxUp,
+  maxDown,
 }: TreemapToolbarProps) {
   const now = useNow()
   const baseDate = market?.baseDate ?? referenceDate
-  const upRatio = market?.upRatio ?? null
 
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
@@ -60,25 +64,9 @@ export function TreemapToolbar({
             ) : (
               <span>장마감 종가 기준</span>
             )}
-            {upRatio !== null && (
-              <>
-                <Divider />
-                <span>
-                  시장{' '}
-                  <span className="font-mono tabular-nums text-foreground-secondary">
-                    {Math.round(upRatio * 100)}%
-                  </span>{' '}
-                  상승
-                </span>
-              </>
-            )}
-            {market && (
-              <>
-                <Divider />
-                <span>등락률은 구성 종목 절사평균</span>
-              </>
-            )}
-            <ThemeMetricHelp baseDate={baseDate} className="ml-1" />
+            <ThemeMetricHelp baseDate={baseDate} className="ml-1">
+              <TreemapLegend maxUp={maxUp} maxDown={maxDown} />
+            </ThemeMetricHelp>
             <Divider />
             <span>
               핫 테마 <span className="font-mono tabular-nums">{shownCount}</span>개
@@ -88,7 +76,7 @@ export function TreemapToolbar({
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="mr-1 text-caption whitespace-nowrap text-muted-foreground">표시 테마 수</span>
+        <span className="mr-1 text-caption whitespace-nowrap text-muted-foreground">최대 표시 테마수</span>
         {HOT_THEME_COUNTS.map((count) => (
           <FilterChip
             key={count}
@@ -96,12 +84,12 @@ export function TreemapToolbar({
             onClick={() => onThemeCountChange(count)}
             className="min-h-11 md:min-h-0"
           >
-            최대 {count}개
+            {count}개
           </FilterChip>
         ))}
         <span aria-hidden className="mx-1.5 hidden h-4 w-px bg-border md:block" />
         <FilterChip active={onlyFavorites} onClick={onToggleFavorites} className="min-h-11 md:min-h-0">
-          내 관심만
+          관심 테마
         </FilterChip>
       </div>
     </div>
