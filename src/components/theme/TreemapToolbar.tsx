@@ -39,7 +39,6 @@ export function TreemapToolbar({
 }: TreemapToolbarProps) {
   const now = useNow()
   const baseDate = market?.baseDate ?? referenceDate
-  const upRatio = market?.upRatio ?? null
 
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
@@ -64,24 +63,6 @@ export function TreemapToolbar({
               </span>
             ) : (
               <span>장마감 종가 기준</span>
-            )}
-            {upRatio !== null && (
-              <>
-                <Divider />
-                <span>
-                  시장{' '}
-                  <span className="font-mono tabular-nums text-foreground-secondary">
-                    {Math.round(upRatio * 100)}%
-                  </span>{' '}
-                  상승
-                </span>
-              </>
-            )}
-            {market && (
-              <>
-                <Divider />
-                <span>등락률은 구성 종목 절사평균</span>
-              </>
             )}
             <ThemeMetricHelp baseDate={baseDate} className="ml-1">
               <TreemapLegend maxUp={maxUp} maxDown={maxDown} />
