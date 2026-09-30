@@ -8,6 +8,15 @@ export function lockedIssueCount(total: number, locked: boolean): number {
   return locked ? Math.max(0, total - FREE_ISSUE_SLOTS) : 0
 }
 
+const MEMBER_ONLY_PATHS = ['/me', '/briefing']
+
+export function logoutLanding(pathname: string): string | null {
+  const memberOnly = MEMBER_ONLY_PATHS.some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`),
+  )
+  return memberOnly ? '/' : null
+}
+
 export interface MemberGate {
   locked: boolean
   pending: boolean
