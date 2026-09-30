@@ -3,7 +3,6 @@ import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { DataNotice } from '@/components/layout/DataNotice'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
-import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
 import { Breadth } from '@/components/theme/ThemeMetricSummary'
 import { Button } from '@/components/ui/button'
 import {
@@ -231,7 +230,6 @@ export default function ThemeListPage() {
               </>
             )}
             <span>1주/1개월/3개월은 달력 기준</span>
-            <ThemeMetricHelp baseDate={baseDate} className="ml-1" />
           </p>
           <div className="card-surface overflow-hidden">
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

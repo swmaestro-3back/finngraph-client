@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
-import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
 import {
   CloseDate,
   ThemeCountFacts,
@@ -83,7 +82,6 @@ export function ThemeFocus({ theme, from, stocks = [] }: ThemeFocusProps) {
               </span>
               <CloseDate baseDate={theme.baseDate} />
             </span>
-            <ThemeMetricHelp baseDate={theme.baseDate} className="-ml-1.5" />
             <FavoriteStar type="THEME" targetKey={String(theme.id)} label={theme.name} size="sm" />
           </div>
           <ThemeMetricCaption theme={theme} className="mt-1" />

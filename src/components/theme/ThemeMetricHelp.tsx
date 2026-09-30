@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Info } from 'lucide-react'
 import { Popover } from 'radix-ui'
 import { formatTradingDate } from '@/lib/referenceDate'
@@ -7,9 +8,11 @@ import { cn } from '@/lib/utils'
 interface ThemeMetricHelpProps {
   baseDate?: string | null
   className?: string
+  /** 계산 방식 목록 아래에 덧붙이는 설명 — 트리맵 범례 등 */
+  children?: ReactNode
 }
 
-export function ThemeMetricHelp({ baseDate, className }: ThemeMetricHelpProps) {
+export function ThemeMetricHelp({ baseDate, className, children }: ThemeMetricHelpProps) {
   const lines = [
     baseDate ? `기준일 ${formatTradingDate(baseDate)} 종가 기준` : '기준일: 장마감 종가 기준',
     METRIC_HELP_LINES.universe,
@@ -49,6 +52,7 @@ export function ThemeMetricHelp({ baseDate, className }: ThemeMetricHelpProps) {
               </li>
             ))}
           </ol>
+          {children}
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

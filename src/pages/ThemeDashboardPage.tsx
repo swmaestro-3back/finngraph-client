@@ -6,7 +6,6 @@ import { NewsSection } from '@/components/theme/NewsSection'
 import { StockSection } from '@/components/theme/StockSection'
 import { ThemeFocus } from '@/components/theme/ThemeFocus'
 import { Treemap, type TreemapItem } from '@/components/theme/Treemap'
-import { TreemapLegend } from '@/components/theme/TreemapLegend'
 import { TreemapToolbar } from '@/components/theme/TreemapToolbar'
 import { Button } from '@/components/ui/button'
 import { toNewsItem } from '@/lib/apiMappers'
@@ -102,6 +101,8 @@ export default function ThemeDashboardPage() {
         market={market}
         referenceDate={referenceDate}
         themeCount={themeCount}
+        maxUp={maxUp}
+        maxDown={maxDown}
         onThemeCountChange={setThemeCount}
         onlyFavorites={onlyFavorites}
         onToggleFavorites={() => {
@@ -163,18 +164,12 @@ export default function ThemeDashboardPage() {
               </p>
             </div>
           ) : (
-            <>
-              <Treemap
-                items={treemapItems}
-                ratio={isMobile ? 1 : DESKTOP_RATIO}
-                selectedId={selected ? String(selected.id) : null}
-                onSelect={selectTheme}
-              />
-              <TreemapLegend
-                maxUp={maxUp}
-                maxDown={maxDown}
-              />
-            </>
+            <Treemap
+              items={treemapItems}
+              ratio={isMobile ? 1 : DESKTOP_RATIO}
+              selectedId={selected ? String(selected.id) : null}
+              onSelect={selectTheme}
+            />
           )}
 
           {selected && (

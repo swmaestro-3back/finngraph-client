@@ -9,7 +9,6 @@ import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { LeaderStockCard } from '@/components/theme/LeaderStockCard'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { RelatedStocksTable } from '@/components/theme/RelatedStocksTable'
-import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
 import {
   CloseDate,
   ThemeCountFacts,
@@ -122,7 +121,6 @@ export default function ThemeDetailPage() {
               {formatChangeOrDash(theme.change)}
             </span>
             <CloseDate baseDate={theme.baseDate} />
-            <ThemeMetricHelp baseDate={theme.baseDate} className="self-center" />
           </div>
           <ThemeCountFacts theme={theme} className="mb-1.5" />
           <ThemeMetricCaption theme={theme} className="mb-3" />
