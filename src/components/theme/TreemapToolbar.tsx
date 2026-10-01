@@ -4,7 +4,7 @@ import { FilterChip } from '@/components/ui/filter-chip'
 import type { ThemeMarketRes } from '@/lib/apiTypes'
 import { formatLocalDate, formatLocalTime, useNow } from '@/lib/marketClock'
 import { HOT_THEME_COUNTS } from '@/lib/queries/useHotThemes'
-import { formatTradingDate } from '@/lib/referenceDate'
+import { formatTradingDate, priceBasisSuffix } from '@/lib/referenceDate'
 
 interface TreemapToolbarProps {
   shownCount: number
@@ -39,6 +39,7 @@ export function TreemapToolbar({
 }: TreemapToolbarProps) {
   const now = useNow()
   const baseDate = market?.baseDate ?? referenceDate
+  const suffix = priceBasisSuffix(market)
 
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
@@ -59,12 +60,12 @@ export function TreemapToolbar({
                 <span className="font-mono tabular-nums text-foreground-secondary">
                   {formatTradingDate(baseDate)}
                 </span>{' '}
-                종가 기준
+                {suffix}
               </span>
             ) : (
               <span>장마감 종가 기준</span>
             )}
-            <ThemeMetricHelp baseDate={baseDate} className="ml-1">
+            <ThemeMetricHelp baseDate={baseDate} suffix={suffix} className="ml-1">
               <TreemapLegend maxUp={maxUp} maxDown={maxDown} />
             </ThemeMetricHelp>
             <Divider />

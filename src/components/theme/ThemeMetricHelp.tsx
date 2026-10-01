@@ -7,14 +7,15 @@ import { cn } from '@/lib/utils'
 
 interface ThemeMetricHelpProps {
   baseDate?: string | null
+  suffix?: string
   className?: string
   /** 계산 방식 목록 아래에 덧붙이는 설명 — 트리맵 범례 등 */
   children?: ReactNode
 }
 
-export function ThemeMetricHelp({ baseDate, className, children }: ThemeMetricHelpProps) {
+export function ThemeMetricHelp({ baseDate, suffix = '종가 기준', className, children }: ThemeMetricHelpProps) {
   const lines = [
-    baseDate ? `기준일 ${formatTradingDate(baseDate)} 종가 기준` : '기준일: 장마감 종가 기준',
+    baseDate ? `기준일 ${formatTradingDate(baseDate)} ${suffix}` : '기준일: 장마감 종가 기준',
     METRIC_HELP_LINES.universe,
     METRIC_HELP_LINES.trimmed,
     METRIC_HELP_LINES.hot,

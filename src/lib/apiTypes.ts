@@ -35,6 +35,7 @@ export interface ThemeRes {
   stockCount: number
   topStocks: ThemeTopStockRes[]
   baseDate?: string | null
+  valuationDate?: string | null
   pricedCount?: number
   upCount?: number
   downCount?: number
@@ -88,6 +89,8 @@ export interface ThemeMarketRes {
   upRatio: number | null
   downRatio: number | null
   coverage: number | null
+  valuationDate?: string | null
+  updatedAt?: string | null
 }
 
 export interface CandleRes {
@@ -136,6 +139,8 @@ export interface StockDetailRes {
   description: string | null
   descriptionSource: string | null
   descriptionRceptNo: string | null
+  baseDate?: string | null
+  valuationDate?: string | null
 }
 
 export interface InvestorFlowRes {
