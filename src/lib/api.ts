@@ -75,9 +75,18 @@ const TIMEOUT_MS = 10_000
 // access 토큰은 JS 메모리 전용 — localStorage에 두지 않아 XSS 시 탈취면을 줄인다.
 // refresh는 httpOnly 쿠키라 클라 코드가 만질 수 없고, credentials: 'include'로만 실린다.
 let accessToken: string | null = null
+let accessTokenExpiresAt: number | null = null
 
-export function setAccessToken(token: string | null): void {
+const REFRESH_SKEW_MS = 60_000
+
+export function setAccessToken(token: string | null, expiresInSeconds?: number): void {
   accessToken = token
+  accessTokenExpiresAt =
+    token !== null && expiresInSeconds !== undefined ? Date.now() + expiresInSeconds * 1000 : null
+}
+
+export function shouldRefreshBefore(expiresAt: number | null, now: number): boolean {
+  return expiresAt !== null && now >= expiresAt - REFRESH_SKEW_MS
 }
 
 // refresh까지 실패해 세션이 끝났을 때 AuthProvider가 상태를 anonymous로 되돌리는 훅
@@ -92,26 +101,34 @@ export function setOnUnauthorized(handler: (() => void) | null): void {
 // 후행이 재사용 감지에 걸려 전 탭이 강제 로그아웃되는 상시 재현 시나리오를 막는다.
 let refreshing: Promise<AuthTokenRes | null> | null = null
 
+function withLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const locks: LockManager | undefined = navigator.locks
+  if (locks === undefined) return fn()
+  try {
+    return locks.request(name, fn) as Promise<T>
+  } catch {
+    return fn()
+  }
+}
+
 export function refreshSession(): Promise<AuthTokenRes | null> {
-  refreshing ??= navigator.locks
-    .request('auth:refresh', async () => {
-      try {
-        const res = await fetch(`${API_BASE}/v1/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-          signal: AbortSignal.timeout(TIMEOUT_MS),
-        })
-        if (!res.ok) return null
-        const envelope = (await res.json()) as DataResponse<AuthTokenRes>
-        accessToken = envelope.data.accessToken
-        return envelope.data
-      } catch {
-        return null
-      }
-    })
-    .finally(() => {
-      refreshing = null
-    })
+  refreshing ??= withLock('auth:refresh', async () => {
+    try {
+      const res = await fetch(`${API_BASE}/v1/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      })
+      if (!res.ok) return null
+      const envelope = (await res.json()) as DataResponse<AuthTokenRes>
+      setAccessToken(envelope.data.accessToken, envelope.data.expiresIn)
+      return envelope.data
+    } catch {
+      return null
+    }
+  }).finally(() => {
+    refreshing = null
+  })
   return refreshing
 }
 
@@ -136,6 +153,14 @@ interface RequestOptions {
 /** 코어: fetch + 상태검사 + JSON 파싱 + ApiError 정규화. 언래핑은 하지 않는다 (§5.1.3) */
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, params, retried = false } = options
+
+  if (
+    !path.startsWith('/v1/auth/') &&
+    accessToken !== null &&
+    shouldRefreshBefore(accessTokenExpiresAt, Date.now())
+  ) {
+    if ((await refreshSession()) === null) accessTokenExpiresAt = null
+  }
 
   let res: Response
   try {

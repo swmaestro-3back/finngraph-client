@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Menu, Search, X } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { Logo } from '@/components/brand/Logo'
 import { SearchBar } from '@/components/search/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { GraphFocus } from '@/data/graphTypes'
-import { getData } from '@/lib/api'
 import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
 import { fromState } from '@/lib/navigation'
 import { loadStocks } from '@/lib/queries/useStocksCached'
+import { logoutLanding } from '@/lib/memberGate'
+import { loadThemes } from '@/lib/queries/useThemesCached'
+import { themeDetailPath, themeIdIndex } from '@/lib/themeRoute'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
@@ -21,27 +24,15 @@ const MENU_ITEMS = [
   { label: '데일리 브리핑', to: '/briefing' },
 ]
 
-// 종목 쪽은 useStocksCached의 모듈 캐시를 재사용한다 — 별도 캐시를 두면 /v1/stocks가 세션 내 2회 나간다
-let themesCache: Promise<ThemeRes[]> | null = null
-
-function loadThemes(): Promise<ThemeRes[]> {
-  themesCache ??= getData<ThemeRes[]>('/v1/themes').catch((err: unknown) => {
-    themesCache = null
-    throw err
-  })
-  return themesCache
-}
-
 function loadSearchData(): Promise<[ThemeRes[], StockRowRes[]]> {
   return Promise.all([loadThemes(), loadStocks()])
 }
 
 const LOAD_FAILED = '검색 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
 
-function focusPath(focus: GraphFocus): string {
-  return focus.kind === 'company'
-    ? `/stock/${focus.ticker}`
-    : `/theme/${encodeURIComponent(focus.name)}`
+function focusPath(focus: GraphFocus, themes: readonly ThemeRes[]): string {
+  if (focus.kind === 'company') return `/stock/${focus.ticker}`
+  return themeDetailPath(focus.name, themeIdIndex(themes)) ?? '/themes'
 }
 
 export function NavBar() {
@@ -83,11 +74,11 @@ export function NavBar() {
     return pathname.startsWith(to.split('/').slice(0, 2).join('/'))
   }
 
-  const goTo = (focus: GraphFocus) => {
-    navigate(focusPath(focus), { state: fromState(pathname) })
-  }
-
   const [themes, stocks] = searchData ?? [[], []]
+
+  const goTo = (focus: GraphFocus) => {
+    navigate(focusPath(focus, themes), { state: fromState(pathname) })
+  }
 
   // 다이얼로그·시트 오버레이(z-50)보다 아래 — 모달이 뜨면 헤더도 함께 흐려진다
   return (
@@ -247,7 +238,10 @@ function AuthSection() {
               className="block w-full px-3.5 py-2 text-left text-sm text-foreground hover:bg-muted"
               onClick={() => {
                 setMenuOpen(false)
-                void logout()
+                logout()
+                toast.success('로그아웃했어요')
+                const landing = logoutLanding(location.pathname)
+                if (landing) navigate(landing, { replace: true })
               }}
             >
               로그아웃

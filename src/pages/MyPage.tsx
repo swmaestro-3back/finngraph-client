@@ -98,7 +98,7 @@ export default function MyPage() {
     setWithdrawError(null)
     try {
       await deleteData('/v1/me')
-      await logout()
+      logout()
       navigate('/', { replace: true })
     } catch {
       setWithdrawError('탈퇴 처리에 실패했습니다. 잠시 후 다시 시도해 주세요')

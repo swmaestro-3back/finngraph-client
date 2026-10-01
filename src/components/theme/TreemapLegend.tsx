@@ -23,7 +23,7 @@ export function TreemapLegend({ maxUp, maxDown }: TreemapLegendProps) {
       </span>
       {range && <span className="font-mono tabular-nums">{range}</span>}
       <span>색 = 등락률, ±{COLOR_SATURATION_PCT}%에서 가장 진함</span>
-      <span>칸 크기 = 등락률 크기 · ▲상승 ▼하락 종목 수 · 주도주 = 가장 크게 움직인 종목</span>
+      <span>칸 크기 = 등락률 크기 · ▲상승 ▼하락 종목 수</span>
     </div>
   )
 }

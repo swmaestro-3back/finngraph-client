@@ -8,7 +8,6 @@ import {
 import type {
   AnalyzedNewsRes,
   BriefingLockedRes,
-  BriefingThemeRes,
   CitationRes,
   CitationType,
   RelationGraphRes,
@@ -16,7 +15,6 @@ import type {
   RelationPartyRes,
   RiskKind,
   RiskRes,
-  StockRowRes,
   WatchKind,
 } from '@/lib/apiTypes'
 
@@ -73,13 +71,6 @@ const POLARITY_BADGES: Record<string, string> = {
   terminated: '종료',
 }
 
-export function pickMovers(stocks: StockRowRes[], count: number): StockRowRes[] {
-  return stocks
-    .filter((s) => s.change !== null)
-    .sort((a, b) => Math.abs(b.change ?? 0) - Math.abs(a.change ?? 0))
-    .slice(0, count)
-}
-
 export function adjacentDates(
   datesDesc: string[],
   current: string,
@@ -101,16 +92,6 @@ export function lockedTeaser(locked: BriefingLockedRes): string {
   ].filter((p): p is string => p !== null)
   if (parts.length === 0) return ''
   return `${parts.join(' · ')}은 로그인 후 볼 수 있습니다`
-}
-
-export function themeRadarSplit(themes: BriefingThemeRes[]): {
-  up: BriefingThemeRes[]
-  down: BriefingThemeRes[]
-} {
-  return {
-    up: themes.filter((t) => t.hotSide === 'UP'),
-    down: themes.filter((t) => t.hotSide === 'DOWN'),
-  }
 }
 
 export interface RiskGroup {

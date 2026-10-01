@@ -88,10 +88,7 @@ export function themeBreadthLabel(theme: ThemeRes): string | null {
 
 export function tileDetail(theme: ThemeRes): string | null {
   if (!hasBreadth(theme)) return null
-  const leader = theme.leaders?.[0]
-  const breadth = `▲${theme.upCount} ▼${theme.downCount}`
-  if (!leader || leader.change === null) return breadth
-  return `${breadth} · ${leader.name} ${formatChange(leader.change)}`
+  return `▲${theme.upCount} ▼${theme.downCount}`
 }
 
 export const TILE_DETAIL_MIN_HEIGHT = 72

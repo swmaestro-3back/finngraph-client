@@ -118,7 +118,7 @@ describe('캡션 · 타일 문구', () => {
   })
 
   it('타일 3행과 aria-label', () => {
-    expect(tileDetail(theme)).toBe('▲11 ▼1 · 루닛 +13.80%')
+    expect(tileDetail(theme)).toBe('▲11 ▼1')
     expect(tileDetail(base)).toBeNull()
     expect(tileLabel(theme, '2026-09-26')).toBe(
       '캔서문샷 +3.10% · 집계 12/12 · ▲11 ·0 ▼1 · 9/26 종가',

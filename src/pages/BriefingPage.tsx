@@ -7,15 +7,12 @@ import { IssueCard } from '@/components/briefing/IssueCard'
 import { RecentContractsBoard } from '@/components/briefing/RecentContractsBoard'
 import { RelationDigest } from '@/components/briefing/RelationDigest'
 import { RiskList } from '@/components/briefing/RiskList'
-import { ThemeRadar } from '@/components/briefing/ThemeRadar'
 import { WatchPointList } from '@/components/briefing/WatchPointList'
 import { DataNotice } from '@/components/layout/DataNotice'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
-import { MoverFeed } from '@/components/theme/MoverFeed'
 import { Button } from '@/components/ui/button'
-import { AI_NOTICE, adjacentDates, lockedTeaser, pickMovers } from '@/lib/briefing'
+import { AI_NOTICE, adjacentDates, lockedTeaser } from '@/lib/briefing'
 import { useBriefing, useBriefingDates } from '@/lib/queries/useBriefing'
-import { useStocksCached } from '@/lib/queries/useStocksCached'
 
 function SectionTitle({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -30,10 +27,8 @@ export default function BriefingPage() {
   const requestedDate = searchParams.get('date')
   const { data: briefing, loading, error, notFound, refetch } = useBriefing(requestedDate)
   const { data: dates } = useBriefingDates(30)
-  const { data: stocks } = useStocksCached()
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
-  const movers = useMemo(() => (stocks ? pickMovers(stocks, 10) : []), [stocks])
   const nav = useMemo(
     () => adjacentDates(dates?.map((d) => d.baseDate) ?? [], briefing?.baseDate ?? ''),
     [dates, briefing],
@@ -138,10 +133,6 @@ export default function BriefingPage() {
             onOpenNews={setOpenNewsId}
           />
 
-          <section aria-labelledby="briefing-themes-title">
-            <SectionTitle id="briefing-themes-title">테마 레이더</SectionTitle>
-            <ThemeRadar themes={briefing.themes} />
-          </section>
 
           <section aria-labelledby="briefing-watch-title">
             <SectionTitle id="briefing-watch-title">지켜볼 점</SectionTitle>
@@ -156,16 +147,9 @@ export default function BriefingPage() {
       )}
 
       {!loading && !error && (
-        <>
-          <section className="mt-8" aria-labelledby="briefing-movers-title">
-            <SectionTitle id="briefing-movers-title">특징주 10선</SectionTitle>
-            <MoverFeed movers={movers} />
-          </section>
-
-          <div className="mt-8">
-            <RecentContractsBoard />
-          </div>
-        </>
+        <div className="mt-8">
+          <RecentContractsBoard />
+        </div>
       )}
 
       <DataNotice className="mt-5" />

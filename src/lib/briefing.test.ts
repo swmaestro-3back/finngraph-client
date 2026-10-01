@@ -3,12 +3,10 @@ import { endId } from '@/data/graphTypes'
 import type {
   AnalyzedNewsRes,
   BriefingLockedRes,
-  BriefingThemeRes,
   CitationRes,
   RelationGraphRes,
   RelationLineRes,
   RiskRes,
-  StockRowRes,
 } from '@/lib/apiTypes'
 import {
   adjacentDates,
@@ -16,21 +14,14 @@ import {
   edgeIdOf,
   groupRisks,
   lockedTeaser,
-  pickMovers,
   relationDigestCaption,
   relationLineLabel,
-  themeRadarSplit,
   toRelationGraphData,
 } from '@/lib/briefing'
 
 const NEWS: CitationRes = { type: 'NEWS', id: '9001', label: '기사 제목', url: 'https://n/9001' }
 const DISCLOSURE: CitationRes = { type: 'DISCLOSURE', id: 'R1', label: '공급계약', url: 'https://d/R1' }
 
-function theme(id: number, hotSide: 'UP' | 'DOWN'): BriefingThemeRes {
-  return {
-    id, name: `테마${id}`, change: 1, hotSide, stockCount: 5, pricedCount: 5, upCount: 4, downCount: 1, flatCount: 0, leaders: [],
-  }
-}
 
 function line(overrides: Partial<RelationLineRes> = {}): RelationLineRes {
   return {
@@ -77,13 +68,6 @@ describe('lockedTeaser', () => {
   })
 })
 
-describe('themeRadarSplit', () => {
-  it('상승과 하락을 순서를 지켜 나눈다', () => {
-    const split = themeRadarSplit([theme(1, 'UP'), theme(2, 'DOWN'), theme(3, 'UP')])
-    expect(split.up.map((t) => t.id)).toEqual([1, 3])
-    expect(split.down.map((t) => t.id)).toEqual([2])
-  })
-})
 
 describe('groupRisks', () => {
   it('kind 순서로 묶고 한국어 라벨을 붙인다', () => {
@@ -190,13 +174,3 @@ describe('toRelationGraphData', () => {
   })
 })
 
-describe('pickMovers', () => {
-  it('등락 절대값 순으로 뽑고 null은 제외한다', () => {
-    const rows = [
-      { ticker: '1', change: 1 },
-      { ticker: '2', change: -5 },
-      { ticker: '3', change: null },
-    ] as StockRowRes[]
-    expect(pickMovers(rows, 2).map((s) => s.ticker)).toEqual(['2', '1'])
-  })
-})

@@ -105,11 +105,10 @@ export function Treemap({
         const singleLine = h < 56
         const [mainName, parenName] = splitParen(theme.name)
         const splitName = !singleLine && parenName !== null
-        const [breadth, leader] = (theme.detail ?? '').split(' · ')
-        const detail = w >= 200 && leader ? `${breadth} · ${leader}` : breadth
+        const detail = theme.detail ?? ''
         const pctText = `${change > 0 ? '+' : '−'}${Math.abs(change).toFixed(2)}%`
         const placement = tileDetailPlacement(w, h, pctText, detail)
-        const inlineDetail = placement === 'inline' ? breadth : null
+        const inlineDetail = placement === 'inline' ? detail : null
         const showDetail = placement === 'line'
         const label = theme.label ?? `${theme.name} ${formatChange(change)}`
 

@@ -19,6 +19,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useThemeIdIndex } from '@/lib/queries/useThemesCached'
+import { themeDetailPath } from '@/lib/themeRoute'
 import { cn } from '@/lib/utils'
 
 const MAX_CONNECTED = 16
@@ -108,11 +110,10 @@ export function NodeDetail({
   const ticker = node.data.ticker
   const indexChips = INDEX_FLAGS.filter((f) => node.data[f.key])
 
-  const detailPath = isTheme
-    ? `/theme/${encodeURIComponent(node.label)}`
-    : ticker
-      ? `/stock/${ticker}`
-      : null
+  const themeIndex = useThemeIdIndex()
+  const themePath = isTheme ? themeDetailPath(node.label, themeIndex) : null
+
+  const detailPath = isTheme ? themePath : ticker ? `/stock/${ticker}` : null
   const detailAvailable = isTheme || node.data.country === 'KR'
   // 모바일은 hover가 없어 툴팁 대신 버튼 줄 아래에 같은 문구를 상시로 보인다
   const showDetailNotice = detailPath !== null && !detailAvailable && isMobile
