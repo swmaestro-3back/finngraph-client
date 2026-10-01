@@ -6,6 +6,7 @@ export interface ApiState<T> {
   loading: boolean
   error: ApiError | null
   refetch: () => void
+  refresh: () => void
 }
 
 export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]): ApiState<T> {
@@ -13,20 +14,29 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]): ApiState<
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
   const generation = useRef(0)
+  const inFlight = useRef(false)
+  const latestFetcher = useRef(fetcher)
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
+    latestFetcher.current = fetcher
+  })
+
+  useEffect(() => {
     const myGen = ++generation.current
+    inFlight.current = true
     setLoading(true)
     setError(null)
     fetcher().then(
       (result) => {
         if (generation.current !== myGen) return
+        inFlight.current = false
         setData(result)
         setLoading(false)
       },
       (e: unknown) => {
         if (generation.current !== myGen) return
+        inFlight.current = false
         setData(null)
         setError(
           e instanceof ApiError ? e : new ApiError('INTERNAL_ERROR', 0, String(e)),
@@ -38,5 +48,18 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]): ApiState<
 
   const refetch = useCallback(() => setTick((t) => t + 1), [])
 
-  return { data, loading, error, refetch }
+  const refresh = useCallback(() => {
+    if (inFlight.current) return
+    const myGen = ++generation.current
+    latestFetcher.current().then(
+      (result) => {
+        if (generation.current !== myGen) return
+        setData(result)
+        setError(null)
+      },
+      () => {},
+    )
+  }, [])
+
+  return { data, loading, error, refetch, refresh }
 }

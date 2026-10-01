@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CircleAlert, Info, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
@@ -12,6 +12,7 @@ import { toNewsItem } from '@/lib/apiMappers'
 import type { ThemeRes } from '@/lib/apiTypes'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useAuth } from '@/lib/auth'
+import { useAutoRefresh } from '@/lib/autoRefresh'
 import { useFavorites } from '@/lib/favorites'
 import { useHotThemes } from '@/lib/queries/useHotThemes'
 import { useReferenceDate } from '@/lib/queries/useReferenceDate'
@@ -45,8 +46,14 @@ export default function ThemeDashboardPage() {
   const { has } = useFavorites()
   const isMobile = useIsMobile()
 
-  const { data: hotThemes, loading, error, refetch } = useHotThemes(themeCount)
-  const { data: market, loading: marketLoading } = useThemeMarket()
+  const {
+    data: hotThemes,
+    loading,
+    error,
+    refetch,
+    refresh: refreshHotThemes,
+  } = useHotThemes(themeCount)
+  const { data: market, loading: marketLoading, refresh: refreshMarket } = useThemeMarket()
   const baseDate = market?.baseDate ?? null
   const fallbackTicker =
     !marketLoading && baseDate === null ? (hotThemes?.[0]?.topStocks[0]?.ticker ?? null) : null
@@ -80,19 +87,34 @@ export default function ThemeDashboardPage() {
     }
   }, [treemapThemes])
 
+  const [shownId, setShownId] = useState<number | null>(null)
   const requestedId = Number(searchParams.get('theme'))
   const selected = useMemo(
-    () => treemapThemes.find((t) => t.id === requestedId) ?? largestTile(treemapThemes),
-    [treemapThemes, requestedId],
+    () =>
+      treemapThemes.find((t) => t.id === requestedId) ??
+      treemapThemes.find((t) => t.id === shownId) ??
+      largestTile(treemapThemes),
+    [treemapThemes, requestedId, shownId],
   )
+  const selectedId = selected?.id ?? null
+  useEffect(() => {
+    setShownId(selectedId)
+  }, [selectedId])
   const selectTheme = (id: string) => {
     setSearchParams({ theme: id }, { replace: true })
   }
   const from = `${pathname}${search}`
 
-  const { data: themeStocks } = useThemeStocks(selected?.id ?? null)
-  const { data: newsDetails } = useThemeNews(selected?.id ?? null)
+  const { data: themeStocks, refresh: refreshThemeStocks } = useThemeStocks(selectedId)
+  const { data: newsDetails } = useThemeNews(selectedId)
   const news = useMemo(() => (newsDetails ?? []).map(toNewsItem), [newsDetails])
+
+  const refreshPrices = useCallback(() => {
+    refreshHotThemes()
+    refreshMarket()
+    refreshThemeStocks()
+  }, [refreshHotThemes, refreshMarket, refreshThemeStocks])
+  useAutoRefresh(refreshPrices, market)
 
   return (
     <div className="page-container pb-12 pt-7">

@@ -27,6 +27,7 @@ import {
 } from '@/lib/themeMetrics'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
+import { priceBasisSuffix } from '@/lib/referenceDate'
 
 const PAGE_SIZE = 20
 
@@ -214,7 +215,7 @@ export default function ThemeListPage() {
                   <span className="font-mono tabular-nums text-foreground-secondary">
                     {formatShortDate(baseDate)}
                   </span>{' '}
-                  종가 기준
+                  {priceBasisSuffix(market)}
                 </span>
                 <span className="mx-1.5 text-foreground-tertiary" aria-hidden>
                   ·
