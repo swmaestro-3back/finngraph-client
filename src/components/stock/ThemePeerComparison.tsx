@@ -119,7 +119,12 @@ function rankOf(myValue: number, pool: number[], lowerIsBetter: boolean): number
   return pool.filter((v) => (lowerIsBetter ? v < myValue : v > myValue)).length + 1
 }
 
-const ROW_GRID = 'grid grid-cols-[56px_1fr_72px] items-center gap-3'
+// 네 지표 행과 맨 아래 눈금이 열을 함께 쓰는 그리드(subgrid) — 배지 칸은 내용 폭(auto)이라
+// 100종목 넘는 테마의 "128/150위"도 넘치지 않고, 가장 긴 배지에 맞춰 모든 행의 막대 폭이 같아진다.
+// 좁은 화면은 라벨 칸과 간격을 줄여 가운데(값·중앙값) 줄에 자리를 더 준다
+const TABLE_GRID =
+  'grid grid-cols-[48px_1fr_auto] gap-x-2 sm:grid-cols-[56px_1fr_auto] sm:gap-x-3'
+const ROW = 'col-span-3 grid grid-cols-subgrid items-center'
 
 /**
  * 꼴찌 ──┼──●── 1위 — 값 크기가 아니라 순위로 점을 놓는다.
@@ -195,17 +200,20 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
         </div>
         <span className="text-xs text-muted-foreground">동료 {peerCount}종목 기준</span>
       </div>
-      {/* 옆 투자 지표 카드가 더 길면 남는 높이를 네 행이 똑같이 나눠 갖는다 — 카드 아래 빈 공간 방지 */}
-      <div className="flex flex-1 flex-col">
+      {/* 옆 투자 지표 카드가 더 길면 남는 높이를 네 행이 똑같이 나눠 갖는다(1fr) — 카드 아래 빈 공간 방지 */}
+      <div
+        className={cn(TABLE_GRID, 'flex-1')}
+        style={{ gridTemplateRows: `repeat(${rows.length}, 1fr) auto` }}
+      >
         {rows.map((row) => (
-          <div key={row.key} className={cn(ROW_GRID, 'flex-1 border-b border-surface-inset py-2')}>
+          <div key={row.key} className={cn(ROW, 'border-b border-surface-inset py-2')}>
             <span className="text-xs font-medium text-foreground">{row.label}</span>
-            <div className="flex flex-col gap-2">
+            <div className="flex min-w-0 flex-col gap-2">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-mono text-xs font-medium text-foreground">
+                <span className="font-mono text-xs font-medium whitespace-nowrap text-foreground">
                   {row.myValue === null ? '—' : row.format(row.myValue)}
                 </span>
-                <span className="text-caption text-muted-foreground">
+                <span className="text-caption whitespace-nowrap text-muted-foreground">
                   중앙값{' '}
                   <span className="font-mono">
                     {row.medianValue === null ? '—' : row.format(row.medianValue)}
@@ -221,26 +229,26 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
               ) : (
                 // 뉴스 "분석" 뱃지와 같은 틀(각진 아웃라인 + 연한 채움) — 막대의 빨강·파랑·초록과 겹치지 않는 노랑.
                 // 높이는 왼쪽 값·막대 묶음(약 31px)보다 살짝 낮게
-              <Badge
-                variant="outline"
-                className="h-7 w-full rounded-sm border-chart-5/70 bg-chart-5/14 font-mono text-body font-semibold text-chart-5-ink"
-              >
+                <Badge
+                  variant="outline"
+                  className="h-7 w-full min-w-16 rounded-sm border-chart-5/70 bg-chart-5/14 px-1.5 font-mono text-xs font-semibold text-chart-5-ink sm:min-w-[72px] sm:px-2 sm:text-body"
+                >
                   {row.rank}/{row.poolCount}위
                 </Badge>
               )}
             </div>
           </div>
         ))}
-      </div>
-      {/* 눈금 — 네 막대가 같은 축을 쓰므로 맨 아래에 한 번만 적는다 */}
-      <div className={cn(ROW_GRID, 'pt-2 text-caption text-muted-foreground')}>
-        <span />
-        <div className="grid grid-cols-3">
-          <span>하위</span>
-          <span className="text-center">중앙</span>
-          <span className="text-right">상위</span>
+        {/* 눈금 — 네 막대가 같은 축을 쓰므로 맨 아래에 한 번만 적는다 */}
+        <div className={cn(ROW, 'pt-2 text-caption text-muted-foreground')}>
+          <span />
+          <div className="grid grid-cols-3">
+            <span>하위</span>
+            <span className="text-center">중앙</span>
+            <span className="text-right">상위</span>
+          </div>
+          <span />
         </div>
-        <span />
       </div>
     </section>
   )
