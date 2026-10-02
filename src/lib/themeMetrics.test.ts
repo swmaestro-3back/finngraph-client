@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ThemeRes } from '@/lib/apiTypes'
+import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import {
   breadthLabel,
   changeStatusTag,
@@ -9,8 +9,7 @@ import {
   hotExclusionTitle,
   isUnderCounted,
   leadStock,
-  leaderCellContent,
-  leaderColumnLabel,
+  marketCapLeaders,
   metricCaption,
   sensitivityLabel,
   tileDetail,
@@ -142,34 +141,6 @@ describe('주도주 표시', () => {
     { ticker: '000003', name: '셋째', change: 1.1 },
   ]
 
-  it('leaders 가 없는 구 응답은 대표 종목 이름을 폴백으로 쓴다', () => {
-    expect(leaderCellContent(undefined, topStocks)).toEqual({
-      kind: 'legacy',
-      text: '피델릭스 · 골든센츄리',
-    })
-    expect(leaderCellContent(undefined, [])).toEqual({ kind: 'empty' })
-  })
-
-  it('leaders 가 빈 배열이거나 등락률이 없으면 시총 상위로 대체하지 않고 비운다', () => {
-    expect(leaderCellContent([], topStocks)).toEqual({ kind: 'empty' })
-    expect(
-      leaderCellContent([{ ticker: '000001', name: '피델릭스', change: null }], topStocks),
-    ).toEqual({ kind: 'empty' })
-  })
-
-  it('leaders 는 최대 2개', () => {
-    expect(leaderCellContent(leaders, topStocks)).toEqual({
-      kind: 'leaders',
-      leaders: leaders.slice(0, 2),
-    })
-  })
-
-  it('열 라벨은 leaders 필드가 하나라도 있으면 주도주, 없으면 대표 종목', () => {
-    expect(leaderColumnLabel([{ leaders: [] }, {}])).toBe('주도주')
-    expect(leaderColumnLabel([{}, {}])).toBe('대표 종목')
-    expect(leaderColumnLabel([])).toBe('대표 종목')
-  })
-
   it('leadStock 은 leaders 우선, 빈 배열이면 null, 없으면 대표 종목', () => {
     expect(leadStock({ leaders, topStocks })).toEqual({
       kind: 'leader',
@@ -259,5 +230,46 @@ describe('tileDetailPlacement', () => {
   it('등락률 줄조차 없는 아주 작은 타일과 빈 줄은 넣지 않는다', () => {
     expect(tileDetailPlacement(200, 30, '−2.30%', '▲4 ▼1')).toBe('none')
     expect(tileDetailPlacement(200, 100, '+3.07%', '')).toBe('none')
+  })
+})
+
+describe('marketCapLeaders', () => {
+  const stock = (ticker: string, marketCap: number | null): ThemeStockRes => ({
+    ticker,
+    name: ticker,
+    market: 'KOSPI',
+    price: 1000,
+    change: 1,
+    tradingValue: null,
+    marketCap,
+    reason: null,
+  })
+
+  it('응답 순서와 무관하게 시가총액 큰 순으로 3개를 고른다', () => {
+    const leaders = marketCapLeaders([stock('A', 10), stock('B', 40), stock('C', 20), stock('D', 30)])
+    expect(leaders.map((l) => l.stock.ticker)).toEqual(['B', 'D', 'C'])
+  })
+
+  it('비중은 구성 종목 시가총액 합 대비 퍼센트다', () => {
+    const leaders = marketCapLeaders([stock('A', 10), stock('B', 40), stock('C', 20), stock('D', 30)])
+    expect(leaders.map((l) => l.share)).toEqual([40, 30, 20])
+  })
+
+  it('시가총액이 없는 종목은 뒤로 보내고 비중을 내지 않는다', () => {
+    const leaders = marketCapLeaders([stock('A', null), stock('B', 30), stock('C', 10)])
+    expect(leaders.map((l) => l.stock.ticker)).toEqual(['B', 'C', 'A'])
+    expect(leaders[2].share).toBeNull()
+  })
+
+  it('종목이 3개보다 적으면 있는 만큼만 돌려준다', () => {
+    expect(marketCapLeaders([])).toEqual([])
+    expect(marketCapLeaders([stock('A', 5)])).toEqual([{ stock: stock('A', 5), share: 100 }])
+  })
+
+  it('시가총액이 전부 없으면 비중도 전부 없다', () => {
+    expect(marketCapLeaders([stock('A', null), stock('B', null)]).map((l) => l.share)).toEqual([
+      null,
+      null,
+    ])
   })
 })

@@ -1,8 +1,7 @@
 import type {
-  ThemeLeaderRes,
   ThemeRes,
   ThemeStockChangeStatus,
-  ThemeTopStockRes,
+  ThemeStockRes,
 } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
 import { hasTurnoverRatio } from '@/lib/treemapColor'
@@ -136,27 +135,6 @@ export function tileLabel(theme: ThemeRes, baseDate: string | null | undefined):
   return parts.join(' · ')
 }
 
-export type LeaderCellContent =
-  | { kind: 'leaders'; leaders: ThemeLeaderRes[] }
-  | { kind: 'empty' }
-  | { kind: 'legacy'; text: string }
-
-export function leaderCellContent(
-  leaders: ThemeLeaderRes[] | undefined,
-  topStocks: ThemeTopStockRes[],
-): LeaderCellContent {
-  if (leaders === undefined) {
-    const text = topStocks.map((s) => s.name).join(' · ')
-    return text ? { kind: 'legacy', text } : { kind: 'empty' }
-  }
-  const priced = leaders.filter((l) => l.change !== null).slice(0, 2)
-  return priced.length === 0 ? { kind: 'empty' } : { kind: 'leaders', leaders: priced }
-}
-
-export function leaderColumnLabel(themes: Pick<ThemeRes, 'leaders'>[]): '주도주' | '대표 종목' {
-  return themes.some((t) => t.leaders !== undefined) ? '주도주' : '대표 종목'
-}
-
 export type ThemeLeadStock =
   | { kind: 'leader'; name: string; change: number }
   | { kind: 'representative'; name: string }
@@ -228,4 +206,22 @@ export function compareNullLast(av: unknown, bv: unknown, desc: boolean): number
       ? av.localeCompare(bv, 'ko')
       : Number(av) - Number(bv)
   return desc ? -compared : compared
+}
+
+export interface MarketCapLeader {
+  stock: ThemeStockRes
+  /** 구성 종목 시가총액 합 대비 비중(%) — 시가총액이 없으면 null */
+  share: number | null
+}
+
+/** 시가총액 상위 종목 — 응답 순서에 기대지 않고 직접 정렬한다 */
+export function marketCapLeaders(stocks: ThemeStockRes[], limit = 3): MarketCapLeader[] {
+  const total = stocks.reduce((sum, s) => sum + (s.marketCap ?? 0), 0)
+  return [...stocks]
+    .sort((a, b) => compareNullLast(a.marketCap, b.marketCap, true))
+    .slice(0, limit)
+    .map((stock) => ({
+      stock,
+      share: stock.marketCap === null || total <= 0 ? null : (stock.marketCap / total) * 100,
+    }))
 }
