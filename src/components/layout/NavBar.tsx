@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { Menu, Search, X } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Logo } from '@/components/brand/Logo'
+import { Logo, LogoMark } from '@/components/brand/Logo'
 import { SearchBar } from '@/components/search/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { GraphFocus } from '@/data/graphTypes'
 import type { StockRowRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
+import { isBareKey } from '@/lib/keyboard'
 import { fromState } from '@/lib/navigation'
 import { loadStocks } from '@/lib/queries/useStocksCached'
 import { logoutLanding } from '@/lib/memberGate'
@@ -47,15 +48,27 @@ export function NavBar() {
       .finally(() => setLoading(false))
   }
 
-  // 768px 미만에서 검색창을 숨기면 검색 기능 자체가 사라진다 — 아이콘으로 접어 두고 펼친다
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  // 768~1279px은 메뉴를 정중앙에 두느라 검색창 자리가 없다 — 아이콘으로 접어 두고 헤더 아래로 펼친다
+  const [searchPanelOpen, setSearchPanelOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // 라우트가 바뀌면(행·배지 클릭 포함) 모바일 패널을 접는다 — 검색어는 key={pathname}으로 비운다
+  // 라우트가 바뀌면(행·배지 클릭 포함) 펼친 패널을 접는다 — 검색어는 key={pathname}으로 비운다
   useEffect(() => {
-    setMobileSearchOpen(false)
+    setSearchPanelOpen(false)
     setMobileMenuOpen(false)
   }, [pathname])
+
+  // '/' — 넓은 화면은 SearchBar가 직접 검색창으로 들어가고, 아이콘 구간에서는 패널을 연다
+  useEffect(() => {
+    const iconRange = window.matchMedia('(min-width: 768px) and (max-width: 1279.98px)')
+    const handler = (e: KeyboardEvent) => {
+      if (!iconRange.matches || !isBareKey(e, '/')) return
+      e.preventDefault()
+      setSearchPanelOpen(true)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   const isActive = (to: string) => {
     if (to === '/') return pathname === '/'
@@ -73,56 +86,28 @@ export function NavBar() {
     navigate(`/stock/${focus.ticker}`, { state: fromState(pathname) })
   }
 
+  const searchBarProps = {
+    variant: 'pill',
+    stocks,
+    placeholder: SEARCH_PLACEHOLDER,
+    notice,
+    onFocus: ensureSearchData,
+    onSelect: goTo,
+  } as const
+
   // 다이얼로그·시트 오버레이(z-50)보다 아래 — 모달이 뜨면 헤더도 함께 흐려진다
+  // 3칸 그리드 — 데스크톱은 좌우 칸을 같은 폭(1fr)으로 두어 메뉴가 화면 정중앙에 온다.
+  // 모바일은 가운데 칸이 남는 폭을 모두 가져가 검색창이 늘 보이게 한다
   return (
     <header className="sticky top-0 z-40 h-14 border-b border-border bg-background">
-      <div className="relative flex h-full items-center gap-5 px-5">
-        <Link to="/" className="shrink-0 text-foreground">
-          <Logo height={24} />
+      <div className="relative grid h-full grid-cols-[auto_1fr_auto] items-center gap-3 px-4 md:grid-cols-[1fr_auto_1fr] md:gap-5 md:px-5">
+        <Link to="/" className="shrink-0 justify-self-start text-foreground">
+          <LogoMark className="md:hidden" />
+          <Logo height={24} className="hidden md:block" />
         </Link>
 
-        <SearchBar
-          key={pathname}
-          variant="pill"
-          stocks={stocks}
-          placeholder={SEARCH_PLACEHOLDER}
-          notice={notice}
-          onFocus={ensureSearchData}
-          onSelect={goTo}
-          className="hidden w-60 shrink-0 md:block"
-          dropdownClassName="left-0 w-80"
-        />
-
-        <div className="flex-1" />
-
-        {/* 모바일 검색 진입점 — 데스크톱 검색창이 hidden 되는 구간의 유일한 대체 경로 */}
-        <button
-          type="button"
-          aria-label="검색"
-          aria-expanded={mobileSearchOpen}
-          onClick={() => {
-            setMobileMenuOpen(false)
-            setMobileSearchOpen((v) => !v)
-          }}
-          className="shrink-0 cursor-pointer p-3 -m-3 text-muted-foreground md:hidden"
-        >
-          <Search className="size-5" />
-        </button>
-
-        {mobileSearchOpen && (
-          <div className="absolute inset-x-0 top-full border-b border-border bg-background p-3 md:hidden">
-            <SearchBar
-              variant="pill"
-              autoFocus
-              stocks={stocks}
-              placeholder={SEARCH_PLACEHOLDER}
-              notice={notice}
-              onFocus={ensureSearchData}
-              onSelect={goTo}
-            />
-          </div>
-        )}
-
+        {/* 가운데 — 모바일은 검색창, 데스크톱은 메뉴 */}
+        <SearchBar key={`m-${pathname}`} {...searchBarProps} className="min-w-0 md:hidden" />
         <nav className="hidden h-full items-center gap-4 md:flex">
           {MENU_ITEMS.map((item) => (
             <Link
@@ -139,18 +124,52 @@ export function NavBar() {
           ))}
         </nav>
 
-        <button
-          type="button"
-          aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
-          aria-expanded={mobileMenuOpen}
-          onClick={() => {
-            setMobileSearchOpen(false)
-            setMobileMenuOpen((v) => !v)
-          }}
-          className="shrink-0 cursor-pointer p-3 -m-3 text-muted-foreground md:hidden"
-        >
-          {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        {/* 오른쪽 — 검색·계정(도구) */}
+        <div className="flex items-center justify-end gap-5">
+          <SearchBar
+            key={pathname}
+            {...searchBarProps}
+            shortcutKey="/"
+            className="hidden w-56 shrink-0 transition-[width] duration-200 focus-within:w-64 motion-reduce:transition-none xl:block"
+            dropdownClassName="right-0 w-80"
+          />
+          <button
+            type="button"
+            aria-label="검색"
+            aria-expanded={searchPanelOpen}
+            aria-keyshortcuts="/"
+            onClick={() => setSearchPanelOpen((v) => !v)}
+            className="hidden shrink-0 cursor-pointer p-3 -m-3 text-muted-foreground hover:text-foreground md:block xl:hidden"
+          >
+            <Search className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="shrink-0 cursor-pointer p-3 -m-3 text-muted-foreground md:hidden"
+          >
+            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+          {/* 모바일은 자리를 검색창에 내주고 계정은 ☰ 메뉴 안으로 옮긴다 */}
+          <div className="hidden md:block">
+            <AuthSection />
+          </div>
+        </div>
+
+        {searchPanelOpen && (
+          <div
+            className="absolute inset-x-0 top-full hidden border-b border-border bg-background p-3 md:block xl:hidden"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setSearchPanelOpen(false)
+            }}
+          >
+            <div className="mx-auto max-w-xl">
+              <SearchBar {...searchBarProps} autoFocus />
+            </div>
+          </div>
+        )}
 
         {mobileMenuOpen && (
           <nav
@@ -169,20 +188,64 @@ export function NavBar() {
                 {item.label}
               </Link>
             ))}
+            <div className="mx-3 my-1.5 h-px bg-border" />
+            <MobileAuthLinks />
           </nav>
         )}
-
-        <AuthSection />
       </div>
     </header>
   )
 }
 
-// 인증 상태별 우측 영역 — Design Ref: §5.3 NavBar (loading 스켈레톤 / 로그인 버튼 / 유저 메뉴)
-function AuthSection() {
-  const { status, user, logout } = useAuth()
+/** 로그아웃 — 회원 전용 화면에 있었다면 비회원이 볼 수 있는 곳으로 옮긴다 */
+function useLogout() {
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  return () => {
+    logout()
+    toast.success('로그아웃했어요')
+    const landing = logoutLanding(location.pathname)
+    if (landing) navigate(landing, { replace: true })
+  }
+}
+
+/** 모바일 ☰ 메뉴 아래 계정 항목 — 헤더에서 빠진 로그인 버튼·유저 메뉴를 대신한다 */
+function MobileAuthLinks() {
+  const { status, user } = useAuth()
+  const location = useLocation()
+  const logout = useLogout()
+  const item =
+    'flex min-h-11 w-full cursor-pointer items-center rounded-lg px-3 text-left text-sm font-medium hover:bg-muted'
+
+  if (status === 'loading') return <Skeleton className="mx-3 my-2 h-7 w-24 rounded-lg" />
+
+  if (status === 'anonymous' || !user) {
+    return (
+      <Link to="/login" state={{ next: location.pathname }} className={cn(item, 'text-primary')}>
+        로그인
+      </Link>
+    )
+  }
+
+  return (
+    <>
+      <Link to="/me" className={cn(item, 'text-foreground')}>
+        마이페이지 <span className="ml-1.5 text-muted-foreground">{user.nickname}</span>
+      </Link>
+      <button type="button" onClick={logout} className={cn(item, 'text-foreground')}>
+        로그아웃
+      </button>
+    </>
+  )
+}
+
+// 인증 상태별 우측 영역 — Design Ref: §5.3 NavBar (loading 스켈레톤 / 로그인 버튼 / 유저 메뉴)
+function AuthSection() {
+  const { status, user } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const logout = useLogout()
   const [menuOpen, setMenuOpen] = useState(false)
 
   if (status === 'loading') {
@@ -192,7 +255,7 @@ function AuthSection() {
   if (status === 'anonymous' || !user) {
     return (
       <Button
-        className="h-11 shrink-0 rounded-full px-5 font-semibold active:bg-primary-pressed md:h-9"
+        className="h-9 shrink-0 rounded-full px-5 font-semibold active:bg-primary-pressed"
         onClick={() => navigate('/login', { state: { next: location.pathname } })}
       >
         로그인
@@ -232,9 +295,6 @@ function AuthSection() {
               onClick={() => {
                 setMenuOpen(false)
                 logout()
-                toast.success('로그아웃했어요')
-                const landing = logoutLanding(location.pathname)
-                if (landing) navigate(landing, { replace: true })
               }}
             >
               로그아웃

@@ -189,9 +189,13 @@ export default function StockDetailPage() {
             >
               {formatChangeOrDash(stock.change)}
             </span>
-            <Button variant="outline" size="sm" className="ml-auto" asChild>
-              <Link to={`/graph/${stock.ticker}`}>지식그래프에서 보기</Link>
-            </Button>
+            {/* 테마 대시보드의 "기업 그래프 →"와 같은 글자 링크 — 제목 줄이라 한 단계 크게 */}
+            <Link
+              to={`/graph/${stock.ticker}`}
+              className="ml-auto flex min-h-11 items-center text-sm font-semibold text-primary hover:underline md:min-h-0"
+            >
+              기업 그래프 →
+            </Link>
           </div>
 
           <CompanyOverview

@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import { CATEGORY_COLORS, type GraphFocus } from '@/data/graphTypes'
 import { StockLogo } from '@/components/stock/StockLogo'
 import { Input } from '@/components/ui/input'
+import { isBareKey } from '@/lib/keyboard'
 import { searchResults, type SearchableStock, type SearchableTheme } from '@/lib/searchResults'
 import { cn } from '@/lib/utils'
 
@@ -25,12 +26,6 @@ interface Props {
   dropdownClassName?: string
   /** 이 키를 누르면 어디서든 검색창으로 들어온다(헤더 '/') — 입력창 안에 키 표시도 띄운다 */
   shortcutKey?: string
-}
-
-/** 글을 쓰는 중인 곳 — 여기서 누른 단축키는 글자이지 명령이 아니다 */
-function isTyping(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
 }
 
 const LISTBOX_ID = 'search-results'
@@ -71,7 +66,7 @@ export function SearchBar({
   useEffect(() => {
     if (!shortcutKey) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key !== shortcutKey || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return
+      if (!isBareKey(e, shortcutKey)) return
       const input = inputRef.current
       // 좁은 화면에서 숨겨진(display:none) 검색창은 포커스할 수 없다 — 키를 가로채지 않는다
       if (!input || input.offsetParent === null) return

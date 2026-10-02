@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { InfoPopover } from '@/components/ui/info-popover'
 import type { StockDetailRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
 import { rangeZone, rankPosition } from '@/lib/rangeZone'
@@ -13,14 +14,99 @@ interface MetricDef {
   label: string
   lowerIsBetter: boolean
   format: (v: number) => string
+  /** 도움말에 적는 '상위'의 뜻 */
+  hint: string
 }
 
 const METRICS: MetricDef[] = [
-  { key: 'marketCap', label: '시가총액', lowerIsBetter: false, format: formatCompactKrw },
-  { key: 'per', label: 'PER', lowerIsBetter: true, format: (v) => `${v.toFixed(2)}배` },
-  { key: 'pbr', label: 'PBR', lowerIsBetter: true, format: (v) => v.toFixed(2) },
-  { key: 'roe', label: 'ROE', lowerIsBetter: false, format: (v) => `${v.toFixed(2)}%` },
+  {
+    key: 'marketCap',
+    label: '시가총액',
+    lowerIsBetter: false,
+    format: formatCompactKrw,
+    hint: '테마 안에서 덩치가 큰 편',
+  },
+  {
+    key: 'per',
+    label: 'PER',
+    lowerIsBetter: true,
+    format: (v) => `${v.toFixed(2)}배`,
+    hint: '이익에 비해 주가가 싼 편',
+  },
+  {
+    key: 'pbr',
+    label: 'PBR',
+    lowerIsBetter: true,
+    format: (v) => v.toFixed(2),
+    hint: '순자산에 비해 주가가 싼 편',
+  },
+  {
+    key: 'roe',
+    label: 'ROE',
+    lowerIsBetter: false,
+    format: (v) => `${v.toFixed(2)}%`,
+    hint: '자본으로 이익을 잘 내는 편',
+  },
 ]
+
+/** 색 구간 — rangeZone과 같은 3등분. 대표 위치로 색을 뽑아 막대와 범례가 어긋나지 않게 한다 */
+const ZONE_LEGEND = [
+  { position: 1, name: '빨강', range: '상위 1/3', meaning: '동료 대부분보다 앞서요' },
+  { position: 0.5, name: '파랑', range: '중간 1/3', meaning: '테마 안에서 보통 수준이에요' },
+  { position: 0, name: '초록', range: '하위 1/3', meaning: '동료 대부분보다 뒤처져요' },
+] as const
+
+/** 테마 내 비교 읽는 법 — 점 위치, 색 구간, 지표마다 다른 '상위' 기준 */
+function PeerRankHelp() {
+  return (
+    <InfoPopover title="테마 내 비교 읽는 법">
+      <div className="flex flex-col gap-3 text-caption leading-relaxed text-foreground-secondary break-keep [text-wrap:pretty]">
+        <p>
+          점은 같은 테마 종목들 사이에서 이 종목의 순위 자리예요. 오른쪽 끝이 1위, 왼쪽 끝이 꼴찌,
+          가운데 눈금이 중앙값이에요.
+        </p>
+        <ul className="flex flex-col gap-1">
+          {ZONE_LEGEND.map((zone) => (
+            <li key={zone.name} className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className={cn(
+                  'size-2.5 shrink-0 rounded-full border-[1.5px]',
+                  rangeZone(zone.position).stroke,
+                  rangeZone(zone.position).fill,
+                )}
+              />
+              <span className="w-24 shrink-0 font-medium text-foreground">
+                {zone.name} · {zone.range}
+              </span>
+              <span>{zone.meaning}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-foreground-tertiary">
+          여기서 빨강은 주가 상승이 아니라 순위가 높다는 뜻이에요.
+        </p>
+        <div>
+          <p className="mb-1 font-medium text-foreground">지표마다 '상위'의 기준이 달라요</p>
+          <ul className="flex flex-col gap-0.5">
+            {METRICS.map((metric) => (
+              <li key={metric.key} className="flex gap-2">
+                <span className="w-14 shrink-0 font-medium text-foreground">{metric.label}</span>
+                <span>
+                  {metric.lowerIsBetter ? '낮을수록' : '높을수록'} 상위 — {metric.hint}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="text-foreground-tertiary">
+          노란 배지는 순위 / 비교 종목 수예요. 값이 없는 종목은 빠지므로 지표마다 비교 종목 수가
+          다를 수 있어요.
+        </p>
+      </div>
+    </InfoPopover>
+  )
+}
 
 function median(values: number[]): number | null {
   if (values.length === 0) return null
@@ -33,7 +119,7 @@ function rankOf(myValue: number, pool: number[], lowerIsBetter: boolean): number
   return pool.filter((v) => (lowerIsBetter ? v < myValue : v > myValue)).length + 1
 }
 
-const ROW_GRID = 'grid grid-cols-[56px_1fr_64px] items-center gap-3'
+const ROW_GRID = 'grid grid-cols-[56px_1fr_72px] items-center gap-3'
 
 /**
  * 꼴찌 ──┼──●── 1위 — 값 크기가 아니라 순위로 점을 놓는다.
@@ -103,7 +189,10 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
   return (
     <section className="card-surface flex flex-col p-4">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold text-foreground">테마 내 비교 · {themeName}</h2>
+        <div className="flex items-center gap-1">
+          <h2 className="text-sm font-semibold text-foreground">테마 내 비교 · {themeName}</h2>
+          <PeerRankHelp />
+        </div>
         <span className="text-xs text-muted-foreground">동료 {peerCount}종목 기준</span>
       </div>
       {/* 옆 투자 지표 카드가 더 길면 남는 높이를 네 행이 똑같이 나눠 갖는다 — 카드 아래 빈 공간 방지 */}
@@ -130,7 +219,12 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
               {row.rank === null ? (
                 <span className="font-mono text-xs text-muted-foreground">—</span>
               ) : (
-                <Badge variant="secondary" className="font-mono text-body">
+                // 뉴스 "분석" 뱃지와 같은 틀(각진 아웃라인 + 연한 채움) — 막대의 빨강·파랑·초록과 겹치지 않는 노랑.
+                // 높이는 왼쪽 값·막대 묶음(약 31px)보다 살짝 낮게
+              <Badge
+                variant="outline"
+                className="h-7 w-full rounded-sm border-chart-5/70 bg-chart-5/14 font-mono text-body font-semibold text-chart-5-ink"
+              >
                   {row.rank}/{row.poolCount}위
                 </Badge>
               )}
@@ -148,9 +242,6 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
         </div>
         <span />
       </div>
-      <p className="mt-1 text-caption text-foreground-tertiary">
-        순위 기준 위치 · PER·PBR은 낮을수록 상위
-      </p>
     </section>
   )
 }

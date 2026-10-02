@@ -94,3 +94,32 @@ export function Logo({ height = 24, tone = 'default', animated = true, className
     </svg>
   )
 }
+
+/** 좁은 화면용 마크 — F와 곡선·점만 (public/brand/finngraph-mark.svg와 같은 모양) */
+export function LogoMark({ size = 28, className }: { size?: number; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      width={size}
+      height={size}
+      role="img"
+      aria-label="Finngraph"
+      className={cn('block shrink-0', className)}
+    >
+      <path
+        fill="currentColor"
+        transform="translate(4 48) scale(0.62)"
+        d="M5.37 0L21.97 0L21.97-28.61L50.20-28.61L50.20-42.19L21.97-42.19L21.97-57.13L53.32-57.13L53.32-70.70L5.37-70.70Z"
+      />
+      <path
+        d="M6,55 H28 C39,55 45,45 49,32 L55,15"
+        fill="none"
+        strokeWidth={6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ stroke: 'var(--primary)' }}
+      />
+      <circle cx={55} cy={15} r={5.5} style={{ fill: 'var(--stock-up)' }} />
+    </svg>
+  )
+}

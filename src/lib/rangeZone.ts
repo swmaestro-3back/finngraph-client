@@ -4,12 +4,20 @@ export interface RangeZone {
   fill: string
   /** 현재 위치 점 */
   dot: string
+  /** 테두리 — 연한 채움과 짝을 이뤄 범례 원으로 쓴다 */
+  stroke: string
 }
 
 export function rangeZone(position: number): RangeZone {
-  if (position < 1 / 3) return { fill: 'bg-trend-positive/25', dot: 'bg-trend-positive' }
-  if (position < 2 / 3) return { fill: 'bg-primary/25', dot: 'bg-primary' }
-  return { fill: 'bg-stock-up/25', dot: 'bg-stock-up' }
+  if (position < 1 / 3)
+    return {
+      fill: 'bg-trend-positive/25',
+      dot: 'bg-trend-positive',
+      stroke: 'border-trend-positive',
+    }
+  if (position < 2 / 3)
+    return { fill: 'bg-primary/25', dot: 'bg-primary', stroke: 'border-primary' }
+  return { fill: 'bg-stock-up/25', dot: 'bg-stock-up', stroke: 'border-stock-up' }
 }
 
 /**
