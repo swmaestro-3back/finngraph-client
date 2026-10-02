@@ -11,16 +11,23 @@ export interface SearchResult {
   focus: GraphFocus
 }
 
-export type SearchableStock = Pick<StockRowRes, 'ticker' | 'name' | 'market'>
+export type SearchableStock = Pick<StockRowRes, 'ticker' | 'name' | 'market'> &
+  Partial<Pick<StockRowRes, 'marketCap'>>
 export type SearchableTheme = Pick<ThemeRes, 'name'>
 
 const MAX_RESULTS = 8
 /** 결과 8칸 중 테마에 내주는 최대 칸 — 종목이 훨씬 많아 테마가 밀려나지 않도록 */
 const THEME_SLOTS = 3
 
+/** 시가총액 내림차순 — 값이 없는 종목은 뒤로 */
+function byMarketCapDesc(a: SearchableStock, b: SearchableStock): number {
+  return (b.marketCap ?? -1) - (a.marketCap ?? -1)
+}
+
 /**
  * 헤더·그래프 사이드바가 공유하는 검색 결과.
  * 첫 행이 Enter 기본 선택지이므로 이름·코드 정확 일치 종목을 맨 앞에 둔다.
+ * 그 안에서는 시가총액이 큰 종목부터 — 흔히 찾는 종목이 8칸 안에 들도록.
  */
 export function searchResults(
   rawQuery: string,
@@ -39,6 +46,8 @@ export function searchResults(
     if (name === q || s.ticker === q) exact.push(s)
     else if (name.includes(q) || s.ticker.includes(q)) partial.push(s)
   }
+  exact.sort(byMarketCapDesc)
+  partial.sort(byMarketCapDesc)
   const stockHits = [...exact, ...partial].slice(0, MAX_RESULTS - themeHits.length)
 
   return [
