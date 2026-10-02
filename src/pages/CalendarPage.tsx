@@ -230,7 +230,7 @@ export default function CalendarPage() {
             failed={failed}
             onOpen={openEvent}
           />
-          <IpoBoard today={today} />
+          <IpoBoard today={today} from={pathname + search} />
         </div>
       </div>
 
