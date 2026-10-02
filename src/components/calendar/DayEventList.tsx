@@ -1,9 +1,7 @@
 import { Star } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { EstimateBadge, EventMarker } from '@/components/calendar/EventMarker'
 import type { CalendarEventRes } from '@/lib/apiTypes'
-import { KIND_LABELS, eventDetails, formatDayTitle, kindFamily } from '@/lib/calendar'
-import { fromState } from '@/lib/navigation'
+import { KIND_LABELS, agendaCountLabel, eventDetails, formatDayTitle, kindFamily } from '@/lib/calendar'
 import { cn } from '@/lib/utils'
 
 interface DayEventListProps {
@@ -13,7 +11,7 @@ interface DayEventListProps {
   holiday: boolean
   loading: boolean
   failed: boolean
-  from: string
+  onOpen: (item: CalendarEventRes) => void
   className?: string
 }
 
@@ -28,16 +26,17 @@ function Detail({ value, numeric = false }: { value: string; numeric?: boolean }
   )
 }
 
-function EventRow({ item, from }: { item: CalendarEventRes; from: string }) {
+function EventRow({ item, onOpen }: { item: CalendarEventRes; onOpen: (item: CalendarEventRes) => void }) {
   const details = eventDetails(item)
-  const agenda = item.kind === 'AGM' && item.agenda.length > 0
+  const agenda = agendaCountLabel(item)
 
   return (
-    <li className="group relative flex flex-col gap-1 border-b border-surface-inset px-5 py-3 transition-colors last:border-b-0 hover:bg-muted has-[a:focus-visible]:bg-muted">
-      <Link
-        to={`/stock/${encodeURIComponent(item.ticker)}`}
-        state={fromState(from)}
-        className="flex flex-col gap-1 outline-none after:absolute after:inset-0 focus-visible:after:ring-3 focus-visible:after:ring-inset focus-visible:after:ring-ring/50"
+    <li className="group border-b border-surface-inset transition-colors last:border-b-0 hover:bg-muted has-[button:focus-visible]:bg-muted">
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={() => onOpen(item)}
+        className="flex w-full cursor-pointer flex-col gap-1 px-5 py-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50"
       >
         <span className="flex min-w-0 items-center gap-1.5">
           {item.favorite && (
@@ -56,23 +55,9 @@ function EventRow({ item, from }: { item: CalendarEventRes; from: string }) {
           {details.map((value, index) => (
             <Detail key={`${index}-${value}`} value={value} numeric />
           ))}
+          {agenda && <Detail value={agenda} numeric />}
         </span>
-      </Link>
-      {agenda && (
-        <div className="mt-1 flex flex-col gap-1 rounded-lg bg-muted px-3 py-2 group-hover:bg-surface-inset">
-          <ol
-            aria-label={`${item.stockName} 주총 안건`}
-            className="list-decimal space-y-0.5 pl-4 text-caption leading-relaxed text-foreground-secondary marker:font-mono marker:text-muted-foreground"
-          >
-            {item.agenda.map((agendum, index) => (
-              <li key={`${index}-${agendum}`} className="break-keep">
-                {agendum}
-              </li>
-            ))}
-          </ol>
-          {item.agendaTruncated && <p className="text-caption text-muted-foreground">외 다수 — 일부 안건만 받았습니다</p>}
-        </div>
-      )}
+      </button>
     </li>
   )
 }
@@ -88,7 +73,7 @@ function Placeholder({ title, description }: { title: string; description?: stri
   )
 }
 
-export function DayEventList({ id, date, events, holiday, loading, failed, from, className }: DayEventListProps) {
+export function DayEventList({ id, date, events, holiday, loading, failed, onOpen, className }: DayEventListProps) {
   const count = events.length
 
   return (
@@ -131,7 +116,7 @@ export function DayEventList({ id, date, events, holiday, loading, failed, from,
       {!loading && !failed && count > 0 && (
         <ul className="min-h-0 overflow-y-auto overscroll-contain xl:max-h-[min(70vh,640px)]">
           {events.map((item, index) => (
-            <EventRow key={`${index}-${item.kind}-${item.ticker}`} item={item} from={from} />
+            <EventRow key={`${index}-${item.kind}-${item.ticker}`} item={item} onOpen={onOpen} />
           ))}
         </ul>
       )}

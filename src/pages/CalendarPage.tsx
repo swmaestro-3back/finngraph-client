@@ -1,8 +1,9 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { CalendarMemberBanner } from '@/components/calendar/CalendarMemberBanner'
 import { DayEventList } from '@/components/calendar/DayEventList'
+import { EventDetailModal } from '@/components/calendar/EventDetailModal'
 import { EstimateBadge, FamilyLegend } from '@/components/calendar/EventMarker'
 import { IpoBoard } from '@/components/calendar/IpoBoard'
 import { MonthGrid } from '@/components/calendar/MonthGrid'
@@ -11,6 +12,7 @@ import { useAuth } from '@/lib/auth'
 import {
   CALENDAR_NOTICE,
   defaultSelection,
+  findEvent,
   formatAsOf,
   formatDayTitle,
   formatMonthParam,
@@ -23,6 +25,7 @@ import {
   parseMonthParam,
   shiftMonth,
   weekdayHolidays,
+  type EventDetailTarget,
   type YearMonth,
 } from '@/lib/calendar'
 import { useCalendar } from '@/lib/queries/useCalendar'
@@ -58,6 +61,7 @@ export default function CalendarPage() {
   const { pathname, search } = useLocation()
   const [params, setParams] = useSearchParams()
   const today = useMemo(() => kstToday(new Date()), [])
+  const [target, setTarget] = useState<EventDetailTarget | null>(null)
 
   const dateParam = parseDateParam(params.get('date'))
   const monthKey = formatMonthParam(
@@ -80,6 +84,14 @@ export default function CalendarPage() {
   const selectedEvents = eventsByDate.get(selected) ?? NO_EVENTS
   const asOf = formatAsOf(fresh?.asOf ?? null)
   const failed = !loading && error !== null
+  const targetRow = useMemo(() => (target ? findEvent(fresh?.events ?? [], target) : null), [fresh, target])
+  const openEvent = useCallback(
+    (item: CalendarEventRes) => setTarget({ ticker: item.ticker, kind: item.kind, date: item.date, label: item.label }),
+    [],
+  )
+  const changeModal = useCallback((open: boolean) => {
+    if (!open) setTarget(null)
+  }, [])
 
   const update = useCallback(
     (next: { month?: string | null; date?: string | null }) => {
@@ -216,12 +228,19 @@ export default function CalendarPage() {
             holiday={holidays.has(selected)}
             loading={pending}
             failed={failed}
-            from={pathname + search}
+            onOpen={openEvent}
           />
           <IpoBoard today={today} />
         </div>
       </div>
 
+      <EventDetailModal
+        target={target}
+        fallback={targetRow}
+        from={pathname + search}
+        today={today}
+        onOpenChange={changeModal}
+      />
       <p className="mt-5 text-caption text-muted-foreground break-keep [text-wrap:pretty]">{CALENDAR_NOTICE}</p>
     </div>
   )
