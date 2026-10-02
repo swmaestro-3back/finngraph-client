@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDateTime, formatTrillion, pressOf } from '@/lib/format'
+import { formatDateTime, formatTrillion, formatVolume, pressOf } from '@/lib/format'
 
 describe('formatTrillion — 조 단위 숫자를 1조 기준으로 조/억 전환', () => {
   it('1조 이상은 소수 첫째 자리 조', () => {
@@ -45,5 +45,17 @@ describe('pressOf — 수집 뉴스 도메인은 언론사 이름으로', () => 
     expect(pressOf('https://n.news.naver.com/mnews/article/366/0001193190')).toBe('네이버 뉴스')
     expect(pressOf('https://www.etoday.co.kr/news/view/1')).toBe('이투데이')
     expect(pressOf('https://www.ajunews.com/view/1')).toBe('아주경제')
+  })
+})
+
+describe('formatVolume — 주 단위 거래량을 만주/주로', () => {
+  it('1만주 이상은 정수 만주', () => {
+    expect(formatVolume(65_555_523)).toBe('6,556만주')
+    expect(formatVolume(10_000)).toBe('1만주')
+  })
+
+  it('1만주 미만은 주 그대로', () => {
+    expect(formatVolume(3_200)).toBe('3,200주')
+    expect(formatVolume(0)).toBe('0주')
   })
 })

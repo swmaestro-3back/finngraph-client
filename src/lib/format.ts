@@ -18,6 +18,12 @@ export function formatPrice(value: number): string {
   return formatAmount(value)
 }
 
+/** 거래량(주) — 1만주 이상은 정수 만주(6,556만주), 미만은 주(3,200주) */
+export function formatVolume(shares: number): string {
+  if (shares >= 1e4) return `${formatAmount(shares / 1e4)}만주`
+  return `${formatAmount(shares)}주`
+}
+
 export function changeColorClass(value: number): string {
   if (value > 0) return 'text-stock-up'
   if (value < 0) return 'text-stock-down'
