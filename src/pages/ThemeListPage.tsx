@@ -9,14 +9,8 @@ import { Button } from '@/components/ui/button'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemes } from '@/lib/queries/useThemes'
 import { fromState } from '@/lib/navigation'
-import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
-import {
-  formatShortDate,
-  hotExclusionTitle,
-  leaderCellContent,
-  leaderColumnLabel,
-  type LeaderCellContent,
-} from '@/lib/themeMetrics'
+import { changeColorClass, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
+import { formatShortDate, hotExclusionTitle } from '@/lib/themeMetrics'
 import { usePageParam, useUrlTableSort } from '@/lib/useListParams'
 import { cn } from '@/lib/utils'
 import { priceBasisSuffix } from '@/lib/referenceDate'
@@ -55,11 +49,12 @@ interface ThemeRow {
   tradingValueLabel: string
   stockCount: number
   pricedCount: number | null
-  leaderCell: LeaderCellContent
+  /** 시가총액 상위 종목 이름 — 상세 페이지 대장주 카드와 같은 종목 */
+  leaders: string[]
   exclusionTitle: string | null
 }
 
-const BASE_COLUMNS: TableColumn<SortKey>[] = [
+const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
   { key: 'name', label: '테마명', align: 'left' },
   { key: 'change', label: '등락률', align: 'center' },
@@ -69,33 +64,27 @@ const BASE_COLUMNS: TableColumn<SortKey>[] = [
   { key: 'm3', label: '3개월', align: 'center' },
   { key: 'tradingValue', label: '거래대금', align: 'center' },
   { key: 'stockCount', label: '종목수', align: 'center' },
+  { key: null, label: '대장주', align: 'left', className: 'pl-4' },
 ]
 
-function LeaderCell({ content }: { content: LeaderCellContent }) {
-  if (content.kind === 'empty') {
+const LEADER_COUNT = 3
+
+function LeaderCell({ names }: { names: string[] }) {
+  if (names.length === 0) {
     return (
-      <span className="pl-4 text-caption text-foreground-tertiary" aria-label="주도주 없음">
+      <span className="pl-4 text-caption text-foreground-tertiary" aria-label="대장주 없음">
         —
       </span>
     )
   }
-  if (content.kind === 'legacy') {
-    return (
-      <span className="overflow-hidden pl-4 text-caption whitespace-nowrap text-ellipsis text-muted-foreground">
-        {content.text}
-      </span>
-    )
-  }
   return (
-    <span className="flex items-center gap-3 overflow-hidden pl-4 text-caption whitespace-nowrap text-foreground-secondary">
-      {content.leaders.map((leader) => (
-        <span key={leader.ticker} className="inline-flex items-baseline gap-1 truncate">
-          <span className="truncate">{leader.name}</span>
-          {leader.change !== null && (
-            <span className={cn('font-mono tabular-nums', changeColorClass(leader.change))}>
-              {formatChange(leader.change)}
-            </span>
-          )}
+    <span
+      title={names.join(', ')}
+      className="flex items-center gap-3 overflow-hidden pl-4 text-caption whitespace-nowrap text-foreground-secondary"
+    >
+      {names.map((name) => (
+        <span key={name} className="min-w-0 truncate">
+          {name}
         </span>
       ))}
     </span>
@@ -108,14 +97,6 @@ export default function ThemeListPage() {
   const { data: themes, loading, error, refetch } = useThemes()
   const { data: market } = useThemeMarket()
   const baseDate = market?.baseDate ?? themes?.[0]?.baseDate ?? null
-  const columns = useMemo<TableColumn<SortKey>[]>(
-    () => [
-      ...BASE_COLUMNS,
-      { key: null, label: leaderColumnLabel(themes ?? []), align: 'left', className: 'pl-4' },
-    ],
-    [themes],
-  )
-
   const allRows: ThemeRow[] = useMemo(
     () =>
       (themes ?? []).map((theme) => {
@@ -135,7 +116,7 @@ export default function ThemeListPage() {
           tradingValueLabel: formatCompactKrw(theme.tradingValue),
           stockCount: theme.stockCount,
           pricedCount: theme.pricedCount ?? null,
-          leaderCell: leaderCellContent(theme.leaders, theme.topStocks),
+          leaders: theme.topStocks.slice(0, LEADER_COUNT).map((s) => s.name),
           exclusionTitle: hotExclusionTitle(theme),
         }
       }),
@@ -213,7 +194,7 @@ export default function ThemeListPage() {
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="min-w-[1080px]">
                 <SortableHeaderRow
-                  columns={columns}
+                  columns={COLUMNS}
                   sortKey={sortKey}
                   sortDesc={sortDesc}
                   onSort={handleSort}
@@ -293,7 +274,7 @@ export default function ThemeListPage() {
                         `${row.stockCount}종목`
                       )}
                     </span>
-                    <LeaderCell content={row.leaderCell} />
+                    <LeaderCell names={row.leaders} />
                   </button>
                 ))}
               </div>
