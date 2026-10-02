@@ -64,7 +64,12 @@ import {
   summarizeRecovery,
   summaryFromAction,
   summaryFromRow,
+  groupPreview,
+  ipoShowsSettlement,
+  nextStepIndex,
+  previewToggleLabel,
   timelineItems,
+  timelineRow,
   weekdayHolidays,
 } from '@/lib/calendar'
 
@@ -86,17 +91,36 @@ const event = (overrides: Partial<CalendarEventRes>): CalendarEventRes => ({
 
 const ipo = (overrides: Partial<IpoRes>): IpoRes => ({
   ticker: '900001',
+  corpCode: null,
   name: '공모',
   status: 'UPCOMING',
+  spac: false,
   subscrStart: '2026-10-10',
   subscrEnd: '2026-10-11',
   offerPrice: null,
+  priceBasis: 'CONFIRMED',
   leadManagers: null,
   payDate: null,
   refundDate: null,
   listingDate: null,
   ...overrides,
 })
+
+const DONGWON_CARD: IpoRes = {
+  ticker: null,
+  corpCode: '00784184',
+  name: '동원파츠',
+  status: 'FILED',
+  spac: false,
+  subscrStart: '2026-11-02',
+  subscrEnd: '2026-11-03',
+  offerPrice: 23000,
+  priceBasis: 'PLANNED',
+  leadManagers: '삼성증권',
+  payDate: '2026-11-05',
+  refundDate: null,
+  listingDate: null,
+}
 
 const SAMSUNG_CALENDAR: StockCalendarRes = {
   ticker: '005930',
@@ -430,8 +454,9 @@ describe('라벨', () => {
     expect(FAMILY_LABELS).toEqual({ DIV: '배당', BONUS: '무상증자', RIGHTS: '유상증자', AGM: '주총' })
   })
 
-  it('공모 상태 4종의 한국어 라벨', () => {
+  it('공모 상태 5종의 한국어 라벨', () => {
     expect(IPO_STATUS_LABELS).toEqual({
+      FILED: '신고서 제출',
       UPCOMING: '청약 예정',
       SUBSCRIBING: '청약 중',
       LISTING_PENDING: '상장 예정',
@@ -998,5 +1023,113 @@ describe('exPriceMissing — 이론가의 미정 판정', () => {
 
   it('권리락이 지난 확정값은 거래소 기준가라 입력이 없어도 미정이 아니다', () => {
     expect(exPriceMissing('PREVIOUS_CLOSE', true)).toBe(false)
+  })
+})
+
+describe('공모주 보드 API 계약 — 설계서 §5.2', () => {
+  it('신고서 카드는 종목코드 없이 DART 고유번호와 예정가 기준을 싣는다', () => {
+    expect([DONGWON_CARD.ticker, DONGWON_CARD.corpCode, DONGWON_CARD.spac, DONGWON_CARD.priceBasis]).toEqual([
+      null,
+      '00784184',
+      false,
+      'PLANNED',
+    ])
+  })
+})
+
+describe('groupIpos — 신고서 제출 묶음', () => {
+  it('신고서 제출은 맨 뒤이고 청약 시작순이며, 이 묶음에만 안내 줄과 미리보기 수가 붙는다', () => {
+    const groups = groupIpos([
+      ipo({ ...DONGWON_CARD, name: 'F2', corpCode: '00000002', subscrStart: '2026-11-20', subscrEnd: '2026-11-21' }),
+      ipo({ name: '상장', status: 'LISTED', listingDate: '2026-09-25' }),
+      ipo({ ...DONGWON_CARD, name: 'F1' }),
+      ipo({ name: '청약중', status: 'SUBSCRIBING' }),
+    ])
+    expect(groups.map((g) => [g.status, g.title, g.note, g.preview, g.items.map((i) => i.name)])).toEqual([
+      ['SUBSCRIBING', '청약 중', null, null, ['청약중']],
+      ['LISTED', '최근 상장', null, null, ['상장']],
+      ['FILED', '신고서 제출', '예탁원 청약 일정이 나오기 전 증권신고서 기준이라 일정이 바뀔 수 있습니다', 5, ['F1', 'F2']],
+    ])
+  })
+})
+
+describe('groupPreview·previewToggleLabel — 긴 묶음 접기', () => {
+  const filed = (count: number) =>
+    groupIpos(
+      Array.from({ length: count }, (_, i) =>
+        ipo({ ...DONGWON_CARD, name: `F${i}`, corpCode: `0000000${i}`, subscrStart: `2026-11-${String(10 + i).padStart(2, '0')}` }),
+      ),
+    )[0]
+
+  it('미리보기 수보다 많으면 앞의 몇 장만 보이고 나머지 수를 알려 준다', () => {
+    const group = filed(7)
+    expect(groupPreview(group, false)).toEqual({ items: group.items.slice(0, 5), hidden: 2 })
+    expect(groupPreview(group, true)).toEqual({ items: group.items, hidden: 0 })
+  })
+
+  it('미리보기 수 이하이거나 미리보기가 없는 묶음은 모두 보인다', () => {
+    const group = filed(5)
+    expect(groupPreview(group, false)).toEqual({ items: group.items, hidden: 0 })
+    const subscribing = groupIpos([ipo({ name: '청약중', status: 'SUBSCRIBING' })])[0]
+    expect(groupPreview(subscribing, false)).toEqual({ items: subscribing.items, hidden: 0 })
+  })
+
+  it('토글 문구는 묶음 이름과 전체 건수, 펼친 뒤에는 접기', () => {
+    const group = filed(7)
+    expect(previewToggleLabel(group, false)).toBe('신고서 제출 7건 모두 보기')
+    expect(previewToggleLabel(group, true)).toBe('접기')
+  })
+})
+
+describe('ipoShowsSettlement — 카드의 환불·상장 줄', () => {
+  it('신고서 제출 카드는 환불·상장 줄을 그리지 않는다', () => {
+    expect(ipoShowsSettlement(DONGWON_CARD)).toBe(false)
+    expect((['UPCOMING', 'SUBSCRIBING', 'LISTING_PENDING', 'LISTED'] as const).map((status) => ipoShowsSettlement(ipo({ status })))).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ])
+  })
+})
+
+describe('ipoCountdown — 신고서 제출', () => {
+  const today = '2026-10-02'
+
+  it('청약 예정과 같이 청약 시작까지 센다', () => {
+    expect(ipoCountdown(DONGWON_CARD, today)).toBe('청약 D-31')
+    expect(ipoCountdown(ipo({ ...DONGWON_CARD, subscrStart: '2026-10-03' }), today)).toBe('내일 청약')
+    expect(ipoCountdown(ipo({ ...DONGWON_CARD, subscrStart: '2026-10-02' }), today)).toBeNull()
+  })
+})
+
+describe('timelineRow·nextStepIndex — 날짜가 빌 수 있는 흐름', () => {
+  const today = '2026-10-02'
+
+  it('날짜가 있으면 단계 상태·날짜·남은 날을 일정 모달과 같게 낸다', () => {
+    expect(timelineRow({ date: '2026-11-02', endDate: '2026-11-03' }, today)).toEqual({
+      state: 'upcoming',
+      dateText: '11/2–11/3',
+      countdown: 'D-31',
+    })
+    expect(timelineRow({ date: '2026-10-01', endDate: '2026-10-03' }, today)).toEqual({
+      state: 'today',
+      dateText: '10/1–10/3',
+      countdown: '진행 중',
+    })
+    expect(timelineRow({ date: '2026-09-25', endDate: null }, today)).toEqual({
+      state: 'past',
+      dateText: '9/25',
+      countdown: '지남',
+    })
+  })
+
+  it('날짜가 없으면 미정이고 남은 날은 없다', () => {
+    expect(timelineRow({ date: null, endDate: null }, today)).toEqual({ state: null, dateText: '미정', countdown: null })
+  })
+
+  it('다음 단계는 지나지 않은 첫 단계이고, 미정 단계도 다음 단계가 된다', () => {
+    expect(nextStepIndex([{ date: '2026-09-25', endDate: null }, { date: null, endDate: null }], today)).toBe(1)
+    expect(nextStepIndex([{ date: '2026-09-25', endDate: null }], today)).toBe(-1)
   })
 })

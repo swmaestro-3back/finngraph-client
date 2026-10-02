@@ -75,6 +75,7 @@ export function kindFamily(kind: CalendarEventKind): EventFamily {
 }
 
 export const IPO_STATUS_LABELS: Record<IpoStatus, string> = {
+  FILED: '신고서 제출',
   UPCOMING: '청약 예정',
   SUBSCRIBING: '청약 중',
   LISTING_PENDING: '상장 예정',
@@ -82,13 +83,22 @@ export const IPO_STATUS_LABELS: Record<IpoStatus, string> = {
 }
 
 const IPO_GROUP_TITLES: Record<IpoStatus, string> = {
+  FILED: '신고서 제출',
   SUBSCRIBING: '청약 중',
   UPCOMING: '청약 예정',
   LISTING_PENDING: '상장 예정',
   LISTED: '최근 상장',
 }
 
-const IPO_GROUP_ORDER: readonly IpoStatus[] = ['SUBSCRIBING', 'UPCOMING', 'LISTING_PENDING', 'LISTED']
+const IPO_GROUP_NOTES: Partial<Record<IpoStatus, string>> = {
+  FILED: '예탁원 청약 일정이 나오기 전 증권신고서 기준이라 일정이 바뀔 수 있습니다',
+}
+
+const IPO_GROUP_PREVIEWS: Partial<Record<IpoStatus, number>> = {
+  FILED: 5,
+}
+
+const IPO_GROUP_ORDER: readonly IpoStatus[] = ['SUBSCRIBING', 'UPCOMING', 'LISTING_PENDING', 'LISTED', 'FILED']
 
 export interface YearMonth {
   year: number
@@ -324,6 +334,8 @@ export function eventDetails(item: EventValues): string[] {
 export interface IpoGroup {
   status: IpoStatus
   title: string
+  note: string | null
+  preview: number | null
   items: IpoRes[]
 }
 
@@ -335,6 +347,7 @@ function compareOptionalDate(a: string | null, b: string | null): number {
 }
 
 const IPO_SORT: Record<IpoStatus, (a: IpoRes, b: IpoRes) => number> = {
+  FILED: (a, b) => compareOptionalDate(a.subscrStart, b.subscrStart),
   SUBSCRIBING: (a, b) => compareOptionalDate(a.subscrEnd, b.subscrEnd),
   UPCOMING: (a, b) => compareOptionalDate(a.subscrStart, b.subscrStart),
   LISTING_PENDING: (a, b) =>
@@ -346,14 +359,32 @@ export function groupIpos(offerings: readonly IpoRes[]): IpoGroup[] {
   return IPO_GROUP_ORDER.map((status) => ({
     status,
     title: IPO_GROUP_TITLES[status],
+    note: IPO_GROUP_NOTES[status] ?? null,
+    preview: IPO_GROUP_PREVIEWS[status] ?? null,
     items: offerings
       .filter((item) => item.status === status)
       .sort((a, b) => IPO_SORT[status](a, b) || a.name.localeCompare(b.name, 'ko')),
   })).filter((group) => group.items.length > 0)
 }
 
-export function ipoCountdown(item: IpoRes, today: string): string | null {
-  if (item.status === 'UPCOMING') {
+export function groupPreview(group: IpoGroup, expanded: boolean): { items: IpoRes[]; hidden: number } {
+  if (expanded || group.preview === null || group.items.length <= group.preview) return { items: group.items, hidden: 0 }
+  return { items: group.items.slice(0, group.preview), hidden: group.items.length - group.preview }
+}
+
+export function previewToggleLabel(group: IpoGroup, expanded: boolean): string {
+  return expanded ? '접기' : `${group.title} ${group.items.length}건 모두 보기`
+}
+
+export function ipoShowsSettlement(item: Pick<IpoRes, 'status'>): boolean {
+  return item.status !== 'FILED'
+}
+
+export function ipoCountdown(
+  item: Pick<IpoRes, 'status' | 'subscrStart' | 'subscrEnd' | 'listingDate'>,
+  today: string,
+): string | null {
+  if (item.status === 'UPCOMING' || item.status === 'FILED') {
     const days = daysBetween(today, item.subscrStart)
     if (days <= 0) return null
     return days === 1 ? '내일 청약' : `청약 D-${days}`
@@ -444,6 +475,26 @@ export function spanCountdown(span: { date: string; endDate: string | null }, to
   if (state === 'past') return '지남'
   if (state === 'today') return span.endDate !== null && span.endDate !== span.date ? '진행 중' : '오늘'
   return dDay(span.date, today)
+}
+
+export interface TimelineRow {
+  state: StepState | null
+  dateText: string
+  countdown: string | null
+}
+
+export function timelineRow(span: { date: string | null; endDate: string | null }, today: string): TimelineRow {
+  if (span.date === null) return { state: null, dateText: '미정', countdown: null }
+  const dated = { date: span.date, endDate: span.endDate }
+  return {
+    state: stepState(dated, today),
+    dateText: formatDateSpan(span.date, span.endDate),
+    countdown: spanCountdown(dated, today),
+  }
+}
+
+export function nextStepIndex(items: readonly { date: string | null; endDate: string | null }[], today: string): number {
+  return items.findIndex((item) => timelineRow(item, today).state !== 'past')
 }
 
 export function focusStep(action: CorporateActionRes, today: string): ActionStepRes | null {

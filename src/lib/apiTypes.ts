@@ -594,15 +594,20 @@ export interface CalendarRes {
   events: CalendarEventRes[]
 }
 
-export type IpoStatus = 'UPCOMING' | 'SUBSCRIBING' | 'LISTING_PENDING' | 'LISTED'
+export type IpoStatus = 'FILED' | 'UPCOMING' | 'SUBSCRIBING' | 'LISTING_PENDING' | 'LISTED'
+
+export type IpoPriceBasis = 'CONFIRMED' | 'PLANNED'
 
 export interface IpoRes {
-  ticker: string
+  ticker: string | null
+  corpCode: string | null
   name: string
   status: IpoStatus
+  spac: boolean
   subscrStart: string
   subscrEnd: string
   offerPrice: number | null
+  priceBasis: IpoPriceBasis
   leadManagers: string | null
   payDate: string | null
   refundDate: string | null
@@ -612,6 +617,99 @@ export interface IpoRes {
 export interface IpoListRes {
   asOf: string | null
   offerings: IpoRes[]
+}
+
+export interface IpoScheduleRes {
+  subscrStart: string | null
+  subscrEnd: string | null
+  payDate: string | null
+  refundDate: string | null
+  listingDate: string | null
+}
+
+export interface IpoUnderwriterRes {
+  name: string
+  role: string | null
+  shares: number | null
+  amount: number | null
+  method: string | null
+}
+
+export interface IpoFundUseRes {
+  purpose: string
+  amount: number
+  share: number | null
+}
+
+export interface IpoSellerRes {
+  holder: string
+  relation: string | null
+  before: number | null
+  sold: number | null
+  after: number | null
+}
+
+export interface IpoPutbackRes {
+  reason: string | null
+  investors: string | null
+  shares: string | null
+  period: string | null
+  price: string | null
+}
+
+export interface IpoOfferingRes {
+  price: number | null
+  priceBasis: IpoPriceBasis
+  shares: number | null
+  amount: number | null
+  method: string | null
+  underwriters: IpoUnderwriterRes[] | null
+  fundUses: IpoFundUseRes[] | null
+  fundUsesWithheld: boolean
+  sellers: IpoSellerRes[] | null
+  oldShareRatio: number | null
+  putback: IpoPutbackRes | null
+}
+
+export interface IpoCompanyRes {
+  ceo: string | null
+  establishedOn: string | null
+  address: string | null
+  homepage: string | null
+  description: string | null
+  descriptionSource: string | null
+  descriptionRceptNo: string | null
+}
+
+export interface IpoAfterListingRes {
+  listingDate: string
+  open: number
+  close: number
+  openReturn: number | null
+  closeReturn: number | null
+  price: number | null
+  currentReturn: number | null
+  priceDate: string | null
+}
+
+export interface IpoFilingRes {
+  firstRceptNo: string
+  latestRceptNo: string
+  latestReportName: string
+}
+
+export interface IpoDetailRes {
+  corpCode: string | null
+  ticker: string | null
+  name: string
+  status: IpoStatus
+  spac: boolean
+  schedule: IpoScheduleRes
+  offering: IpoOfferingRes
+  company: IpoCompanyRes | null
+  afterListing: IpoAfterListingRes | null
+  filing: IpoFilingRes | null
+  asOf: string | null
 }
 
 export type CalendarFamily = 'DIV' | 'BONUS' | 'RIGHTS' | 'AGM'
