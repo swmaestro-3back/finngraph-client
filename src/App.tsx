@@ -14,6 +14,7 @@ import CorpGraphPage from '@/pages/CorpGraphPage'
 import ThemeListPage from '@/pages/ThemeListPage'
 import StockListPage from '@/pages/StockListPage'
 import BriefingPage from '@/pages/BriefingPage'
+import CalendarPage from '@/pages/CalendarPage'
 
 function ThemesAliasRedirect() {
   const { themeId } = useParams()
@@ -42,6 +43,7 @@ function App() {
         <Route path="/graph/theme/:name" element={<CorpGraphPage />} />
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="/briefing" element={<BriefingPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/terms" element={<LegalPage doc="terms" />} />
         <Route path="/privacy" element={<LegalPage doc="privacy" />} />
         <Route
