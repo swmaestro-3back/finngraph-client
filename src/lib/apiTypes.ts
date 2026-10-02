@@ -559,3 +559,57 @@ export interface BriefingSummaryRes {
   generatedAt: string
   headline: string | null
 }
+
+export type CalendarEventKind =
+  | 'DIV_EX'
+  | 'DIV_RECORD'
+  | 'DIV_PAY'
+  | 'BONUS_EX'
+  | 'BONUS_LIST'
+  | 'RIGHTS_EX'
+  | 'RIGHTS_SUBSCRIBE'
+  | 'RIGHTS_LIST'
+  | 'AGM'
+
+export interface CalendarEventRes {
+  date: string
+  kind: CalendarEventKind
+  ticker: string
+  stockName: string
+  endDate: string | null
+  amount: number | null
+  ratio: number | null
+  label: string | null
+  agenda: string[]
+  agendaTruncated: boolean
+  estimated: boolean
+  favorite: boolean
+}
+
+export interface CalendarRes {
+  from: string
+  to: string
+  asOf: string | null
+  closedDates: string[]
+  events: CalendarEventRes[]
+}
+
+export type IpoStatus = 'UPCOMING' | 'SUBSCRIBING' | 'LISTING_PENDING' | 'LISTED'
+
+export interface IpoRes {
+  ticker: string
+  name: string
+  status: IpoStatus
+  subscrStart: string
+  subscrEnd: string
+  offerPrice: number | null
+  leadManagers: string | null
+  payDate: string | null
+  refundDate: string | null
+  listingDate: string | null
+}
+
+export interface IpoListRes {
+  asOf: string | null
+  offerings: IpoRes[]
+}
