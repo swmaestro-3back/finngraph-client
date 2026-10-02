@@ -53,6 +53,15 @@ export type GraphHighlight =
   | { kind: 'nodes'; ids: string[]; hops?: number; camera?: boolean }
   | { kind: 'link'; id: string }
 
+/**
+ * 잠깐 켜 보기 — 선택(GraphHighlight)과 달리 카메라를 움직이지 않고, 끝나면 원래 선택 강조로 돌아간다.
+ * link는 패널의 이웃 행, nodes·links는 범례의 한 종류에 올렸을 때다.
+ */
+export type GraphPreview =
+  | { kind: 'link'; id: string }
+  | { kind: 'links'; ids: string[] }
+  | { kind: 'nodes'; ids: string[] }
+
 interface Props {
   data: GraphData
   onNodeClick: (node: GraphNode) => void
@@ -62,11 +71,8 @@ interface Props {
   /** 빈 캔버스 클릭 — 선택 해제 */
   onBackgroundClick: () => void
   highlight: GraphHighlight | null
-  /**
-   * 잠깐 켜 볼 간선 — 상세 패널의 이웃 행에 올렸을 때. 선택(highlight)과 달리 카메라를 움직이지 않고,
-   * null로 돌아오면 원래 선택 강조로 복원한다. 캔버스 안의 간선 호버와 같은 그림이다.
-   */
-  previewLinkId?: string | null
+  /** 잠깐 켜 볼 대상 — null로 돌아오면 원래 선택 강조로 복원한다. 참조가 바뀔 때만 다시 칠하므로 호출자가 메모이즈한다 */
+  preview?: GraphPreview | null
   /** 지금 조회의 중심 노드 — 유일하게 크게 그리고 글로우를 두른다 */
   centerId?: string | null
   /**
@@ -94,6 +100,7 @@ interface HighlightSpec {
 interface D3State {
   nodes: GraphNode[]
   applyHighlight: (highlight: GraphHighlight | null) => void
+  applyPreview: (preview: GraphPreview) => void
 }
 
 /**
@@ -110,7 +117,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     onLinkClick,
     onBackgroundClick,
     highlight,
-    previewLinkId = null,
+    preview = null,
     centerId = null,
     primaryIds,
     seedLinkIds,
@@ -451,7 +458,32 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     const applyHighlight = (h: GraphHighlight | null) =>
       paint(h == null ? null : h.kind === 'link' ? linkSpec(h.id) : nodesSpec(h.ids, h.hops ?? 1))
 
-    d3StateRef.current = { nodes, applyHighlight }
+    /**
+     * 한 종류 전체를 켜 볼 때의 강조 — 선택이 아니므로 잉크 링(focus)은 두르지 않고 밝기만 남긴다.
+     * 노드 묶음은 그 노드들과 서로를 잇는 간선을, 간선 묶음은 그 간선들과 양 끝을 켠다.
+     */
+    const groupSpec = (nodeIds: Set<string>, isLinkOn: (l: GraphLink) => boolean): HighlightSpec => ({
+      focus: new Set<string>(),
+      neighbors: nodeIds,
+      isLinkOn,
+    })
+    const applyPreview = (p: GraphPreview) => {
+      if (p.kind === 'link') return paint(linkSpec(p.id))
+      if (p.kind === 'nodes') {
+        const ids = new Set(p.ids)
+        return paint(groupSpec(ids, (l) => ids.has(endId(l.source)) && ids.has(endId(l.target))))
+      }
+      const linkIds = new Set(p.ids)
+      const ends = new Set<string>()
+      links.forEach((l) => {
+        if (!linkIds.has(l.id)) return
+        ends.add(endId(l.source))
+        ends.add(endId(l.target))
+      })
+      paint(groupSpec(ends, (l) => linkIds.has(l.id)))
+    }
+
+    d3StateRef.current = { nodes, applyHighlight, applyPreview }
     // 필터 변경 등으로 그래프를 다시 그렸을 때도 현재 선택 강조를 유지한다
     applyHighlight(highlightRef.current)
 
@@ -723,13 +755,14 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     focusOn(highlight.ids, false)
   }, [highlight, data, sizeRef, centerId])
 
-  // ========== 패널 행 호버 → 간선 미리 보기 ==========
+  // ========== 패널 행·범례 호버 → 잠깐 켜 보기 ==========
   // 선택 반영 effect 뒤에 둔다 — 같은 렌더에서 둘 다 바뀌면 미리 보기가 마지막에 칠해진다
   useEffect(() => {
     const state = d3StateRef.current
     if (!state) return
-    state.applyHighlight(previewLinkId ? { kind: 'link', id: previewLinkId } : highlightRef.current)
-  }, [previewLinkId])
+    if (preview) state.applyPreview(preview)
+    else state.applyHighlight(highlightRef.current)
+  }, [preview])
 
   return (
     <div ref={containerRef} className="relative size-full" style={{ background: T.canvas }}>
