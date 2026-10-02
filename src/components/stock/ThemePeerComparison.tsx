@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
 import type { StockDetailRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
+import { rangeZone, rankPosition } from '@/lib/rangeZone'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { cn } from '@/lib/utils'
 
@@ -52,14 +53,14 @@ function MetricBar({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="w-10 shrink-0 text-micro text-muted-foreground">{label}</span>
+      <span className="w-10 shrink-0 text-caption text-muted-foreground">{label}</span>
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-inset">
         <div
           className={cn('h-full rounded-full', fillClass)}
           style={{ width: `${barWidth(value, max)}%` }}
         />
       </div>
-      <span className="w-14 shrink-0 text-right font-mono text-micro text-foreground">
+      <span className="w-14 shrink-0 text-right font-mono text-caption text-foreground">
         {value === null ? '—' : format(value)}
       </span>
     </div>
@@ -101,44 +102,52 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
   })
 
   return (
-    <section className="card-surface p-4">
+    <section className="card-surface flex flex-col p-4">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-body font-semibold text-foreground">테마 내 비교 · {themeName}</h2>
-        <span className="text-caption text-muted-foreground">동료 {peerCount}종목 기준</span>
+        <h2 className="text-sm font-semibold text-foreground">테마 내 비교 · {themeName}</h2>
+        <span className="text-xs text-muted-foreground">동료 {peerCount}종목 기준</span>
       </div>
-      {rows.map((row) => (
-        <div
-          key={row.key}
-          className="grid grid-cols-[56px_1fr_64px] items-center gap-3 border-b border-surface-inset py-2 last:border-b-0 last:pb-0"
-        >
-          <span className="text-caption font-medium text-foreground">{row.label}</span>
-          <div className="flex flex-col gap-1">
-            <MetricBar
-              label="내 값"
-              value={row.myValue}
-              max={row.max}
-              format={row.format}
-              fillClass="bg-primary/80"
-            />
-            <MetricBar
-              label="중앙값"
-              value={row.medianValue}
-              max={row.max}
-              format={row.format}
-              fillClass="bg-muted-foreground/40"
-            />
+      {/* 옆 투자 지표 카드가 더 길면 남는 높이를 네 행이 똑같이 나눠 갖는다 — 카드 아래 빈 공간 방지 */}
+      <div className="flex flex-1 flex-col">
+        {rows.map((row) => (
+          <div
+            key={row.key}
+            className="grid flex-1 grid-cols-[56px_1fr_64px] items-center gap-3 border-b border-surface-inset py-2 last:border-b-0"
+          >
+            <span className="text-xs font-medium text-foreground">{row.label}</span>
+            <div className="flex flex-col gap-1">
+              <MetricBar
+                label="내 값"
+                value={row.myValue}
+                max={row.max}
+                format={row.format}
+                // 52주 막대와 같은 3구간 색 — 순위 상위 1/3 빨강, 중간 파랑, 하위 1/3 초록
+                fillClass={
+                  row.rank === null
+                    ? 'bg-primary/80'
+                    : rangeZone(rankPosition(row.rank, row.poolCount)).dot
+                }
+              />
+              <MetricBar
+                label="중앙값"
+                value={row.medianValue}
+                max={row.max}
+                format={row.format}
+                fillClass="bg-muted-foreground/40"
+              />
+            </div>
+            <div className="text-right">
+              {row.rank === null ? (
+                <span className="font-mono text-xs text-muted-foreground">—</span>
+              ) : (
+                <Badge variant="secondary" className="font-mono text-body">
+                  {row.rank}/{row.poolCount}위
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="text-right">
-            {row.rank === null ? (
-              <span className="font-mono text-caption text-muted-foreground">—</span>
-            ) : (
-              <Badge variant="secondary" className="font-mono">
-                {row.rank}/{row.poolCount}위
-              </Badge>
-            )}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </section>
   )
 }

@@ -13,6 +13,7 @@ import {
   formatPrice,
 } from '@/lib/format'
 import { FIFTY_TWO_WEEKS, priceRange, type PriceRange } from '@/lib/priceRange'
+import { rangeZone } from '@/lib/rangeZone'
 import { useCandles } from '@/lib/queries/useCandles'
 import { useStockIndex } from '@/lib/queries/useStocksCached'
 import { cn } from '@/lib/utils'
@@ -81,13 +82,6 @@ function foreignRatioRows(flows: InvestorFlowRes[], fallback: number | null): Me
   ]
 }
 
-/** 52주 범위를 3등분한 구간별 막대 색 — 하위 초록, 중간 파랑, 상위 빨강 */
-function rangeZone(position: number): { fill: string; dot: string } {
-  if (position < 1 / 3) return { fill: 'bg-trend-positive/25', dot: 'bg-trend-positive' }
-  if (position < 2 / 3) return { fill: 'bg-primary/25', dot: 'bg-primary' }
-  return { fill: 'bg-stock-up/25', dot: 'bg-stock-up' }
-}
-
 /** 52주 최저 ──●── 최고 — 데이터가 오기 전에도 같은 높이로 자리를 잡아 카드가 출렁이지 않게 한다 */
 function RangeBar({ range }: { range: PriceRange | null }) {
   const pct = range ? range.position * 100 : 0
@@ -95,8 +89,8 @@ function RangeBar({ range }: { range: PriceRange | null }) {
   return (
     <div className="mb-3 border-b border-surface-inset pb-3">
       <div className="flex items-center gap-3">
-        <span className="w-8 shrink-0 text-caption text-muted-foreground">52주</span>
-        <span className="font-mono text-caption font-medium text-foreground">
+        <span className="w-8 shrink-0 text-xs text-muted-foreground">52주</span>
+        <span className="font-mono text-xs font-medium text-foreground">
           {range ? formatPrice(range.low) : DASH}
         </span>
         <div
@@ -119,11 +113,11 @@ function RangeBar({ range }: { range: PriceRange | null }) {
             </>
           )}
         </div>
-        <span className="font-mono text-caption font-medium text-foreground">
+        <span className="font-mono text-xs font-medium text-foreground">
           {range ? formatPrice(range.high) : DASH}
         </span>
       </div>
-      <div className="mt-1 flex justify-between pl-11 text-micro text-muted-foreground">
+      <div className="mt-1 flex justify-between pl-11 text-caption text-muted-foreground">
         <span>
           최저 대비{' '}
           <span className="font-mono">{range ? formatChange(range.fromLow) : DASH}</span>
@@ -197,22 +191,22 @@ export function StockMetricsCard({
 
   return (
     <section className="card-surface @container p-4">
-      <h2 className="mb-2 text-body font-semibold text-foreground">투자 지표</h2>
+      <h2 className="mb-2 text-sm font-semibold text-foreground">투자 지표</h2>
       <RangeBar range={range} />
       {/* 열 수는 화면이 아니라 카드 폭으로 정한다 — 반폭이면 2열, 테마 비교 없이 전체 폭이면 4열 */}
       <div className="grid gap-x-6 gap-y-3 @[22rem]:grid-cols-2 @3xl:grid-cols-4">
         {groups.map((group) => (
           <div key={group.title}>
-            <h3 className="mb-0.5 text-micro text-muted-foreground">{group.title}</h3>
+            <h3 className="mb-0.5 text-caption text-muted-foreground">{group.title}</h3>
             {group.rows.map((r) => (
               <div
                 key={r.label}
                 className="flex items-baseline justify-between gap-2 border-b border-surface-inset py-[3px] last:border-b-0"
               >
-                <span className="text-caption text-muted-foreground">{r.label}</span>
+                <span className="text-xs text-muted-foreground">{r.label}</span>
                 <span
                   className={cn(
-                    'font-mono text-caption font-medium text-foreground',
+                    'font-mono text-xs font-medium text-foreground',
                     r.signed != null && changeColorClass(r.signed),
                   )}
                 >
