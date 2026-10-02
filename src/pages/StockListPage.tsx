@@ -1,21 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DataNotice } from '@/components/layout/DataNotice'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
+import { ListPagination } from '@/components/table/ListPagination'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockFilterBar } from '@/components/table/StockFilterBar'
 import { StockIdentity } from '@/components/table/StockIdentity'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
 import {
   changeColorClass,
   formatAmountOrDash,
@@ -27,13 +20,15 @@ import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
 import { fromState } from '@/lib/navigation'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
+import { writePage } from '@/lib/listParams'
 import {
   applyStockFilters,
-  DEFAULT_FILTER,
+  filterFromParams,
+  filterToParams,
   isFilterActive,
   type FilterState,
 } from '@/lib/stockFilter'
-import { useTableSort } from '@/lib/useTableSort'
+import { usePageParam, useUrlTableSort } from '@/lib/useListParams'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 20
@@ -43,17 +38,19 @@ const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
 const GRID =
   'grid grid-cols-[36px_28px_minmax(190px,1fr)_92px_76px_76px_76px_76px_96px_64px_64px_64px_64px] items-center gap-2'
 
-type SortKey =
-  | 'name'
-  | 'change'
-  | 'w1'
-  | 'm1'
-  | 'm3'
-  | 'marketCap'
-  | 'per'
-  | 'pbr'
-  | 'roe'
-  | 'dividendYield'
+const SORT_KEYS = [
+  'name',
+  'change',
+  'w1',
+  'm1',
+  'm3',
+  'marketCap',
+  'per',
+  'pbr',
+  'roe',
+  'dividendYield',
+] as const
+type SortKey = (typeof SORT_KEYS)[number]
 
 interface StockRow {
   ticker: string
@@ -91,11 +88,13 @@ const COLUMNS: TableColumn<SortKey>[] = [
 
 export default function StockListPage() {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const [page, setPage] = useState(1)
-  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
-  const [onlyFavorites, setOnlyFavorites] = useState(false)
+  const { pathname, search } = useLocation()
+  // 페이지·정렬·필터는 주소 쿼리에 둔다 — 상세에 다녀와도 보던 목록으로 돌아온다
+  const [params, setParams] = useSearchParams()
+  const filter = useMemo(() => filterFromParams(params), [params])
   const { status } = useAuth()
+  // 로그아웃 상태로 ?fav=1 주소에 들어오면 빈 목록 대신 전체를 보인다
+  const onlyFavorites = params.get('fav') === '1' && status !== 'anonymous'
   const { has } = useFavorites()
   const { data: stocks, loading, error, refetch } = useStocksCached()
 
@@ -108,37 +107,35 @@ export default function StockListPage() {
     [filteredRows, has, onlyFavorites],
   )
 
-  const handleFilterChange = (next: FilterState) => {
-    setFilter(next)
-    setPage(1)
+  // 필터가 바뀌면 보던 페이지 번호는 의미가 없으니 같은 갱신에서 1페이지로 돌린다.
+  // 범위 입력은 글자마다 불리므로 히스토리에 쌓지 않는다
+  const updateParams = (mutate: (next: URLSearchParams) => void) => {
+    const next = new URLSearchParams(params)
+    mutate(next)
+    writePage(next, 1)
+    setParams(next, { replace: true })
   }
 
-  const { sorted, sortKey, sortDesc, handleSort } = useTableSort<StockRow, SortKey>(
+  const handleFilterChange = (next: FilterState) => {
+    updateParams((p) => filterToParams(next, p))
+  }
+
+  const toggleFavorites = () => {
+    updateParams((p) => {
+      if (onlyFavorites) p.delete('fav')
+      else p.set('fav', '1')
+    })
+  }
+
+  const { sorted, sortKey, sortDesc, handleSort } = useUrlTableSort<StockRow, SortKey>(
     visibleRows,
+    SORT_KEYS,
     'w1',
   )
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const { page, goToPage } = usePageParam(totalPages)
   const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  const sortBy = (key: SortKey) => {
-    handleSort(key)
-    setPage(1)
-  }
-
-  const goToPage = (next: number) => {
-    setPage(Math.min(totalPages, Math.max(1, next)))
-    window.scrollTo(0, 0)
-  }
-
-  const pageNumbers = useMemo(() => {
-    const window_ = 3
-    const start = Math.max(1, Math.min(page - window_, totalPages - window_ * 2))
-    const end = Math.min(totalPages, Math.max(page + window_, window_ * 2 + 1))
-    const list: number[] = []
-    for (let n = start; n <= end; n++) list.push(n)
-    return list
-  }, [page, totalPages])
 
   return (
     <div className="page-container pb-12 pt-7">
@@ -190,8 +187,7 @@ export default function StockListPage() {
                   navigate('/login', { state: { next: pathname } })
                   return
                 }
-                setOnlyFavorites((prev) => !prev)
-                setPage(1)
+                toggleFavorites()
               }}
             >
               내 관심만
@@ -217,7 +213,7 @@ export default function StockListPage() {
                   columns={COLUMNS}
                   sortKey={sortKey}
                   sortDesc={sortDesc}
-                  onSort={sortBy}
+                  onSort={handleSort}
                   className={cn(GRID, 'border-b border-border bg-muted px-4 py-2.5')}
                 />
 
@@ -228,12 +224,12 @@ export default function StockListPage() {
                     role="link"
                     tabIndex={0}
                     onClick={() =>
-                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname) })
+                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname + search) })
                     }
                     onKeyDown={(event) => {
                       if (event.key !== 'Enter' && event.key !== ' ') return
                       event.preventDefault()
-                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname) })
+                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname + search) })
                     }}
                     className={cn(
                       GRID,
@@ -292,48 +288,7 @@ export default function StockListPage() {
             </div>
           </div>
 
-          <Pagination className="mt-5">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  text="이전"
-                  href="#"
-                  aria-disabled={page === 1}
-                  className={cn(page === 1 && 'pointer-events-none opacity-50')}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    goToPage(page - 1)
-                  }}
-                />
-              </PaginationItem>
-              {pageNumbers.map((n) => (
-                <PaginationItem key={n}>
-                  <PaginationLink
-                    href="#"
-                    isActive={n === page}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      goToPage(n)
-                    }}
-                  >
-                    {n}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  text="다음"
-                  href="#"
-                  aria-disabled={page === totalPages}
-                  className={cn(page === totalPages && 'pointer-events-none opacity-50')}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    goToPage(page + 1)
-                  }}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <ListPagination page={page} totalPages={totalPages} onPageChange={goToPage} className="mt-5" />
         </>
       )}
 

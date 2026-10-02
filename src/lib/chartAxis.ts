@@ -7,12 +7,12 @@
 /** 가격 라벨이 들어가는 오른쪽 여백 — 축을 공유하는 레인은 전부 이걸 달아야 정렬된다 */
 export const AXIS_GUTTER = 'mr-16'
 
-/** 상승·호재 / 하락·악재 — index.css 토큰과 1:1 동기화 (--stock-up / --stock-down) */
-export const UP = '#cf202f'
-export const DOWN = '#0052ff'
+/** 상승·호재 / 하락·악재 — index.css 변수 참조 (--stock-up / --stock-down) */
+export const UP = 'var(--stock-up)'
+export const DOWN = 'var(--stock-down)'
 
-/** 크로스헤어·선택 룰 색 — --foreground-tertiary */
-export const RULE = '#a8acb3'
+/** 크로스헤어·선택 룰 색 */
+export const RULE = 'var(--chart-rule)'
 
 /** 한 항목이 차지하는 폭(%) */
 export function slotPct(count: number): number {

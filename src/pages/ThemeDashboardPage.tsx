@@ -6,7 +6,7 @@ import { NewsSection } from '@/components/theme/NewsSection'
 import { StockSection } from '@/components/theme/StockSection'
 import { ThemeFocus } from '@/components/theme/ThemeFocus'
 import { Treemap, type TreemapItem } from '@/components/theme/Treemap'
-import { TreemapToolbar } from '@/components/theme/TreemapToolbar'
+import { DashboardToolbar } from '@/components/theme/DashboardToolbar'
 import { Button } from '@/components/ui/button'
 import { toNewsItem } from '@/lib/apiMappers'
 import type { ThemeRes } from '@/lib/apiTypes'
@@ -118,7 +118,7 @@ export default function ThemeDashboardPage() {
 
   return (
     <div className="page-container pb-12 pt-7">
-      <TreemapToolbar
+      <DashboardToolbar
         shownCount={treemapThemes.length}
         market={market}
         referenceDate={referenceDate}
@@ -199,7 +199,7 @@ export default function ThemeDashboardPage() {
               key={`focus-${selected.id}`}
               className="mt-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300"
             >
-              <ThemeFocus theme={selected} from={from} stocks={themeStocks ?? []} />
+              <ThemeFocus theme={selected} from={from} />
 
               <div className="mt-4 grid items-stretch gap-4 lg:grid-cols-[1.08fr_0.92fr]">
                 <div className="min-w-0 [&>section]:h-full">

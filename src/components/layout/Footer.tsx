@@ -4,7 +4,7 @@ import { DATA_SOURCE_NOTICE } from '@/lib/themeMetrics'
 
 // 실제 라우트만 노출한다 — 약관·회사 소개류의 빈 링크('#')는 데모에 두지 않는다
 const FOOTER_LINKS = [
-  { label: '테마 트리맵', to: '/' },
+  { label: '테마 대시보드', to: '/' },
   { label: '테마 목록', to: '/themes' },
   { label: '주식 목록', to: '/stocks' },
   { label: '기업 그래프', to: '/graph' },

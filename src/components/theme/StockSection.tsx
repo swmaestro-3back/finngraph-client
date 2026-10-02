@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { StockLogo } from '@/components/stock/StockLogo'
 import type { ThemeStockRes } from '@/lib/apiTypes'
 import {
   changeColorClass,
@@ -9,12 +10,7 @@ import {
   toEok,
   toMillion,
 } from '@/lib/format'
-import {
-  changeStatusTag,
-  excludedFromMeanLabel,
-  TRIMMED_TITLE,
-  trimmedTickers,
-} from '@/lib/themeMetrics'
+import { changeStatusTag } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 const GRID =
@@ -39,7 +35,6 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
       }),
     [stocks],
   )
-  const excluded = excludedFromMeanLabel(trimmedTickers(stocks).size)
 
   return (
     <section className={cn('card-surface p-5', className)}>
@@ -47,12 +42,6 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
         <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">구성 종목</h2>
         <span className="text-caption text-muted-foreground">
           등락률순 · <span className="font-mono tabular-nums">{sorted.length}</span>개
-          {excluded && (
-            <span title={TRIMMED_TITLE}>
-              {' · '}
-              {excluded}
-            </span>
-          )}
         </span>
       </div>
 
@@ -74,7 +63,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
         )}
         {sorted.map((stock) => {
           const tag = changeStatusTag(stock.changeStatus)
-          const priced = stock.change !== null && (!tag || tag.keepsChange)
+          const priced = stock.change !== null && !tag
           return (
           <Link
             key={stock.ticker}
@@ -86,6 +75,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
             )}
           >
             <span className="flex min-w-0 items-center gap-[9px] overflow-hidden">
+              <StockLogo ticker={stock.ticker} size={24} reserveSpace />
               <span className="truncate text-sm font-semibold text-foreground">{stock.name}</span>
               <span className="shrink-0 font-mono text-caption text-muted-foreground">
                 {stock.ticker}

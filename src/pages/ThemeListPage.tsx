@@ -1,31 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ListPagination } from '@/components/table/ListPagination'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { Breadth } from '@/components/theme/ThemeMetricSummary'
 import { Button } from '@/components/ui/button'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemes } from '@/lib/queries/useThemes'
 import { fromState } from '@/lib/navigation'
 import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import {
   formatShortDate,
-  hasThemeMetricsV2,
   hotExclusionTitle,
   leaderCellContent,
   leaderColumnLabel,
   type LeaderCellContent,
 } from '@/lib/themeMetrics'
-import { useTableSort } from '@/lib/useTableSort'
+import { usePageParam, useUrlTableSort } from '@/lib/useListParams'
 import { cn } from '@/lib/utils'
 import { priceBasisSuffix } from '@/lib/referenceDate'
 
@@ -36,15 +28,17 @@ const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
 const GRID =
   'grid grid-cols-[36px_minmax(170px,1fr)_76px_96px_76px_76px_76px_96px_84px_minmax(220px,1.5fr)] items-center gap-2'
 
-type SortKey =
-  | 'name'
-  | 'change'
-  | 'breadth'
-  | 'w1'
-  | 'm1'
-  | 'm3'
-  | 'tradingValue'
-  | 'stockCount'
+const SORT_KEYS = [
+  'name',
+  'change',
+  'breadth',
+  'w1',
+  'm1',
+  'm3',
+  'tradingValue',
+  'stockCount',
+] as const
+type SortKey = (typeof SORT_KEYS)[number]
 
 interface ThemeRow {
   id: number
@@ -110,12 +104,10 @@ function LeaderCell({ content }: { content: LeaderCellContent }) {
 
 export default function ThemeListPage() {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const [page, setPage] = useState(1)
+  const { pathname, search } = useLocation()
   const { data: themes, loading, error, refetch } = useThemes()
   const { data: market } = useThemeMarket()
   const baseDate = market?.baseDate ?? themes?.[0]?.baseDate ?? null
-  const hasV2 = hasThemeMetricsV2(market, themes)
   const columns = useMemo<TableColumn<SortKey>[]>(
     () => [
       ...BASE_COLUMNS,
@@ -150,23 +142,16 @@ export default function ThemeListPage() {
     [themes],
   )
 
-  const { sorted, sortKey, sortDesc, handleSort } = useTableSort<ThemeRow, SortKey>(
+  // 페이지·정렬은 주소 쿼리에 둔다 — 상세에 다녀와도 보던 목록으로 돌아온다
+  const { sorted, sortKey, sortDesc, handleSort } = useUrlTableSort<ThemeRow, SortKey>(
     allRows,
-    'm1',
+    SORT_KEYS,
+    'm3',
   )
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const { page, goToPage } = usePageParam(totalPages)
   const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  const sortBy = (key: SortKey) => {
-    handleSort(key)
-    setPage(1)
-  }
-
-  const goToPage = (next: number) => {
-    setPage(Math.min(totalPages, Math.max(1, next)))
-    window.scrollTo(0, 0)
-  }
 
   return (
     <div className="page-container pb-12 pt-7">
@@ -222,14 +207,6 @@ export default function ThemeListPage() {
                 </span>
               </>
             )}
-            {hasV2 && (
-              <>
-                <span>등락률 = 구성 종목 등락률의 절사평균</span>
-                <span className="mx-1.5 text-foreground-tertiary" aria-hidden>
-                  ·
-                </span>
-              </>
-            )}
             <span>1주/1개월/3개월은 달력 기준</span>
           </p>
           <div className="card-surface overflow-hidden">
@@ -239,7 +216,7 @@ export default function ThemeListPage() {
                   columns={columns}
                   sortKey={sortKey}
                   sortDesc={sortDesc}
-                  onSort={sortBy}
+                  onSort={handleSort}
                   className={cn(GRID, 'border-b border-border bg-muted px-4 py-2.5')}
                 />
 
@@ -249,7 +226,7 @@ export default function ThemeListPage() {
                     type="button"
                     onClick={() =>
                       navigate(`/theme/${row.id}`, {
-                        state: fromState(pathname),
+                        state: fromState(pathname + search),
                       })
                     }
                     className={cn(
@@ -323,48 +300,7 @@ export default function ThemeListPage() {
             </div>
           </div>
 
-          <Pagination className="mt-5">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  text="이전"
-                  href="#"
-                  aria-disabled={page === 1}
-                  className={cn(page === 1 && 'pointer-events-none opacity-50')}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    goToPage(page - 1)
-                  }}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                <PaginationItem key={n}>
-                  <PaginationLink
-                    href="#"
-                    isActive={n === page}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      goToPage(n)
-                    }}
-                  >
-                    {n}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  text="다음"
-                  href="#"
-                  aria-disabled={page === totalPages}
-                  className={cn(page === totalPages && 'pointer-events-none opacity-50')}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    goToPage(page + 1)
-                  }}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <ListPagination page={page} totalPages={totalPages} onPageChange={goToPage} className="mt-5" />
         </>
       )}
 

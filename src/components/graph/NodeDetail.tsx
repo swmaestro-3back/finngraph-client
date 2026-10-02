@@ -15,6 +15,7 @@ import {
   formatPriceOrDash,
 } from '@/lib/format'
 import { EntityChip, Section, TypeBadge } from '@/components/graph/DetailParts'
+import { StockLogo } from '@/components/stock/StockLogo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -130,15 +131,18 @@ export function NodeDetail({
         ))}
       </div>
 
-      <h2
-        className={cn(
-          'mt-0 text-xl leading-[1.25] font-semibold tracking-[-0.4px] text-foreground',
-          ticker ? 'mb-1' : 'mb-3',
-        )}
-      >
-        {node.label}
-      </h2>
-      {ticker && <div className="mb-3 font-mono text-caption text-muted-foreground">{ticker}</div>}
+      {/* 토스 아이콘은 국내 종목코드만 있다 — 해외 기업은 요청하지 않는다 */}
+      <div className="mb-3 flex items-center gap-2.5">
+        {ticker && node.data.country === 'KR' && <StockLogo ticker={ticker} size={36} />}
+        <div className="min-w-0">
+          <h2 className="m-0 text-xl leading-[1.25] font-semibold tracking-[-0.4px] text-foreground">
+            {node.label}
+          </h2>
+          {ticker && (
+            <div className="mt-1 font-mono text-caption text-muted-foreground">{ticker}</div>
+          )}
+        </div>
+      </div>
 
       {stock && (
         <div className="mb-4 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-body">

@@ -17,7 +17,7 @@ import { themeDetailPath, themeIdIndex } from '@/lib/themeRoute'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
-  { label: '테마 트리맵', to: '/' },
+  { label: '테마 대시보드', to: '/' },
   { label: '테마 목록', to: '/themes' },
   { label: '주식 목록', to: '/stocks' },
   { label: '기업 그래프', to: '/graph' },

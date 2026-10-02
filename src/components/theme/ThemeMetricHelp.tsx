@@ -17,7 +17,6 @@ export function ThemeMetricHelp({ baseDate, suffix = '종가 기준', className,
   const lines = [
     baseDate ? `기준일 ${formatTradingDate(baseDate)} ${suffix}` : '기준일: 장마감 종가 기준',
     METRIC_HELP_LINES.universe,
-    METRIC_HELP_LINES.trimmed,
     METRIC_HELP_LINES.hot,
   ]
 

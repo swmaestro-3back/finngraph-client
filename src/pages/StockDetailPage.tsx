@@ -9,6 +9,7 @@ import { FinancialTable } from '@/components/stock/FinancialTable'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
+import { StockLogo } from '@/components/stock/StockLogo'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { SupplyStreakBadges } from '@/components/stock/SupplyStreakBadges'
 import { ThemePeerComparison } from '@/components/stock/ThemePeerComparison'
@@ -197,6 +198,8 @@ export default function StockDetailPage() {
       {!loading && !error && stock && (
         <>
           <div className="mb-3 flex flex-wrap items-baseline gap-[9px]">
+            {/* 행은 baseline 정렬이라 이미지만 가운데로 뺀다 — 장식이므로 대체 텍스트는 종목명(h1)에 맡긴다 */}
+            <StockLogo ticker={stock.ticker} className="self-center" />
             <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
               {stock.name}
             </h1>

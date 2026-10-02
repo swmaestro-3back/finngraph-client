@@ -67,3 +67,54 @@ export function applyStockFilters(rows: StockRowRes[], state: FilterState): Stoc
     return true
   })
 }
+
+// ── 주소 쿼리 직렬화 ──
+// 필터도 주소에 둔다 — 상세에 다녀왔을 때 페이지 번호만 남고 필터가 풀리면 다른 목록이 뜬다.
+// market=KOSPI · preset=lowPer,highRoe · theme=반도체 · per=..10 · marketCap=1000..5000 (범위는 화면 표기 단위)
+
+const MARKETS: FilterState['market'][] = ['KOSPI', 'KOSDAQ']
+const PRESET_KEYS = Object.keys(PRESET_TESTS) as PresetKey[]
+const RANGE_SEPARATOR = '..'
+
+function parseBound(raw: string | undefined): number | undefined {
+  if (raw === undefined || raw.trim() === '') return undefined
+  const num = Number(raw)
+  return Number.isFinite(num) ? num : undefined
+}
+
+export function filterFromParams(params: URLSearchParams): FilterState {
+  const market = MARKETS.find((m) => m === params.get('market')) ?? 'ALL'
+  const requested = (params.get('preset') ?? '').split(',')
+  const presets = new Set(PRESET_KEYS.filter((key) => requested.includes(key)))
+  const ranges: FilterState['ranges'] = {}
+  for (const key of RANGE_KEYS) {
+    const raw = params.get(key)
+    if (raw === null) continue
+    const [min, max] = raw.split(RANGE_SEPARATOR)
+    const range = { min: parseBound(min), max: parseBound(max) }
+    if (range.min !== undefined || range.max !== undefined) ranges[key] = range
+  }
+  return { market, presets, theme: params.get('theme') || null, ranges }
+}
+
+/** params의 필터 항목을 state로 덮어쓴다 (다른 항목은 건드리지 않는다) */
+export function filterToParams(state: FilterState, params: URLSearchParams): void {
+  if (state.market === 'ALL') params.delete('market')
+  else params.set('market', state.market)
+
+  const presets = PRESET_KEYS.filter((key) => state.presets.has(key))
+  if (presets.length === 0) params.delete('preset')
+  else params.set('preset', presets.join(','))
+
+  if (state.theme === null) params.delete('theme')
+  else params.set('theme', state.theme)
+
+  for (const key of RANGE_KEYS) {
+    const range = state.ranges[key]
+    if (range === undefined || (range.min === undefined && range.max === undefined)) {
+      params.delete(key)
+    } else {
+      params.set(key, `${range.min ?? ''}${RANGE_SEPARATOR}${range.max ?? ''}`)
+    }
+  }
+}

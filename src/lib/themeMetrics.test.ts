@@ -3,13 +3,9 @@ import type { ThemeRes } from '@/lib/apiTypes'
 import {
   breadthLabel,
   changeStatusTag,
-  excludedFromMeanLabel,
-  trimmedTickers,
   compareNullLast,
   countLabel,
   coverageBanner,
-  describeTrim,
-  hasThemeMetricsV2,
   hotExclusionTitle,
   isUnderCounted,
   leadStock,
@@ -37,23 +33,6 @@ const base: ThemeRes = {
   stockCount: 12,
   topStocks: [],
 }
-
-describe('describeTrim', () => {
-  it('5종목 이상은 상·하위 k종목 제외 문구', () => {
-    expect(describeTrim(12, 1)).toBe('12종목 중 상·하위 1종목씩 제외한 평균')
-    expect(describeTrim(21, 3)).toBe('21종목 중 상·하위 3종목씩 제외한 평균')
-  })
-
-  it('3·4종목은 중앙값', () => {
-    expect(describeTrim(3, 1)).toBe('3종목 중앙값')
-    expect(describeTrim(4, 1)).toBe('4종목 중앙값')
-  })
-
-  it('3종목 미만은 종목 수 부족', () => {
-    expect(describeTrim(2, 0)).toBe('종목 수 부족(2종목)')
-    expect(describeTrim(0, 0)).toBe('종목 수 부족(0종목)')
-  })
-})
 
 describe('breadthLabel · countLabel', () => {
   it('▲ · ▼ 순서', () => {
@@ -108,9 +87,8 @@ describe('캡션 · 타일 문구', () => {
     expect(sensitivityLabel(2.81)).toBe('한 종목 제외 시 최대 ±2.8%p')
   })
 
-  it('metricCaption 은 절사 설명 · 단순평균 · 감도 순', () => {
+  it('metricCaption 은 단순평균 · 감도 순', () => {
     expect(metricCaption(theme)).toEqual([
-      '12종목 중 상·하위 1종목씩 제외한 평균',
       '단순평균 +9.03%',
       '한 종목 제외 시 최대 ±2.8%p',
     ])
@@ -207,19 +185,6 @@ describe('주도주 표시', () => {
   })
 })
 
-describe('hasThemeMetricsV2', () => {
-  it('market 응답이 있거나 pricedCount 가 하나라도 있으면 v2', () => {
-    expect(hasThemeMetricsV2({ baseDate: '2026-09-26' }, [base])).toBe(true)
-    expect(hasThemeMetricsV2(null, [base, { ...base, pricedCount: 3 }])).toBe(true)
-  })
-
-  it('둘 다 없으면 구 백엔드', () => {
-    expect(hasThemeMetricsV2(null, [base])).toBe(false)
-    expect(hasThemeMetricsV2(null, null)).toBe(false)
-    expect(hasThemeMetricsV2(undefined, [])).toBe(false)
-  })
-})
-
 describe('coverageBanner', () => {
   it('coverage 0.8 미만이면 반영률 포함 배너', () => {
     expect(coverageBanner(0.192, 10)).toBe(
@@ -239,7 +204,6 @@ describe('coverageBanner', () => {
 
 describe('changeStatusTag', () => {
   it('상태별 라벨', () => {
-    expect(changeStatusTag('TRIMMED')?.label).toBe('평균 제외')
     expect(changeStatusTag('SUSPENDED')?.label).toBe('거래정지')
     expect(changeStatusTag('DELISTING')?.label).toBe('정리매매')
     expect(changeStatusTag('NO_CANDLE')?.label).toBe('시세 없음')
@@ -248,27 +212,15 @@ describe('changeStatusTag', () => {
     expect(changeStatusTag(undefined)).toBeNull()
   })
 
-  it('평균 제외 종목만 등락률 표시를 유지하고 모든 태그는 설명을 가진다', () => {
-    expect(changeStatusTag('TRIMMED')?.keepsChange).toBe(true)
-    expect(changeStatusTag('SUSPENDED')?.keepsChange).toBe(false)
-    expect(changeStatusTag('NO_PREV')?.keepsChange).toBe(false)
-    for (const status of ['TRIMMED', 'SUSPENDED', 'DELISTING', 'NO_CANDLE'] as const) {
+  it('절사평균에서 빠진 종목은 등락률이 실제 값이라 태그가 없다', () => {
+    expect(changeStatusTag('TRIMMED')).toBeNull()
+  })
+
+  it('모든 태그는 설명을 가진다', () => {
+    for (const status of ['SUSPENDED', 'DELISTING', 'NO_CANDLE'] as const) {
       expect(changeStatusTag(status)?.title.length).toBeGreaterThan(10)
     }
   })
-
-  it('평균 제외 종목 집합과 개수 문구를 만든다', () => {
-    const stocks = [
-      { ticker: '1', changeStatus: 'TRIMMED' as const },
-      { ticker: '2', changeStatus: 'PRICED' as const },
-      { ticker: '3', changeStatus: 'TRIMMED' as const },
-      { ticker: '4', changeStatus: undefined },
-    ]
-    expect([...trimmedTickers(stocks)]).toEqual(['1', '3'])
-    expect(excludedFromMeanLabel(2)).toBe('평균 계산 제외 2')
-    expect(excludedFromMeanLabel(0)).toBeNull()
-  })
-
 })
 
 describe('compareNullLast', () => {

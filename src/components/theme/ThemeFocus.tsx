@@ -5,12 +5,10 @@ import {
   ThemeCountFacts,
   ThemeMetricCaption,
 } from '@/components/theme/ThemeMetricSummary'
-import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
+import type { ThemeRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import {
   hasBreadth,
-  TRIMMED_TITLE,
-  trimmedTickers,
   turnoverFact,
 } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
@@ -18,7 +16,6 @@ import { cn } from '@/lib/utils'
 interface ThemeFocusProps {
   theme: ThemeRes
   from: string
-  stocks?: ThemeStockRes[]
 }
 
 interface FactProps {
@@ -57,11 +54,10 @@ const CHIP =
   'inline-flex min-h-11 items-center rounded-full border border-border px-2.5 py-1 text-caption font-medium text-foreground transition-colors hover:bg-muted md:min-h-0'
 const TEXT_LINK = 'flex min-h-11 items-center hover:underline md:min-h-0'
 
-export function ThemeFocus({ theme, from, stocks = [] }: ThemeFocusProps) {
+export function ThemeFocus({ theme, from }: ThemeFocusProps) {
   const state = { from }
   const periods = PERIODS.filter((p) => theme[p.key] !== null)
   const leaders = (theme.leaders ?? []).slice(0, 2)
-  const trimmed = trimmedTickers(stocks)
   const changeTone = theme.change === null ? 'text-muted-foreground' : changeColorClass(theme.change)
   const turnover = turnoverFact(theme.tradingValueRatio)
 
@@ -152,11 +148,6 @@ export function ThemeFocus({ theme, from, stocks = [] }: ThemeFocusProps) {
                       )}
                     >
                       {formatChange(stock.change)}
-                    </span>
-                  )}
-                  {trimmed.has(stock.ticker) && (
-                    <span title={TRIMMED_TITLE} className="ml-1.5 font-normal text-muted-foreground">
-                      평균 제외
                     </span>
                   )}
                 </Link>

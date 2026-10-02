@@ -31,11 +31,15 @@ const PERIODS: { key: CandlePeriod; label: string }[] = [
   { key: 'M', label: '1달' },
 ]
 
+// 대시보드의 관련 뉴스와 같은 높이에서 안쪽 스크롤 — 뉴스가 적으면 빈 칸 없이 내용만큼만 차지한다
+const NEWS_LIST_CLASS =
+  'max-h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+
 export default function ThemeDetailPage() {
   const { themeId } = useParams()
   const parsedId = Number(themeId)
   const id = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
-  const back = useBackTarget({ to: '/', label: '테마 트리맵' })
+  const back = useBackTarget({ to: '/', label: '테마 대시보드' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
@@ -171,6 +175,7 @@ export default function ThemeDetailPage() {
             title={`${theme.name} 관련 뉴스`}
             items={news}
             className="mt-4"
+            listClassName={NEWS_LIST_CLASS}
             relationFilter
             onItemClick={(item) => setOpenNewsId(item.id)}
           />

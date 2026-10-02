@@ -2,7 +2,6 @@ import type {
   ThemeLeaderRes,
   ThemeRes,
   ThemeStockChangeStatus,
-  ThemeStockRes,
   ThemeTopStockRes,
 } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
@@ -13,16 +12,8 @@ export const DATA_SOURCE_NOTICE =
 
 export const METRIC_HELP_LINES = {
   universe: '집계 대상: 활성 보통주 · 거래정지·정리매매·시세 결손 제외',
-  trimmed:
-    '등락률 = 구성 종목 등락률의 절사평균 (n종목이면 상·하위 k종목 제외, 3~4종목은 중앙값)',
   hot: '핫 테마 = 5종목 이상 집계 · 시장보다 넓은 방향성 · 신뢰구간 하한 기준',
 } as const
-
-export function describeTrim(n: number, k: number): string {
-  if (n < 3) return `종목 수 부족(${n}종목)`
-  if (n < 5) return `${n}종목 중앙값`
-  return `${n}종목 중 상·하위 ${k}종목씩 제외한 평균`
-}
 
 export function breadthLabel(up: number, flat: number, down: number): string {
   return `▲${up} ·${flat} ▼${down}`
@@ -61,13 +52,13 @@ export function sensitivityLabel(sensitivity: number | null | undefined): string
 
 export function metricCaption(theme: ThemeRes): string[] | null {
   if (theme.pricedCount === undefined) return null
-  const parts = [describeTrim(theme.pricedCount, theme.trimCount ?? 0)]
+  const parts: string[] = []
   if (theme.meanChange !== null && theme.meanChange !== undefined) {
     parts.push(`단순평균 ${formatChange(theme.meanChange)}`)
   }
   const sensitivity = sensitivityLabel(theme.sensitivity)
   if (sensitivity) parts.push(sensitivity)
-  return parts
+  return parts.length > 0 ? parts : null
 }
 
 export function hasBreadth(
@@ -179,14 +170,6 @@ export function leadStock(theme: Pick<ThemeRes, 'leaders' | 'topStocks'>): Theme
   return top ? { kind: 'representative', name: top.name } : null
 }
 
-export function hasThemeMetricsV2(
-  market: unknown,
-  themes: Pick<ThemeRes, 'pricedCount'>[] | null | undefined,
-): boolean {
-  if (market !== null && market !== undefined) return true
-  return (themes ?? []).some((t) => t.pricedCount !== undefined)
-}
-
 export function coverageBanner(
   coverage: number | null | undefined,
   hotCount: number | null,
@@ -201,51 +184,33 @@ export function coverageBanner(
   return `시세 적재가 끝나지 않아 핫 테마를 잠시 비워 둡니다${suffix}`
 }
 
+/** 등락률을 낼 수 없는 종목에 붙이는 사유 태그. 절사평균에서 빠진 종목(TRIMMED)은 등락률이 실제 값이라 태그를 달지 않는다 */
 export interface ChangeStatusTag {
   label: string
   title: string
-  keepsChange: boolean
 }
-
-export const TRIMMED_TITLE =
-  '등락률이 극단값이라 테마 절사평균 계산에서 뺐습니다. 종목 등락률은 실제 값입니다.'
 
 export function changeStatusTag(status: ThemeStockChangeStatus | undefined): ChangeStatusTag | null {
   switch (status) {
-    case 'TRIMMED':
-      return { label: '평균 제외', title: TRIMMED_TITLE, keepsChange: true }
     case 'SUSPENDED':
       return {
         label: '거래정지',
         title: '거래정지 종목이라 이날 등락률을 산출하지 않았습니다.',
-        keepsChange: false,
       }
     case 'DELISTING':
       return {
         label: '정리매매',
         title: '정리매매 종목은 테마 집계에 넣지 않습니다.',
-        keepsChange: false,
       }
     case 'NO_CANDLE':
     case 'NO_PREV':
       return {
         label: '시세 없음',
         title: '이날 또는 전 거래일 시세가 없어 등락률을 낼 수 없습니다.',
-        keepsChange: false,
       }
     default:
       return null
   }
-}
-
-export function trimmedTickers(
-  stocks: Pick<ThemeStockRes, 'ticker' | 'changeStatus'>[],
-): Set<string> {
-  return new Set(stocks.filter((s) => s.changeStatus === 'TRIMMED').map((s) => s.ticker))
-}
-
-export function excludedFromMeanLabel(count: number): string | null {
-  return count > 0 ? `평균 계산 제외 ${count}` : null
 }
 
 function isMissing(value: unknown): boolean {
