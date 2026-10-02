@@ -69,6 +69,11 @@ export function formatChangeOrDash(value: number | null): string {
   return value === null ? '—' : formatChange(value)
 }
 
+export function formatVolumeMan(shares: number): string {
+  const man = shares / 10_000
+  return `${man.toLocaleString('ko-KR', { maximumFractionDigits: man < 10 ? 1 : 0 })}만주`
+}
+
 export function formatAmountOrDash(value: number | null): string {
   return value === null ? '—' : formatAmount(value)
 }
