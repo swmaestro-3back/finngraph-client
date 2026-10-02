@@ -1,20 +1,45 @@
 import { describe, expect, it } from 'vitest'
-import type { CalendarEventRes, IpoRes } from '@/lib/apiTypes'
+import type {
+  ActionStepRes,
+  CalendarEventKind,
+  CalendarEventRes,
+  CorporateActionRes,
+  DividendReactionRes,
+  IpoRes,
+  StockCalendarRes,
+} from '@/lib/apiTypes'
+import { emptyFinancials } from '@/lib/annualPeriod'
+import { formatChange, formatPercent, formatWon } from '@/lib/format'
 import {
+  BASIS_LABELS,
   CALENDAR_MAX_RANGE_DAYS,
+  EX_PRICE_BASIS_LABELS,
   FAMILY_LABELS,
   IPO_STATUS_LABELS,
+  KIND_DESCRIPTIONS,
   KIND_LABELS,
   KIND_SHORT_LABELS,
+  STOCK_CALENDAR_WINDOW_DAYS,
+  actionKey,
+  agendaCountLabel,
+  candleIndexOn,
   cellPreview,
+  dDay,
   daysBetween,
   defaultSelection,
   eventDetails,
+  exPriceMissing,
+  findAction,
+  findEvent,
+  focusStep,
   formatAsOf,
   formatDateSpan,
+  formatDayRange,
   formatDayTitle,
+  formatFullDate,
   formatMonthParam,
   formatMonthTitle,
+  formatRecoverySummary,
   formatSharesPerShare,
   gridRange,
   groupEventsByDate,
@@ -24,11 +49,22 @@ import {
   keyboardTarget,
   kindFamily,
   kstToday,
+  latestPayoutRatio,
+  metricText,
   monthGrid,
   monthOf,
   parseDateParam,
   parseMonthParam,
+  recoveryLabel,
+  selectAction,
   shiftMonth,
+  spanCountdown,
+  stepState,
+  stockCalendarWindow,
+  summarizeRecovery,
+  summaryFromAction,
+  summaryFromRow,
+  timelineItems,
   weekdayHolidays,
 } from '@/lib/calendar'
 
@@ -59,6 +95,138 @@ const ipo = (overrides: Partial<IpoRes>): IpoRes => ({
   payDate: null,
   refundDate: null,
   listingDate: null,
+  ...overrides,
+})
+
+const SAMSUNG_CALENDAR: StockCalendarRes = {
+  ticker: '005930',
+  stockName: '삼성전자',
+  market: 'KOSPI',
+  price: 71200,
+  change: 1.2345,
+  priceDate: '2026-10-02',
+  from: '2026-04-05',
+  to: '2027-04-04',
+  asOf: '2026-10-02T07:41:00+09:00',
+  actions: [
+    {
+      family: 'DIV',
+      label: '분기',
+      basisDate: '2026-09-30',
+      lastBuyDate: '2026-09-28',
+      lastBuyEstimated: false,
+      steps: [
+        { kind: 'DIV_EX', date: '2026-09-29', endDate: null, estimated: false },
+        { kind: 'DIV_RECORD', date: '2026-09-30', endDate: null, estimated: false },
+        { kind: 'DIV_PAY', date: '2026-11-20', endDate: null, estimated: false },
+      ],
+      amount: 361,
+      ratio: null,
+      agenda: [],
+      agendaTruncated: false,
+      dividend: { dps: 361, dpsBasis: 'CURRENT', expectedYield: 0.507 },
+      rights: null,
+      bonus: null,
+    },
+    {
+      family: 'AGM',
+      label: '임시총회',
+      basisDate: '2026-10-20',
+      lastBuyDate: '2026-10-16',
+      lastBuyEstimated: false,
+      steps: [{ kind: 'AGM', date: '2026-11-09', endDate: null, estimated: false }],
+      amount: null,
+      ratio: null,
+      agenda: [
+        { text: '합병승인', tags: ['합병'] },
+        { text: '사내이사 선임', tags: [] },
+      ],
+      agendaTruncated: false,
+      dividend: null,
+      rights: null,
+      bonus: null,
+    },
+  ],
+}
+
+const RIGHTS_ACTION: CorporateActionRes = {
+  family: 'RIGHTS',
+  label: null,
+  basisDate: '2026-08-05',
+  lastBuyDate: '2026-08-03',
+  lastBuyEstimated: false,
+  steps: [
+    { kind: 'RIGHTS_EX', date: '2026-08-04', endDate: null, estimated: false },
+    { kind: 'RIGHTS_SUBSCRIBE', date: '2026-09-10', endDate: '2026-09-11', estimated: false },
+    { kind: 'RIGHTS_LIST', date: '2026-10-02', endDate: null, estimated: false },
+  ],
+  amount: 20600,
+  ratio: 21.58,
+  agenda: [],
+  agendaTruncated: false,
+  dividend: null,
+  rights: {
+    dilution: 17.7496,
+    issuePrice: 20600,
+    priceVsIssue: 12.1359,
+    exPrice: { theoretical: 24466, basis: 'PREVIOUS_CLOSE', actualOpen: 24350 },
+  },
+  bonus: null,
+}
+
+const BONUS_ACTION: CorporateActionRes = {
+  family: 'BONUS',
+  label: null,
+  basisDate: '2026-11-10',
+  lastBuyDate: '2026-11-06',
+  lastBuyEstimated: false,
+  steps: [
+    { kind: 'BONUS_EX', date: '2026-11-09', endDate: null, estimated: false },
+    { kind: 'BONUS_LIST', date: '2026-12-01', endDate: null, estimated: false },
+  ],
+  amount: null,
+  ratio: 100,
+  agenda: [],
+  agendaTruncated: false,
+  dividend: null,
+  rights: null,
+  bonus: {
+    exPrice: { theoretical: 15400, basis: 'CURRENT_PRICE', actualOpen: null },
+    returnAfter5: null,
+    returnAfter20: null,
+  },
+}
+
+const DIVIDEND_HISTORY: DividendReactionRes[] = [
+  {
+    recordDate: '2026-06-30',
+    kind: '분기',
+    dps: 361,
+    exDate: '2026-06-29',
+    prevClose: 70100,
+    exOpen: 69800,
+    theoreticalDrop: 0.515,
+    openGap: -0.428,
+    recoveryDays: 3,
+    pending: false,
+  },
+]
+
+const step = (kind: CalendarEventKind, date: string, overrides: Partial<ActionStepRes> = {}): ActionStepRes => ({
+  kind,
+  date,
+  endDate: null,
+  estimated: false,
+  ...overrides,
+})
+
+const action = (overrides: Partial<CorporateActionRes>): CorporateActionRes => ({
+  ...SAMSUNG_CALENDAR.actions[0],
+  ...overrides,
+})
+
+const reaction = (overrides: Partial<DividendReactionRes>): DividendReactionRes => ({
+  ...DIVIDEND_HISTORY[0],
   ...overrides,
 })
 
@@ -409,5 +577,426 @@ describe('ipoCountdown — 오늘(KST) 기준 남은 날', () => {
     expect(ipoCountdown(ipo({ status: 'UPCOMING', subscrStart: '2026-10-01' }), today)).toBeNull()
     expect(ipoCountdown(ipo({ status: 'SUBSCRIBING', subscrEnd: '2026-10-01' }), today)).toBeNull()
     expect(ipoCountdown(ipo({ status: 'LISTED', listingDate: '2026-09-30' }), today)).toBeNull()
+  })
+})
+
+describe('종목 일정 API 계약 — 설계서 §4.1·§4.2 예시', () => {
+  it('계열별 지표 블록은 자기 계열에만 있다', () => {
+    expect(
+      [...SAMSUNG_CALENDAR.actions, RIGHTS_ACTION, BONUS_ACTION].map((a) => [
+        a.family,
+        a.dividend !== null,
+        a.rights !== null,
+        a.bonus !== null,
+      ]),
+    ).toEqual([
+      ['DIV', true, false, false],
+      ['AGM', false, false, false],
+      ['RIGHTS', false, true, false],
+      ['BONUS', false, false, true],
+    ])
+  })
+
+  it('권리락 이론가는 확정·참고 기준을 함께 싣고 배당락 반응은 회복일이 비어 올 수 있다', () => {
+    expect(RIGHTS_ACTION.rights?.exPrice.basis).toBe('PREVIOUS_CLOSE')
+    expect(BONUS_ACTION.bonus?.exPrice.actualOpen).toBeNull()
+    expect(DIVIDEND_HISTORY[0].recoveryDays).toBe(3)
+  })
+})
+
+describe('stockCalendarWindow — 클릭한 일정일 앞뒤 180일', () => {
+  it('양끝 포함 361일이라 서버 상한 366일 안이다', () => {
+    const { from, to } = stockCalendarWindow('2026-10-02')
+    expect([from, to]).toEqual(['2026-04-05', '2027-03-31'])
+    expect(daysBetween(from, to) + 1).toBe(STOCK_CALENDAR_WINDOW_DAYS * 2 + 1)
+    expect(daysBetween(from, to) + 1).toBeLessThanOrEqual(366)
+  })
+
+  it('윤년 2월을 넘어도 일수가 같다', () => {
+    const { from, to } = stockCalendarWindow('2028-02-29')
+    expect([from, to]).toEqual(['2027-09-02', '2028-08-27'])
+    expect(daysBetween(from, to) + 1).toBe(361)
+  })
+})
+
+describe('findEvent — 모달 대상 행', () => {
+  const rows = [
+    event({ ticker: '005930', kind: 'DIV_EX', date: '2026-09-29', label: null }),
+    event({ ticker: '005930', kind: 'DIV_RECORD', date: '2026-09-30', label: null }),
+    event({ ticker: '000660', kind: 'DIV_EX', date: '2026-09-29', label: null }),
+  ]
+
+  it('종목·종류·날짜가 모두 같은 행', () => {
+    expect(findEvent(rows, { ticker: '005930', kind: 'DIV_RECORD', date: '2026-09-30', label: null })).toBe(rows[1])
+    expect(findEvent(rows, { ticker: '000660', kind: 'DIV_EX', date: '2026-09-29', label: null })).toBe(rows[2])
+  })
+
+  it('없으면 null', () => {
+    expect(findEvent(rows, { ticker: '005930', kind: 'DIV_PAY', date: '2026-11-20', label: null })).toBeNull()
+  })
+
+  it('같은 날 같은 종류 행이 둘이면 라벨까지 같은 행', () => {
+    const twins = [
+      event({ ticker: '005930', kind: 'DIV_PAY', date: '2026-11-20', label: '결산' }),
+      event({ ticker: '005930', kind: 'DIV_PAY', date: '2026-11-20', label: '분기' }),
+    ]
+    expect(findEvent(twins, { ticker: '005930', kind: 'DIV_PAY', date: '2026-11-20', label: '분기' })).toBe(twins[1])
+    expect(findEvent(twins, { ticker: '005930', kind: 'DIV_PAY', date: '2026-11-20', label: '결산' })).toBe(twins[0])
+  })
+})
+
+describe('actionKey — 서버 묶음 키', () => {
+  it('계열|기준일|라벨, 라벨이 없으면 빈 칸', () => {
+    expect(actionKey(SAMSUNG_CALENDAR.actions[1])).toBe('AGM|2026-10-20|임시총회')
+    expect(actionKey(RIGHTS_ACTION)).toBe('RIGHTS|2026-08-05|')
+  })
+})
+
+describe('findAction — 클릭한 (종류, 날짜)가 든 묶음', () => {
+  it('단계에 같은 종류·날짜가 있는 묶음', () => {
+    expect(findAction(SAMSUNG_CALENDAR.actions, 'DIV_RECORD', '2026-09-30')).toBe(SAMSUNG_CALENDAR.actions[0])
+    expect(findAction(SAMSUNG_CALENDAR.actions, 'AGM', '2026-11-09')).toBe(SAMSUNG_CALENDAR.actions[1])
+  })
+
+  it('없으면 null', () => {
+    expect(findAction(SAMSUNG_CALENDAR.actions, 'DIV_PAY', '2027-04-20')).toBeNull()
+  })
+
+  it('같은 날 같은 종류 묶음이 둘이면 행의 라벨과 같은 묶음, 라벨이 안 맞으면 첫 묶음', () => {
+    const yearEnd = action({ label: '결산', basisDate: '2026-06-30', steps: [step('DIV_PAY', '2026-11-20')] })
+    const quarter = SAMSUNG_CALENDAR.actions[0]
+    expect(findAction([yearEnd, quarter], 'DIV_PAY', '2026-11-20', '분기')).toBe(quarter)
+    expect(findAction([yearEnd, quarter], 'DIV_PAY', '2026-11-20')).toBe(yearEnd)
+    expect(findAction([yearEnd, quarter], 'DIV_PAY', '2026-11-20', '반기')).toBe(yearEnd)
+  })
+})
+
+describe('selectAction — 모달 초점의 묶음', () => {
+  it('키가 있으면 키로만 찾는다', () => {
+    expect(
+      selectAction(SAMSUNG_CALENDAR.actions, { key: 'AGM|2026-10-20|임시총회', kind: 'DIV_EX', date: '2026-09-29' }),
+    ).toBe(SAMSUNG_CALENDAR.actions[1])
+    expect(selectAction(SAMSUNG_CALENDAR.actions, { key: 'RIGHTS|2026-08-05|', kind: 'DIV_EX', date: '2026-09-29' })).toBeNull()
+  })
+
+  it('키가 없으면 (종류, 날짜)와 라벨로 찾는다', () => {
+    expect(selectAction(SAMSUNG_CALENDAR.actions, { key: null, kind: 'DIV_EX', date: '2026-09-29' }, '분기')).toBe(
+      SAMSUNG_CALENDAR.actions[0],
+    )
+  })
+})
+
+describe('stepState — 오늘(KST) 기준 단계 상태', () => {
+  it('하루짜리 단계는 지남·오늘·예정', () => {
+    expect(stepState({ date: '2026-10-01', endDate: null }, '2026-10-02')).toBe('past')
+    expect(stepState({ date: '2026-10-02', endDate: null }, '2026-10-02')).toBe('today')
+    expect(stepState({ date: '2026-10-03', endDate: null }, '2026-10-02')).toBe('upcoming')
+  })
+
+  it('기간 단계는 마지막 날까지 오늘이다', () => {
+    const span = { date: '2026-10-01', endDate: '2026-10-05' }
+    expect(stepState(span, '2026-09-30')).toBe('upcoming')
+    expect(stepState(span, '2026-10-01')).toBe('today')
+    expect(stepState(span, '2026-10-05')).toBe('today')
+    expect(stepState(span, '2026-10-06')).toBe('past')
+  })
+})
+
+describe('dDay·spanCountdown — 남은 날 표기', () => {
+  it('dDay는 오늘·D-n·D+n', () => {
+    expect(dDay('2026-10-02', '2026-10-02')).toBe('오늘')
+    expect(dDay('2026-10-05', '2026-10-02')).toBe('D-3')
+    expect(dDay('2026-09-29', '2026-10-02')).toBe('D+3')
+  })
+
+  it('지난 단계는 지남, 기간 단계가 진행 중이면 진행 중', () => {
+    expect(spanCountdown({ date: '2026-10-05', endDate: null }, '2026-10-02')).toBe('D-3')
+    expect(spanCountdown({ date: '2026-10-02', endDate: null }, '2026-10-02')).toBe('오늘')
+    expect(spanCountdown({ date: '2026-09-29', endDate: null }, '2026-10-02')).toBe('지남')
+    expect(spanCountdown({ date: '2026-10-01', endDate: '2026-10-05' }, '2026-10-02')).toBe('진행 중')
+    expect(spanCountdown({ date: '2026-10-01', endDate: '2026-10-05' }, '2026-10-05')).toBe('진행 중')
+    expect(spanCountdown({ date: '2026-10-01', endDate: '2026-10-05' }, '2026-10-06')).toBe('지남')
+    expect(spanCountdown({ date: '2026-10-02', endDate: '2026-10-02' }, '2026-10-02')).toBe('오늘')
+  })
+})
+
+describe('focusStep — 묶음의 대표 단계', () => {
+  const dividend = SAMSUNG_CALENDAR.actions[0]
+
+  it('지나지 않은 첫 단계, 오늘인 단계 포함', () => {
+    expect(focusStep(dividend, '2026-10-02')?.kind).toBe('DIV_PAY')
+    expect(focusStep(dividend, '2026-09-30')?.kind).toBe('DIV_RECORD')
+    expect(focusStep(RIGHTS_ACTION, '2026-09-11')?.kind).toBe('RIGHTS_SUBSCRIBE')
+  })
+
+  it('모두 지났으면 마지막 단계, 단계가 없으면 null', () => {
+    expect(focusStep(dividend, '2026-12-01')?.kind).toBe('DIV_PAY')
+    expect(focusStep(action({ steps: [] }), '2026-10-02')).toBeNull()
+  })
+})
+
+describe('formatDayRange — 요약의 날짜 표기', () => {
+  it('하루는 선택일 제목 형식, 기간은 양끝을 같은 형식으로', () => {
+    expect(formatDayRange('2026-09-29', null)).toBe('9월 29일 (화)')
+    expect(formatDayRange('2026-09-29', '2026-09-29')).toBe('9월 29일 (화)')
+    expect(formatDayRange('2026-09-10', '2026-09-11')).toBe('9월 10일 (목) – 9월 11일 (금)')
+  })
+})
+
+describe('timelineItems — 권리 일정 흐름', () => {
+  it('배당은 기준일 단계가 이미 있어 단계만', () => {
+    const items = timelineItems(SAMSUNG_CALENDAR.actions[0])
+    expect(items.map((i) => [i.kind, i.label, i.date])).toEqual([
+      ['LAST_BUY', '매수 마감', '2026-09-28'],
+      ['DIV_EX', '배당락', '2026-09-29'],
+      ['DIV_RECORD', '배당 기준일', '2026-09-30'],
+      ['DIV_PAY', '배당 지급', '2026-11-20'],
+    ])
+  })
+
+  it('주총은 매수 마감 → 주주명부 기준일 → 주총일', () => {
+    expect(timelineItems(SAMSUNG_CALENDAR.actions[1])).toEqual([
+      { key: 'LAST_BUY|2026-10-16', kind: 'LAST_BUY', label: '매수 마감', date: '2026-10-16', endDate: null, estimated: false },
+      { key: 'BASIS|2026-10-20', kind: 'BASIS', label: '주주명부 기준일', date: '2026-10-20', endDate: null, estimated: false },
+      { key: 'AGM|2026-11-09', kind: 'AGM', label: '주총', date: '2026-11-09', endDate: null, estimated: false },
+    ])
+  })
+
+  it('유상은 권리락 뒤에 신주배정 기준일을 날짜 순서대로 끼운다', () => {
+    expect(timelineItems(RIGHTS_ACTION).map((i) => i.label)).toEqual([
+      '매수 마감',
+      '유상 권리락',
+      '신주배정 기준일',
+      '유상 청약',
+      '유상 신주상장',
+    ])
+    expect(timelineItems(RIGHTS_ACTION)[3].endDate).toBe('2026-09-11')
+  })
+
+  it('기준일 단계가 없는 배당은 배당 기준일을 끼우고, 같은 날짜면 단계 뒤에 둔다', () => {
+    expect(
+      timelineItems(action({ basisDate: '2026-09-30', steps: [step('DIV_PAY', '2026-11-20')] })).map((i) => i.kind),
+    ).toEqual(['LAST_BUY', 'BASIS', 'DIV_PAY'])
+    expect(
+      timelineItems(
+        action({
+          family: 'RIGHTS',
+          basisDate: '2026-08-04',
+          steps: [step('RIGHTS_EX', '2026-08-04'), step('RIGHTS_LIST', '2026-10-02')],
+        }),
+      ).map((i) => i.kind),
+    ).toEqual(['LAST_BUY', 'RIGHTS_EX', 'BASIS', 'RIGHTS_LIST'])
+  })
+
+  it('매수 마감이 추정이면 흐름 항목에도 추정으로 싣는다', () => {
+    const items = timelineItems(action({ lastBuyDate: '2027-06-11', lastBuyEstimated: true }))
+    expect(items[0]).toEqual({
+      key: 'LAST_BUY|2027-06-11',
+      kind: 'LAST_BUY',
+      label: '매수 마감',
+      date: '2027-06-11',
+      endDate: null,
+      estimated: true,
+    })
+  })
+})
+
+describe('모달 문구 상수', () => {
+  it('계열별 기준일 이름', () => {
+    expect(BASIS_LABELS).toEqual({
+      DIV: '배당 기준일',
+      BONUS: '신주배정 기준일',
+      RIGHTS: '신주배정 기준일',
+      AGM: '주주명부 기준일',
+    })
+  })
+
+  it('종류별 한 줄 설명', () => {
+    expect(KIND_DESCRIPTIONS).toEqual({
+      DIV_EX: '이날부터 산 주식은 이번 배당을 받지 못합니다. 배당만큼 주가가 낮게 출발하기도 합니다.',
+      DIV_RECORD: '이날 주주명부에 오른 주주가 배당을 받습니다. 결제에 2거래일이 걸려 매수는 그 전에 끝내야 합니다.',
+      DIV_PAY: '배당금이 주주 계좌로 들어오는 날입니다.',
+      BONUS_EX: '이날부터 산 주식은 무상 신주를 받지 못합니다. 늘어나는 주식 수만큼 기준가가 낮게 조정됩니다.',
+      BONUS_LIST: '무상으로 받은 신주가 상장돼 거래할 수 있게 되는 날입니다.',
+      RIGHTS_EX: '이날부터 산 주식은 유상 신주를 배정받지 못합니다. 기준가가 권리락 이론가로 조정됩니다.',
+      RIGHTS_SUBSCRIBE: '신주를 배정받은 주주가 발행가로 청약하는 기간입니다.',
+      RIGHTS_LIST: '유상으로 발행한 신주가 상장돼 거래할 수 있게 되는 날입니다.',
+      AGM: '주주가 안건에 의결권을 행사하는 날입니다. 기준일에 주주명부에 올라 있어야 참석할 수 있습니다.',
+    })
+  })
+})
+
+describe('agendaCountLabel — 행의 안건 표기', () => {
+  it('건수만, 잘렸으면 이상', () => {
+    expect(agendaCountLabel(event({ kind: 'AGM', agenda: ['정관변경', '사내이사 선임', '합병승인'] }))).toBe('안건 3건')
+    expect(agendaCountLabel(event({ kind: 'AGM', agenda: ['정관변경'], agendaTruncated: true }))).toBe('안건 1건 이상')
+    expect(agendaCountLabel(SAMSUNG_CALENDAR.actions[1])).toBe('안건 2건')
+  })
+
+  it('안건이 없으면 null', () => {
+    expect(agendaCountLabel(event({ kind: 'AGM', agenda: [] }))).toBeNull()
+  })
+})
+
+describe('eventDetails — 행이 아닌 값 묶음도 받는다', () => {
+  it('묶음의 금액·비율과 단계의 날짜로 같은 문구를 만든다', () => {
+    expect(eventDetails({ kind: 'RIGHTS_EX', date: '2026-08-04', endDate: null, amount: null, ratio: 30 })).toEqual([
+      '발행가 미정',
+      '1주당 0.3주',
+    ])
+  })
+})
+
+describe('summaryFromAction·summaryFromRow — 일정 요약 모델', () => {
+  it('묶음에서 초점 단계의 날짜와 묶음 값·매수 마감일', () => {
+    expect(summaryFromAction(SAMSUNG_CALENDAR.actions[0], 'DIV_EX', '2026-09-29')).toEqual({
+      kind: 'DIV_EX',
+      date: '2026-09-29',
+      endDate: null,
+      estimated: false,
+      label: '분기',
+      details: ['주당 361원'],
+      lastBuy: { date: '2026-09-28', estimated: false },
+    })
+  })
+
+  it('청약 단계는 기간과 발행가·배정 비율', () => {
+    const summary = summaryFromAction(RIGHTS_ACTION, 'RIGHTS_SUBSCRIBE', '2026-09-10')
+    expect(summary.endDate).toBe('2026-09-11')
+    expect(summary.details).toEqual(['청약 9/10–9/11', '발행가 20,600원', '1주당 0.2158주'])
+  })
+
+  it('묶음을 못 찾으면 행 정보로, 매수 마감일은 없다', () => {
+    const row = event({ ticker: '005930', kind: 'DIV_PAY', date: '2026-11-20', label: '분기', amount: null })
+    expect(summaryFromRow({ ticker: '005930', kind: 'DIV_PAY', date: '2026-11-20', label: null }, row)).toEqual({
+      kind: 'DIV_PAY',
+      date: '2026-11-20',
+      endDate: null,
+      estimated: false,
+      label: '분기',
+      details: ['배당금 미정'],
+      lastBuy: null,
+    })
+  })
+
+  it('행도 없으면 종류·날짜만, 값 문구 없이', () => {
+    expect(summaryFromRow({ ticker: '005930', kind: 'AGM', date: '2026-11-09', label: null }, null)).toEqual({
+      kind: 'AGM',
+      date: '2026-11-09',
+      endDate: null,
+      estimated: false,
+      label: null,
+      details: [],
+      lastBuy: null,
+    })
+  })
+})
+
+describe('summarizeRecovery·formatRecoverySummary — 5거래일 내 회복 요약', () => {
+  const rows = [
+    reaction({ recoveryDays: 1 }),
+    reaction({ recoveryDays: 5 }),
+    reaction({ recoveryDays: 6 }),
+    reaction({ recoveryDays: null }),
+    reaction({ recoveryDays: null, pending: true }),
+  ]
+
+  it('집계 중 회차는 분모·분자에서 빼고 따로 센다', () => {
+    expect(summarizeRecovery(rows)).toEqual({ total: 4, recovered: 2, pending: 1 })
+    expect(summarizeRecovery([])).toEqual({ total: 0, recovered: 0, pending: 0 })
+  })
+
+  it('N회 중 M회, 집계 중이 있으면 덧붙인다', () => {
+    expect(formatRecoverySummary(summarizeRecovery(rows))).toBe('4회 중 2회 5거래일 내 회복 · 1회 집계 중')
+    expect(formatRecoverySummary({ total: 3, recovered: 3, pending: 0 })).toBe('3회 중 3회 5거래일 내 회복')
+  })
+
+  it('확정 회차가 없으면 집계 중만, 기록이 없으면 null', () => {
+    expect(formatRecoverySummary({ total: 0, recovered: 0, pending: 1 })).toBe('1회 집계 중')
+    expect(formatRecoverySummary({ total: 0, recovered: 0, pending: 0 })).toBeNull()
+  })
+})
+
+describe('recoveryLabel — 회차별 회복 칸', () => {
+  it('당일·n거래일째·미회복·집계 중', () => {
+    expect(recoveryLabel(reaction({ recoveryDays: 1 }))).toBe('당일 회복')
+    expect(recoveryLabel(reaction({ recoveryDays: 3 }))).toBe('3거래일째 회복')
+    expect(recoveryLabel(reaction({ recoveryDays: null }))).toBe('60거래일 내 미회복')
+    expect(recoveryLabel(reaction({ recoveryDays: null, pending: true }))).toBe('집계 중')
+  })
+})
+
+describe('latestPayoutRatio — 최근 연도 배당성향', () => {
+  it('추정이 아니고 값이 있는 가장 최근 연도', () => {
+    expect(
+      latestPayoutRatio([
+        { ...emptyFinancials(2023), payoutRatio: 30.1 },
+        { ...emptyFinancials(2025), payoutRatio: null },
+        { ...emptyFinancials(2024), payoutRatio: 25.5 },
+        { ...emptyFinancials(2026), payoutRatio: 40, estimated: true },
+      ]),
+    ).toEqual({ year: 2024, value: 25.5 })
+  })
+
+  it('값이 하나도 없으면 null', () => {
+    expect(latestPayoutRatio([])).toBeNull()
+    expect(latestPayoutRatio([emptyFinancials(2025)])).toBeNull()
+  })
+})
+
+describe('candleIndexOn — 차트에서 강조할 일봉', () => {
+  const candles = [{ date: '2026-09-28' }, { date: '2026-09-29' }, { date: '2026-09-30' }]
+
+  it('날짜가 정확히 같은 일봉', () => {
+    expect(candleIndexOn(candles, '2026-09-29')).toBe(1)
+  })
+
+  it('휴장일·구간 밖·미래는 강조하지 않는다', () => {
+    expect(candleIndexOn(candles, '2026-09-27')).toBeNull()
+    expect(candleIndexOn(candles, '2026-10-01')).toBeNull()
+    expect(candleIndexOn([], '2026-09-29')).toBeNull()
+  })
+})
+
+describe('formatFullDate — 연도가 섞이는 표의 날짜', () => {
+  it('YYYY.MM.DD', () => {
+    expect(formatFullDate('2026-06-30')).toBe('2026.06.30')
+  })
+})
+
+describe('metricText — 미정과 계산 불가 구분', () => {
+  it('원천 값이 없으면 미정', () => {
+    expect(metricText(null, formatWon, true)).toBe('미정')
+    expect(metricText(0.507, formatPercent, true)).toBe('미정')
+  })
+
+  it('원천은 있는데 계산값이 없으면 —', () => {
+    expect(metricText(null, formatPercent, false)).toBe('—')
+  })
+
+  it('값이 있으면 그 포맷', () => {
+    expect(metricText(361, formatWon, false)).toBe('361원')
+    expect(metricText(0.507, formatPercent, false)).toBe('0.51%')
+    expect(metricText(-3.2, formatChange, false)).toBe('−3.20%')
+  })
+})
+
+describe('EX_PRICE_BASIS_LABELS — 이론가의 확정·참고 구분', () => {
+  it('기준별 설명', () => {
+    expect(EX_PRICE_BASIS_LABELS).toEqual({
+      PREVIOUS_CLOSE: '권리락 전날 종가로 계산한 확정값',
+      CURRENT_PRICE: '현재가로 계산한 참고값',
+    })
+  })
+})
+
+describe('exPriceMissing — 이론가의 미정 판정', () => {
+  it('현재가 참고값은 계산 입력(발행가·배정 비율)이 없으면 미정', () => {
+    expect(exPriceMissing('CURRENT_PRICE', true)).toBe(true)
+    expect(exPriceMissing('CURRENT_PRICE', false)).toBe(false)
+  })
+
+  it('권리락이 지난 확정값은 거래소 기준가라 입력이 없어도 미정이 아니다', () => {
+    expect(exPriceMissing('PREVIOUS_CLOSE', true)).toBe(false)
   })
 })

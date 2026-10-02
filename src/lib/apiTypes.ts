@@ -613,3 +613,88 @@ export interface IpoListRes {
   asOf: string | null
   offerings: IpoRes[]
 }
+
+export type CalendarFamily = 'DIV' | 'BONUS' | 'RIGHTS' | 'AGM'
+
+export interface ActionStepRes {
+  kind: CalendarEventKind
+  date: string
+  endDate: string | null
+  estimated: boolean
+}
+
+export interface AgendaItemRes {
+  text: string
+  tags: string[]
+}
+
+export type DpsBasis = 'CURRENT' | 'PREVIOUS'
+
+export interface DividendMetricsRes {
+  dps: number | null
+  dpsBasis: DpsBasis | null
+  expectedYield: number | null
+}
+
+export type ExPriceBasis = 'PREVIOUS_CLOSE' | 'CURRENT_PRICE'
+
+export interface ExPriceRes {
+  theoretical: number | null
+  basis: ExPriceBasis
+  actualOpen: number | null
+}
+
+export interface RightsMetricsRes {
+  dilution: number | null
+  issuePrice: number | null
+  priceVsIssue: number | null
+  exPrice: ExPriceRes
+}
+
+export interface BonusMetricsRes {
+  exPrice: ExPriceRes
+  returnAfter5: number | null
+  returnAfter20: number | null
+}
+
+export interface CorporateActionRes {
+  family: CalendarFamily
+  label: string | null
+  basisDate: string
+  lastBuyDate: string
+  lastBuyEstimated: boolean
+  steps: ActionStepRes[]
+  amount: number | null
+  ratio: number | null
+  agenda: AgendaItemRes[]
+  agendaTruncated: boolean
+  dividend: DividendMetricsRes | null
+  rights: RightsMetricsRes | null
+  bonus: BonusMetricsRes | null
+}
+
+export interface StockCalendarRes {
+  ticker: string
+  stockName: string
+  market: string
+  price: number | null
+  change: number | null
+  priceDate: string | null
+  from: string
+  to: string
+  asOf: string | null
+  actions: CorporateActionRes[]
+}
+
+export interface DividendReactionRes {
+  recordDate: string
+  kind: string
+  dps: number
+  exDate: string
+  prevClose: number
+  exOpen: number
+  theoreticalDrop: number
+  openGap: number
+  recoveryDays: number | null
+  pending: boolean
+}
