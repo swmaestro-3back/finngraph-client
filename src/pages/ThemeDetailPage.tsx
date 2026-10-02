@@ -167,7 +167,7 @@ export default function ThemeDetailPage() {
             onClearSelection={clearSelection}
           />
 
-          <LeaderStockCard themeName={theme.name} stocks={stocks ?? []} period={period} />
+          <LeaderStockCard themeName={theme.name} stocks={stocks ?? []} />
 
           <RelatedStocksTable stocks={stocks ?? []} />
 

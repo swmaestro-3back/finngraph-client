@@ -40,6 +40,10 @@
   --chart-3-soft: #a27ef9;
   --chart-4: #f6657a;
   --chart-5: #f4b000;
+  /* 여러 종목을 한 차트에 겹칠 때의 선 색 — 상승 빨강·하락 파랑과 겹치지 않고 색각 이상에서도 구분되는 조합 */
+  --series-1: #14a077;
+  --series-2: #5b45c9;
+  --series-3: #e56a2c;
   --chart-grid: #efecec;
   --sidebar: #f8f7f7;
   --sidebar-foreground: #201d1d;
@@ -105,6 +109,9 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3-soft: var(--chart-3-soft);
