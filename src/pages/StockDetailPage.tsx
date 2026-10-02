@@ -48,6 +48,8 @@ import { cn } from '@/lib/utils'
 // 섹션 사이 구분선 — 접힌 상태에서도 남아 어디서 다음 섹션이 시작하는지 보여준다
 const SECTION_HEADER = 'mb-[9px] mt-6 border-t border-border pt-6'
 
+const SUPPLY_FETCH_LIMIT = Math.max(...SUPPLY_RANGES.map((r) => r.limit))
+
 export default function StockDetailPage() {
   const { stockCode } = useParams()
   const code = stockCode ?? ''
@@ -63,7 +65,8 @@ export default function StockDetailPage() {
 
   const { data: stock, loading, error, refetch } = useStockDetail(code)
   const { data: candleRes } = useCandles(code, period)
-  const { data: flowRes } = useInvestorFlows(code, SUPPLY_RANGE_LIMITS[supplyRange])
+  // 수급은 가장 긴 기간으로 한 번 받아 두고 칩에 따라 잘라 쓴다 — 뱃지(연속 일수·보유율 증감)는 칩과 무관하게 전체를 본다
+  const { data: flowRes } = useInvestorFlows(code, SUPPLY_FETCH_LIMIT)
   const { data: financialRows } = useFinancials(code)
   const { data: newsRows, loading: newsLoading } = useStockNews(code)
 
@@ -79,7 +82,10 @@ export default function StockDetailPage() {
         : [],
     [candleRes, newsRows, newsLoading, period],
   )
-  const supply = useMemo(() => (flowRes ?? []).map(toSupplyPoint), [flowRes])
+  const supply = useMemo(
+    () => (flowRes ?? []).slice(-SUPPLY_RANGE_LIMITS[supplyRange]).map(toSupplyPoint),
+    [flowRes, supplyRange],
+  )
   // 연간 실적 차트가 보는 연도 범위 — memo 자식이 헛돌지 않도록 참조를 유지 (표는 항상 전체 기간)
   const annualRows = useMemo(
     () => sliceRecentYears(financialRows ?? [], yearsFor(annualPeriod)),

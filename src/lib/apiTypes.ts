@@ -181,11 +181,10 @@ export interface AnnualFinancialsRes {
 export type CandlePeriod = 'D' | 'W' | 'M'
 
 /**
- * 기간별 캔들 개수 — 일봉 6개월(≈120거래일). 백엔드 limit 상한은 500.
- * 주봉·월봉은 ETL 적재 이력(STOCK_PERIOD_LOOKBACK_DAYS=120, 2026-05-18~)에 맞춘 값이라
- * 백필 후에는 주봉 52(1년)·월봉 36(3년)으로 올린다.
+ * 기간별 캔들 개수 — 일봉 6개월(≈120거래일)·주봉 1년·월봉 3년. 백엔드 limit 상한은 500.
+ * 길게 볼수록 봉을 굵게 — 상장이 짧은 종목은 백엔드가 더 적게 줄 수 있다.
  */
-export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 120, W: 18, M: 7 }
+export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 120, W: 52, M: 36 }
 
 /** 투자자별 수급 조회 기간 — 백엔드는 거래일 개수(limit)만 받으므로 1개월 ≈ 20거래일로 환산한다 */
 export type SupplyRange = '1M' | '3M' | '6M' | '1Y'
