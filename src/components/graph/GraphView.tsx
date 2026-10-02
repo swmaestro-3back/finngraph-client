@@ -41,8 +41,8 @@ import {
 } from '@/lib/graphRoute'
 import { useMemberGate } from '@/lib/memberGate'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
-import { useStocks } from '@/lib/queries/useStocks'
-import { useThemes } from '@/lib/queries/useThemes'
+import { useStocksCached } from '@/lib/queries/useStocksCached'
+import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
@@ -78,8 +78,9 @@ export function GraphView({ focus }: Props) {
   // 개요는 서버가 1홉 고정이라 URL에 hop이 남아 있어도 강조 범위는 1홉이다
   const effectiveHop = controls.hop ? gatedHop : 1
   const { data, loading, error, refetch } = useKgGraph(focus, gatedQuery)
-  const { data: stocks } = useStocks()
-  const { data: themes } = useThemes()
+  // 전종목·테마 목록은 수백 KB다 — 재중심으로 이 화면이 다시 마운트될 때마다 받지 않도록 탭 공용 캐시를 탄다
+  const { data: stocks } = useStocksCached()
+  const { data: themes } = useThemesCached()
   const navigate = useNavigate()
   const location = useLocation()
   const navState = location.state as GraphNavState | null

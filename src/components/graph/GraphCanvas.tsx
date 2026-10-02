@@ -42,6 +42,7 @@ import { hideTooltip, moveTooltip, showTooltip, type TooltipContent } from '@/li
 import { buildLinkCard } from '@/lib/linkCard'
 import { useCanvasSize, type CanvasSize } from '@/lib/useCanvasSize'
 import { T } from '@/lib/graphTheme'
+import { nodeLogoUrl } from '@/lib/stockLogo'
 
 export interface GraphCanvasRef {
   zoomIn: () => void
@@ -227,7 +228,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     )
     // 중심과 메인 노드는 같은 크기 — 화면에서 "이 그래프의 주인공"이 여럿일 수 있다(뉴스 모달)
     const isPrimary = (d: GraphNode) => d.id === centerId || (primaryIds?.has(d.id) ?? false)
-    const radius = (d: GraphNode) => (isPrimary(d) ? CENTER_RADIUS : degreeRadius(d))
+    // 로고 노드는 그림이 읽히도록 차수 척도를 한 단계 큰 범위로 옮긴다
+    const hasLogo = (d: GraphNode) => nodeLogoUrl(d) != null
+    const radius = (d: GraphNode) =>
+      isPrimary(d) ? CENTER_RADIUS : hasLogo(d) ? logoRadius(degreeRadius(d)) : degreeRadius(d)
     const isEvent = (d: GraphNode) => d.type === 'event'
     // 노드 본체의 폭·높이. 기업은 폭 == 높이(원), 이벤트는 가로로 긴 태그 — rx를 높이 절반으로 주면 둘 다 rect 하나로 그린다
     const bodyW = (d: GraphNode) => (isEvent(d) ? eventNodeWidth(d.label) : radius(d) * 2)
@@ -255,6 +259,15 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('r', 1)
       .attr('fill', T.ink)
       .attr('fill-opacity', DOT_OPACITY)
+    // 로고는 원으로 잘라 그린다 — 경계 상자 기준이라 크기가 달라도 clipPath 하나로 된다
+    defs
+      .append('clipPath')
+      .attr('id', LOGO_CLIP_ID)
+      .attr('clipPathUnits', 'objectBoundingBox')
+      .append('circle')
+      .attr('cx', 0.5)
+      .attr('cy', 0.5)
+      .attr('r', 0.5)
     svg
       .append('rect')
       .attr('width', '100%')
@@ -355,6 +368,23 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('stroke-width', 1.5)
       .attr('pointer-events', 'none')
 
+    // === LOGOS === 시장색 원 위에 한 겹 안쪽으로 얹는다 — 바깥 띠에 시장색이 남고, 로드에 실패하면 원래 점으로 돌아간다
+    const logoSize = (d: GraphNode) => bodyW(d) - LOGO_RING * 2
+    const logo = g
+      .append('g')
+      .selectAll<SVGImageElement, GraphNode>('image')
+      .data(nodes.filter(hasLogo))
+      .join('image')
+      .attr('href', (d) => nodeLogoUrl(d)!)
+      .attr('width', logoSize)
+      .attr('height', logoSize)
+      .attr('clip-path', `url(#${LOGO_CLIP_ID})`)
+      .attr('preserveAspectRatio', 'xMidYMid slice')
+      .attr('pointer-events', 'none')
+      .on('error', function () {
+        d3.select(this).remove()
+      })
+
     // === LABELS === 기업은 점 아래 지도 라벨(흰 외곽선으로 간선 위에서도 읽힌다), 이벤트는 태그 안 흰 글자
     const label = g
       .append('g')
@@ -398,6 +428,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     function paint(spec: HighlightSpec | null) {
       if (!spec) {
         node.attr('opacity', 1).attr('stroke', T.paper).attr('stroke-width', 1.5)
+        logo.attr('opacity', 1)
         glow.attr('opacity', 1)
         tintLinks(baseColor, baseOpacity)
         label.attr('opacity', labelLod)
@@ -412,6 +443,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         // 선택 노드는 잉크색 링 — 어떤 채움색 위에서도 "여기"로 읽힌다
         .attr('stroke', (d) => (focus.has(d.id) ? T.ink : T.paper))
         .attr('stroke-width', (d) => (focus.has(d.id) ? 2 : 1.5))
+      logo.attr('opacity', (d) => (isRelevant(d.id) ? 1 : DIM))
       glow.attr('opacity', (d) => (isRelevant(d.id) ? 1 : DIM))
       // 켜진 간선만 제 색(출발 노드 색)을 입는다 — 평소의 슬레이트와 대비되어 관계가 튀어나온다
       tintLinks(
@@ -641,6 +673,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       linkHit.attr('d', (d) => curvePath(curve(d)))
       glow.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
       node.attr('x', (d) => d.x! - bodyW(d) / 2).attr('y', (d) => d.y! - bodyH(d) / 2)
+      logo.attr('x', (d) => d.x! - logoSize(d) / 2).attr('y', (d) => d.y! - logoSize(d) / 2)
       nodeHit.attr('x', (d) => d.x! - hitW(d) / 2).attr('y', (d) => d.y! - hitH(d) / 2)
       label.attr('transform', (d) =>
         isEvent(d)
@@ -776,6 +809,17 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 const DOT_PATTERN_ID = 'graph-dots'
 const DOT_GRID = 24
 const DOT_OPACITY = 0.07
+
+/** 종목 로고 — 원으로 자르는 clipPath id, 바깥에 남기는 시장색 띠 폭, 로고 노드의 반지름 범위 */
+const LOGO_CLIP_ID = 'graph-logo-clip'
+const LOGO_RING = 2
+const LOGO_RADIUS = { min: 10, max: 17 } as const
+
+/** 차수 반지름(NODE_RADIUS 범위)을 로고 반지름 범위로 옮긴다 — 상대 크기는 그대로 */
+function logoRadius(r: number): number {
+  const t = (r - NODE_RADIUS.min) / (NODE_RADIUS.max - NODE_RADIUS.min)
+  return LOGO_RADIUS.min + (LOGO_RADIUS.max - LOGO_RADIUS.min) * t
+}
 
 /** 중심 후광이 점 바깥으로 나오는 폭 */
 const CENTER_GLOW = 10
