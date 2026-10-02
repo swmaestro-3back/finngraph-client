@@ -200,7 +200,6 @@ export default function StockListPage() {
           </div>
 
           <StockFilterBar
-            stocks={allRows}
             value={filter}
             onChange={handleFilterChange}
             matchCount={filteredRows.length}

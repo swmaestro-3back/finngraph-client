@@ -6,14 +6,12 @@ export type RangeKey = 'marketCap' | 'per' | 'pbr' | 'roe' | 'dividendYield'
 export interface FilterState {
   market: 'ALL' | 'KOSPI' | 'KOSDAQ'
   presets: Set<PresetKey>
-  theme: string | null
   ranges: Partial<Record<RangeKey, { min?: number; max?: number }>>
 }
 
 export const DEFAULT_FILTER: FilterState = {
   market: 'ALL',
   presets: new Set<PresetKey>(),
-  theme: null,
   ranges: {},
 }
 
@@ -40,7 +38,6 @@ export function isFilterActive(state: FilterState): boolean {
   return (
     state.market !== 'ALL' ||
     state.presets.size > 0 ||
-    state.theme !== null ||
     RANGE_KEYS.some((key) => {
       const range = state.ranges[key]
       return range !== undefined && (range.min !== undefined || range.max !== undefined)
@@ -51,7 +48,6 @@ export function isFilterActive(state: FilterState): boolean {
 export function applyStockFilters(rows: StockRowRes[], state: FilterState): StockRowRes[] {
   return rows.filter((row) => {
     if (state.market !== 'ALL' && row.market !== state.market) return false
-    if (state.theme !== null && row.themeName !== state.theme) return false
     for (const preset of state.presets) {
       if (!PRESET_TESTS[preset](row)) return false
     }
@@ -70,7 +66,7 @@ export function applyStockFilters(rows: StockRowRes[], state: FilterState): Stoc
 
 // ── 주소 쿼리 직렬화 ──
 // 필터도 주소에 둔다 — 상세에 다녀왔을 때 페이지 번호만 남고 필터가 풀리면 다른 목록이 뜬다.
-// market=KOSPI · preset=lowPer,highRoe · theme=반도체 · per=..10 · marketCap=1000..5000 (범위는 화면 표기 단위)
+// market=KOSPI · preset=lowPer,highRoe · per=..10 · marketCap=1000..5000 (범위는 화면 표기 단위)
 
 const MARKETS: FilterState['market'][] = ['KOSPI', 'KOSDAQ']
 const PRESET_KEYS = Object.keys(PRESET_TESTS) as PresetKey[]
@@ -94,7 +90,7 @@ export function filterFromParams(params: URLSearchParams): FilterState {
     const range = { min: parseBound(min), max: parseBound(max) }
     if (range.min !== undefined || range.max !== undefined) ranges[key] = range
   }
-  return { market, presets, theme: params.get('theme') || null, ranges }
+  return { market, presets, ranges }
 }
 
 /** params의 필터 항목을 state로 덮어쓴다 (다른 항목은 건드리지 않는다) */
@@ -105,9 +101,6 @@ export function filterToParams(state: FilterState, params: URLSearchParams): voi
   const presets = PRESET_KEYS.filter((key) => state.presets.has(key))
   if (presets.length === 0) params.delete('preset')
   else params.set('preset', presets.join(','))
-
-  if (state.theme === null) params.delete('theme')
-  else params.set('theme', state.theme)
 
   for (const key of RANGE_KEYS) {
     const range = state.ranges[key]

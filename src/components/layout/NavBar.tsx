@@ -7,13 +7,11 @@ import { SearchBar } from '@/components/search/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { GraphFocus } from '@/data/graphTypes'
-import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
+import type { StockRowRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
 import { fromState } from '@/lib/navigation'
 import { loadStocks } from '@/lib/queries/useStocksCached'
 import { logoutLanding } from '@/lib/memberGate'
-import { loadThemes } from '@/lib/queries/useThemesCached'
-import { themeDetailPath, themeIdIndex } from '@/lib/themeRoute'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
@@ -24,29 +22,22 @@ const MENU_ITEMS = [
   { label: '데일리 브리핑', to: '/briefing' },
 ]
 
-function loadSearchData(): Promise<[ThemeRes[], StockRowRes[]]> {
-  return Promise.all([loadThemes(), loadStocks()])
-}
+const SEARCH_PLACEHOLDER = '종목 검색'
 
 const LOAD_FAILED = '검색 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
-
-function focusPath(focus: GraphFocus, themes: readonly ThemeRes[]): string {
-  if (focus.kind === 'company') return `/stock/${focus.ticker}`
-  return themeDetailPath(focus.name, themeIdIndex(themes)) ?? '/themes'
-}
 
 export function NavBar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   // 검색 데이터는 첫 포커스에 한 번 받는다 — 헤더는 모든 페이지에 있으므로 마운트 시 부르면 낭비
-  const [searchData, setSearchData] = useState<[ThemeRes[], StockRowRes[]] | null>(null)
+  const [searchData, setSearchData] = useState<StockRowRes[] | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const ensureSearchData = () => {
     if (searchData || loading) return
     setLoading(true)
-    loadSearchData()
+    loadStocks()
       .then((data) => {
         setSearchData(data)
         setNotice(null)
@@ -74,10 +65,12 @@ export function NavBar() {
     return pathname.startsWith(to.split('/').slice(0, 2).join('/'))
   }
 
-  const [themes, stocks] = searchData ?? [[], []]
+  const stocks = searchData ?? []
 
+  // 헤더 검색은 종목만 다룬다 — 테마를 넘기지 않으므로 focus는 항상 company
   const goTo = (focus: GraphFocus) => {
-    navigate(focusPath(focus, themes), { state: fromState(pathname) })
+    if (focus.kind !== 'company') return
+    navigate(`/stock/${focus.ticker}`, { state: fromState(pathname) })
   }
 
   // 다이얼로그·시트 오버레이(z-50)보다 아래 — 모달이 뜨면 헤더도 함께 흐려진다
@@ -92,7 +85,7 @@ export function NavBar() {
           key={pathname}
           variant="pill"
           stocks={stocks}
-          themes={themes}
+          placeholder={SEARCH_PLACEHOLDER}
           notice={notice}
           onFocus={ensureSearchData}
           onSelect={goTo}
@@ -122,7 +115,7 @@ export function NavBar() {
               variant="pill"
               autoFocus
               stocks={stocks}
-              themes={themes}
+              placeholder={SEARCH_PLACEHOLDER}
               notice={notice}
               onFocus={ensureSearchData}
               onSelect={goTo}

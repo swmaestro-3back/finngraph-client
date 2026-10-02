@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { pageBlock, readPage, readSort, writePage, writeSort } from '@/lib/listParams'
+import {
+  pageBlock,
+  readPage,
+  readQuery,
+  readSort,
+  writePage,
+  writeQuery,
+  writeSort,
+} from '@/lib/listParams'
 import { filterFromParams, filterToParams, type FilterState } from '@/lib/stockFilter'
 
 describe('pageBlock', () => {
@@ -58,7 +66,7 @@ describe('sort 쿼리', () => {
 
 describe('주식 필터 쿼리', () => {
   it('기본 필터는 주소를 비운다', () => {
-    const params = new URLSearchParams('market=KOSPI&preset=lowPer&theme=x&per=..10&page=3')
+    const params = new URLSearchParams('market=KOSPI&preset=lowPer&per=..10&page=3')
     filterToParams(filterFromParams(new URLSearchParams('')), params)
     expect(params.toString()).toBe('page=3')
   })
@@ -67,7 +75,6 @@ describe('주식 필터 쿼리', () => {
     const state: FilterState = {
       market: 'KOSDAQ',
       presets: new Set(['highRoe', 'lowPer']),
-      theme: '2차전지 (소재)',
       ranges: { per: { max: 10 }, marketCap: { min: 1000, max: 5000 }, roe: { min: -2.5 } },
     }
     const params = new URLSearchParams()
@@ -80,5 +87,20 @@ describe('주식 필터 쿼리', () => {
     expect(state.market).toBe('ALL')
     expect([...state.presets]).toEqual(['highRoe'])
     expect(state.ranges).toEqual({})
+  })
+})
+
+describe('q 쿼리', () => {
+  it('검색어를 읽고 쓴다', () => {
+    const params = new URLSearchParams('sort=m1')
+    expect(readQuery(params)).toBe('')
+    writeQuery(params, '반도체')
+    expect(readQuery(params)).toBe('반도체')
+  })
+
+  it('빈 검색어는 주소에서 지운다', () => {
+    const params = new URLSearchParams('q=게임&page=2')
+    writeQuery(params, '  ')
+    expect(params.toString()).toBe('page=2')
   })
 })

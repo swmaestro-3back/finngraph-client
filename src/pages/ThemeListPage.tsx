@@ -1,17 +1,20 @@
-import { useMemo } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { CircleAlert, RotateCw, Search, X } from 'lucide-react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { DataNotice } from '@/components/layout/DataNotice'
 import { ListPagination } from '@/components/table/ListPagination'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { Breadth } from '@/components/theme/ThemeMetricSummary'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemes } from '@/lib/queries/useThemes'
 import { fromState } from '@/lib/navigation'
 import { changeColorClass, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import { formatShortDate, hotExclusionTitle } from '@/lib/themeMetrics'
+import { readQuery, writePage, writeQuery } from '@/lib/listParams'
+import { isBlankQuery, matchRange } from '@/lib/nameMatch'
 import { usePageParam, useUrlTableSort } from '@/lib/useListParams'
 import { cn } from '@/lib/utils'
 import { priceBasisSuffix } from '@/lib/referenceDate'
@@ -93,9 +96,26 @@ function LeaderCell({ names }: { names: string[] }) {
   )
 }
 
+/** 검색어와 일치한 글자만 강조한 테마명 */
+function HighlightedName({ name, query }: { name: string; query: string }) {
+  const range = matchRange(name, query)
+  if (!range) return <>{name}</>
+  const [start, end] = range
+  return (
+    <>
+      {name.slice(0, start)}
+      <mark className="bg-transparent text-primary">{name.slice(start, end)}</mark>
+      {name.slice(end)}
+    </>
+  )
+}
+
 export default function ThemeListPage() {
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
+  const [params, setParams] = useSearchParams()
+  // 입력 원문은 로컬에 든다 — 한글 조합 중 글자를 주소 왕복에 맡기면 깨질 수 있다. 초기값만 주소에서 읽는다
+  const [query, setQuery] = useState(() => readQuery(params))
   const { data: themes, loading, error, refetch } = useThemes()
   const { data: market } = useThemeMarket()
   const baseDate = market?.baseDate ?? themes?.[0]?.baseDate ?? null
@@ -126,8 +146,23 @@ export default function ThemeListPage() {
   )
 
   // 페이지·정렬은 주소 쿼리에 둔다 — 상세에 다녀와도 보던 목록으로 돌아온다
+  const searching = !isBlankQuery(query)
+  const matchedRows = useMemo(
+    () => (searching ? allRows.filter((row) => matchRange(row.name, query) !== null) : allRows),
+    [allRows, query, searching],
+  )
+
+  // 검색어는 ?q=에 두어 상세에 다녀와도 남게 한다. 글자마다 바뀌므로 히스토리에 쌓지 않고, 보던 페이지는 1로 돌린다
+  const changeQuery = (next: string) => {
+    setQuery(next)
+    const nextParams = new URLSearchParams(params)
+    writeQuery(nextParams, next)
+    writePage(nextParams, 1)
+    setParams(nextParams, { replace: true })
+  }
+
   const { sorted, sortKey, sortDesc, handleSort } = useUrlTableSort<ThemeRow, SortKey>(
-    allRows,
+    matchedRows,
     SORT_KEYS,
     'm3',
   )
@@ -138,14 +173,44 @@ export default function ThemeListPage() {
 
   return (
     <div className="page-container pb-12 pt-7">
-      <div className="mb-3 flex items-end justify-between gap-4">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
         <div className="flex items-baseline gap-[9px]">
           <h1 className="text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">
             테마 목록
           </h1>
           <span className="text-body text-muted-foreground">
-            전체 {allRows.length}개 테마
+            {searching
+              ? `검색 결과 ${matchedRows.length} / 전체 ${allRows.length}`
+              : `전체 ${allRows.length}개 테마`}
           </span>
+        </div>
+        {/* 제목 줄 오른쪽 — 결과 목록을 띄우지 않고 아래 표를 바로 걸러낸다 */}
+        <div className="relative w-full sm:w-72">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+            strokeWidth={2}
+          />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => changeQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') changeQuery('')
+            }}
+            placeholder="테마 이름으로 찾기"
+            aria-label="테마 이름으로 찾기"
+            className="h-9 rounded-lg border-0 bg-muted pr-9 pl-10 focus-visible:ring-2 [&::-webkit-search-cancel-button]:hidden"
+          />
+          {query && (
+            <button
+              type="button"
+              aria-label="검색어 지우기"
+              onClick={() => changeQuery('')}
+              className="absolute top-1/2 right-1.5 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -203,6 +268,16 @@ export default function ThemeListPage() {
                   className={cn(GRID, 'border-b border-border bg-muted px-4 py-2.5')}
                 />
 
+                {searching && matchedRows.length === 0 && (
+                  <div className="flex flex-col items-center gap-3 py-16 text-center">
+                    <p className="text-body text-muted-foreground">
+                      '{query.trim()}'와 일치하는 테마가 없습니다.
+                    </p>
+                    <Button variant="outline" size="sm" onClick={() => changeQuery('')}>
+                      검색어 지우기
+                    </Button>
+                  </div>
+                )}
                 {pageRows.map((row, index) => (
                   // 별표가 행 안에 들어가 button 중첩이 되므로 행을 div+role로 둔다
                   <div
@@ -236,7 +311,7 @@ export default function ThemeListPage() {
                       className="-ml-1"
                     />
                     <span className="overflow-hidden text-sm font-medium whitespace-nowrap text-ellipsis text-foreground">
-                      {row.name}
+                      <HighlightedName name={row.name} query={query} />
                     </span>
                     <span
                       title={row.exclusionTitle ?? undefined}

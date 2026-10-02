@@ -51,3 +51,13 @@ export function writeSort<K extends string>(
   if (sort.desc) params.delete('dir')
   else params.set('dir', 'asc')
 }
+
+/** ?q= — 목록 안 이름 검색어. 앞뒤 공백만 있는 값은 적지 않는다 */
+export function readQuery(params: URLSearchParams): string {
+  return params.get('q') ?? ''
+}
+
+export function writeQuery(params: URLSearchParams, query: string): void {
+  if (query.trim() === '') params.delete('q')
+  else params.set('q', query)
+}

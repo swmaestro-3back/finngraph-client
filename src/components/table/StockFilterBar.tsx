@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { Input } from '@/components/ui/input'
-import type { StockRowRes } from '@/lib/apiTypes'
 import {
   DEFAULT_FILTER,
   isFilterActive,
@@ -20,10 +19,10 @@ const MARKETS: { value: FilterState['market']; label: string }[] = [
 ]
 
 const PRESETS: { key: PresetKey; label: string }[] = [
-  { key: 'lowPer', label: '저PER' },
-  { key: 'highDividend', label: '고배당' },
-  { key: 'highRoe', label: '고ROE' },
   { key: 'largeCap', label: '대형주' },
+  { key: 'lowPer', label: '저PER' },
+  { key: 'highRoe', label: '고ROE' },
+  { key: 'highDividend', label: '고배당' },
 ]
 
 const RANGES: { key: RangeKey; label: string }[] = [
@@ -35,22 +34,15 @@ const RANGES: { key: RangeKey; label: string }[] = [
 ]
 
 interface StockFilterBarProps {
-  stocks: StockRowRes[]
   value: FilterState
   onChange: (next: FilterState) => void
   matchCount: number
 }
 
-export function StockFilterBar({ stocks, value, onChange, matchCount }: StockFilterBarProps) {
+export function StockFilterBar({ value, onChange, matchCount }: StockFilterBarProps) {
   const [open, setOpen] = useState(false)
   // 입력 도중 문자열("3." 등)을 보존하려고 화면용 원문은 따로 든다 — 숫자만 상위로 올린다
   const [rangeText, setRangeText] = useState<Record<string, string>>({})
-
-  const themes = useMemo(() => {
-    const set = new Set<string>()
-    for (const stock of stocks) if (stock.themeName) set.add(stock.themeName)
-    return [...set].sort((a, b) => a.localeCompare(b, 'ko'))
-  }, [stocks])
 
   const togglePreset = (key: PresetKey) => {
     const presets = new Set(value.presets)
@@ -99,19 +91,6 @@ export function StockFilterBar({ stocks, value, onChange, matchCount }: StockFil
             {label}
           </FilterChip>
         ))}
-
-        <select
-          value={value.theme ?? ''}
-          onChange={(e) => onChange({ ...value, theme: e.target.value || null })}
-          className="h-[30px] cursor-pointer rounded border border-border bg-transparent px-2 text-caption font-medium text-foreground-secondary outline-none focus-visible:border-ring"
-        >
-          <option value="">전체 테마</option>
-          {themes.map((theme) => (
-            <option key={theme} value={theme}>
-              {theme}
-            </option>
-          ))}
-        </select>
 
         <Button variant="ghost" size="sm" onClick={() => setOpen((prev) => !prev)}>
           상세 필터

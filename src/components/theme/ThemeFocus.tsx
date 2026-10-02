@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { Link } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { LeaderStockCard } from '@/components/theme/LeaderStockCard'
-import { Breadth, CloseDate, ThemeMetricCaption } from '@/components/theme/ThemeMetricSummary'
+import { CloseDate, ThemeMetricCaption } from '@/components/theme/ThemeMetricSummary'
 import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import { countLabel, hasBreadth, turnoverFact } from '@/lib/themeMetrics'
@@ -39,7 +39,7 @@ function Fact({ label, tone, children }: FactProps) {
 }
 
 /**
- * 설명은 테마마다 1줄에서 7줄까지 들쭉날쭉하다 — 4줄에서 접어 옆의 지표 칸과 높이를 맞추고,
+ * 설명은 테마마다 1줄에서 7줄까지 들쭉날쭉하다 — 3줄에서 접어 옆의 지표 칸과 높이를 맞추고,
  * 넘칠 때만 펼치기 버튼을 둔다.
  */
 function Description({ text }: { text: string }) {
@@ -71,7 +71,7 @@ function Description({ text }: { text: string }) {
         id="theme-focus-description"
         className={cn(
           'text-body leading-relaxed text-foreground-secondary break-keep [text-wrap:pretty]',
-          !expanded && 'line-clamp-4',
+          !expanded && 'line-clamp-3',
         )}
       >
         {text}
@@ -151,16 +151,6 @@ export function ThemeFocus({ theme, stocks, from }: ThemeFocusProps) {
             {hasBreadth(theme) ? (
               <>
                 <Fact label="집계">{countLabel(theme.pricedCount, theme.stockCount)}</Fact>
-                <Fact label="등락 현황">
-                  <Breadth
-                    up={theme.upCount}
-                    flat={
-                      theme.flatCount ??
-                      Math.max(0, theme.pricedCount - theme.upCount - theme.downCount)
-                    }
-                    down={theme.downCount}
-                  />
-                </Fact>
                 {(theme.suspendedCount ?? 0) > 0 && (
                   <Fact label="거래정지">{theme.suspendedCount}</Fact>
                 )}
