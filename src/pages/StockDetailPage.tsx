@@ -218,7 +218,7 @@ export default function StockDetailPage() {
           {/* 테마 비교(좌) · 투자지표(우) — 테마 비교가 없으면(null) 지표가 전체 폭을 쓴다 */}
           <div className="mb-4 grid gap-4 lg:grid-cols-2 [&>*:only-child]:col-span-full">
             <ThemePeerComparison stock={stock} />
-            <StockMetricsCard stock={stock} financials={financialRows} />
+            <StockMetricsCard stock={stock} financials={financialRows} flows={flowRes} />
           </div>
 
           {/* 캔들이 뉴스보다 먼저 오면 issues가 빈 배열이라 이슈 레인이 days[0]에서 깨진다 — 둘 다 준비되면 그린다 */}

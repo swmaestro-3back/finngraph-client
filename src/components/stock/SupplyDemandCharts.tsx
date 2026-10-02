@@ -12,6 +12,7 @@ import {
 import type { SupplyPoint } from '@/lib/apiTypes'
 import { DOWN, UP } from '@/lib/chartAxis'
 import { SYNC_BY_INDEX, syncMarks, SyncPinHeader, useSyncedIndex, type SyncedIndex } from '@/lib/chartSync'
+import { changeColorClass, formatChange } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 // 투자자별 수급 4카드 (design-specs/stock-detail.md §1-6)
@@ -60,7 +61,7 @@ function SupplyCard({
   children,
 }: {
   title: string
-  meta: string
+  meta: React.ReactNode
   metaColorClass?: string
   children: React.ReactElement
 }) {
@@ -127,7 +128,11 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
   const sync = useSyncedIndex()
   const tickInterval = xTickInterval(points.length)
   const pinnedDay = sync.pinnedIndex === null ? null : points[sync.pinnedIndex].label
-  const latestRatio = [...points].reverse().find((p) => p.foreignRatio !== null)?.foreignRatio ?? null
+  // 보유율이 비어 있는 날(당일 미집계 등)은 건너뛰고 기간의 첫 값과 최신 값을 고른다
+  const firstRatio = points.find((p) => p.foreignRatio !== null)?.foreignRatio ?? null
+  const latestRatio = points.findLast((p) => p.foreignRatio !== null)?.foreignRatio ?? null
+  // 기간 첫날 대비 증감 — 보유율끼리의 차이라 %가 아니라 %p
+  const ratioChange = firstRatio === null || latestRatio === null ? null : latestRatio - firstRatio
   const nets: { title: string; key: keyof SupplyPoint }[] = [
     { title: '외국인 순매수량', key: 'foreignNet' },
     { title: '기관 순매수량', key: 'institutionNet' },
@@ -143,7 +148,23 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <SupplyCard title="외국인 보유율" meta={latestRatio === null ? '—' : `${latestRatio.toFixed(2)}%`}>
+        <SupplyCard
+          title="외국인 보유율"
+          meta={
+            latestRatio === null ? (
+              '—'
+            ) : (
+              <>
+                {latestRatio.toFixed(2)}%
+                {ratioChange !== null && (
+                  <span className={cn('ml-1', changeColorClass(ratioChange))}>
+                    ({formatChange(ratioChange)}p)
+                  </span>
+                )}
+              </>
+            )
+          }
+        >
           <ComposedChart
             data={points}
             margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
