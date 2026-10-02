@@ -44,6 +44,14 @@ export function NoteBadge({ children, title }: { children: ReactNode; title?: st
   )
 }
 
+export function Tag({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex shrink-0 items-center rounded-full border border-border px-1.5 font-sans text-micro font-medium leading-tight text-foreground">
+      {children}
+    </span>
+  )
+}
+
 export function Metric({
   term,
   children,
