@@ -33,36 +33,36 @@ function rankOf(myValue: number, pool: number[], lowerIsBetter: boolean): number
   return pool.filter((v) => (lowerIsBetter ? v < myValue : v > myValue)).length + 1
 }
 
-function barWidth(value: number | null, max: number): number {
-  if (value === null || max <= 0) return 0
-  return Math.max(0, Math.min(100, (value / max) * 100))
-}
+const ROW_GRID = 'grid grid-cols-[56px_1fr_64px] items-center gap-3'
 
-function MetricBar({
-  label,
-  value,
-  max,
-  format,
-  fillClass,
-}: {
-  label: string
-  value: number | null
-  max: number
-  format: (v: number) => string
-  fillClass: string
-}) {
+/**
+ * 꼴찌 ──┼──●── 1위 — 값 크기가 아니라 순위로 점을 놓는다.
+ * 값 비례 막대는 동료 중 극단값 하나에 나머지가 전부 바닥에 붙고, 음수는 그릴 수도 없다.
+ * 가운데 눈금이 중앙값 자리다(순위 축에서는 중앙값이 항상 한가운데).
+ */
+function RankTrack({ label, rank, total }: { label: string; rank: number | null; total: number }) {
+  const position = rank === null ? null : rankPosition(rank, total)
+  const zone = rangeZone(position ?? 0)
+  const pct = (position ?? 0) * 100
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-10 shrink-0 text-caption text-muted-foreground">{label}</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-inset">
+    <div
+      role="img"
+      aria-label={rank === null ? `${label} 순위 없음` : `${label} ${total}종목 중 ${rank}위`}
+      className="relative h-1.5 rounded-full bg-surface-inset"
+    >
+      {position !== null && (
+        <div className={cn('h-full rounded-full', zone.fill)} style={{ width: `${pct}%` }} />
+      )}
+      <div className="absolute top-1/2 left-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 bg-muted-foreground/50" />
+      {position !== null && (
         <div
-          className={cn('h-full rounded-full', fillClass)}
-          style={{ width: `${barWidth(value, max)}%` }}
+          className={cn(
+            'absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-background',
+            zone.dot,
+          )}
+          style={{ left: `${pct}%` }}
         />
-      </div>
-      <span className="w-14 shrink-0 text-right font-mono text-caption text-foreground">
-        {value === null ? '—' : format(value)}
-      </span>
+      )}
     </div>
   )
 }
@@ -95,7 +95,6 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
       ...metric,
       myValue,
       medianValue: median(pool),
-      max: pool.length > 0 ? Math.max(...pool) : 0,
       poolCount: pool.length,
       rank: myValue === null ? null : rankOf(myValue, pool, metric.lowerIsBetter),
     }
@@ -110,31 +109,22 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
       {/* 옆 투자 지표 카드가 더 길면 남는 높이를 네 행이 똑같이 나눠 갖는다 — 카드 아래 빈 공간 방지 */}
       <div className="flex flex-1 flex-col">
         {rows.map((row) => (
-          <div
-            key={row.key}
-            className="grid flex-1 grid-cols-[56px_1fr_64px] items-center gap-3 border-b border-surface-inset py-2 last:border-b-0"
-          >
+          <div key={row.key} className={cn(ROW_GRID, 'flex-1 border-b border-surface-inset py-2')}>
             <span className="text-xs font-medium text-foreground">{row.label}</span>
-            <div className="flex flex-col gap-1">
-              <MetricBar
-                label="내 값"
-                value={row.myValue}
-                max={row.max}
-                format={row.format}
-                // 52주 막대와 같은 3구간 색 — 순위 상위 1/3 빨강, 중간 파랑, 하위 1/3 초록
-                fillClass={
-                  row.rank === null
-                    ? 'bg-primary/80'
-                    : rangeZone(rankPosition(row.rank, row.poolCount)).dot
-                }
-              />
-              <MetricBar
-                label="중앙값"
-                value={row.medianValue}
-                max={row.max}
-                format={row.format}
-                fillClass="bg-muted-foreground/40"
-              />
+            <div className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-mono text-xs font-medium text-foreground">
+                  {row.myValue === null ? '—' : row.format(row.myValue)}
+                </span>
+                <span className="text-caption text-muted-foreground">
+                  중앙값{' '}
+                  <span className="font-mono">
+                    {row.medianValue === null ? '—' : row.format(row.medianValue)}
+                  </span>
+                </span>
+              </div>
+              {/* 52주 막대와 같은 3구간 색 — 순위 상위 1/3 빨강, 중간 파랑, 하위 1/3 초록 */}
+              <RankTrack label={row.label} rank={row.rank} total={row.poolCount} />
             </div>
             <div className="text-right">
               {row.rank === null ? (
@@ -148,6 +138,19 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
           </div>
         ))}
       </div>
+      {/* 눈금 — 네 막대가 같은 축을 쓰므로 맨 아래에 한 번만 적는다 */}
+      <div className={cn(ROW_GRID, 'pt-2 text-caption text-muted-foreground')}>
+        <span />
+        <div className="grid grid-cols-3">
+          <span>하위</span>
+          <span className="text-center">중앙</span>
+          <span className="text-right">상위</span>
+        </div>
+        <span />
+      </div>
+      <p className="mt-1 text-caption text-foreground-tertiary">
+        순위 기준 위치 · PER·PBR은 낮을수록 상위
+      </p>
     </section>
   )
 }
