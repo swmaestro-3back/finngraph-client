@@ -95,6 +95,7 @@ describe('toCompanyOverviewGraph', () => {
       keywords: ['lg전자', '액추에이터', '로봇'],
       companies: ['LG전자'],
       memberCount: 3,
+      newsIds: [4, 5, 6],
       firstPublishedAt: '2026-09-07T09:12:00+09:00',
       lastPublishedAt: '2026-09-07T15:39:00+09:00',
       representativeNewsId: 4,

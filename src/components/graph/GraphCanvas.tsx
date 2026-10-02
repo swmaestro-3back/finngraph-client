@@ -62,6 +62,11 @@ interface Props {
   /** 빈 캔버스 클릭 — 선택 해제 */
   onBackgroundClick: () => void
   highlight: GraphHighlight | null
+  /**
+   * 잠깐 켜 볼 간선 — 상세 패널의 이웃 행에 올렸을 때. 선택(highlight)과 달리 카메라를 움직이지 않고,
+   * null로 돌아오면 원래 선택 강조로 복원한다. 캔버스 안의 간선 호버와 같은 그림이다.
+   */
+  previewLinkId?: string | null
   /** 지금 조회의 중심 노드 — 유일하게 크게 그리고 글로우를 두른다 */
   centerId?: string | null
   /**
@@ -105,6 +110,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     onLinkClick,
     onBackgroundClick,
     highlight,
+    previewLinkId = null,
     centerId = null,
     primaryIds,
     seedLinkIds,
@@ -716,6 +722,14 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     }
     focusOn(highlight.ids, false)
   }, [highlight, data, sizeRef, centerId])
+
+  // ========== 패널 행 호버 → 간선 미리 보기 ==========
+  // 선택 반영 effect 뒤에 둔다 — 같은 렌더에서 둘 다 바뀌면 미리 보기가 마지막에 칠해진다
+  useEffect(() => {
+    const state = d3StateRef.current
+    if (!state) return
+    state.applyHighlight(previewLinkId ? { kind: 'link', id: previewLinkId } : highlightRef.current)
+  }, [previewLinkId])
 
   return (
     <div ref={containerRef} className="relative size-full" style={{ background: T.canvas }}>

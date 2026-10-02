@@ -60,6 +60,7 @@ function toEventNode(e: KgEventNode): GraphNode {
       keywords: e.keywords,
       companies: e.companies,
       memberCount: e.member_count ?? undefined,
+      newsIds: e.news_ids,
       firstPublishedAt: e.first_published_at ?? undefined,
       lastPublishedAt: e.last_published_at ?? undefined,
       representativeNewsId: e.representative_news_id ?? undefined,

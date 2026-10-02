@@ -3,27 +3,33 @@
 
 import { endId, type GraphLink, type GraphNode, type Predicate } from '@/data/graphTypes'
 
+/** 이웃 하나 — 노드와 함께 그 이웃으로 이어진 간선을 든다. 패널의 행이 품목·근거 수·최근 언급을 간선에서 읽는다 */
+export interface Neighbor {
+  node: GraphNode
+  link: GraphLink
+}
+
 export interface NodeNeighbors {
   /** SUPPLIES_TO 들어옴 — 이 기업에 납품하는 곳 */
-  suppliers: GraphNode[]
+  suppliers: Neighbor[]
   /** SUPPLIES_TO 나감 — 이 기업이 납품하는 곳 */
-  customers: GraphNode[]
+  customers: Neighbor[]
   /** ACQUIRES 나감 — 이 기업이 인수한 곳 */
-  acquired: GraphNode[]
+  acquired: Neighbor[]
   /** ACQUIRES 들어옴 — 이 기업을 인수한 곳 */
-  acquirers: GraphNode[]
+  acquirers: Neighbor[]
   /** INVESTS_IN 나감 — 이 기업이 투자한 곳 */
-  investees: GraphNode[]
+  investees: Neighbor[]
   /** INVESTS_IN 들어옴 — 이 기업에 투자한 곳 */
-  investors: GraphNode[]
+  investors: Neighbor[]
   /** BELONGS_TO 나감 — 기업이 속한 테마 */
-  themes: GraphNode[]
+  themes: Neighbor[]
   /** BELONGS_TO 들어옴 — 테마에 속한 기업 */
-  members: GraphNode[]
+  members: Neighbor[]
   /** HAS_EVENT 나감 — 기업이 언급된 이벤트 */
-  events: GraphNode[]
+  events: Neighbor[]
   /** HAS_EVENT 들어옴 — 이벤트에 언급된 기업 */
-  mentioners: GraphNode[]
+  mentioners: Neighbor[]
 }
 
 type Bucket = keyof NodeNeighbors
@@ -51,7 +57,7 @@ export const EMPTY_NEIGHBORS: NodeNeighbors = {
 }
 
 /**
- * nodeId에 닿는 간선을 훑어 이웃을 버킷에 담는다. 같은 이웃이 여러 간선으로 이어져도 한 번만 넣고,
+ * nodeId에 닿는 간선을 훑어 이웃을 버킷에 담는다. 같은 이웃이 여러 간선으로 이어져도 한 번만 넣고(먼저 온 간선이 남는다),
  * nodeById에 없는 끝점은 건너뛴다. links는 필터 전 전체 그래프를 넘겨야 캔버스에서 숨긴 테마도 칩으로 보인다.
  */
 export function classifyNeighbors(
@@ -59,7 +65,7 @@ export function classifyNeighbors(
   links: GraphLink[],
   nodeById: Map<string, GraphNode>,
 ): NodeNeighbors {
-  const seen: Record<Bucket, Map<string, GraphNode>> = {
+  const seen: Record<Bucket, Map<string, Neighbor>> = {
     suppliers: new Map(),
     customers: new Map(),
     acquired: new Map(),
@@ -81,11 +87,11 @@ export function classifyNeighbors(
     const [outgoing, incoming] = bucket
     if (s === nodeId) {
       const n = nodeById.get(t)
-      if (n) seen[outgoing].set(t, n)
+      if (n && !seen[outgoing].has(t)) seen[outgoing].set(t, { node: n, link: l })
     }
     if (t === nodeId) {
       const n = nodeById.get(s)
-      if (n) seen[incoming].set(s, n)
+      if (n && !seen[incoming].has(s)) seen[incoming].set(s, { node: n, link: l })
     }
   })
 

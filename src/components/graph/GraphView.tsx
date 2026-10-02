@@ -57,6 +57,9 @@ interface Props {
   focus: GraphFocus
 }
 
+/** 패널 안 이동 이력 상한 — 되돌아가기는 몇 걸음이면 충분하다 */
+const MAX_TRAIL = 20
+
 /** 재중심 이동에 실어 보내는 navigation state — 도착한 화면이 중심 노드를 자동 선택하라는 요청 */
 interface GraphNavState {
   selectCenter?: boolean
@@ -88,6 +91,10 @@ export function GraphView({ focus }: Props) {
 
   // 선택이 유일한 출처 — 캔버스 하이라이트도 여기서 파생된다
   const [selection, setSelection] = useState<GraphSelection | null>(null)
+  /** 패널 안에서 행을 눌러 옮겨 온 길 — 패널 맨 위 되돌아가기가 이 순서를 거슬러 간다. 캔버스에서 새로 고르면 비운다 */
+  const [trail, setTrail] = useState<GraphSelection[]>([])
+  /** 패널의 이웃 행에 올린 간선 — 선택을 바꾸지 않고 캔버스에서 그 간선만 잠깐 켠다 */
+  const [hoverLinkId, setHoverLinkId] = useState<string | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<Set<NodeCategory>>(() =>
     lensDefaultCategories(lens),
   )
@@ -98,7 +105,13 @@ export function GraphView({ focus }: Props) {
   // 종류까지 함께 본다 — 티커와 테마 이름이 우연히 같아도 원점이 바뀌면 선택을 비운다
   useEffect(() => {
     setSelection(null)
+    setTrail([])
   }, [focus.kind, focusKey])
+
+  // 행을 눌러 선택이 옮겨 가면 그 행은 사라져 mouseleave가 오지 않는다 — 선택이 바뀔 때마다 지운다
+  useEffect(() => {
+    setHoverLinkId(null)
+  }, [selection])
 
   // 렌즈를 바꾸면 필터는 그 렌즈의 기본값으로 돌아간다 — 한 렌즈에서 끈 종류가 다른 렌즈까지 따라오지 않도록
   useEffect(() => {
@@ -124,6 +137,8 @@ export function GraphView({ focus }: Props) {
   useEffect(() => {
     if (syncedDataRef.current === data) return
     syncedDataRef.current = data
+    // 이력은 이전 그래프의 노드·간선 객체를 쥐고 있다 — 새 그래프에서는 버린다
+    setTrail((t) => (t.length > 0 ? [] : t))
     if (!data || !selection) return
     if (selection.kind === 'node') {
       const fresh = nodeById.get(selection.node.id)
@@ -175,21 +190,61 @@ export function GraphView({ focus }: Props) {
       : { kind: 'link', id: selection.link.id }
   }, [selection, effectiveHop])
 
-  const selectNode = useCallback((node: GraphNode) => setSelection({ kind: 'node', node }), [])
-
-  const selectLink = useCallback(
-    (link: GraphLink) => {
-      // 이벤트 간선은 보여줄 상세가 없다 — 클릭을 무시하고 기존 선택을 그대로 둔다
-      if (isEventLink(link)) return
+  /** 간선 → 선택. 이벤트 간선은 보여줄 상세가 없고, 끝점이 응답에 없으면 그릴 수 없다 */
+  const toEdgeSelection = useCallback(
+    (link: GraphLink): GraphSelection | null => {
+      if (isEventLink(link)) return null
       const source = nodeById.get(endId(link.source))
       const target = nodeById.get(endId(link.target))
-      if (!source || !target) return
-      setSelection({ kind: 'edge', link, source, target })
+      return source && target ? { kind: 'edge', link, source, target } : null
     },
     [nodeById],
   )
 
-  const clearSelection = useCallback(() => setSelection(null), [])
+  // 캔버스에서 고른 선택 — 새 출발이라 패널 안 이동 이력을 비운다
+  const selectNode = useCallback((node: GraphNode) => {
+    setTrail([])
+    setSelection({ kind: 'node', node })
+  }, [])
+
+  const selectLink = useCallback(
+    (link: GraphLink) => {
+      // 선택할 수 없는 간선은 클릭을 무시하고 기존 선택을 그대로 둔다
+      const next = toEdgeSelection(link)
+      if (!next) return
+      setTrail([])
+      setSelection(next)
+    },
+    [toEdgeSelection],
+  )
+
+  /** 패널 안에서 옮겨 가는 선택 — 지금 선택을 이력에 쌓아 되돌아갈 수 있게 한다 */
+  const stepTo = useCallback(
+    (next: GraphSelection) => {
+      if (selection) setTrail((t) => [...t, selection].slice(-MAX_TRAIL))
+      setSelection(next)
+    },
+    [selection],
+  )
+  const stepToNode = useCallback((node: GraphNode) => stepTo({ kind: 'node', node }), [stepTo])
+  const stepToLink = useCallback(
+    (link: GraphLink) => {
+      const next = toEdgeSelection(link)
+      if (next) stepTo(next)
+    },
+    [toEdgeSelection, stepTo],
+  )
+  const stepBack = useCallback(() => {
+    const previous = trail.at(-1)
+    if (!previous) return
+    setTrail(trail.slice(0, -1))
+    setSelection(previous)
+  }, [trail])
+
+  const clearSelection = useCallback(() => {
+    setTrail([])
+    setSelection(null)
+  }, [])
 
   /** 노드를 새 중심으로 — 경로가 바뀌므로 히스토리에 한 단계 쌓인다 (뒤로가기 = 이전 중심). hop·범위는 그대로 */
   const recenter = useCallback(
@@ -263,16 +318,27 @@ export function GraphView({ focus }: Props) {
     return classifyNeighbors(selection.node.id, data.links, nodeById)
   }, [data, selection, nodeById])
 
-  // 검색용으로 이미 받아 둔 종목 목록에서 선택 기업의 시세 행을 찾는다 — 추가 호출 없음
+  // 선택 간선과 같은 두 노드를 잇는 다른 간선 — 반대 방향 공급이나 인수·공급이 겹친 경우를 패널이 이어 준다
+  const siblings = useMemo<GraphLink[]>(() => {
+    if (!data || selection?.kind !== 'edge') return []
+    const ends = new Set([selection.source.id, selection.target.id])
+    return data.links.filter(
+      (l) =>
+        l.id !== selection.link.id &&
+        !isEventLink(l) &&
+        endId(l.source) !== endId(l.target) &&
+        ends.has(endId(l.source)) &&
+        ends.has(endId(l.target)),
+    )
+  }, [data, selection])
+
+  // 검색용으로 이미 받아 둔 종목·테마 목록에서 패널이 시세를 찾는다 — 추가 호출 없음
   const stockByTicker = useMemo(
     () => new Map((stocks ?? []).map((s) => [s.ticker, s])),
     [stocks],
   )
-  const selectedStock =
-    selection?.kind === 'node' && selection.node.data.ticker
-      ? stockByTicker.get(selection.node.data.ticker)
-      : undefined
-  const isSelectedCenter = selection?.kind === 'node' && selection.node.id === centerId
+  const stockByName = useMemo(() => new Map((stocks ?? []).map((s) => [s.name, s])), [stocks])
+  const themeByName = useMemo(() => new Map((themes ?? []).map((t) => [t.name, t])), [themes])
 
   const handleReset = () => {
     graphRef.current?.resetZoom()
@@ -327,6 +393,32 @@ export function GraphView({ focus }: Props) {
   if (!data) return null
 
   const scoped = controls.scope && scope !== 'all'
+
+  // 데스크톱은 캔버스 옆 칸, 모바일은 바텀시트 — 자리만 다르고 내용은 같다
+  const detailPanel = selection && !locked && !pending && (
+    <DetailPanel
+      selection={selection}
+      onClose={clearSelection}
+      isMobile={isMobile}
+      previous={trail.at(-1)}
+      onBack={stepBack}
+      neighbors={neighbors}
+      centerId={centerId}
+      stockByTicker={stockByTicker}
+      stockByName={stockByName}
+      themeByName={themeByName}
+      siblings={siblings}
+      onNodeSelect={stepToNode}
+      onLinkSelect={stepToLink}
+      onLinkHover={setHoverLinkId}
+      onRecenter={recenter}
+      onThemeOpen={openTheme}
+      centerShortcuts={centerShortcuts}
+      nodesByLabel={nodesByLabel}
+      onShowSharing={showSharing}
+      onOpenNews={setOpenNewsId}
+    />
+  )
 
   return (
     <SidebarProvider
@@ -409,6 +501,7 @@ export function GraphView({ focus }: Props) {
               onLinkClick={selectLink}
               onBackgroundClick={clearSelection}
               highlight={highlight}
+              previewLinkId={hoverLinkId}
               centerId={centerId}
               selectedCategories={selectedCategories}
               selectedPredicates={selectedPredicates}
@@ -516,42 +609,11 @@ export function GraphView({ focus }: Props) {
               isMobile={isMobile}
             />
           </div>
-          {selection && !locked && !pending && !isMobile && (
-            <DetailPanel
-              selection={selection}
-              onClose={clearSelection}
-              neighbors={neighbors}
-              isCenter={isSelectedCenter}
-              stock={selectedStock}
-              onNodeSelect={selectNode}
-              onRecenter={recenter}
-              onThemeOpen={openTheme}
-              centerShortcuts={centerShortcuts}
-              nodesByLabel={nodesByLabel}
-              onShowSharing={showSharing}
-              onOpenNews={setOpenNewsId}
-            />
-          )}
+          {!isMobile && detailPanel}
         </div>
       </SidebarInset>
 
-      {selection && !locked && !pending && isMobile && (
-        <DetailPanel
-          selection={selection}
-          onClose={clearSelection}
-          isMobile
-          neighbors={neighbors}
-          isCenter={isSelectedCenter}
-          stock={selectedStock}
-          onNodeSelect={selectNode}
-          onRecenter={recenter}
-          onThemeOpen={openTheme}
-          centerShortcuts={centerShortcuts}
-          nodesByLabel={nodesByLabel}
-          onShowSharing={showSharing}
-          onOpenNews={setOpenNewsId}
-        />
-      )}
+      {isMobile && detailPanel}
       <NewsDetailModal newsId={openNewsId} onOpenChange={(open) => !open && setOpenNewsId(null)} />
     </SidebarProvider>
   )

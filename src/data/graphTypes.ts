@@ -32,6 +32,8 @@ export interface GraphNode {
     /** 이벤트에 언급된 기업명 — 그래프 노드와는 이름으로만 맞춰 볼 수 있다 */
     companies?: string[];
     memberCount?: number;
+    /** 클러스터를 이루는 뉴스 id — 상세 패널이 기사 제목을 불러올 때 쓴다 */
+    newsIds?: number[];
     firstPublishedAt?: string;
     lastPublishedAt?: string;
     representativeNewsId?: number;

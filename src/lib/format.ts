@@ -133,3 +133,21 @@ export function formatDateTime(iso: string): string {
   const two = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}. ${two(d.getMonth() + 1)}. ${two(d.getDate())}. ${two(d.getHours())}:${two(d.getMinutes())}`
 }
+
+/**
+ * 짧은 날짜 "08.24" — ISO 문자열의 날짜 부분을 그대로 읽는다(서버가 준 시간대 기준, 브라우저 시간대로 옮기지 않는다).
+ * 올해가 아니면 "25.11.03"처럼 연도를 붙인다. 파싱 실패면 빈 문자열
+ */
+export function formatShortDate(iso: string | null | undefined): string {
+  const match = iso?.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!match) return ''
+  const [, y, m, d] = match
+  return Number(y) === new Date().getFullYear() ? `${m}.${d}` : `${y.slice(2)}.${m}.${d}`
+}
+
+/** 짧은 날짜 + 시각 "09.29 13:56" — 시각이 없는 문자열이면 날짜만 */
+export function formatShortDateTime(iso: string | null | undefined): string {
+  const date = formatShortDate(iso)
+  const time = iso?.match(/T(\d{2}:\d{2})/)?.[1]
+  return date && time ? `${date} ${time}` : date
+}
