@@ -22,6 +22,7 @@ const MENU_ITEMS = [
   { label: '주식 목록', to: '/stocks' },
   { label: '기업 그래프', to: '/graph' },
   { label: '데일리 브리핑', to: '/briefing' },
+  { label: '캘린더', to: '/calendar' },
 ]
 
 function loadSearchData(): Promise<[ThemeRes[], StockRowRes[]]> {
