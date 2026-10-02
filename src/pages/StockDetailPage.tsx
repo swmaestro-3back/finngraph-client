@@ -10,6 +10,7 @@ import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
 import { StockLogo } from '@/components/stock/StockLogo'
+import { StockMetricsCard } from '@/components/stock/StockMetricsCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { SupplyStreakBadges } from '@/components/stock/SupplyStreakBadges'
 import { ThemePeerComparison } from '@/components/stock/ThemePeerComparison'
@@ -32,11 +33,8 @@ import {
 } from '@/lib/apiTypes'
 import {
   changeColorClass,
-  formatAmountOrDash,
-  formatChange,
   formatChangeOrDash,
   formatPriceOrDash,
-  toEok,
 } from '@/lib/format'
 import { fromState, useBackTarget } from '@/lib/navigation'
 import { useCandles } from '@/lib/queries/useCandles'
@@ -46,11 +44,6 @@ import { useStockDetail } from '@/lib/queries/useStockDetail'
 import { useStockNews } from '@/lib/queries/useStockNews'
 import { lastTradingDate } from '@/lib/referenceDate'
 import { cn } from '@/lib/utils'
-
-interface StatTile {
-  label: string
-  value: string
-}
 
 // 섹션 사이 구분선 — 접힌 상태에서도 남아 어디서 다음 섹션이 시작하는지 보여준다
 const SECTION_HEADER = 'mb-[9px] mt-6 border-t border-border pt-6'
@@ -101,32 +94,6 @@ export default function StockDetailPage() {
     dated.sort((a, b) => new Date(b.collectedAt).getTime() - new Date(a.collectedAt).getTime())
     return dated[0] ?? null
   }, [newsRows, newsLoading])
-
-  const statTiles: StatTile[] = useMemo(() => {
-    if (!stock) return []
-    return [
-      { label: '시가총액', value: `${formatAmountOrDash(toEok(stock.marketCap))}억` },
-      { label: 'PER', value: stock.per === null ? '—' : `${stock.per.toFixed(2)}배` },
-      { label: 'PBR', value: stock.pbr === null ? '—' : stock.pbr.toFixed(2) },
-      { label: 'ROE', value: stock.roe === null ? '—' : `${stock.roe.toFixed(2)}%` },
-      {
-        label: 'EPS',
-        value: stock.eps === null ? '—' : `${Math.round(stock.eps).toLocaleString('ko-KR')}원`,
-      },
-      {
-        label: '배당수익률',
-        value: stock.dividendYield === null ? '—' : `${stock.dividendYield.toFixed(2)}%`,
-      },
-      {
-        label: '외국인 보유율',
-        value: stock.foreignRatio === null ? '—' : `${stock.foreignRatio.toFixed(1)}%`,
-      },
-      {
-        label: '전년 대비 매출',
-        value: stock.revenueGrowth === null ? '—' : formatChange(stock.revenueGrowth),
-      },
-    ]
-  }, [stock])
 
   // 백엔드가 요청한 개수보다 적게 줄 수 있으므로(주봉·월봉 적재 이력이 짧음) 실제 마지막 캔들을 고른다
   useEffect(() => {
@@ -240,19 +207,13 @@ export default function StockDetailPage() {
             </div>
           )}
 
-          <div className="mb-4 grid grid-cols-2 gap-[9px] md:grid-cols-4">
-            {statTiles.map((tile) => (
-              <div key={tile.label} className="rounded-xl bg-muted px-3 py-[9px]">
-                <div className="text-caption text-muted-foreground">{tile.label}</div>
-                <div className="font-mono text-sm font-medium leading-[1.3] text-foreground">
-                  {tile.value}
-                </div>
-              </div>
-            ))}
-          </div>
-
           <SupplyStreakBadges flows={flowRes ?? []} />
-          <ThemePeerComparison stock={stock} />
+
+          {/* 테마 비교(좌) · 투자지표(우) — 테마 비교가 없으면(null) 지표가 전체 폭을 쓴다 */}
+          <div className="mb-4 grid gap-4 lg:grid-cols-2 [&>*:only-child]:col-span-full">
+            <ThemePeerComparison stock={stock} />
+            <StockMetricsCard stock={stock} financials={financialRows} />
+          </div>
 
           {/* 캔들이 뉴스보다 먼저 오면 issues가 빈 배열이라 이슈 레인이 days[0]에서 깨진다 — 둘 다 준비되면 그린다 */}
           {candles.length > 0 && issues.length > 0 ? (

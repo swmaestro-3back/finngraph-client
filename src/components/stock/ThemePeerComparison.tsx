@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
 import type { StockDetailRes } from '@/lib/apiTypes'
+import { formatCompactKrw } from '@/lib/format'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { cn } from '@/lib/utils'
 
-type MetricKey = 'per' | 'pbr' | 'roe' | 'dividendYield'
+type MetricKey = 'marketCap' | 'per' | 'pbr' | 'roe'
 
 interface MetricDef {
   key: MetricKey
@@ -14,10 +15,10 @@ interface MetricDef {
 }
 
 const METRICS: MetricDef[] = [
+  { key: 'marketCap', label: '시가총액', lowerIsBetter: false, format: formatCompactKrw },
   { key: 'per', label: 'PER', lowerIsBetter: true, format: (v) => `${v.toFixed(2)}배` },
   { key: 'pbr', label: 'PBR', lowerIsBetter: true, format: (v) => v.toFixed(2) },
   { key: 'roe', label: 'ROE', lowerIsBetter: false, format: (v) => `${v.toFixed(2)}%` },
-  { key: 'dividendYield', label: '배당률', lowerIsBetter: false, format: (v) => `${v.toFixed(2)}%` },
 ]
 
 function median(values: number[]): number | null {
@@ -75,7 +76,7 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
   )
 
   if (!themeName) return null
-  if (loading) return <div className="mb-4 h-44 animate-pulse rounded bg-muted" />
+  if (loading) return <div className="min-h-44 animate-pulse rounded bg-muted" />
   if (!data) return null
 
   const peerCount = themeStocks.filter((s) => s.ticker !== stock.ticker).length
@@ -100,7 +101,7 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
   })
 
   return (
-    <section className="card-surface mb-4 p-4">
+    <section className="card-surface p-4">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-body font-semibold text-foreground">테마 내 비교 · {themeName}</h2>
         <span className="text-caption text-muted-foreground">동료 {peerCount}종목 기준</span>
@@ -108,7 +109,7 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
       {rows.map((row) => (
         <div
           key={row.key}
-          className="grid grid-cols-[44px_1fr_64px] items-center gap-3 border-b border-surface-inset py-2 last:border-b-0 last:pb-0"
+          className="grid grid-cols-[56px_1fr_64px] items-center gap-3 border-b border-surface-inset py-2 last:border-b-0 last:pb-0"
         >
           <span className="text-caption font-medium text-foreground">{row.label}</span>
           <div className="flex flex-col gap-1">

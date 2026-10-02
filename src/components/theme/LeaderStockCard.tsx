@@ -34,11 +34,13 @@ const PAD = 10
 const RANGES = [
   { key: '3M', label: '3개월', limit: 60 },
   { key: '6M', label: '6개월', limit: 120 },
+  // 쌓인 일봉이 1년에 못 미치는 동안은 있는 만큼만 그린다
+  { key: '1Y', label: '1년', limit: 245 },
 ] as const
 type RangeKey = (typeof RANGES)[number]['key']
 
 // 가장 긴 구간의 첫날에도 밴드가 나오도록 이동평균 창만큼 더 받는다
-const CANDLE_LIMIT = 120 + DEFAULT_BAND.window - 1
+const CANDLE_LIMIT = Math.max(...RANGES.map((r) => r.limit)) + DEFAULT_BAND.window - 1
 
 /** 종목별 선 색 — 상승 빨강·하락 파랑·평균 밴드 노랑과 겹치지 않는 조합 (index.css --series-*) */
 const LINE_COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)']
@@ -75,14 +77,6 @@ function axisPercent(pct: number): string {
   return `${pct > 0 ? '+' : '−'}${Math.abs(pct)}%`
 }
 
-/** 눈금용 주가 — 유효숫자 3자리로 다듬는다 (1,072,170 → 1,070,000) */
-function axisPrice(base: number, pct: number): string {
-  const price = base * (1 + pct / 100)
-  if (price <= 0) return '—'
-  const unit = 10 ** Math.max(Math.floor(Math.log10(price)) - 2, 0)
-  return formatPrice(Math.round(price / unit) * unit)
-}
-
 interface LeaderStockCardProps {
   themeName: string
   stocks: ThemeStockRes[]
@@ -91,11 +85,11 @@ interface LeaderStockCardProps {
 export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
   const { pathname } = useLocation()
   const [hoveredTicker, setHoveredTicker] = useState<string | null>(null)
-  const [rangeKey, setRangeKey] = useState<RangeKey>('3M')
+  const [rangeKey, setRangeKey] = useState<RangeKey>('6M')
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
   const leaders = useMemo(() => marketCapLeaders(stocks), [stocks])
-  const range = RANGES.find((r) => r.key === rangeKey) ?? RANGES[0]
+  const range = RANGES.find((r) => r.key === rangeKey) ?? RANGES[1]
 
   const first = useCandles(leaders[0]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
   const second = useCandles(leaders[1]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
@@ -113,7 +107,7 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
   const groupLabel = leaders.length === 3 ? '3대장' : '대장주'
   // 행에 올려 둔 동안만 그 종목을 도드라지게 하고 나머지 선을 흐린다
   const emphasizedIndex = hoveredTicker === null ? -1 : tickers.indexOf(hoveredTicker)
-  // 주가 눈금과 수익률 문구의 기준 종목 — 올려 둔 행이 없으면 시총 1위
+  // 수익률 문구의 기준 종목 — 올려 둔 행이 없으면 시총 1위
   const activeIndex = Math.max(emphasizedIndex, 0)
   const active = leaders[activeIndex].stock
   const activeSeries = chart?.series[activeIndex] ?? null
@@ -125,12 +119,18 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
   const hi = chart?.bandMax ?? 0
   const yTicks = chart ? niceTicks(lo, hi) : []
   const xTicks = chart ? monthTicks(chart.dates) : []
-  const topOf = (pct: number) => `${(yOf(pct, lo, hi) / CHART_H) * 100}%`
-  const priceLabels = yTicks.map((t) =>
-    activeSeries?.base === undefined ? '' : axisPrice(activeSeries.base, t),
+  // 오른쪽 끝에 며칠만 걸친 달은 이름을 적을 자리가 없어 격자선만 둔다
+  const monthLabels = xTicks.filter(
+    (tick) => tick.index / Math.max((chart?.dates.length ?? 0) - 1, 1) <= 0.94,
   )
-  // 주가 눈금 칸 너비 — 가장 긴 숫자에 맞춘다 (11px 고정폭 ≈ 6.6px/자)
-  const priceGutter = Math.max(...priceLabels.map((label) => label.length), 3) * 6.6 + 8
+  const topOf = (pct: number) => `${(yOf(pct, lo, hi) / CHART_H) * 100}%`
+  // 세로축이 수익률이라 주가는 축에서 읽을 수 없다 — 선 끝 이름표에 종목마다 마지막 종가를 적는다
+  const endPrices = (chart?.series ?? []).map((series) => {
+    const close = series?.points[series.points.length - 1].close
+    return close === undefined ? '' : formatPrice(close)
+  })
+  // 종가 칸 너비 — 가장 긴 숫자에 맞춘다 (12px 고정폭 ≈ 7.2px/자)
+  const priceWidth = Math.max(...endPrices.map((label) => label.length), 0) * 7.2
   // 선 끝 이름표 — 마지막 값 높이에 두되 서로 겹치면 벌린다
   const labelTops = spreadLabels(
     (chart?.series ?? []).map((series) =>
@@ -140,9 +140,11 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
     3,
     97,
   )
-  // 넓은 화면의 이름표 칸 — 로고(22px) + 이름. 좁은 화면은 로고만 둔다
+  // 넓은 화면의 이름표 칸 — 로고(24px) + 이름 + 종가. 좁은 화면은 로고만 둔다
   const labelGutter =
-    Math.min(Math.max(...leaders.map((l) => l.stock.name.length)) * 11 + 12, 76) + 22
+    Math.min(Math.max(...leaders.map((l) => l.stock.name.length)) * 12 + 12, 84) +
+    24 +
+    (priceWidth > 0 ? priceWidth + 6 : 0)
 
   const dateCount = chart?.dates.length ?? 0
   // 기간을 줄인 직후 남아 있는 예전 위치는 버린다
@@ -184,7 +186,7 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
               <li
                 key={stock.ticker}
                 onMouseEnter={() => setHoveredTicker(stock.ticker)}
-                className="group relative rounded-lg px-[9px] py-4 hover:bg-muted"
+                className="group relative rounded-lg px-[9px] py-5 hover:bg-muted"
               >
                 {/* 행 전체가 종목 상세로 가는 링크 — 올려 두는 동안 차트에서 그 종목 선을 도드라지게 한다 */}
                 <Link
@@ -196,30 +198,33 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
                   className="absolute inset-0 rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
                 />
                 <div className="pointer-events-none relative flex items-center gap-[9px]">
-                  <span className="w-3 shrink-0 text-center font-mono text-xs font-semibold text-foreground-tertiary">
+                  <span className="w-3 shrink-0 text-center font-mono text-[13px] font-semibold text-foreground-tertiary">
                     {i + 1}
                   </span>
-                  <StockLogo ticker={stock.ticker} size={24} reserveSpace />
-                  <span className="truncate text-sm font-semibold text-foreground group-hover:underline">
-                    {stock.name}
-                  </span>
-                  <span className="shrink-0 rounded bg-surface-inset px-1.5 py-0.5 text-micro leading-none tracking-[0.4px] text-muted-foreground">
-                    {stock.market}
-                  </span>
-                  {tag && (
-                    <span
-                      title={tag.title}
-                      className="shrink-0 rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
-                    >
-                      {tag.label}
+                  <StockLogo ticker={stock.ticker} size={28} reserveSpace />
+                  {/* 폭이 모자라면 종목명을 자르기 전에 시장·상태 라벨부터 다음 줄로 넘겨 숨긴다 */}
+                  <span className="flex h-6 min-w-0 flex-1 flex-wrap items-center gap-x-[9px] overflow-hidden">
+                    <span className="max-w-full truncate text-[15px] leading-6 font-semibold text-foreground group-hover:underline">
+                      {stock.name}
                     </span>
-                  )}
-                  <span className="ml-auto shrink-0 font-mono text-sm font-medium text-foreground">
+                    <span className="shrink-0 rounded bg-surface-inset px-1.5 py-0.5 text-micro leading-none tracking-[0.4px] text-muted-foreground">
+                      {stock.market}
+                    </span>
+                    {tag && (
+                      <span
+                        title={tag.title}
+                        className="shrink-0 rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
+                      >
+                        {tag.label}
+                      </span>
+                    )}
+                  </span>
+                  <span className="shrink-0 font-mono text-[15px] font-medium text-foreground">
                     {formatPriceOrDash(stock.price)}
                   </span>
                   <span
                     className={cn(
-                      'w-[58px] shrink-0 text-right font-mono text-xs font-medium',
+                      'w-[62px] shrink-0 text-right font-mono text-[13px] font-medium',
                       stock.change === null
                         ? 'text-foreground-tertiary'
                         : changeColorClass(stock.change),
@@ -228,7 +233,7 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
                     {formatChangeOrDash(stock.change)}
                   </span>
                 </div>
-                <div className="pointer-events-none relative mt-3 flex items-baseline justify-between gap-3 pl-[21px] text-xs text-muted-foreground">
+                <div className="pointer-events-none relative mt-3.5 flex items-baseline justify-between gap-3 pl-[21px] text-[13px] text-muted-foreground">
                   <span className="whitespace-nowrap">
                     시총{' '}
                     <span className="font-mono text-foreground-secondary">
@@ -247,7 +252,7 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
                 {share !== null && (
                   <div
                     aria-hidden
-                    className="pointer-events-none relative mt-2.5 ml-[21px] h-2.5 overflow-hidden rounded-[3px] bg-surface-inset"
+                    className="pointer-events-none relative mt-3 ml-[21px] h-3 overflow-hidden rounded-[3px] bg-surface-inset"
                   >
                     {/* 막대 색이 차트에서 이 종목의 선 색이다 */}
                     <span
@@ -264,7 +269,17 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
         <div className="flex min-w-0 flex-col">
           {chart ? (
             <>
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-caption text-muted-foreground">
+              {/* 세로축이 주가가 아니라 수익률임을 먼저 알린다 — 0% 기준일까지 함께 적는다 */}
+              <div className="mb-2 flex flex-wrap items-baseline gap-x-2">
+                <h3 className="text-sm font-medium text-foreground">수익률 비교</h3>
+                <span className="text-xs text-muted-foreground">
+                  <span className="font-mono tabular-nums">
+                    {formatShortDate(chart.dates[0])}
+                  </span>{' '}
+                  종가 대비
+                </span>
+              </div>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
                 <div className="flex items-center gap-3">
                   {averageBand && (
                     <span className="flex items-center gap-1.5" title={BAND_HELP}>
@@ -300,16 +315,11 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
                 </span>
               </div>
 
-              {/* 왼쪽 눈금은 세 종목 공통 수익률, 선 끝에 종목 이름표, 맨 오른쪽은 기준 종목의 주가로 환산한 눈금.
-                  좁은 화면에서는 주가 눈금 칸을 접고 툴팁으로만 주가를 보여준다 */}
+              {/* 왼쪽 눈금은 세 종목 공통 수익률, 선 끝에 종목 이름표와 마지막 종가.
+                  좁은 화면에서는 이름표를 로고만 남기고 툴팁으로만 주가를 보여준다 */}
               <div
-                className="grid flex-1 grid-cols-[40px_minmax(0,1fr)_30px] grid-rows-[240px_auto] font-mono text-caption md:grid-cols-[40px_minmax(0,1fr)_var(--label-gutter)_var(--price-gutter)] md:grid-rows-[minmax(280px,1fr)_auto]"
-                style={
-                  {
-                    '--label-gutter': `${labelGutter}px`,
-                    '--price-gutter': `${priceGutter}px`,
-                  } as CSSProperties
-                }
+                className="grid flex-1 grid-cols-[44px_minmax(0,1fr)_32px] grid-rows-[260px_auto] font-mono text-xs md:grid-cols-[44px_minmax(0,1fr)_var(--label-gutter)] md:grid-rows-[minmax(320px,1fr)_auto]"
+                style={{ '--label-gutter': `${labelGutter}px` } as CSSProperties}
               >
                 <div className="relative text-foreground-tertiary">
                   {yTicks.map((t) => (
@@ -502,64 +512,49 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
                           >
                             <StockLogo
                               ticker={tickers[i]}
-                              size={16}
+                              size={18}
                               reserveSpace
                               className="block"
                             />
                           </span>
-                          <span className="hidden truncate md:inline">{leaders[i].stock.name}</span>
+                          <span className="hidden min-w-0 flex-1 truncate md:inline">
+                            {leaders[i].stock.name}
+                          </span>
+                          <span className="hidden shrink-0 font-mono font-normal tabular-nums text-foreground-tertiary md:inline">
+                            {endPrices[i]}
+                          </span>
                         </span>
                       ),
                   )}
-                </div>
-
-                <div className="relative hidden text-foreground-secondary md:block">
-                  {yTicks.map((t, i) => (
-                    <span
-                      key={t}
-                      className="absolute left-2 -translate-y-1/2 tabular-nums"
-                      style={{ top: topOf(t) }}
-                    >
-                      {priceLabels[i]}
-                    </span>
-                  ))}
                 </div>
 
                 <span className="pt-1.5 pr-2 text-right font-sans text-foreground-tertiary">
                   수익률
                 </span>
                 <div className="relative h-6 text-foreground-tertiary">
-                  {xTicks.map((tick) => (
-                    <span
-                      key={tick.index}
-                      className={cn(
-                        'absolute top-1.5 font-sans whitespace-nowrap',
-                        // 오른쪽 끝에 붙은 달은 안쪽으로 당겨 잘리지 않게 한다
-                        leftOf(tick.index) > 88 ? '-translate-x-full pr-1' : 'pl-1',
-                      )}
-                      style={{ left: `${leftOf(tick.index)}%` }}
-                    >
-                      {tick.label}
-                    </span>
-                  ))}
-                </div>
-                <span />
-                <span className="hidden items-center gap-1.5 pt-1.5 pl-2 font-sans text-foreground-tertiary md:flex">
-                  {activeSeries && (
-                    <>
+                  {/* 달이 많으면 글자가 붙으므로 한 달 걸러 적는다 — 세로 격자선은 매달 그대로 둔다 */}
+                  {monthLabels
+                    .filter(
+                      (_, i) => monthLabels.length <= 7 || (monthLabels.length - 1 - i) % 2 === 0,
+                    )
+                    .map((tick) => (
                       <span
-                        aria-hidden
-                        className="size-1.5 rounded-full"
-                        style={{ backgroundColor: LINE_COLORS[activeIndex] }}
-                      />
-                      주가(원)
-                    </>
-                  )}
-                </span>
+                        key={tick.index}
+                        className={cn(
+                          'absolute top-1.5 font-sans whitespace-nowrap',
+                          // 오른쪽 끝에 붙은 달은 안쪽으로 당겨 잘리지 않게 한다
+                          leftOf(tick.index) > 88 ? '-translate-x-full pr-1' : 'pl-1',
+                        )}
+                        style={{ left: `${leftOf(tick.index)}%` }}
+                      >
+                        {tick.label}
+                      </span>
+                    ))}
+                </div>
               </div>
             </>
           ) : candlesLoading ? (
-            <div className="h-[300px] w-full animate-pulse rounded-lg bg-muted md:h-full" />
+            <div className="h-[340px] w-full animate-pulse rounded-lg bg-muted md:h-full" />
           ) : (
             <p className="m-auto py-8 text-caption text-muted-foreground">
               이 기간의 시세가 아직 없어요.

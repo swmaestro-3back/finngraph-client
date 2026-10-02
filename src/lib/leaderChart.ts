@@ -19,8 +19,6 @@ export interface ReturnSeries {
   /** 볼린저 밴드 — 창이 차지 않은 앞쪽 날짜는 빠진다 */
   band: BandPoint[]
   periodReturn: number
-  /** 수익률 0%에 해당하는 주가(구간 첫 종가) — 평균 선에는 없다 */
-  base?: number
 }
 
 export interface ReturnChart {
@@ -63,24 +61,34 @@ export function bollinger(
 /**
  * 여러 종목의 일봉을 "구간 첫 종가 대비 수익률"로 바꿔 같은 날짜축·세로축에 올린다.
  * 종목마다 거래일이 다를 수 있어(거래정지·신규상장) 순번이 아니라 날짜로 맞춘다.
- * 구간은 마지막 limit개이고, 그 앞 시세는 밴드 첫 값을 내는 준비 구간으로만 쓴다.
+ * 구간은 마지막 limit개(이력이 짧은 종목이 있으면 그 종목의 첫날부터)이고,
+ * 그 앞 시세는 밴드 첫 값을 내는 준비 구간으로만 쓴다.
  */
 export function buildReturnChart(
   candleSets: (CandleRes[] | null)[],
   limit: number,
   { window, k }: BandOptions = DEFAULT_BAND,
 ): ReturnChart | null {
-  const stocks = candleSets.map((candles) => {
+  const sliced = candleSets.map((candles) => {
     const all = candles ?? []
     const rangeStart = Math.max(all.length - limit, 0)
-    if (all.length - rangeStart < 2) return null
+    return all.length - rangeStart < 2 ? null : { all, rangeStart }
+  })
+  // 이력이 짧은 종목이 있으면 모두 같은 날부터 비교한다 — 0% 기준일이 다르면 수익률을 견줄 수 없다
+  const commonStart = sliced.reduce(
+    (latest, s) => (s && s.all[s.rangeStart].date > latest ? s.all[s.rangeStart].date : latest),
+    '',
+  )
+  const stocks = sliced.map((s) => {
+    if (!s) return null
+    const rangeStart = s.all.findIndex((c) => c.date >= commonStart)
+    if (rangeStart === -1 || s.all.length - rangeStart < 2) return null
     // 준비 구간까지 같은 기준(구간 첫 종가)으로 환산해야 밴드가 선과 같은 축에 놓인다
-    const base = all[rangeStart].close || 1
+    const base = s.all[rangeStart].close || 1
     return {
-      base,
-      closes: all.map((c) => c.close),
-      dates: all.map((c) => c.date),
-      pcts: all.map((c) => ((c.close - base) / base) * 100),
+      closes: s.all.map((c) => c.close),
+      dates: s.all.map((c) => c.date),
+      pcts: s.all.map((c) => ((c.close - base) / base) * 100),
       rangeStart,
     }
   })
@@ -95,7 +103,7 @@ export function buildReturnChart(
     pctDates: string[],
     rangeStart: number,
     closes?: number[],
-  ): Omit<ReturnSeries, 'base'> | null => {
+  ): ReturnSeries | null => {
     const bands = bollinger(pcts, window, k)
     const points: ReturnPoint[] = []
     const band: BandPoint[] = []
@@ -110,10 +118,9 @@ export function buildReturnChart(
     return { points, band, periodReturn: points[points.length - 1].pct }
   }
 
-  const series = stocks.map((s): ReturnSeries | null => {
-    const built = s ? toSeries(s.pcts, s.dates, s.rangeStart, s.closes) : null
-    return s && built ? { ...built, base: s.base } : null
-  })
+  const series = stocks.map((s) =>
+    s ? toSeries(s.pcts, s.dates, s.rangeStart, s.closes) : null,
+  )
 
   // 평균: 날짜마다 종목 수익률을 평균한다 — 시세가 빠진 날은 직전 값을 이어 쓴다
   const valid = stocks.filter((s) => s !== null)

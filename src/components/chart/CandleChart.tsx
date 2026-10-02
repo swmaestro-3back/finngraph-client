@@ -210,7 +210,7 @@ export function CandleChart({
       {/* 캔들 영역 */}
       <div
         ref={areaRef}
-        className={cn('relative h-[max(200px,20.833vw)]', AXIS_GUTTER, onSelect && 'cursor-pointer')}
+        className={cn('relative h-[max(240px,25vw)]', AXIS_GUTTER, onSelect && 'cursor-pointer')}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={() => hover && toggleSelect(hover.index)}

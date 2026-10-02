@@ -35,18 +35,27 @@ describe('buildReturnChart', () => {
     expect(chart?.series[0]?.periodReturn).toBeCloseTo(-18.1818, 3)
   })
 
+  it('시세 이력이 짧은 종목이 있으면 모두 그 종목의 첫날부터 비교한다', () => {
+    const b = [candle('2026-09-30', 50), candle('2026-10-01', 100)]
+    const chart = buildReturnChart([a, b], 4)
+    expect(chart?.dates).toEqual(['2026-09-30', '2026-10-01'])
+    // a도 9/30 종가(120)를 0%로 다시 잡는다
+    expect(chart?.series[0]?.periodReturn).toBe(-25)
+    expect(chart?.series[1]?.periodReturn).toBe(100)
+  })
+
   it('세로축 범위는 모든 종목을 합쳐 잡는다', () => {
     const b = [candle('2026-09-30', 50), candle('2026-10-01', 100)]
     const chart = buildReturnChart([a, b], 4)
-    expect(chart?.min).toBe(-10)
+    expect(chart?.min).toBe(-25)
     expect(chart?.max).toBe(100)
   })
 
-  it('거래일이 빠진 종목은 날짜 기준으로 제자리에 놓는다', () => {
-    const b = [candle('2026-09-30', 50), candle('2026-10-01', 100)]
-    const chart = buildReturnChart([a, b], 4)
+  it('중간에 거래일이 빠진 종목은 날짜 기준으로 제자리에 놓는다', () => {
+    const gap = [candle('2026-09-28', 10), candle('2026-09-30', 12), candle('2026-10-01', 15)]
+    const chart = buildReturnChart([a, gap], 4)
     expect(chart?.dates).toHaveLength(4)
-    expect(chart?.series[1]?.points.map((p) => p.index)).toEqual([2, 3])
+    expect(chart?.series[1]?.points.map((p) => p.index)).toEqual([0, 2, 3])
   })
 
   it('시세가 두 개 미만인 종목은 null, 전부 없으면 차트도 null', () => {
@@ -123,10 +132,9 @@ describe('buildReturnChart 밴드와 평균', () => {
   })
 })
 
-describe('주가 환산용 값', () => {
-  it('종목 선은 구간 첫 종가와 날짜별 종가를 함께 준다', () => {
+describe('날짜별 종가', () => {
+  it('종목 선은 날짜별 종가를 함께 준다', () => {
     const chart = buildReturnChart([a], 3)
-    expect(chart?.series[0]?.base).toBe(110)
     expect(chart?.series[0]?.points.map((p) => p.close)).toEqual([110, 120, 90])
   })
 })
