@@ -199,7 +199,7 @@ export default function ThemeDashboardPage() {
               key={`focus-${selected.id}`}
               className="mt-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300"
             >
-              <ThemeFocus theme={selected} from={from} />
+              <ThemeFocus theme={selected} stocks={themeStocks ?? []} from={from} />
 
               <div className="mt-4 grid items-stretch gap-4 lg:grid-cols-[1.08fr_0.92fr]">
                 <div className="min-w-0 [&>section]:h-full">

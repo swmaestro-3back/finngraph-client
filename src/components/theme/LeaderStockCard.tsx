@@ -80,10 +80,12 @@ function axisPercent(pct: number): string {
 interface LeaderStockCardProps {
   themeName: string
   stocks: ThemeStockRes[]
+  /** 다른 카드 안에 넣을 때 — 카드 면을 빼고 윗선으로만 구분하며, 제목에서 테마명을 뺀다 */
+  embedded?: boolean
 }
 
-export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
-  const { pathname } = useLocation()
+export function LeaderStockCard({ themeName, stocks, embedded = false }: LeaderStockCardProps) {
+  const { pathname, search } = useLocation()
   const [hoveredTicker, setHoveredTicker] = useState<string | null>(null)
   const [rangeKey, setRangeKey] = useState<RangeKey>('6M')
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
@@ -158,12 +160,12 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
   }
 
   return (
-    <section className="mt-4 card-surface p-5">
+    <section className={embedded ? 'mt-4 border-t border-border pt-4' : 'mt-4 card-surface p-5'}>
       <div className="mb-[9px] flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-baseline gap-[9px]">
           <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
             {/* 종목이 셋이 안 되는 테마에서 "3대장"이라 부르지 않는다 */}
-            {themeName} {groupLabel}
+            {embedded ? groupLabel : `${themeName} ${groupLabel}`}
           </h2>
           <span className="text-caption text-muted-foreground">
             시가총액 상위 <span className="font-mono tabular-nums">{leaders.length}</span>종목
@@ -191,7 +193,7 @@ export function LeaderStockCard({ themeName, stocks }: LeaderStockCardProps) {
                 {/* 행 전체가 종목 상세로 가는 링크 — 올려 두는 동안 차트에서 그 종목 선을 도드라지게 한다 */}
                 <Link
                   to={`/stock/${stock.ticker}`}
-                  state={fromState(pathname)}
+                  state={fromState(pathname + search)}
                   aria-label={`${stock.name} 종목 상세 보기`}
                   onFocus={() => setHoveredTicker(stock.ticker)}
                   onBlur={() => setHoveredTicker(null)}

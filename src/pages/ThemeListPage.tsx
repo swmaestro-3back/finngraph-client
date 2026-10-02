@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { DataNotice } from '@/components/layout/DataNotice'
 import { ListPagination } from '@/components/table/ListPagination'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
@@ -20,7 +21,7 @@ const PAGE_SIZE = 20
 const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
 
 const GRID =
-  'grid grid-cols-[36px_minmax(170px,1fr)_76px_96px_76px_76px_76px_96px_84px_minmax(220px,1.5fr)] items-center gap-2'
+  'grid grid-cols-[36px_28px_minmax(170px,1fr)_76px_96px_76px_76px_76px_96px_84px_minmax(220px,1.5fr)] items-center gap-2'
 
 const SORT_KEYS = [
   'name',
@@ -56,6 +57,7 @@ interface ThemeRow {
 
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
+  { key: null, label: '', align: 'left' },
   { key: 'name', label: '테마명', align: 'left' },
   { key: 'change', label: '등락률', align: 'center' },
   { key: 'breadth', label: '등락 현황', align: 'center' },
@@ -192,7 +194,7 @@ export default function ThemeListPage() {
           </p>
           <div className="card-surface overflow-hidden">
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="min-w-[1080px]">
+              <div className="min-w-[1116px]">
                 <SortableHeaderRow
                   columns={COLUMNS}
                   sortKey={sortKey}
@@ -202,14 +204,21 @@ export default function ThemeListPage() {
                 />
 
                 {pageRows.map((row, index) => (
-                  <button
+                  // 별표가 행 안에 들어가 button 중첩이 되므로 행을 div+role로 둔다
+                  <div
                     key={row.id}
-                    type="button"
+                    role="link"
+                    tabIndex={0}
                     onClick={() =>
                       navigate(`/theme/${row.id}`, {
                         state: fromState(pathname + search),
                       })
                     }
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter' && event.key !== ' ') return
+                      event.preventDefault()
+                      navigate(`/theme/${row.id}`, { state: fromState(pathname + search) })
+                    }}
                     className={cn(
                       GRID,
                       'w-full cursor-pointer border-b border-surface-inset px-4 py-2.5 text-left hover:bg-muted',
@@ -219,6 +228,13 @@ export default function ThemeListPage() {
                     <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">
                       {(page - 1) * PAGE_SIZE + index + 1}
                     </span>
+                    <FavoriteStar
+                      type="THEME"
+                      targetKey={String(row.id)}
+                      label={row.name}
+                      size="sm"
+                      className="-ml-1"
+                    />
                     <span className="overflow-hidden text-sm font-medium whitespace-nowrap text-ellipsis text-foreground">
                       {row.name}
                     </span>
@@ -275,7 +291,7 @@ export default function ThemeListPage() {
                       )}
                     </span>
                     <LeaderCell names={row.leaders} />
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
