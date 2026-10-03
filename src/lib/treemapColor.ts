@@ -18,10 +18,6 @@ export function mixColor(dir: 'up' | 'down', t: number): { bg: string; k: number
   return { bg: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`, k, rgb }
 }
 
-export function treemapTileColor(dir: TreemapDirection, t: number): string {
-  return mixColor(dir, t).bg
-}
-
 const TINTED_INK = { up: [122, 15, 24], down: [11, 42, 107] } as const
 const PAPER_INK = [10, 11, 13] as const
 const WHITE = [255, 255, 255] as const
