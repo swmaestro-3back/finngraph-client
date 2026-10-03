@@ -196,6 +196,9 @@ function isMissing(value: unknown): boolean {
   return value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))
 }
 
+// 비교자 한 번 만들어 두고 쓴다 — localeCompare(…, 'ko')는 호출마다 로케일을 다시 푼다
+const KO_COLLATOR = new Intl.Collator('ko')
+
 export function compareNullLast(av: unknown, bv: unknown, desc: boolean): number {
   const aMissing = isMissing(av)
   const bMissing = isMissing(bv)
@@ -204,7 +207,7 @@ export function compareNullLast(av: unknown, bv: unknown, desc: boolean): number
   if (bMissing) return -1
   const compared =
     typeof av === 'string' && typeof bv === 'string'
-      ? av.localeCompare(bv, 'ko')
+      ? KO_COLLATOR.compare(av, bv)
       : Number(av) - Number(bv)
   return desc ? -compared : compared
 }

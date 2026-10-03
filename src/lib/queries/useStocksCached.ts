@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { getData } from '@/lib/api'
 import type { StockRowRes } from '@/lib/apiTypes'
 import { cachedLoader, useApi, type ApiState } from '@/lib/queries/useApi'
@@ -11,8 +10,20 @@ export function useStocksCached(): ApiState<StockRowRes[]> {
   return useApi<StockRowRes[]>(() => loadStocks(), [])
 }
 
+// 같은 응답 배열에는 같은 인덱스 — 행마다 쓰는 호버카드가 3천 건 Map을 제각기 만들지 않게 모듈에서 한 번만 만든다
+const indexCache = new WeakMap<StockRowRes[], Map<string, StockRowRes>>()
+
+function indexOf(rows: StockRowRes[]): Map<string, StockRowRes> {
+  let index = indexCache.get(rows)
+  if (!index) {
+    index = new Map(rows.map((s) => [s.ticker, s]))
+    indexCache.set(rows, index)
+  }
+  return index
+}
+
 /** ticker → 종목 행 인덱스. 로드 전에는 null */
 export function useStockIndex(): Map<string, StockRowRes> | null {
   const { data } = useStocksCached()
-  return useMemo(() => (data ? new Map(data.map((s) => [s.ticker, s])) : null), [data])
+  return data ? indexOf(data) : null
 }

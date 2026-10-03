@@ -208,6 +208,13 @@ describe('compareNullLast', () => {
     expect(compareNullLast(Number.NaN, 1, true)).toBe(1)
     expect(compareNullLast(1, undefined, false)).toBe(-1)
   })
+
+  it('한글·영문·숫자가 섞인 이름도 localeCompare(ko)와 같은 순서', () => {
+    const names = ['삼성전자', 'SK하이닉스', '3S', 'LG에너지솔루션', '가온전선', 'kakao', '한국전력']
+    const expected = [...names].sort((a, b) => a.localeCompare(b, 'ko'))
+    const actual = [...names].sort((a, b) => compareNullLast(a, b, false))
+    expect(actual).toEqual(expected)
+  })
 })
 
 describe('tileDetailPlacement', () => {

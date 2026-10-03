@@ -35,10 +35,7 @@ interface SupplyTooltipProps {
 function SupplyTooltip({ active, payload, label, kind }: SupplyTooltipProps) {
   if (!active || !payload?.length) return null
   const value = payload[0].value
-  const text =
-    kind === 'ratio'
-      ? `${value.toFixed(2)}%`
-      : `${value >= 0 ? '+' : '−'}${Math.abs(value).toLocaleString('ko-KR')}만주`
+  const text = kind === 'ratio' ? `${value.toFixed(2)}%` : signedManju(value)
   return (
     <div className="pointer-events-none rounded-xl border border-border bg-background px-3 py-2 shadow-soft">
       <div className="mb-0.5 font-mono text-micro text-muted-foreground">{label}</div>
@@ -87,16 +84,26 @@ function xTickInterval(count: number): number {
   return Math.max(1, Math.round(count / 8))
 }
 
+/** 순매수량(만주) — 0도 '+'로 적는다 */
+function signedManju(value: number): string {
+  return `${value >= 0 ? '+' : '−'}${Math.abs(value).toLocaleString('ko-KR')}만주`
+}
+
+/** 4카드가 공유하는 차트 props — 같은 거래일 축과 syncId를 써야 커서가 같은 칸을 가리킨다 */
+function chartProps(sync: SyncedIndex, points: SupplyPoint[]) {
+  return {
+    data: points,
+    margin: { top: 4, right: 4, left: 0, bottom: 0 },
+    syncId: SYNC_ID,
+    syncMethod: SYNC_BY_INDEX,
+    onClick: sync.onChartClick,
+  }
+}
+
 function netBarChart(points: SupplyPoint[], key: keyof SupplyPoint, sync: SyncedIndex) {
   const tickInterval = xTickInterval(points.length)
   return (
-    <ComposedChart
-      data={points}
-      margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
-      syncId={SYNC_ID}
-      syncMethod={SYNC_BY_INDEX}
-      onClick={sync.onChartClick}
-    >
+    <ComposedChart {...chartProps(sync, points)}>
       <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
       <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
       <YAxis tick={axisTick} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}만`} width={38} />
@@ -165,13 +172,7 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
             )
           }
         >
-          <ComposedChart
-            data={points}
-            margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
-            syncId={SYNC_ID}
-            syncMethod={SYNC_BY_INDEX}
-            onClick={sync.onChartClick}
-          >
+          <ComposedChart {...chartProps(sync, points)}>
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 3" />
             {/* 순매수 막대 차트와 같은 band 스케일 — 네 차트의 커서가 같은 칸 중앙에 놓인다 */}
             <XAxis dataKey="label" scale="band" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={tickInterval} />
@@ -191,7 +192,7 @@ export const SupplyDemandCharts = memo(function SupplyDemandCharts({
             <SupplyCard
               key={key}
               title={title}
-              meta={`누적 ${cum >= 0 ? '+' : '−'}${Math.abs(cum).toLocaleString('ko-KR')}만주`}
+              meta={`누적 ${signedManju(cum)}`}
               metaColorClass={cum >= 0 ? 'text-stock-up' : 'text-stock-down'}
             >
               {netBarChart(points, key, sync)}

@@ -72,7 +72,13 @@ export default function StockListPage() {
   const { pathname } = useLocation()
   // 페이지·정렬·필터는 주소 쿼리에 둔다 — 상세에 다녀와도 보던 목록으로 돌아온다
   const [params, setParams] = useSearchParams()
-  const filter = useMemo(() => filterFromParams(params), [params])
+  // 필터에 관한 쿼리만 뽑아 키로 삼는다 — 페이지·정렬이 바뀌어도 filter 참조가 유지돼 3천 행을 다시 거르지 않는다
+  const filterKey = useMemo(() => {
+    const only = new URLSearchParams()
+    filterToParams(filterFromParams(params), only)
+    return only.toString()
+  }, [params])
+  const filter = useMemo(() => filterFromParams(new URLSearchParams(filterKey)), [filterKey])
   const { status } = useAuth()
   // 로그아웃 상태로 ?fav=1 주소에 들어오면 빈 목록 대신 전체를 보인다
   const onlyFavorites = params.get('fav') === '1' && status !== 'anonymous'

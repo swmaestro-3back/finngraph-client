@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ChevronUp } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { ChipGroup } from '@/components/layout/ChipGroup'
@@ -49,6 +49,36 @@ import { cn } from '@/lib/utils'
 const SECTION_HEADER = 'mb-[9px] mt-6 border-t border-border pt-6'
 
 const SUPPLY_FETCH_LIMIT = Math.max(...SUPPLY_RANGES.map((r) => r.limit))
+
+/** 접히는 섹션 제목 줄 — 펼친 동안만 오른쪽 옵션(칩)을 보이고, 화살표로 접고 편다 */
+function CollapsibleSectionHeader({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string
+  open: boolean
+  onToggle: () => void
+  children?: ReactNode
+}) {
+  return (
+    <div className={`${SECTION_HEADER} flex items-center justify-between`}>
+      <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">{title}</h2>
+      <div className="flex items-center gap-3">
+        {open && children}
+        <button
+          type="button"
+          onClick={onToggle}
+          className="cursor-pointer text-muted-foreground"
+          aria-label={open ? `${title} 접기` : `${title} 펼치기`}
+        >
+          <ChevronUp className={cn('size-4 transition-transform', !open && 'rotate-180')} />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function StockDetailPage() {
   const { stockCode } = useParams()
@@ -246,26 +276,13 @@ export default function StockDetailPage() {
             className={SECTION_HEADER}
           />
 
-          <div className={`${SECTION_HEADER} flex items-center justify-between`}>
-            <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
-              투자자별 수급
-            </h2>
-            <div className="flex items-center gap-3">
-              {supplyOpen && (
-                <ChipGroup options={SUPPLY_RANGES} value={supplyRange} onChange={setSupplyRange} />
-              )}
-              <button
-                type="button"
-                onClick={() => setSupplyOpen((open) => !open)}
-                className="cursor-pointer text-muted-foreground"
-                aria-label={supplyOpen ? '투자자별 수급 접기' : '투자자별 수급 펼치기'}
-              >
-                <ChevronUp
-                  className={cn('size-4 transition-transform', !supplyOpen && 'rotate-180')}
-                />
-              </button>
-            </div>
-          </div>
+          <CollapsibleSectionHeader
+            title="투자자별 수급"
+            open={supplyOpen}
+            onToggle={() => setSupplyOpen((open) => !open)}
+          >
+            <ChipGroup options={SUPPLY_RANGES} value={supplyRange} onChange={setSupplyRange} />
+          </CollapsibleSectionHeader>
           {supplyOpen &&
             (supply.length > 0 ? (
               // 기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록
@@ -274,28 +291,13 @@ export default function StockDetailPage() {
               <p className="text-caption text-muted-foreground">수급 데이터가 없습니다.</p>
             ))}
 
-          <div className={`${SECTION_HEADER} flex items-center justify-between`}>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
-                연간 실적
-              </h2>
-            </div>
-            <div className="flex items-center gap-3">
-              {annualOpen && (
-                <ChipGroup options={ANNUAL_PERIODS} value={annualPeriod} onChange={setAnnualPeriod} />
-              )}
-              <button
-                type="button"
-                onClick={() => setAnnualOpen((open) => !open)}
-                className="cursor-pointer text-muted-foreground"
-                aria-label={annualOpen ? '연간 실적 접기' : '연간 실적 펼치기'}
-              >
-                <ChevronUp
-                  className={cn('size-4 transition-transform', !annualOpen && 'rotate-180')}
-                />
-              </button>
-            </div>
-          </div>
+          <CollapsibleSectionHeader
+            title="연간 실적"
+            open={annualOpen}
+            onToggle={() => setAnnualOpen((open) => !open)}
+          >
+            <ChipGroup options={ANNUAL_PERIODS} value={annualPeriod} onChange={setAnnualPeriod} />
+          </CollapsibleSectionHeader>
           {annualOpen &&
             (annualRows.length > 0 ? (
               // 종목·기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록
