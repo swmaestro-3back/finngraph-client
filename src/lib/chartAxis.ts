@@ -77,7 +77,7 @@ export function annualTickInterval(count: number, maxLabels = 12): number {
 }
 
 /** 이슈 막대의 최소 높이(px) — 1건도 "있다"는 것은 보여야 한다 */
-export const ISSUE_BAR_MIN_PX = 2
+const ISSUE_BAR_MIN_PX = 2
 
 /**
  * 이슈 막대 높이 비율(0~1) — 제곱근 척도.

@@ -3,7 +3,7 @@
 // 기본값은 주소에 적지 않는다 — /stocks 는 항상 1페이지·기본 정렬이다.
 
 /** 페이지 번호를 몇 개씩 끊어 보여 줄지 */
-export const PAGE_BLOCK = 5
+const PAGE_BLOCK = 5
 
 /** page가 속한 묶음의 페이지 번호들 — 1~5, 6~10 … 마지막 묶음은 totalPages에서 끊긴다 */
 export function pageBlock(page: number, totalPages: number, size = PAGE_BLOCK): number[] {

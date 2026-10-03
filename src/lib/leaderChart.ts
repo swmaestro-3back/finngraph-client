@@ -14,7 +14,7 @@ export interface BandPoint {
   lower: number
 }
 
-export interface ReturnSeries {
+interface ReturnSeries {
   points: ReturnPoint[]
   /** 볼린저 밴드 — 창이 차지 않은 앞쪽 날짜는 빠진다 */
   band: BandPoint[]

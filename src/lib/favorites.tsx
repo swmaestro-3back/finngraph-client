@@ -22,7 +22,7 @@ import { useAuth } from '@/lib/auth'
 import type { FavoriteItemRes, FavoriteKind, FavoriteListRes } from '@/lib/apiTypes'
 
 /** 키 집합의 원소 형식 — 유형이 달라도 키가 겹칠 수 있어 유형을 접두로 붙인다 */
-export function favoriteKey(type: FavoriteKind, key: string): string {
+function favoriteKey(type: FavoriteKind, key: string): string {
   return `${type}:${key}`
 }
 

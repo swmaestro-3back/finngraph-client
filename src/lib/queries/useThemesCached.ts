@@ -6,7 +6,7 @@ import { themeIdIndex, type ThemeIdIndex } from '@/lib/themeRoute'
 
 let themesCache: Promise<ThemeRes[]> | null = null
 
-export function loadThemes(): Promise<ThemeRes[]> {
+function loadThemes(): Promise<ThemeRes[]> {
   themesCache ??= getData<ThemeRes[]>('/v1/themes').catch((err: unknown) => {
     themesCache = null
     throw err

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { stockLogoUrl } from '@/lib/stockLogo'
 import { cn } from '@/lib/utils'
 
 interface StockLogoProps {
@@ -10,11 +11,6 @@ interface StockLogoProps {
   /** 아이콘이 없을 때 대신 그릴 것 — 주면 reserveSpace보다 먼저다 */
   fallback?: ReactNode
   className?: string
-}
-
-/** 종목 로고 — 백엔드가 주지 않으므로 ticker로 토스증권 정적 아이콘 주소를 만든다. 국내 종목코드와 미국 티커(NVDA 등) 모두 있다 */
-function logoUrl(ticker: string): string {
-  return `https://static.toss.im/png-icons/securities/icn-sec-fill-${ticker}.png`
 }
 
 export function StockLogo({
@@ -35,7 +31,7 @@ export function StockLogo({
 
   return (
     <img
-      src={logoUrl(ticker)}
+      src={stockLogoUrl(ticker)}
       alt=""
       width={size}
       height={size}

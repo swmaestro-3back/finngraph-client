@@ -1,13 +1,13 @@
-export const PASSWORD_MIN_LENGTH = 8
-export const PASSWORD_MAX_LENGTH = 128
-export const NICKNAME_MIN_LENGTH = 2
+const PASSWORD_MIN_LENGTH = 8
+const PASSWORD_MAX_LENGTH = 128
+const NICKNAME_MIN_LENGTH = 2
 export const NICKNAME_MAX_LENGTH = 20
 export const CODE_LENGTH = 6
 export const CODE_TTL_SECONDS = 5 * 60
 export const RESEND_COOLDOWN_SECONDS = 60
-export const RATE_LIMIT_FALLBACK_SECONDS = 60
+const RATE_LIMIT_FALLBACK_SECONDS = 60
 
-export type PasswordRuleKey = 'length' | 'letter' | 'digit' | 'space'
+type PasswordRuleKey = 'length' | 'letter' | 'digit' | 'space'
 
 export interface PasswordRule {
   key: PasswordRuleKey

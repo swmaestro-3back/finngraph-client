@@ -21,7 +21,7 @@ import type {
 export const AI_NOTICE =
   '요약·해설 문장은 AI가 인용된 기사·공시에서 생성했으며 투자 판단의 근거가 아닙니다.'
 
-export const RISK_LABELS: Record<RiskKind, string> = {
+const RISK_LABELS: Record<RiskKind, string> = {
   ADMINISTRATION_NEW: '관리종목 신규 지정',
   SUSPENDED_NEW: '거래정지 신규',
   DELISTING_NEW: '정리매매 신규',
@@ -38,7 +38,7 @@ export const WATCH_LABELS: Record<WatchKind, string> = {
   ISSUE_SPREAD: '이슈 확산',
 }
 
-export const RELATION_LABELS: Record<string, string> = {
+const RELATION_LABELS: Record<string, string> = {
   SUPPLIES_TO: '공급',
   ACQUIRES: '인수',
   INVESTS_IN: '투자',

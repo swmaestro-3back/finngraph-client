@@ -26,7 +26,7 @@ export function isUnderCounted(pricedCount: number, stockCount: number): boolean
   return pricedCount < 5 || pricedCount * 10 < stockCount * 7
 }
 
-export const UNDER_COUNTED_TITLE = '집계 종목 부족 · 핫 테마 제외'
+const UNDER_COUNTED_TITLE = '집계 종목 부족 · 핫 테마 제외'
 
 export function hotExclusionTitle(theme: ThemeRes): string | null {
   if (theme.pricedCount === undefined) return null
@@ -70,7 +70,7 @@ export function hasBreadth(
   )
 }
 
-export function themeBreadthLabel(theme: ThemeRes): string | null {
+function themeBreadthLabel(theme: ThemeRes): string | null {
   if (!hasBreadth(theme)) return null
   const flat = theme.flatCount ?? Math.max(0, theme.pricedCount - theme.upCount - theme.downCount)
   return breadthLabel(theme.upCount, flat, theme.downCount)
@@ -81,8 +81,8 @@ export function tileDetail(theme: ThemeRes): string | null {
   return `▲${theme.upCount} ▼${theme.downCount}`
 }
 
-export const TILE_DETAIL_MIN_HEIGHT = 72
-export const TILE_PCT_MIN_HEIGHT = 36
+const TILE_DETAIL_MIN_HEIGHT = 72
+const TILE_PCT_MIN_HEIGHT = 36
 const TILE_DETAIL_CHAR_WIDTH = 6.6
 const TILE_DETAIL_PADDING = 16
 
@@ -104,14 +104,14 @@ export function tileDetailPlacement(
   return 'none'
 }
 
-export const TURNOVER_WINDOW_LABEL = '20일 평균'
+const TURNOVER_WINDOW_LABEL = '20일 평균'
 
 export function turnoverMultiple(ratio: number | null | undefined): string | null {
   if (!hasTurnoverRatio(ratio)) return null
   return `${(Math.round(ratio * 10) / 10).toFixed(1)}배`
 }
 
-export const TURNOVER_EMPHASIS_RATIO = 2
+const TURNOVER_EMPHASIS_RATIO = 2
 
 export interface TurnoverFact {
   multiple: string

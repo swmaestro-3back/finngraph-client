@@ -85,7 +85,7 @@ export function setAccessToken(token: string | null, expiresInSeconds?: number):
     token !== null && expiresInSeconds !== undefined ? Date.now() + expiresInSeconds * 1000 : null
 }
 
-export function shouldRefreshBefore(expiresAt: number | null, now: number): boolean {
+function shouldRefreshBefore(expiresAt: number | null, now: number): boolean {
   return expiresAt !== null && now >= expiresAt - REFRESH_SKEW_MS
 }
 

@@ -41,17 +41,17 @@ export interface GraphNode {
   fy?: number | null;
 }
 
-export interface EdgeItem {
+interface EdgeItem {
   text: string;
   type: EntityType;
 }
 
-export interface NewsMention {
+interface NewsMention {
   news_id: string;
   item: string | null;
 }
 
-export interface DisclosureMention {
+interface DisclosureMention {
   rcept_no: string;
   item: string | null;
 }
@@ -83,11 +83,6 @@ export interface GraphLink {
 export type GraphSelection =
   | { kind: "node"; node: GraphNode }
   | { kind: "edge"; link: GraphLink; source: GraphNode; target: GraphNode };
-
-export interface GraphScale {
-  maxDegree: number;
-  maxMentionedCount: number;
-}
 
 export function endId(v: string | GraphNode): string {
   return typeof v === "string" ? v : v.id;

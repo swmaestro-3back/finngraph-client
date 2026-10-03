@@ -9,6 +9,7 @@ import { StockFilterBar } from '@/components/table/StockFilterBar'
 import { StockIdentity } from '@/components/table/StockIdentity'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
+import type { StockRowRes } from '@/lib/apiTypes'
 import {
   changeColorClass,
   formatAmountOrDash,
@@ -52,24 +53,6 @@ const SORT_KEYS = [
 ] as const
 type SortKey = (typeof SORT_KEYS)[number]
 
-interface StockRow {
-  ticker: string
-  name: string
-  market: string
-  price: number | null
-  change: number | null
-  w1: number | null
-  m1: number | null
-  m3: number | null
-  marketCap: number | null
-  per: number | null
-  pbr: number | null
-  roe: number | null
-  dividendYield: number | null
-  themeId: number | null
-  themeName: string | null
-}
-
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
   { key: null, label: '', align: 'left' },
@@ -98,7 +81,7 @@ export default function StockListPage() {
   const { has } = useFavorites()
   const { data: stocks, loading, error, refetch } = useStocksCached()
 
-  const allRows: StockRow[] = useMemo(() => stocks ?? [], [stocks])
+  const allRows: StockRowRes[] = useMemo(() => stocks ?? [], [stocks])
   const filteredRows = useMemo(() => applyStockFilters(allRows, filter), [allRows, filter])
   const filterActive = isFilterActive(filter)
   // 관심 필터는 FilterState 밖에 둔다 — stockFilter.ts는 순수 모듈이라 로그인 상태를 모른다
@@ -127,7 +110,7 @@ export default function StockListPage() {
     })
   }
 
-  const { sorted, sortKey, sortDesc, handleSort } = useUrlTableSort<StockRow, SortKey>(
+  const { sorted, sortKey, sortDesc, handleSort } = useUrlTableSort<StockRowRes, SortKey>(
     visibleRows,
     SORT_KEYS,
     'w1',

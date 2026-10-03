@@ -7,6 +7,7 @@ import {
 } from '@/lib/apiTypes'
 import {
   changeColorClass,
+  formatAmount,
   formatChange,
   formatChangeOrDash,
   formatCompactKrw,
@@ -37,7 +38,7 @@ function fixed(value: number | null, digits: number, suffix = ''): string {
 }
 
 function won(value: number | null): string {
-  return value === null ? DASH : `${Math.round(value).toLocaleString('ko-KR')}원`
+  return value === null ? DASH : `${formatAmount(value)}원`
 }
 
 function signedRow(label: string, value: number | null): MetricRow {

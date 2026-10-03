@@ -9,18 +9,18 @@ export interface NewsRes {
   tripleExtracted?: boolean | null
 }
 
-export interface ThemeTopStockRes {
+interface ThemeTopStockRes {
   ticker: string
   name: string
 }
 
-export interface ThemeLeaderRes {
+interface ThemeLeaderRes {
   ticker: string
   name: string
   change: number | null
 }
 
-export type ThemeHotSide = 'UP' | 'DOWN'
+type ThemeHotSide = 'UP' | 'DOWN'
 
 export interface ThemeRes {
   id: number
@@ -278,7 +278,7 @@ export interface AnnualFinancials {
   payoutRatio: number | null
 }
 
-export type AuthProviderKind = 'EMAIL' | 'KAKAO'
+type AuthProviderKind = 'EMAIL' | 'KAKAO'
 
 export interface MeRes {
   nickname: string
@@ -296,6 +296,7 @@ export interface AuthTokenRes {
 
 export type FavoriteKind = 'STOCK' | 'THEME'
 
+/** @public */
 export interface FavoriteRes {
   type: FavoriteKind
   key: string
@@ -312,7 +313,7 @@ export interface FavoriteItemRes {
   theme: FavoriteThemeRes | null
 }
 
-export interface FavoriteStockRes {
+interface FavoriteStockRes {
   ticker: string
   name: string
   market: string
@@ -321,7 +322,7 @@ export interface FavoriteStockRes {
   marketCap: number | null
 }
 
-export interface FavoriteThemeRes {
+interface FavoriteThemeRes {
   id: number
   name: string
   change: number | null
@@ -336,7 +337,7 @@ export interface FavoriteListRes {
   items: FavoriteItemRes[]
 }
 
-export type ContractRole = 'FILER' | 'COUNTERPARTY'
+type ContractRole = 'FILER' | 'COUNTERPARTY'
 
 export interface StockContractRes {
   rceptNo: string
@@ -383,7 +384,7 @@ export interface CitationRes {
   url: string | null
 }
 
-export interface BriefingSentenceRes {
+interface BriefingSentenceRes {
   text: string
   citations: CitationRes[]
 }
@@ -393,19 +394,19 @@ export interface BriefingHeadlineRes {
   citations: CitationRes[]
 }
 
-export interface BriefingStockRes {
+interface BriefingStockRes {
   ticker: string
   name: string
   market: string | null
   change: number | null
 }
 
-export interface BriefingStockRefRes {
+interface BriefingStockRefRes {
   ticker: string
   name: string
 }
 
-export interface BriefingArticleRes {
+interface BriefingArticleRes {
   newsId: number
   title: string
   url: string | null
@@ -424,13 +425,13 @@ export interface BriefingIssueRes {
   commentary: { sentences: BriefingSentenceRes[] } | null
 }
 
-export interface BriefingLeaderRes {
+interface BriefingLeaderRes {
   ticker: string
   name: string
   change: number
 }
 
-export interface BriefingThemeRes {
+interface BriefingThemeRes {
   id: number
   name: string
   change: number | null
@@ -500,7 +501,7 @@ export interface AnalyzedNewsRes {
   relations: RelationLineRes[] | null
 }
 
-export interface RelationGraphNodeRes {
+interface RelationGraphNodeRes {
   id: string
   name: string
   ticker: string | null
@@ -508,7 +509,7 @@ export interface RelationGraphNodeRes {
   change: number | null
 }
 
-export interface RelationGraphEdgeRes {
+interface RelationGraphEdgeRes {
   id: string
   source: string
   target: string

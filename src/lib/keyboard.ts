@@ -1,5 +1,5 @@
 /** 글을 쓰는 중인 곳 — 여기서 누른 단축키는 글자이지 명령이 아니다 */
-export function isTyping(target: EventTarget | null): boolean {
+function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
   return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
 }

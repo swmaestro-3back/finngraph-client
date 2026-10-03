@@ -31,13 +31,13 @@ export interface KgThemeNode {
   source_theme_id: number | null
 }
 
-export interface KgNewsMention {
+interface KgNewsMention {
   news_id: string
   /** 뉴스에서 추출된 품목/근거 문구 */
   item: string | null
 }
 
-export interface KgDisclosureMention {
+interface KgDisclosureMention {
   /** DART 접수번호 */
   rcept_no: string
   /** 공시 항목명 */
@@ -45,7 +45,7 @@ export interface KgDisclosureMention {
 }
 
 /** 기업→기업 관계 타입 — 공급망 응답은 SUPPLIES_TO만, 개요 응답은 셋 다 */
-export type KgSupplyRelType = 'SUPPLIES_TO' | 'ACQUIRES' | 'INVESTS_IN'
+type KgSupplyRelType = 'SUPPLIES_TO' | 'ACQUIRES' | 'INVESTS_IN'
 
 /** 기업→기업 관계 — start(공급자/인수자/투자자) → end. 근거가 인라인이라 별도 상세 조회가 없다 */
 export interface KgSupplyRelRes {
