@@ -23,7 +23,7 @@ import {
 } from '@/lib/leaderChart'
 import { fromState } from '@/lib/navigation'
 import { useCandles } from '@/lib/queries/useCandles'
-import { changeStatusTag, formatShortDate, marketCapLeaders } from '@/lib/themeMetrics'
+import { changeStatusTag, formatMonthDay, marketCapLeaders } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 const CHART_W = 560
@@ -276,7 +276,7 @@ export function LeaderStockCard({ themeName, stocks, embedded = false }: LeaderS
                 <h3 className="text-sm font-medium text-foreground">수익률 비교</h3>
                 <span className="text-xs text-muted-foreground">
                   <span className="font-mono tabular-nums">
-                    {formatShortDate(chart.dates[0])}
+                    {formatMonthDay(chart.dates[0])}
                   </span>{' '}
                   종가 대비
                 </span>
@@ -458,7 +458,7 @@ export function LeaderStockCard({ themeName, stocks, embedded = false }: LeaderS
                         style={{ left: `${hoverLeft}%` }}
                       >
                         <div className="mb-1 text-muted-foreground">
-                          {formatShortDate(chart.dates[hover])}
+                          {formatMonthDay(chart.dates[hover])}
                         </div>
                         <div className="grid grid-cols-[auto_auto_auto] items-center gap-x-3 gap-y-0.5">
                           {leaders.map(({ stock }, i) => {

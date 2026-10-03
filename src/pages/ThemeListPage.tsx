@@ -12,7 +12,7 @@ import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemes } from '@/lib/queries/useThemes'
 import { fromState } from '@/lib/navigation'
 import { changeColorClass, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
-import { formatShortDate, hotExclusionTitle } from '@/lib/themeMetrics'
+import { formatMonthDay, hotExclusionTitle } from '@/lib/themeMetrics'
 import { readQuery, writePage, writeQuery } from '@/lib/listParams'
 import { isBlankQuery, matchRange } from '@/lib/nameMatch'
 import { usePageParam, useUrlTableSort } from '@/lib/useListParams'
@@ -246,7 +246,7 @@ export default function ThemeListPage() {
               <>
                 <span>
                   <span className="font-mono tabular-nums text-foreground-secondary">
-                    {formatShortDate(baseDate)}
+                    {formatMonthDay(baseDate)}
                   </span>{' '}
                   {priceBasisSuffix(market)}
                 </span>

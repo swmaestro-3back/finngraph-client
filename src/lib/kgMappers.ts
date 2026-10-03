@@ -2,6 +2,7 @@ import {
   ALL_ENTITY_TYPES,
   ALL_PREDICATES,
   endId,
+  isPredicate,
   type GraphData,
   type GraphLink,
   type GraphNode,
@@ -21,7 +22,22 @@ import type {
   KgThemeNode,
   KgThemeRes,
 } from '@/lib/kgApiTypes'
-import type { NewsGraphData, NewsRelation } from '@/lib/useNewsGraph'
+
+export interface NewsRelation {
+  link: GraphLink
+  source: GraphNode
+  target: GraphNode
+}
+
+/** 뉴스 그래프 응답을 모달이 쓰는 모양으로 — toNewsGraph의 결과 */
+export interface NewsGraphData {
+  graph: GraphData
+  relations: NewsRelation[]
+  expanded: NewsRelation[]
+  seedIds: string[]
+  /** 서버 노드 상한에 걸려 확장 일부가 잘렸는가 — 캔버스 아래 안내 문구용 */
+  truncated: boolean
+}
 
 /** 기업 노드 — 라벨은 이름, 없으면 티커, 그것도 없으면 element_id */
 function toCompanyNode(c: KgCompanyNode): GraphNode {
@@ -123,14 +139,6 @@ function toCompanyLink(r: KgCompanyRelRes): GraphLink {
   }
 }
 
-/**
- * 서버가 이 다섯 관계 타입 밖의 값을 보낼 수 있다 — 새 관계가 클라이언트 배포보다 먼저 나갈 수 있어서다.
- * 매핑 전에 걸러 두면 toCompanyLink의 switch가 안전하게 다섯 케이스로만 닫힌다.
- */
-function isKnownPredicate(r: { type: string }): boolean {
-  return (ALL_PREDICATES as string[]).includes(r.type)
-}
-
 function toGraph(nodes: GraphNode[], links: GraphLink[], center: GraphNode | undefined): GraphData {
   return {
     nodes,
@@ -160,7 +168,7 @@ export function toSupplyChainGraph(res: KgSupplyChainRes, ticker: string): Graph
   const nodes = res.companies.map(toCompanyNode)
   const nodeIds = new Set(nodes.map((n) => n.id))
   const links = res.relationships
-    .filter(isKnownPredicate)
+    .filter((r) => isPredicate(r.type))
     .filter(hasBothEnds(nodeIds))
     .map(toSupplyLink)
   return toGraph(nodes, links, findCenter(nodes, ticker))
@@ -180,7 +188,7 @@ export function toCompanyOverviewGraph(res: KgCompanyRes, ticker: string): Graph
   const nodes = [...res.companies.map(toCompanyNode), ...res.events.map(toEventNode)]
   const nodeIds = new Set(nodes.map((n) => n.id))
   const links = res.relationships
-    .filter(isKnownPredicate)
+    .filter((r) => isPredicate(r.type))
     .filter(hasBothEnds(nodeIds))
     .map(toCompanyLink)
   return toGraph(nodes, links, findCenter(nodes, ticker))
@@ -211,7 +219,7 @@ export function toNewsGraph(res: KgNewsGraphRes): NewsGraphData {
   const nodes = res.companies.map(toCompanyNode)
   const nodeIds = new Set(nodes.map((n) => n.id))
   const links = res.relationships
-    .filter(isKnownPredicate)
+    .filter((r) => isPredicate(r.type))
     .filter(hasBothEnds(nodeIds))
     .map(toSupplyLink)
   const graph = toGraph(nodes, links, undefined)

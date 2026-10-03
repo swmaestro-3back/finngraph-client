@@ -34,14 +34,15 @@ export function hotExclusionTitle(theme: ThemeRes): string | null {
   return isUnderCounted(theme.pricedCount, theme.stockCount) ? UNDER_COUNTED_TITLE : null
 }
 
-export function formatShortDate(isoDate: string): string {
+/** "9/26"처럼 짧게 — format.ts의 formatShortDate("09.26")와 다른 표기라 이름을 나눈다 */
+export function formatMonthDay(isoDate: string): string {
   const [, m, d] = isoDate.split('-').map(Number)
   if (!m || !d) return isoDate
   return `${m}/${d}`
 }
 
 export function closeDateLabel(baseDate: string | null | undefined): string | null {
-  return baseDate ? `${formatShortDate(baseDate)} 종가` : null
+  return baseDate ? `${formatMonthDay(baseDate)} 종가` : null
 }
 
 export function sensitivityLabel(sensitivity: number | null | undefined): string | null {

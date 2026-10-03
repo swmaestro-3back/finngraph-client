@@ -10,6 +10,9 @@ import { useApi, type ApiState } from '@/lib/queries/useApi'
  */
 const cache = new Map<string, Promise<NewsRes>>()
 
+/** 메인 백엔드 기사 id는 숫자 문자열 — kg-api의 element_id처럼 다른 모양이면 호출하지 않는다 */
+export const isApiId = (id: string): boolean => /^\d+$/.test(id)
+
 export function loadNews(newsId: string): Promise<NewsRes> {
   const hit = cache.get(newsId)
   if (hit) return hit

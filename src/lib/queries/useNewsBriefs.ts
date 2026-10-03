@@ -1,5 +1,5 @@
 import { useApi } from '@/lib/queries/useApi'
-import { loadNews } from '@/lib/queries/useNewsDetail'
+import { isApiId, loadNews } from '@/lib/queries/useNewsDetail'
 
 /** 목록 한 줄에 필요한 만큼의 기사 정보 */
 export interface NewsBrief {
@@ -8,8 +8,6 @@ export interface NewsBrief {
   url: string | null
   publishedAt: string | null
 }
-
-const isApiId = (id: string) => /^\d+$/.test(id)
 
 /** 불러오지 못한 기사는 null — 목록에서 그 줄만 빠지고 나머지는 그대로 보인다 */
 function loadBrief(id: string): Promise<NewsBrief | null> {

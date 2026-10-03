@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { BriefingStatus } from '@/lib/apiTypes'
 import { formatDateTime } from '@/lib/format'
-import { formatShortDate } from '@/lib/themeMetrics'
+import { formatMonthDay } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 interface BriefingHeaderProps {
@@ -26,7 +26,7 @@ function StepButton({
   className?: string
 }) {
   const Icon = direction === 'prev' ? ChevronLeft : ChevronRight
-  const label = `${formatShortDate(target)} 브리핑`
+  const label = `${formatMonthDay(target)} 브리핑`
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -67,7 +67,7 @@ export function BriefingHeader({ baseDate, generatedAt, status, prev, next, onNa
             <span className="inline-flex items-center">
               {prev && <StepButton target={prev} direction="prev" onNavigate={onNavigate} className="-ml-6" />}
               <span className="pr-0.5">
-                <span className="font-mono tabular-nums text-foreground">{formatShortDate(baseDate)}</span> 종가 기준
+                <span className="font-mono tabular-nums text-foreground">{formatMonthDay(baseDate)}</span> 종가 기준
               </span>
               {next && <StepButton target={next} direction="next" onNavigate={onNavigate} className="ml-0.5" />}
             </span>

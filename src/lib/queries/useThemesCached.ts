@@ -1,18 +1,10 @@
 import { useMemo } from 'react'
 import { getData } from '@/lib/api'
 import type { ThemeRes } from '@/lib/apiTypes'
-import { useApi, type ApiState } from '@/lib/queries/useApi'
+import { cachedLoader, useApi, type ApiState } from '@/lib/queries/useApi'
 import { themeIdIndex, type ThemeIdIndex } from '@/lib/themeRoute'
 
-let themesCache: Promise<ThemeRes[]> | null = null
-
-function loadThemes(): Promise<ThemeRes[]> {
-  themesCache ??= getData<ThemeRes[]>('/v1/themes').catch((err: unknown) => {
-    themesCache = null
-    throw err
-  })
-  return themesCache
-}
+const loadThemes = cachedLoader(() => getData<ThemeRes[]>('/v1/themes'))
 
 export function useThemesCached(): ApiState<ThemeRes[]> {
   return useApi<ThemeRes[]>(() => loadThemes(), [])

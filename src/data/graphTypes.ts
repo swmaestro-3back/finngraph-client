@@ -171,3 +171,8 @@ export const PREDICATE_LABELS: Record<Predicate, string> = {
 export const ALL_ENTITY_TYPES: EntityType[] = ["company", "theme", "event"];
 
 export const ALL_PREDICATES: Predicate[] = ["SUPPLIES_TO", "ACQUIRES", "INVESTS_IN", "BELONGS_TO", "HAS_EVENT"];
+
+/** 서버가 보낸 관계 타입 문자열이 클라이언트가 아는 다섯 가지인가 — 새 관계가 배포보다 먼저 나갈 수 있어 매핑 전에 거른다 */
+export function isPredicate(value: string): value is Predicate {
+  return (ALL_PREDICATES as string[]).includes(value);
+}

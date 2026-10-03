@@ -1,5 +1,6 @@
 import {
-  ALL_PREDICATES,
+  PREDICATE_LABELS,
+  isPredicate,
   type GraphData,
   type GraphLink,
   type GraphNode,
@@ -38,11 +39,11 @@ export const WATCH_LABELS: Record<WatchKind, string> = {
   ISSUE_SPREAD: '이슈 확산',
 }
 
-const RELATION_LABELS: Record<string, string> = {
-  SUPPLIES_TO: '공급',
-  ACQUIRES: '인수',
-  INVESTS_IN: '투자',
-}
+/** 브리핑 관계 문장에 나오는 기업 간 관계 — 그래프 범례와 같은 라벨을 쓴다 */
+const RELATION_PREDICATES = ['SUPPLIES_TO', 'ACQUIRES', 'INVESTS_IN'] as const satisfies readonly Predicate[]
+const RELATION_LABELS: Record<string, string> = Object.fromEntries(
+  RELATION_PREDICATES.map((p) => [p, PREDICATE_LABELS[p]]),
+)
 
 const CITATION_PREFIX: Record<CitationType, string> = {
   NEWS: '뉴스',
@@ -136,10 +137,6 @@ export function relationDigestCaption(
     return `${articles} · 관계 ${graph.edges.length}건 · 기업 ${graph.nodes.length}곳`
   }
   return `${articles} · 관계 ${locked?.graphEdges ?? 0}건`
-}
-
-function isPredicate(value: string): value is Predicate {
-  return (ALL_PREDICATES as string[]).includes(value)
 }
 
 export function toRelationGraphData(graph: RelationGraphRes): GraphData {
