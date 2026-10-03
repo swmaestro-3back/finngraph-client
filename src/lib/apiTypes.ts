@@ -186,6 +186,13 @@ export type CandlePeriod = 'D' | 'W' | 'M'
  */
 export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 120, W: 52, M: 36 }
 
+/** 캔들 기간 칩 — 종목 상세 차트와 테마 이슈 타임라인이 같은 순서·문구를 쓴다 */
+export const CANDLE_PERIODS: { key: CandlePeriod; label: string; chartLabel: string }[] = [
+  { key: 'D', label: '1일', chartLabel: '일봉' },
+  { key: 'W', label: '1주', chartLabel: '주봉' },
+  { key: 'M', label: '1달', chartLabel: '월봉' },
+]
+
 /** 투자자별 수급 조회 기간 — 백엔드는 거래일 개수(limit)만 받으므로 1개월 ≈ 20거래일로 환산한다 */
 export type SupplyRange = '1M' | '3M' | '6M' | '1Y'
 

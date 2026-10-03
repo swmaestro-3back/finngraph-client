@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
+import { TableSkeleton } from '@/components/table/TableSkeleton'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { FilterChip } from '@/components/ui/filter-chip'
@@ -110,13 +111,7 @@ export default function MyPage() {
     void refresh().catch(() => {})
   }
 
-  const listSkeleton = (
-    <div className="card-surface overflow-hidden p-4">
-      {Array.from({ length: 5 }, (_, i) => (
-        <div key={i} className="mb-2 h-8 animate-pulse rounded bg-muted" />
-      ))}
-    </div>
-  )
+  const listSkeleton = <TableSkeleton rows={5} />
 
   const failure = (message: string, retry: () => void) => (
     <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
@@ -305,11 +300,7 @@ export default function MyPage() {
             (newsError ? (
               failure('관심종목 뉴스를 불러오지 못했습니다.', refetchNews)
             ) : newsLoading ? (
-              <div className="card-surface overflow-hidden p-4">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <div key={i} className="mb-2 h-10 animate-pulse rounded bg-muted" />
-                ))}
-              </div>
+              <TableSkeleton rows={6} rowClassName="h-10" />
             ) : news.length === 0 ? (
               <div className="card-surface flex flex-col items-center justify-center gap-1 py-12">
                 <p className="text-body text-foreground">관심종목 뉴스가 아직 없어요</p>

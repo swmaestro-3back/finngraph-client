@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties, type PointerEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { ChipGroup } from '@/components/layout/ChipGroup'
 import { StockLogo } from '@/components/stock/StockLogo'
-import { FilterChip } from '@/components/ui/filter-chip'
 import type { ThemeStockRes } from '@/lib/apiTypes'
 import {
   changeColorClass,
@@ -171,13 +171,7 @@ export function LeaderStockCard({ themeName, stocks, embedded = false }: LeaderS
             시가총액 상위 <span className="font-mono tabular-nums">{leaders.length}</span>종목
           </span>
         </div>
-        <div className="flex gap-1.5">
-          {RANGES.map((r) => (
-            <FilterChip key={r.key} active={rangeKey === r.key} onClick={() => setRangeKey(r.key)}>
-              {r.label}
-            </FilterChip>
-          ))}
-        </div>
+        <ChipGroup options={RANGES} value={rangeKey} onChange={setRangeKey} />
       </div>
 
       <div className="grid gap-x-5 gap-y-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">

@@ -1,27 +1,27 @@
 import { useMemo, useState } from 'react'
-import { CircleAlert, RotateCw, Search, X } from 'lucide-react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Search, X } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
+import { LinkRow, NUM } from '@/components/table/LinkRow'
 import { ListPagination } from '@/components/table/ListPagination'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
+import { TableSkeleton } from '@/components/table/TableSkeleton'
 import { Breadth } from '@/components/theme/ThemeMetricSummary'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemes } from '@/lib/queries/useThemes'
-import { fromState } from '@/lib/navigation'
 import { changeColorClass, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import { formatMonthDay, hotExclusionTitle } from '@/lib/themeMetrics'
 import { readQuery, writePage, writeQuery } from '@/lib/listParams'
 import { isBlankQuery, matchRange } from '@/lib/nameMatch'
-import { usePageParam, useUrlTableSort } from '@/lib/useListParams'
+import { usePagedRows, useUrlTableSort } from '@/lib/useListParams'
 import { cn } from '@/lib/utils'
 import { priceBasisSuffix } from '@/lib/referenceDate'
 
 const PAGE_SIZE = 20
-
-const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
 
 const GRID =
   'grid grid-cols-[36px_28px_minmax(170px,1fr)_76px_96px_76px_76px_76px_96px_84px_minmax(220px,1.5fr)] items-center gap-2'
@@ -111,8 +111,6 @@ function HighlightedName({ name, query }: { name: string; query: string }) {
 }
 
 export default function ThemeListPage() {
-  const navigate = useNavigate()
-  const { pathname, search } = useLocation()
   const [params, setParams] = useSearchParams()
   // 입력 원문은 로컬에 든다 — 한글 조합 중 글자를 주소 왕복에 맡기면 깨질 수 있다. 초기값만 주소에서 읽는다
   const [query, setQuery] = useState(() => readQuery(params))
@@ -167,9 +165,7 @@ export default function ThemeListPage() {
     'm3',
   )
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
-  const { page, goToPage } = usePageParam(totalPages)
-  const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const { page, totalPages, goToPage, pageRows } = usePagedRows(sorted, PAGE_SIZE)
 
   return (
     <div className="page-container pb-12 pt-7">
@@ -214,30 +210,9 @@ export default function ThemeListPage() {
         </div>
       </div>
 
-      {loading && (
-        <div className="card-surface overflow-hidden p-4">
-          {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="mb-2 h-8 animate-pulse rounded bg-muted" />
-          ))}
-        </div>
-      )}
+      {loading && <TableSkeleton rows={8} />}
 
-      {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <p className="text-body text-muted-foreground">
-            {error.isRetryable
-              ? '일시적으로 데이터를 불러올 수 없습니다.'
-              : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isRetryable && (
-            <Button variant="outline" size="sm" onClick={refetch}>
-              <RotateCw data-icon="inline-start" />
-              다시 시도
-            </Button>
-          )}
-        </div>
-      )}
+      {!loading && error && <ErrorState error={error} onRetry={refetch} />}
 
       {!loading && !error && (
         <>
@@ -279,27 +254,7 @@ export default function ThemeListPage() {
                   </div>
                 )}
                 {pageRows.map((row, index) => (
-                  // 별표가 행 안에 들어가 button 중첩이 되므로 행을 div+role로 둔다
-                  <div
-                    key={row.id}
-                    role="link"
-                    tabIndex={0}
-                    onClick={() =>
-                      navigate(`/theme/${row.id}`, {
-                        state: fromState(pathname + search),
-                      })
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter' && event.key !== ' ') return
-                      event.preventDefault()
-                      navigate(`/theme/${row.id}`, { state: fromState(pathname + search) })
-                    }}
-                    className={cn(
-                      GRID,
-                      'w-full cursor-pointer border-b border-surface-inset px-4 py-2.5 text-left hover:bg-muted',
-                      index % 2 === 1 && 'bg-foreground/[0.016]',
-                    )}
-                  >
+                  <LinkRow key={row.id} to={`/theme/${row.id}`} index={index} gridClassName={GRID}>
                     <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">
                       {(page - 1) * PAGE_SIZE + index + 1}
                     </span>
@@ -366,7 +321,7 @@ export default function ThemeListPage() {
                       )}
                     </span>
                     <LeaderCell names={row.leaders} />
-                  </div>
+                  </LinkRow>
                 ))}
               </div>
             </div>

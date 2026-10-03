@@ -31,7 +31,7 @@ export function useUrlTableSort<T, K extends Extract<keyof T, string>>(
  * 현재 페이지를 ?page= 에 둔다. 주소의 값이 범위를 벗어나면(데이터 로딩 전, 필터로 줄어든 뒤)
  * 주소는 건드리지 않고 화면에서만 끝 페이지로 맞춘다.
  */
-export function usePageParam(totalPages: number) {
+function usePageParam(totalPages: number) {
   const [params, setParams] = useSearchParams()
   const page = Math.min(readPage(params), totalPages)
 
@@ -44,4 +44,12 @@ export function usePageParam(totalPages: number) {
   }
 
   return { page, goToPage }
+}
+
+/** 정렬된 전체 행에서 현재 페이지 몫만 — 페이지 번호는 usePageParam이 주소에서 읽는다 */
+export function usePagedRows<T>(rows: T[], pageSize: number) {
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize))
+  const { page, goToPage } = usePageParam(totalPages)
+  const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
+  return { page, totalPages, goToPage, pageRows }
 }

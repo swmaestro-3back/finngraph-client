@@ -1,13 +1,14 @@
 import { useMemo } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { ListPagination } from '@/components/table/ListPagination'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockFilterBar } from '@/components/table/StockFilterBar'
+import { LinkRow, NUM } from '@/components/table/LinkRow'
 import { StockIdentity } from '@/components/table/StockIdentity'
-import { Button } from '@/components/ui/button'
+import { TableSkeleton } from '@/components/table/TableSkeleton'
 import { FilterChip } from '@/components/ui/filter-chip'
 import type { StockRowRes } from '@/lib/apiTypes'
 import {
@@ -19,7 +20,6 @@ import {
 } from '@/lib/format'
 import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
-import { fromState } from '@/lib/navigation'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { writePage } from '@/lib/listParams'
 import {
@@ -29,12 +29,10 @@ import {
   isFilterActive,
   type FilterState,
 } from '@/lib/stockFilter'
-import { usePageParam, useUrlTableSort } from '@/lib/useListParams'
+import { usePagedRows, useUrlTableSort } from '@/lib/useListParams'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 20
-
-const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
 
 const GRID =
   'grid grid-cols-[36px_28px_minmax(190px,1fr)_92px_76px_76px_76px_76px_96px_64px_64px_64px_64px] items-center gap-2'
@@ -71,7 +69,7 @@ const COLUMNS: TableColumn<SortKey>[] = [
 
 export default function StockListPage() {
   const navigate = useNavigate()
-  const { pathname, search } = useLocation()
+  const { pathname } = useLocation()
   // 페이지·정렬·필터는 주소 쿼리에 둔다 — 상세에 다녀와도 보던 목록으로 돌아온다
   const [params, setParams] = useSearchParams()
   const filter = useMemo(() => filterFromParams(params), [params])
@@ -116,9 +114,7 @@ export default function StockListPage() {
     'w1',
   )
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
-  const { page, goToPage } = usePageParam(totalPages)
-  const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const { page, totalPages, goToPage, pageRows } = usePagedRows(sorted, PAGE_SIZE)
 
   return (
     <div className="page-container pb-12 pt-7">
@@ -135,30 +131,9 @@ export default function StockListPage() {
         </div>
       </div>
 
-      {loading && (
-        <div className="card-surface overflow-hidden p-4">
-          {Array.from({ length: 10 }, (_, i) => (
-            <div key={i} className="mb-2 h-8 animate-pulse rounded bg-muted" />
-          ))}
-        </div>
-      )}
+      {loading && <TableSkeleton rows={10} />}
 
-      {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <p className="text-body text-muted-foreground">
-            {error.isRetryable
-              ? '일시적으로 데이터를 불러올 수 없습니다.'
-              : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isRetryable && (
-            <Button variant="outline" size="sm" onClick={refetch}>
-              <RotateCw data-icon="inline-start" />
-              다시 시도
-            </Button>
-          )}
-        </div>
-      )}
+      {!loading && error && <ErrorState error={error} onRetry={refetch} />}
 
       {!loading && !error && (
         <>
@@ -200,25 +175,7 @@ export default function StockListPage() {
                 />
 
                 {pageRows.map((row, index) => (
-                  // 별표가 행 안에 들어가 button 중첩이 되므로 행을 div+role로 바꿨다
-                  <div
-                    key={row.ticker}
-                    role="link"
-                    tabIndex={0}
-                    onClick={() =>
-                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname + search) })
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter' && event.key !== ' ') return
-                      event.preventDefault()
-                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname + search) })
-                    }}
-                    className={cn(
-                      GRID,
-                      'w-full cursor-pointer border-b border-surface-inset px-4 py-2.5 text-left hover:bg-muted',
-                      index % 2 === 1 && 'bg-foreground/[0.016]',
-                    )}
-                  >
+                  <LinkRow key={row.ticker} to={`/stock/${row.ticker}`} index={index} gridClassName={GRID}>
                     <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">
                       {(page - 1) * PAGE_SIZE + index + 1}
                     </span>
@@ -264,7 +221,7 @@ export default function StockListPage() {
                     <span className={cn(NUM, 'text-foreground-secondary')}>
                       {row.dividendYield === null ? '—' : `${row.dividendYield.toFixed(2)}%`}
                     </span>
-                  </div>
+                  </LinkRow>
                 ))}
               </div>
             </div>

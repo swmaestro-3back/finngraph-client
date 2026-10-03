@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
+import { ChipGroup } from '@/components/layout/ChipGroup'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueLane } from '@/components/stock/IssueLane'
@@ -14,9 +15,7 @@ import {
   ThemeCountFacts,
   ThemeMetricCaption,
 } from '@/components/theme/ThemeMetricSummary'
-import { Button } from '@/components/ui/button'
-import { FilterChip } from '@/components/ui/filter-chip'
-import { CANDLE_COUNTS, type CandlePeriod } from '@/lib/apiTypes'
+import { CANDLE_COUNTS, CANDLE_PERIODS, type CandlePeriod } from '@/lib/apiTypes'
 import { buildIssueTimeline, candleDates, toNewsItem } from '@/lib/apiMappers'
 import { changeColorClass, formatChangeOrDash } from '@/lib/format'
 import { useBackTarget } from '@/lib/navigation'
@@ -24,12 +23,6 @@ import { useThemeDetail } from '@/lib/queries/useThemeDetail'
 import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { cn } from '@/lib/utils'
-
-const PERIODS: { key: CandlePeriod; label: string }[] = [
-  { key: 'D', label: '1일' },
-  { key: 'W', label: '1주' },
-  { key: 'M', label: '1달' },
-]
 
 // 대시보드의 관련 뉴스와 같은 높이에서 안쪽 스크롤 — 뉴스가 적으면 빈 칸 없이 내용만큼만 차지한다
 const NEWS_LIST_CLASS =
@@ -82,31 +75,15 @@ export default function ThemeDetailPage() {
       )}
 
       {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <h1 className="text-lg font-medium text-foreground">
-            {error.isNotFound ? '존재하지 않는 테마입니다' : '일시적인 오류'}
-          </h1>
-          <p className="text-body text-muted-foreground">
-            {error.isNotFound
-              ? '요청하신 테마를 찾을 수 없습니다.'
-              : error.isRetryable
-                ? '일시적으로 데이터를 불러올 수 없습니다.'
-                : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isNotFound ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/themes">테마 목록으로</Link>
-            </Button>
-          ) : (
-            error.isRetryable && (
-              <Button variant="outline" size="sm" onClick={refetch}>
-                <RotateCw data-icon="inline-start" />
-                다시 시도
-              </Button>
-            )
-          )}
-        </div>
+        <ErrorState
+          error={error}
+          onRetry={refetch}
+          notFound={{
+            title: '존재하지 않는 테마입니다',
+            message: '요청하신 테마를 찾을 수 없습니다.',
+            action: { to: '/themes', label: '테마 목록으로' },
+          }}
+        />
       )}
 
       {!loading && !error && theme && (
@@ -139,17 +116,7 @@ export default function ThemeDetailPage() {
             <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
               이슈 타임라인
             </h2>
-            <div className="flex gap-1.5">
-              {PERIODS.map((p) => (
-                <FilterChip
-                  key={p.key}
-                  active={period === p.key}
-                  onClick={() => setPeriod(p.key)}
-                >
-                  {p.label}
-                </FilterChip>
-              ))}
-            </div>
+            <ChipGroup options={CANDLE_PERIODS} value={period} onChange={setPeriod} />
           </div>
           <div key={`${theme.name}-${period}`} className="card-surface mb-4 p-5">
             <IssueLane

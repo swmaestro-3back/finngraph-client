@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { CircleAlert, ExternalLink, RotateCw } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { ChipGroup } from '@/components/layout/ChipGroup'
 import { SalesRatioCell } from '@/components/stock/ContractSection'
 import { Button } from '@/components/ui/button'
-import { FilterChip } from '@/components/ui/filter-chip'
 import type { RecentContractRes } from '@/lib/apiTypes'
 import { formatContractPeriod } from '@/lib/contracts'
 import { formatCompactKrw } from '@/lib/format'
@@ -92,13 +92,7 @@ export function RecentContractsBoard() {
             최근 {DAYS}일 단일판매·공급계약 공시 · 매출 대비 비율은 제출사 최근 매출액 기준
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          {SORTS.map((s) => (
-            <FilterChip key={s.key} active={sort === s.key} onClick={() => setSort(s.key)}>
-              {s.label}
-            </FilterChip>
-          ))}
-        </div>
+        <ChipGroup options={SORTS} value={sort} onChange={setSort} className="items-center" />
       </div>
 
       <div className="card-surface p-5">
