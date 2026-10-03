@@ -12,7 +12,7 @@ import { Breadth } from '@/components/theme/ThemeMetricSummary'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
-import { useThemes } from '@/lib/queries/useThemes'
+import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { changeColorClass, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import { formatMonthDay, hotExclusionTitle } from '@/lib/themeMetrics'
 import { readQuery, writePage, writeQuery } from '@/lib/listParams'
@@ -114,7 +114,7 @@ export default function ThemeListPage() {
   const [params, setParams] = useSearchParams()
   // 입력 원문은 로컬에 든다 — 한글 조합 중 글자를 주소 왕복에 맡기면 깨질 수 있다. 초기값만 주소에서 읽는다
   const [query, setQuery] = useState(() => readQuery(params))
-  const { data: themes, loading, error, refetch } = useThemes()
+  const { data: themes, loading, error, refetch } = useThemesCached()
   const { data: market } = useThemeMarket()
   const baseDate = market?.baseDate ?? themes?.[0]?.baseDate ?? null
   const allRows: ThemeRow[] = useMemo(
