@@ -13,7 +13,7 @@ import {
 } from '@/lib/format'
 import { DEFAULT_BAND, buildReturnChart } from '@/lib/leaderChart'
 import { fromState } from '@/lib/navigation'
-import { useCandles } from '@/lib/queries/useCandles'
+import { useCandlesCached } from '@/lib/queries/useCandles'
 import { changeStatusTag, marketCapLeaders } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
@@ -51,9 +51,9 @@ export function LeaderStockCard({ themeName, stocks, embedded = false }: LeaderS
   const leaders = useMemo(() => marketCapLeaders(stocks), [stocks])
   const range = RANGES.find((r) => r.key === rangeKey) ?? RANGES[1]
 
-  const first = useCandles(leaders[0]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
-  const second = useCandles(leaders[1]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
-  const third = useCandles(leaders[2]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
+  const first = useCandlesCached(leaders[0]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
+  const second = useCandlesCached(leaders[1]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
+  const third = useCandlesCached(leaders[2]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
 
   // 세 종목을 같은 세로축에 올려야 누가 더 올랐는지 선 높이로 비교된다
   const chart = useMemo(

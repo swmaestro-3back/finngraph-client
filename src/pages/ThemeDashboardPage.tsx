@@ -60,6 +60,8 @@ export default function ThemeDashboardPage() {
   const candleDate = useReferenceDate(fallbackTicker)
   const referenceDate = baseDate ?? candleDate
   const banner = coverageBanner(market?.coverage, hotThemes ? hotThemes.length : null)
+  // 표시 개수를 바꿔 다시 받는 동안에는 이전 화면을 그대로 둔다 — 뼈대로 갈아엎으면 아래 차트가 사라졌다 다시 생긴다
+  const firstLoading = loading && !hotThemes
 
   const treemapThemes = useMemo(() => {
     const list = hotThemes ?? []
@@ -136,7 +138,7 @@ export default function ThemeDashboardPage() {
         }}
       />
 
-      {loading && (
+      {firstLoading && (
         <>
           <div className="aspect-[1200/520] w-full animate-pulse rounded-2xl bg-muted" />
           <div className="mt-3 h-4 w-1/2 animate-pulse rounded bg-muted" />
@@ -148,9 +150,9 @@ export default function ThemeDashboardPage() {
         </>
       )}
 
-      {!loading && error && <ErrorState error={error} onRetry={refetch} />}
+      {!firstLoading && error && <ErrorState error={error} onRetry={refetch} />}
 
-      {!loading && !error && hotThemes && (
+      {!error && hotThemes && (
         <>
           {banner && (
             <div
