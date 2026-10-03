@@ -8,7 +8,14 @@ import {
   writeQuery,
   writeSort,
 } from '@/lib/listParams'
-import { filterFromParams, filterToParams, type FilterState } from '@/lib/stockFilter'
+import {
+  applyStockFilters,
+  filterFromParams,
+  filterToParams,
+  LARGE_CAP_RANK,
+  type FilterState,
+} from '@/lib/stockFilter'
+import type { StockRowRes } from '@/lib/apiTypes'
 
 describe('pageBlock', () => {
   it('5개씩 끊는다', () => {
@@ -102,5 +109,43 @@ describe('q 쿼리', () => {
     const params = new URLSearchParams('q=게임&page=2')
     writeQuery(params, '  ')
     expect(params.toString()).toBe('page=2')
+  })
+})
+
+describe('대형주 프리셋', () => {
+  // 시가총액이 i에 비례하는 150종목 + 값 없는 1종목
+  const rows = [
+    ...Array.from({ length: 150 }, (_, i) => ({
+      ticker: String(i).padStart(6, '0'),
+      market: i % 2 === 0 ? 'KOSPI' : 'KOSDAQ',
+      marketCap: (i + 1) * 1e9,
+      per: null,
+      roe: null,
+    })),
+    { ticker: '999999', market: 'KOSPI', marketCap: null, per: null, roe: null },
+  ] as unknown as StockRowRes[]
+  const largeCap: FilterState = { market: 'ALL', presets: new Set(['largeCap']), ranges: {} }
+
+  it('시가총액 순위 1~100위만 남긴다', () => {
+    const result = applyStockFilters(rows, largeCap)
+    expect(result).toHaveLength(LARGE_CAP_RANK)
+    expect(Math.min(...result.map((r) => r.marketCap ?? 0))).toBe(51 * 1e9)
+  })
+
+  it('순위는 시장 필터와 무관하게 전체에서 센다', () => {
+    const result = applyStockFilters(rows, { ...largeCap, market: 'KOSPI' })
+    expect(result).toHaveLength(50)
+  })
+})
+
+describe('고배당 프리셋', () => {
+  it('배당률 5% 이상만 남기고 값이 없으면 뺀다', () => {
+    const rows = [
+      { ticker: '000001', dividendYield: 5 },
+      { ticker: '000002', dividendYield: 4.99 },
+      { ticker: '000003', dividendYield: null },
+    ] as unknown as StockRowRes[]
+    const state: FilterState = { market: 'ALL', presets: new Set(['highDividend']), ranges: {} }
+    expect(applyStockFilters(rows, state).map((r) => r.ticker)).toEqual(['000001'])
   })
 })

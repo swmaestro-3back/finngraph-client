@@ -1,6 +1,6 @@
 import type { StockRowRes } from '@/lib/apiTypes'
 
-export type PresetKey = 'lowPer' | 'highDividend' | 'highRoe' | 'largeCap'
+export type PresetKey = 'largeCap' | 'lowPer' | 'highRoe' | 'highDividend'
 export type RangeKey = 'marketCap' | 'per' | 'pbr' | 'roe' | 'dividendYield'
 
 export interface FilterState {
@@ -15,12 +15,25 @@ export const DEFAULT_FILTER: FilterState = {
   ranges: {},
 }
 
-// marketCap 원본은 원 단위(표시할 때만 toEok로 억 환산) — 대형주 1조 = 1e12원
-const PRESET_TESTS: Record<PresetKey, (row: StockRowRes) => boolean> = {
+/** 대형주 = 전체 종목 중 시가총액 순위 1~LARGE_CAP_RANK위 */
+export const LARGE_CAP_RANK = 100
+
+// 값만 보면 되는 프리셋 — 대형주는 순위라 전체 목록이 필요해 applyStockFilters에서 따로 가린다
+const VALUE_PRESET_TESTS: Record<Exclude<PresetKey, 'largeCap'>, (row: StockRowRes) => boolean> = {
   lowPer: (row) => row.per !== null && row.per > 0 && row.per < 10,
-  highDividend: (row) => row.dividendYield !== null && row.dividendYield >= 3,
   highRoe: (row) => row.roe !== null && row.roe >= 10,
-  largeCap: (row) => row.marketCap !== null && row.marketCap >= 1e12,
+  highDividend: (row) => row.dividendYield !== null && row.dividendYield >= 5,
+}
+
+/** 시가총액 상위 LARGE_CAP_RANK종목의 ticker — 시장 필터와 무관하게 받은 목록 전체에서 센다 */
+function largeCapTickers(rows: StockRowRes[]): Set<string> {
+  return new Set(
+    rows
+      .filter((row) => row.marketCap !== null)
+      .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+      .slice(0, LARGE_CAP_RANK)
+      .map((row) => row.ticker),
+  )
 }
 
 // 범위 입력은 화면 표기 단위(시총=억)로 받으므로 비교 전에 원 단위로 되돌린다
@@ -46,10 +59,13 @@ export function isFilterActive(state: FilterState): boolean {
 }
 
 export function applyStockFilters(rows: StockRowRes[], state: FilterState): StockRowRes[] {
+  const largeCaps = state.presets.has('largeCap') ? largeCapTickers(rows) : null
   return rows.filter((row) => {
     if (state.market !== 'ALL' && row.market !== state.market) return false
     for (const preset of state.presets) {
-      if (!PRESET_TESTS[preset](row)) return false
+      if (preset === 'largeCap') {
+        if (!largeCaps?.has(row.ticker)) return false
+      } else if (!VALUE_PRESET_TESTS[preset](row)) return false
     }
     for (const key of RANGE_KEYS) {
       const range = state.ranges[key]
@@ -69,7 +85,7 @@ export function applyStockFilters(rows: StockRowRes[], state: FilterState): Stoc
 // market=KOSPI · preset=lowPer,highRoe · per=..10 · marketCap=1000..5000 (범위는 화면 표기 단위)
 
 const MARKETS: FilterState['market'][] = ['KOSPI', 'KOSDAQ']
-const PRESET_KEYS = Object.keys(PRESET_TESTS) as PresetKey[]
+const PRESET_KEYS: PresetKey[] = ['largeCap', 'lowPer', 'highRoe', 'highDividend']
 const RANGE_SEPARATOR = '..'
 
 function parseBound(raw: string | undefined): number | undefined {
