@@ -15,7 +15,7 @@ import {
   ThemeCountFacts,
   ThemeMetricCaption,
 } from '@/components/theme/ThemeMetricSummary'
-import { CANDLE_COUNTS, CANDLE_PERIODS, type CandlePeriod } from '@/lib/apiTypes'
+import { CANDLE_COUNTS, CANDLE_PERIODS, type CandlePeriod, type IssueDay } from '@/lib/apiTypes'
 import { buildIssueTimeline, candleDates, toNewsItem } from '@/lib/apiMappers'
 import { changeColorClass, formatChangeOrDash } from '@/lib/format'
 import { useBackTarget } from '@/lib/navigation'
@@ -28,6 +28,28 @@ import { cn } from '@/lib/utils'
 const NEWS_LIST_CLASS =
   'max-h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
+/** 이슈 레인의 hover는 이 안에서만 돈다 — 막대를 스칠 때마다 페이지 전체(대장주 카드·종목 표·뉴스)가 다시 그려지지 않게 */
+function ThemeIssueLane({
+  days,
+  selectedIndex,
+  onSelect,
+}: {
+  days: IssueDay[]
+  selectedIndex: number | null
+  onSelect: (index: number | null) => void
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  return (
+    <IssueLane
+      days={days}
+      hoveredIndex={hoveredIndex}
+      selectedIndex={selectedIndex}
+      onHover={setHoveredIndex}
+      onSelect={onSelect}
+    />
+  )
+}
+
 export default function ThemeDetailPage() {
   const { themeId } = useParams()
   const parsedId = Number(themeId)
@@ -36,7 +58,6 @@ export default function ThemeDetailPage() {
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const { data: theme, loading, error, refetch } = useThemeDetail(id)
   const { data: stocks } = useThemeStocks(id)
@@ -119,13 +140,7 @@ export default function ThemeDetailPage() {
             <ChipGroup options={CANDLE_PERIODS} value={period} onChange={setPeriod} />
           </div>
           <div key={`${theme.name}-${period}`} className="card-surface mb-4 p-5">
-            <IssueLane
-              days={issues}
-              hoveredIndex={hoveredIndex}
-              selectedIndex={selectedIndex}
-              onHover={setHoveredIndex}
-              onSelect={setSelectedIndex}
-            />
+            <ThemeIssueLane days={issues} selectedIndex={selectedIndex} onSelect={setSelectedIndex} />
           </div>
           <IssueNewsPanel
             days={issues}

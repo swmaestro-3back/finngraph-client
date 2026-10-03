@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { StockLogo } from '@/components/stock/StockLogo'
+import { ChangeStatusTag } from '@/components/theme/ChangeStatusTag'
 import type { ThemeStockRes } from '@/lib/apiTypes'
 import {
   changeColorClass,
@@ -10,7 +11,7 @@ import {
   toEok,
   toMillion,
 } from '@/lib/format'
-import { changeStatusTag } from '@/lib/themeMetrics'
+import { changeStatusTag, compareNullLast } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 const GRID =
@@ -25,14 +26,9 @@ interface StockSectionProps {
 }
 
 export function StockSection({ stocks, from, className, listClassName }: StockSectionProps) {
+  // 등락률 내림차순, 등락률 없는 종목은 뒤로
   const sorted = useMemo(
-    () =>
-      [...stocks].sort((a, b) => {
-        if (a.change === null && b.change === null) return 0
-        if (a.change === null) return 1
-        if (b.change === null) return -1
-        return b.change - a.change
-      }),
+    () => [...stocks].sort((a, b) => compareNullLast(a.change, b.change, true)),
     [stocks],
   )
 
@@ -101,14 +97,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
               >
                 {stock.change === null ? '—' : formatChange(stock.change)}
               </span>
-              {tag && (
-                <span
-                  title={tag.title}
-                  className="rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
-                >
-                  {tag.label}
-                </span>
-              )}
+              {tag && <ChangeStatusTag tag={tag} />}
             </span>
           </Link>
           )

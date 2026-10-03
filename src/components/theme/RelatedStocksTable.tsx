@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockIdentity } from '@/components/table/StockIdentity'
+import { ChangeStatusTag } from '@/components/theme/ChangeStatusTag'
 import { FilterChip } from '@/components/ui/filter-chip'
 import type { ThemeStockRes } from '@/lib/apiTypes'
 import {
@@ -128,14 +129,7 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
                 >
                   {formatChangeOrDash(stock.change)}
                 </span>
-                {tag && (
-                  <span
-                    title={tag.title}
-                    className="rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
-                  >
-                    {tag.label}
-                  </span>
-                )}
+                {tag && <ChangeStatusTag tag={tag} />}
               </span>
               <span className="text-right font-mono text-xs text-foreground-secondary">
                 {formatAmountOrDash(toMillion(stock.tradingValue))}
