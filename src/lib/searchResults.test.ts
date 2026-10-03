@@ -36,6 +36,17 @@ describe('searchResults', () => {
     expect(keys[0]).toBe('company:005930')
   })
 
+  it('같은 일치 등급 안에서는 시가총액 내림차순, 값이 없으면 뒤로', () => {
+    const capped = [
+      { ticker: '000001', name: '가나 소형', market: 'KOSDAQ', marketCap: 100 },
+      { ticker: '000002', name: '가나 미상', market: 'KOSDAQ', marketCap: null },
+      { ticker: '000003', name: '가나 대형', market: 'KOSPI', marketCap: 900 },
+      { ticker: '000004', name: '가나', market: 'KOSDAQ', marketCap: 1 },
+    ]
+    const keys = searchResults('가나', capped, []).map((r) => r.key)
+    expect(keys).toEqual(['company:000004', 'company:000003', 'company:000001', 'company:000002'])
+  })
+
   it('대소문자를 무시한다', () => {
     expect(searchResults('naver', stocks, themes)[0]?.label).toBe('NAVER')
   })

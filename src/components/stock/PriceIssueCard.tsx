@@ -1,16 +1,10 @@
 import { memo, useMemo, useState } from 'react'
 import { CandleChart } from '@/components/chart/CandleChart'
 import { ChartCard } from '@/components/chart/ChartCard'
-import { FilterChip } from '@/components/ui/filter-chip'
+import { ChipGroup } from '@/components/layout/ChipGroup'
 import { IssueLane } from '@/components/stock/IssueLane'
-import type { Candle, CandlePeriod, IssueDay } from '@/lib/apiTypes'
+import { CANDLE_PERIODS, type Candle, type CandlePeriod, type IssueDay } from '@/lib/apiTypes'
 import { lockedIssueCount, useMemberGate } from '@/lib/memberGate'
-
-const PERIODS: { key: CandlePeriod; label: string; chartLabel: string }[] = [
-  { key: 'D', label: '1일', chartLabel: '일봉' },
-  { key: 'W', label: '1주', chartLabel: '주봉' },
-  { key: 'M', label: '1달', chartLabel: '월봉' },
-]
 
 interface PriceIssueCardProps {
   candles: Candle[]
@@ -53,7 +47,7 @@ export const PriceIssueCard = memo(function PriceIssueCard({
       ((candles[candles.length - 1].close - candles[0].open) / candles[0].open) * 100
     return { rangeLow: low, rangeHigh: high, periodChange: change }
   }, [candles])
-  const chartLabel = PERIODS.find((p) => p.key === period)?.chartLabel
+  const chartLabel = CANDLE_PERIODS.find((p) => p.key === period)?.chartLabel
 
   return (
     <ChartCard
@@ -61,19 +55,7 @@ export const PriceIssueCard = memo(function PriceIssueCard({
       change={periodChange}
       rangeLow={rangeLow}
       rangeHigh={rangeHigh}
-      actions={
-        <div className="flex gap-1.5">
-          {PERIODS.map((p) => (
-            <FilterChip
-              key={p.key}
-              active={period === p.key}
-              onClick={() => onPeriodChange(p.key)}
-            >
-              {p.label}
-            </FilterChip>
-          ))}
-        </div>
-      }
+      actions={<ChipGroup options={CANDLE_PERIODS} value={period} onChange={onPeriodChange} />}
     >
       <CandleChart
         candles={candles}

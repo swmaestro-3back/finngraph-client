@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
+import { ChipGroup } from '@/components/layout/ChipGroup'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueLane } from '@/components/stock/IssueLane'
@@ -14,9 +15,7 @@ import {
   ThemeCountFacts,
   ThemeMetricCaption,
 } from '@/components/theme/ThemeMetricSummary'
-import { Button } from '@/components/ui/button'
-import { FilterChip } from '@/components/ui/filter-chip'
-import { CANDLE_COUNTS, type CandlePeriod } from '@/lib/apiTypes'
+import { CANDLE_COUNTS, CANDLE_PERIODS, type CandlePeriod, type IssueDay } from '@/lib/apiTypes'
 import { buildIssueTimeline, candleDates, toNewsItem } from '@/lib/apiMappers'
 import { changeColorClass, formatChangeOrDash } from '@/lib/format'
 import { useBackTarget } from '@/lib/navigation'
@@ -25,21 +24,40 @@ import { useThemeNews } from '@/lib/queries/useThemeNews'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { cn } from '@/lib/utils'
 
-const PERIODS: { key: CandlePeriod; label: string }[] = [
-  { key: 'D', label: '1일' },
-  { key: 'W', label: '1주' },
-  { key: 'M', label: '1달' },
-]
+// 대시보드의 관련 뉴스와 같은 높이에서 안쪽 스크롤 — 뉴스가 적으면 빈 칸 없이 내용만큼만 차지한다
+const NEWS_LIST_CLASS =
+  'max-h-[max(280px,31.667vw)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+
+/** 이슈 레인의 hover는 이 안에서만 돈다 — 막대를 스칠 때마다 페이지 전체(대장주 카드·종목 표·뉴스)가 다시 그려지지 않게 */
+function ThemeIssueLane({
+  days,
+  selectedIndex,
+  onSelect,
+}: {
+  days: IssueDay[]
+  selectedIndex: number | null
+  onSelect: (index: number | null) => void
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  return (
+    <IssueLane
+      days={days}
+      hoveredIndex={hoveredIndex}
+      selectedIndex={selectedIndex}
+      onHover={setHoveredIndex}
+      onSelect={onSelect}
+    />
+  )
+}
 
 export default function ThemeDetailPage() {
   const { themeId } = useParams()
   const parsedId = Number(themeId)
   const id = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
-  const back = useBackTarget({ to: '/', label: '테마 트리맵' })
+  const back = useBackTarget({ to: '/', label: '테마 대시보드' })
   const [period, setPeriod] = useState<CandlePeriod>('D')
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const { data: theme, loading, error, refetch } = useThemeDetail(id)
   const { data: stocks } = useThemeStocks(id)
@@ -78,31 +96,15 @@ export default function ThemeDetailPage() {
       )}
 
       {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <h1 className="text-lg font-medium text-foreground">
-            {error.isNotFound ? '존재하지 않는 테마입니다' : '일시적인 오류'}
-          </h1>
-          <p className="text-body text-muted-foreground">
-            {error.isNotFound
-              ? '요청하신 테마를 찾을 수 없습니다.'
-              : error.isRetryable
-                ? '일시적으로 데이터를 불러올 수 없습니다.'
-                : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isNotFound ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/themes">테마 목록으로</Link>
-            </Button>
-          ) : (
-            error.isRetryable && (
-              <Button variant="outline" size="sm" onClick={refetch}>
-                <RotateCw data-icon="inline-start" />
-                다시 시도
-              </Button>
-            )
-          )}
-        </div>
+        <ErrorState
+          error={error}
+          onRetry={refetch}
+          notFound={{
+            title: '존재하지 않는 테마입니다',
+            message: '요청하신 테마를 찾을 수 없습니다.',
+            action: { to: '/themes', label: '테마 목록으로' },
+          }}
+        />
       )}
 
       {!loading && !error && theme && (
@@ -135,26 +137,10 @@ export default function ThemeDetailPage() {
             <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
               이슈 타임라인
             </h2>
-            <div className="flex gap-1.5">
-              {PERIODS.map((p) => (
-                <FilterChip
-                  key={p.key}
-                  active={period === p.key}
-                  onClick={() => setPeriod(p.key)}
-                >
-                  {p.label}
-                </FilterChip>
-              ))}
-            </div>
+            <ChipGroup options={CANDLE_PERIODS} value={period} onChange={setPeriod} />
           </div>
           <div key={`${theme.name}-${period}`} className="card-surface mb-4 p-5">
-            <IssueLane
-              days={issues}
-              hoveredIndex={hoveredIndex}
-              selectedIndex={selectedIndex}
-              onHover={setHoveredIndex}
-              onSelect={setSelectedIndex}
-            />
+            <ThemeIssueLane days={issues} selectedIndex={selectedIndex} onSelect={setSelectedIndex} />
           </div>
           <IssueNewsPanel
             days={issues}
@@ -163,7 +149,7 @@ export default function ThemeDetailPage() {
             onClearSelection={clearSelection}
           />
 
-          <LeaderStockCard stocks={stocks ?? []} period={period} />
+          <LeaderStockCard themeName={theme.name} stocks={stocks ?? []} />
 
           <RelatedStocksTable stocks={stocks ?? []} />
 
@@ -171,6 +157,7 @@ export default function ThemeDetailPage() {
             title={`${theme.name} 관련 뉴스`}
             items={news}
             className="mt-4"
+            listClassName={NEWS_LIST_CLASS}
             relationFilter
             onItemClick={(item) => setOpenNewsId(item.id)}
           />

@@ -1,6 +1,6 @@
 import type { InvestorFlowRes } from '@/lib/apiTypes'
 
-export type StreakDirection = 'buy' | 'sell' | null
+type StreakDirection = 'buy' | 'sell' | null
 
 export interface SupplyStreak {
   days: number

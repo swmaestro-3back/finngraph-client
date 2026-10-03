@@ -16,7 +16,7 @@ export function shouldAutoRefresh(now: Date, basis: PriceBasis | null | undefine
   return intradayTime(basis) !== null && basis?.baseDate === KST_DATE.format(now)
 }
 
-export interface VisibilitySource {
+interface VisibilitySource {
   readonly visibilityState: DocumentVisibilityState
   addEventListener(type: 'visibilitychange', listener: () => void): void
   removeEventListener(type: 'visibilitychange', listener: () => void): void

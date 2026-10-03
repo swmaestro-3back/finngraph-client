@@ -69,7 +69,7 @@ const API_BASE = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '
 )
 
 // 파라미터화하지 않는다 — 무거운 쿼리는 서버 L0 측정 대상이지 클라 튜닝 대상이 아니다 (§5.1.4)
-const TIMEOUT_MS = 10_000
+export const TIMEOUT_MS = 10_000
 
 // ── 인증 상태 (Design §5.1) ─────────────────────────────────────────────────
 // access 토큰은 JS 메모리 전용 — localStorage에 두지 않아 XSS 시 탈취면을 줄인다.
@@ -85,7 +85,7 @@ export function setAccessToken(token: string | null, expiresInSeconds?: number):
     token !== null && expiresInSeconds !== undefined ? Date.now() + expiresInSeconds * 1000 : null
 }
 
-export function shouldRefreshBefore(expiresAt: number | null, now: number): boolean {
+function shouldRefreshBefore(expiresAt: number | null, now: number): boolean {
   return expiresAt !== null && now >= expiresAt - REFRESH_SKEW_MS
 }
 
@@ -133,7 +133,7 @@ export function refreshSession(): Promise<AuthTokenRes | null> {
 }
 
 /** 쿼리스트링 — undefined 값은 생략 */
-function qs(params?: Record<string, string | number | undefined>): string {
+export function qs(params?: Record<string, string | number | undefined>): string {
   if (!params) return ''
   const entries = Object.entries(params).filter(
     (pair): pair is [string, string | number] => pair[1] !== undefined,
@@ -141,6 +141,23 @@ function qs(params?: Record<string, string | number | undefined>): string {
   if (entries.length === 0) return ''
   const search = new URLSearchParams(entries.map(([k, v]) => [k, String(v)]))
   return `?${search.toString()}`
+}
+
+/** fetch 자체가 던진 예외 → ApiError. 응답이 없으므로 타임아웃과 네트워크 단절만 구분한다 */
+export function toFetchError(e: unknown, path: string): ApiError {
+  if (e instanceof DOMException && e.name === 'TimeoutError') {
+    return new ApiError('TIMEOUT', 0, `요청 시간 초과: ${path}`)
+  }
+  return new ApiError('NETWORK_ERROR', 0, `네트워크 오류: ${path}`)
+}
+
+/** 성공 응답의 JSON 본문 — 파싱 실패는 PARSE_ERROR로 정규화한다 */
+export async function parseJsonBody<T>(res: Response, path: string): Promise<T> {
+  try {
+    return (await res.json()) as T
+  } catch {
+    throw new ApiError('PARSE_ERROR', res.status, `응답 JSON 파싱 실패: ${path}`)
+  }
 }
 
 interface RequestOptions {
@@ -176,11 +193,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       ...(body !== undefined && { body: JSON.stringify(body) }),
     })
   } catch (e) {
-    // fetch 자체가 던지면 응답이 없다 — 타임아웃과 네트워크 단절만 구분한다
-    if (e instanceof DOMException && e.name === 'TimeoutError') {
-      throw new ApiError('TIMEOUT', 0, `요청 시간 초과: ${path}`)
-    }
-    throw new ApiError('NETWORK_ERROR', 0, `네트워크 오류: ${path}`)
+    throw toFetchError(e, path)
   }
 
   // access 만료 → refresh 1회 후 재시도. auth 경로 자체는 제외해 refresh 루프를 끊는다
@@ -214,11 +227,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     return undefined as T
   }
 
-  try {
-    return (await res.json()) as T
-  } catch {
-    throw new ApiError('PARSE_ERROR', res.status, `응답 JSON 파싱 실패: ${path}`)
-  }
+  return parseJsonBody<T>(res, path)
 }
 
 /** DataResponse 언래핑 — 단건·전체 목록(themes·stocks 등 D4 전체 반환) 공용 */

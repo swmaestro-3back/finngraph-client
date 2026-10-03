@@ -1,6 +1,6 @@
 export type LegalSlug = 'terms' | 'privacy'
 
-export interface LegalArticle {
+interface LegalArticle {
   heading: string
   paragraphs?: string[]
   items?: string[]
@@ -13,7 +13,7 @@ export interface LegalDocument {
   articles: LegalArticle[]
 }
 
-export const TERMS: LegalDocument = {
+const TERMS: LegalDocument = {
   slug: 'terms',
   title: '이용약관',
   summary: 'finngraph 서비스 이용에 관한 운영자와 회원 간의 권리·의무 및 책임 사항을 정합니다.',
@@ -99,7 +99,7 @@ export const TERMS: LegalDocument = {
   ],
 }
 
-export const PRIVACY: LegalDocument = {
+const PRIVACY: LegalDocument = {
   slug: 'privacy',
   title: '개인정보처리방침',
   summary: '운영자가 회원의 개인정보를 어떤 항목으로, 어떤 목적으로, 얼마 동안 처리하는지 안내합니다.',

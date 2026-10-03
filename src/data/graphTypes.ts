@@ -1,11 +1,5 @@
 export type EntityType = "company" | "theme" | "event";
 
-export const LABEL_TO_TYPE: Record<string, EntityType> = {
-  COMPANY: "company",
-  THEME: "theme",
-  EVENT: "event",
-};
-
 export type Predicate = "SUPPLIES_TO" | "ACQUIRES" | "INVESTS_IN" | "BELONGS_TO" | "HAS_EVENT";
 
 export type GraphFocus =
@@ -32,6 +26,8 @@ export interface GraphNode {
     /** 이벤트에 언급된 기업명 — 그래프 노드와는 이름으로만 맞춰 볼 수 있다 */
     companies?: string[];
     memberCount?: number;
+    /** 클러스터를 이루는 뉴스 id — 상세 패널이 기사 제목을 불러올 때 쓴다 */
+    newsIds?: number[];
     firstPublishedAt?: string;
     lastPublishedAt?: string;
     representativeNewsId?: number;
@@ -45,17 +41,17 @@ export interface GraphNode {
   fy?: number | null;
 }
 
-export interface EdgeItem {
+interface EdgeItem {
   text: string;
   type: EntityType;
 }
 
-export interface NewsMention {
+interface NewsMention {
   news_id: string;
   item: string | null;
 }
 
-export interface DisclosureMention {
+interface DisclosureMention {
   rcept_no: string;
   item: string | null;
 }
@@ -87,11 +83,6 @@ export interface GraphLink {
 export type GraphSelection =
   | { kind: "node"; node: GraphNode }
   | { kind: "edge"; link: GraphLink; source: GraphNode; target: GraphNode };
-
-export interface GraphScale {
-  maxDegree: number;
-  maxMentionedCount: number;
-}
 
 export function endId(v: string | GraphNode): string {
   return typeof v === "string" ? v : v.id;
@@ -180,3 +171,8 @@ export const PREDICATE_LABELS: Record<Predicate, string> = {
 export const ALL_ENTITY_TYPES: EntityType[] = ["company", "theme", "event"];
 
 export const ALL_PREDICATES: Predicate[] = ["SUPPLIES_TO", "ACQUIRES", "INVESTS_IN", "BELONGS_TO", "HAS_EVENT"];
+
+/** 서버가 보낸 관계 타입 문자열이 클라이언트가 아는 다섯 가지인가 — 새 관계가 배포보다 먼저 나갈 수 있어 매핑 전에 거른다 */
+export function isPredicate(value: string): value is Predicate {
+  return (ALL_PREDICATES as string[]).includes(value);
+}

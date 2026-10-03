@@ -1,27 +1,15 @@
 import { useMemo } from 'react'
-import type { Hop } from '@/components/graph/HopSelector'
-import type { GraphData, GraphLink, GraphNode } from '@/data/graphTypes'
+import type { GraphNode } from '@/data/graphTypes'
 import { ApiError } from '@/lib/api'
 import type { NewsDetail } from '@/lib/apiTypes'
+import type { Hop } from '@/lib/graphRoute'
 import { getKgData } from '@/lib/kgApi'
 import type { KgNewsGraphRes } from '@/lib/kgApiTypes'
-import { toNewsGraph } from '@/lib/kgMappers'
+import { toNewsGraph, type NewsGraphData } from '@/lib/kgMappers'
 import { useApi } from '@/lib/queries/useApi'
 
-export interface NewsRelation {
-  link: GraphLink
-  source: GraphNode
-  target: GraphNode
-}
-
-export interface NewsGraphData {
-  graph: GraphData
-  relations: NewsRelation[]
-  expanded: NewsRelation[]
-  seedIds: string[]
-  /** 서버 노드 상한에 걸려 확장 일부가 잘렸는가 — 캔버스 아래 안내 문구용 */
-  truncated: boolean
-}
+// NewsGraphSection 같은 소비자는 이 모듈에서 타입을 가져간다 — 정의는 매퍼(kgMappers) 옆에 있다
+export type { NewsGraphData, NewsRelation } from '@/lib/kgMappers'
 
 /**
  * 캔버스에서 "메인"으로 크게 그릴 노드 — 시드 기업에, 모달 상단 관련 기업 칩과 ticker가 맞는 노드를 더한다.

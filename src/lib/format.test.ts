@@ -1,5 +1,12 @@
-import { describe, expect, it } from 'vitest'
-import { formatDateTime, formatTrillion, formatVolumeMan, pressOf } from '@/lib/format'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  formatDateTime,
+  formatShortDate,
+  formatShortDateTime,
+  formatTrillion,
+  formatVolume,
+  pressOf,
+} from '@/lib/format'
 
 describe('formatTrillion — 조 단위 숫자를 1조 기준으로 조/억 전환', () => {
   it('1조 이상은 소수 첫째 자리 조', () => {
@@ -48,15 +55,39 @@ describe('pressOf — 수집 뉴스 도메인은 언론사 이름으로', () => 
   })
 })
 
-describe('formatVolumeMan — 주 단위 거래량을 만주로', () => {
-  it('10만주 이상은 정수 만주', () => {
-    expect(formatVolumeMan(1_553_824)).toBe('155만주')
-    expect(formatVolumeMan(164_254)).toBe('16만주')
+describe('formatVolume — 주 단위 거래량을 만주/주로', () => {
+  it('1만주 이상은 정수 만주', () => {
+    expect(formatVolume(65_555_523)).toBe('6,556만주')
+    expect(formatVolume(10_000)).toBe('1만주')
   })
 
-  it('10만주 미만은 소수 첫째 자리까지', () => {
-    expect(formatVolumeMan(36_761)).toBe('3.7만주')
-    expect(formatVolumeMan(30_000)).toBe('3만주')
-    expect(formatVolumeMan(0)).toBe('0만주')
+  it('1만주 미만은 주 그대로', () => {
+    expect(formatVolume(3_200)).toBe('3,200주')
+    expect(formatVolume(0)).toBe('0주')
+  })
+})
+
+describe('formatShortDate — 장부 행의 날짜 "08.24"', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-03T12:00:00+09:00'))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('올해는 월.일, 다른 해는 연도 두 자리를 붙인다', () => {
+    expect(formatShortDate('2026-08-24T10:00:00+09:00')).toBe('08.24')
+    expect(formatShortDate('2025-11-03')).toBe('25.11.03')
+  })
+
+  it('시각이 있으면 붙이고 없으면 날짜만', () => {
+    expect(formatShortDateTime('2026-09-29T13:56:00+09:00')).toBe('09.29 13:56')
+    expect(formatShortDateTime('2026-09-29')).toBe('09.29')
+  })
+
+  it('없거나 잘못된 값이면 빈 문자열', () => {
+    expect(formatShortDate(null)).toBe('')
+    expect(formatShortDateTime('not-a-date')).toBe('')
   })
 })

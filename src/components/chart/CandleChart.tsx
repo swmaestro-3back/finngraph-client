@@ -12,7 +12,7 @@ import {
   indexFromX,
   slotCenter,
 } from '@/lib/chartAxis'
-import { changeColorClass, formatChange, formatPrice, formatVolumeMan } from '@/lib/format'
+import { changeColorClass, formatChange, formatPrice, formatVolume } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 // 커서를 따라다니는 툴팁의 기본 위치 = 포인터 오른쪽 대각선 위. 가장자리에선 반대편으로 뒤집는다.
@@ -210,7 +210,7 @@ export function CandleChart({
       {/* 캔들 영역 */}
       <div
         ref={areaRef}
-        className={cn('relative h-[max(200px,20.833vw)]', AXIS_GUTTER, onSelect && 'cursor-pointer')}
+        className={cn('relative h-[max(240px,25vw)]', AXIS_GUTTER, onSelect && 'cursor-pointer')}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={() => hover && toggleSelect(hover.index)}
@@ -268,7 +268,7 @@ export function CandleChart({
             <div className="flex justify-between text-caption leading-[1.6]">
               <span className="text-muted-foreground">거래량</span>
               <span className="font-mono font-medium text-foreground">
-                {formatVolumeMan(hovered.volume)}
+                {formatVolume(hovered.volume)}
               </span>
             </div>
           </div>
@@ -279,7 +279,7 @@ export function CandleChart({
       <div className={cn('mt-3 flex items-baseline justify-between', AXIS_GUTTER)}>
         <span className="text-xs font-semibold text-foreground">거래량</span>
         <span className="text-caption text-muted-foreground">
-          최대 {formatVolumeMan(maxVolume)}
+          최대 {formatVolume(maxVolume)}
         </span>
       </div>
       <div

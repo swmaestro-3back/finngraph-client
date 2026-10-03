@@ -11,7 +11,7 @@ import type {
   IpoStatus,
 } from '@/lib/apiTypes'
 import { formatWon } from '@/lib/format'
-import { formatShortDate } from '@/lib/themeMetrics'
+import { formatMonthDay } from '@/lib/themeMetrics'
 
 export const CALENDAR_MAX_RANGE_DAYS = 62
 
@@ -278,8 +278,8 @@ export function formatDayTitle(isoDate: string): string {
 }
 
 export function formatDateSpan(start: string, end: string | null): string {
-  if (!end || end === start) return formatShortDate(start)
-  return `${formatShortDate(start)}–${formatShortDate(end)}`
+  if (!end || end === start) return formatMonthDay(start)
+  return `${formatMonthDay(start)}–${formatMonthDay(end)}`
 }
 
 function compareEvents(a: CalendarEventRes, b: CalendarEventRes): number {

@@ -6,7 +6,7 @@ import { DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import type { StockCalendarRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChange, formatPrice } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
-import { formatShortDate } from '@/lib/themeMetrics'
+import { formatMonthDay } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 type HeaderStock = Pick<StockCalendarRes, 'ticker' | 'stockName' | 'market' | 'price' | 'change' | 'priceDate'>
@@ -48,7 +48,7 @@ export function EventDetailHeader({ stock, description, from, onNavigate }: Even
           )}
           {stock.priceDate && (
             <span className="font-mono text-caption tabular-nums text-muted-foreground">
-              {formatShortDate(stock.priceDate)} 기준
+              {formatMonthDay(stock.priceDate)} 기준
             </span>
           )}
         </p>

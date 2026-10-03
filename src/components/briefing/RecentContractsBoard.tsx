@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { CircleAlert, ExternalLink, RotateCw } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { SalesRatioCell } from '@/components/stock/ContractSection'
-import { Button } from '@/components/ui/button'
-import { FilterChip } from '@/components/ui/filter-chip'
+import { ChipGroup } from '@/components/layout/ChipGroup'
+import {
+  ContractAmountCells,
+  ContractListError,
+  ContractListSkeleton,
+} from '@/components/stock/ContractSection'
 import type { RecentContractRes } from '@/lib/apiTypes'
-import { formatContractPeriod } from '@/lib/contracts'
-import { formatCompactKrw } from '@/lib/format'
+import { formatContractPeriod, formatSalesRatio } from '@/lib/contracts'
 import { useRecentContracts, type RecentContractSort } from '@/lib/queries/useRecentContracts'
 import { cn } from '@/lib/utils'
 
@@ -43,7 +44,7 @@ function BoardRow({ row, from }: { row: RecentContractRes; from: string }) {
         </div>
         <p className="mt-0.5 truncate text-caption text-muted-foreground sm:hidden">
           <span className="mr-1.5 font-mono tabular-nums text-foreground-secondary">
-            매출 대비 {row.salesRatio === null ? '—' : `${row.salesRatio.toFixed(1)}%`}
+            매출 대비 {formatSalesRatio(row.salesRatio)}
           </span>
           {row.counterpartyName ?? '상대방 미기재'} · <span className="font-mono tabular-nums">{row.rceptDate.slice(5)}</span>
         </p>
@@ -56,21 +57,7 @@ function BoardRow({ row, from }: { row: RecentContractRes; from: string }) {
           {period && <span className="ml-1.5 font-mono tabular-nums">{period}</span>}
         </p>
       </div>
-      <span className="text-right font-mono text-sm font-medium tabular-nums text-foreground">
-        {formatCompactKrw(row.contractAmount)}
-      </span>
-      <div className="hidden sm:block">
-        <SalesRatioCell ratio={row.salesRatio} />
-      </div>
-      <a
-        href={row.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="DART 공시 원문 열기"
-        className="hidden justify-self-end text-muted-foreground transition-colors hover:text-primary sm:block"
-      >
-        <ExternalLink className="size-4" strokeWidth={2} />
-      </a>
+      <ContractAmountCells row={row} />
     </div>
   )
 }
@@ -92,37 +79,12 @@ export function RecentContractsBoard() {
             최근 {DAYS}일 단일판매·공급계약 공시 · 매출 대비 비율은 제출사 최근 매출액 기준
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          {SORTS.map((s) => (
-            <FilterChip key={s.key} active={sort === s.key} onClick={() => setSort(s.key)}>
-              {s.label}
-            </FilterChip>
-          ))}
-        </div>
+        <ChipGroup options={SORTS} value={sort} onChange={setSort} className="items-center" />
       </div>
 
       <div className="card-surface p-5">
-        {loading && (
-          <div className="flex flex-col gap-2">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-11 animate-pulse rounded-lg bg-muted" />
-            ))}
-          </div>
-        )}
-        {!loading && error && (
-          <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <CircleAlert className="size-6 text-muted-foreground" />
-            <p className="text-caption text-muted-foreground">
-              {error.isRetryable ? '공시 정보를 잠시 불러올 수 없어요.' : '공시 정보를 불러오지 못했어요.'}
-            </p>
-            {error.isRetryable && (
-              <Button variant="outline" size="sm" onClick={refetch}>
-                <RotateCw data-icon="inline-start" />
-                다시 시도
-              </Button>
-            )}
-          </div>
-        )}
+        {loading && <ContractListSkeleton rows={4} />}
+        {!loading && error && <ContractListError error={error} onRetry={refetch} />}
         {!loading && !error && rows.length === 0 && (
           <p className="py-8 text-center text-caption text-muted-foreground">
             최근 {DAYS}일 안에 접수된 공급계약 공시가 없어요.

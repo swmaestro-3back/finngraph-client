@@ -3,7 +3,7 @@ import type { IpoDetailRes } from '@/lib/apiTypes'
 import { formatFullDate } from '@/lib/calendar'
 import { formatWon } from '@/lib/format'
 import { ipoPriceText } from '@/lib/ipoDetail'
-import { formatShortDate } from '@/lib/themeMetrics'
+import { formatMonthDay } from '@/lib/themeMetrics'
 
 export function IpoAfterListingSection({ detail }: { detail: Pick<IpoDetailRes, 'afterListing' | 'offering'> }) {
   const after = detail.afterListing
@@ -27,7 +27,7 @@ export function IpoAfterListingSection({ detail }: { detail: Pick<IpoDetailRes, 
               {formatWon(after.close)}
               <SignedPercent value={after.closeReturn} fallback="—" />
             </Metric>
-            <Metric term="현재가" hint={after.priceDate ? `${formatShortDate(after.priceDate)} 기준` : undefined}>
+            <Metric term="현재가" hint={after.priceDate ? `${formatMonthDay(after.priceDate)} 기준` : undefined}>
               {after.price === null ? '—' : formatWon(after.price)}
               <SignedPercent value={after.currentReturn} fallback="—" />
             </Metric>

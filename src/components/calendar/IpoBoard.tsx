@@ -18,7 +18,7 @@ import {
 import { formatWon } from '@/lib/format'
 import { PLANNED_PRICE_HINT, findIpo, ipoKey, ipoPriceBadge, ipoTarget, type IpoDetailTarget } from '@/lib/ipoDetail'
 import { useIpos } from '@/lib/queries/useIpos'
-import { formatShortDate } from '@/lib/themeMetrics'
+import { formatMonthDay } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 function Field({ term, children, wide = false }: { term: string; children: ReactNode; wide?: boolean }) {
@@ -31,7 +31,7 @@ function Field({ term, children, wide = false }: { term: string; children: React
 }
 
 function dateOrPending(isoDate: string | null) {
-  return isoDate ? <span className="font-mono tabular-nums">{formatShortDate(isoDate)}</span> : '미정'
+  return isoDate ? <span className="font-mono tabular-nums">{formatMonthDay(isoDate)}</span> : '미정'
 }
 
 function IpoCardBody({ item, today }: { item: IpoRes; today: string }) {

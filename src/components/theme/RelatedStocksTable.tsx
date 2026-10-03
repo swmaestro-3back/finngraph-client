@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockIdentity } from '@/components/table/StockIdentity'
+import { ChangeStatusTag } from '@/components/theme/ChangeStatusTag'
 import { FilterChip } from '@/components/ui/filter-chip'
 import type { ThemeStockRes } from '@/lib/apiTypes'
 import {
@@ -14,12 +15,7 @@ import {
   toMillion,
 } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
-import {
-  changeStatusTag,
-  excludedFromMeanLabel,
-  TRIMMED_TITLE,
-  trimmedTickers,
-} from '@/lib/themeMetrics'
+import { changeStatusTag } from '@/lib/themeMetrics'
 import { useTableSort } from '@/lib/useTableSort'
 import { cn } from '@/lib/utils'
 
@@ -62,12 +58,11 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
   }
   const { sorted, sortKey, sortDesc, handleSort } = useTableSort<ThemeStockRes, SortKey>(
     filtered,
-    'change',
+    'marketCap',
   )
 
   const visible = moreOpen ? sorted : sorted.slice(0, VISIBLE_ROWS)
   const hasMore = sorted.length > VISIBLE_ROWS
-  const excluded = excludedFromMeanLabel(trimmedTickers(sorted).size)
 
   return (
     <section className="mt-4 card-surface p-5">
@@ -76,12 +71,6 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
           <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">관련 종목</h2>
           <span className="text-caption text-muted-foreground">
             <span className="font-mono tabular-nums">{sorted.length}</span>개
-            {excluded && (
-              <span title={TRIMMED_TITLE}>
-                {' · '}
-                {excluded}
-              </span>
-            )}
           </span>
         </div>
         <div className="flex gap-1.5">
@@ -111,7 +100,7 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
 
           {visible.map((stock) => {
             const tag = changeStatusTag(stock.changeStatus)
-            const priced = stock.change !== null && (!tag || tag.keepsChange)
+            const priced = stock.change !== null && !tag
             return (
             <button
               key={stock.ticker}
@@ -140,14 +129,7 @@ export function RelatedStocksTable({ stocks }: RelatedStocksTableProps) {
                 >
                   {formatChangeOrDash(stock.change)}
                 </span>
-                {tag && (
-                  <span
-                    title={tag.title}
-                    className="rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
-                  >
-                    {tag.label}
-                  </span>
-                )}
+                {tag && <ChangeStatusTag tag={tag} />}
               </span>
               <span className="text-right font-mono text-xs text-foreground-secondary">
                 {formatAmountOrDash(toMillion(stock.tradingValue))}

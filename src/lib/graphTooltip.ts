@@ -2,7 +2,7 @@
 // d3가 그린 SVG 요소 위에서 커서를 따라다녀야 해서 React 상태가 아니라 DOM을 직접 만진다.
 
 /** 간선 제목 — 출발 [관계 →] 도착. 태그 색은 켜진 간선과 같은 출발 기업의 시장 색 */
-export interface LinkTitle {
+interface LinkTitle {
   from: string
   relation: string
   to: string
@@ -18,7 +18,7 @@ export interface TooltipContent {
 }
 
 /** 세 줄 상한의 카드 — 제목 / 본문 줄 / 흐린 마지막 줄. 빈 줄은 건너뛴다 */
-export function renderTooltip(el: HTMLDivElement, content: TooltipContent) {
+function renderTooltip(el: HTMLDivElement, content: TooltipContent) {
   el.textContent = ''
 
   const title = document.createElement('div')
@@ -72,7 +72,7 @@ export function moveTooltip(el: HTMLDivElement | null, event: MouseEvent) {
 }
 
 /** 화면 좌표(clientX/Y) 옆에 놓는다 */
-export function placeTooltip(el: HTMLDivElement | null, clientX: number, clientY: number) {
+function placeTooltip(el: HTMLDivElement | null, clientX: number, clientY: number) {
   if (!el) return
   const host = el.offsetParent as HTMLElement | null
   const rect = host?.getBoundingClientRect() ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight)

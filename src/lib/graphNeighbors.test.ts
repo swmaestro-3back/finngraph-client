@@ -31,21 +31,27 @@ const links: GraphLink[] = [
 describe('classifyNeighbors', () => {
   it('관계 타입과 방향으로 나눈다', () => {
     const n = classifyNeighbors('me', links, byId)
-    expect(n.suppliers.map((x) => x.id)).toEqual(['sup'])
-    expect(n.customers.map((x) => x.id)).toEqual(['cus'])
-    expect(n.acquired.map((x) => x.id)).toEqual(['acq'])
-    expect(n.acquirers.map((x) => x.id)).toEqual(['own'])
-    expect(n.investees.map((x) => x.id)).toEqual(['inv'])
-    expect(n.investors.map((x) => x.id)).toEqual(['fund'])
-    expect(n.themes.map((x) => x.id)).toEqual(['theme'])
-    expect(n.events.map((x) => x.id)).toEqual(['ev'])
+    expect(n.suppliers.map((x) => x.node.id)).toEqual(['sup'])
+    expect(n.customers.map((x) => x.node.id)).toEqual(['cus'])
+    expect(n.acquired.map((x) => x.node.id)).toEqual(['acq'])
+    expect(n.acquirers.map((x) => x.node.id)).toEqual(['own'])
+    expect(n.investees.map((x) => x.node.id)).toEqual(['inv'])
+    expect(n.investors.map((x) => x.node.id)).toEqual(['fund'])
+    expect(n.themes.map((x) => x.node.id)).toEqual(['theme'])
+    expect(n.events.map((x) => x.node.id)).toEqual(['ev'])
     expect(n.members).toEqual([])
     expect(n.mentioners).toEqual([])
   })
 
+  it('이웃마다 그 이웃으로 이어진 간선을 함께 든다 — 중복이면 먼저 온 간선', () => {
+    const n = classifyNeighbors('me', links, byId)
+    expect(n.suppliers[0].link.id).toBe('l1')
+    expect(n.customers[0].link.id).toBe('l2')
+  })
+
   it('테마·이벤트 노드에서 보면 들어오는 쪽이 채워진다', () => {
-    expect(classifyNeighbors('theme', links, byId).members.map((x) => x.id)).toEqual(['me'])
-    expect(classifyNeighbors('ev', links, byId).mentioners.map((x) => x.id)).toEqual(['me'])
+    expect(classifyNeighbors('theme', links, byId).members.map((x) => x.node.id)).toEqual(['me'])
+    expect(classifyNeighbors('ev', links, byId).mentioners.map((x) => x.node.id)).toEqual(['me'])
   })
 
   it('간선이 없으면 빈 묶음', () => {
@@ -57,6 +63,6 @@ describe('classifyNeighbors', () => {
     expect(() => classifyNeighbors('me', [...links, badLink], byId)).not.toThrow()
     // 나머지 분류에는 영향이 없다
     const n = classifyNeighbors('me', [...links, badLink], byId)
-    expect(n.suppliers.map((x) => x.id)).toEqual(['sup'])
+    expect(n.suppliers.map((x) => x.node.id)).toEqual(['sup'])
   })
 })

@@ -1,157 +1,179 @@
-import { useMemo } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import type { CandlePeriod } from '@/lib/apiTypes'
-import type { CandleRes, ThemeStockRes } from '@/lib/apiTypes'
-import { changeColorClass, formatChange, formatChangeOrDash, formatPriceOrDash } from '@/lib/format'
+import { useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { ChipGroup } from '@/components/layout/ChipGroup'
+import { StockLogo } from '@/components/stock/StockLogo'
+import { ChangeStatusTag } from '@/components/theme/ChangeStatusTag'
+import { LeaderReturnChart } from '@/components/theme/LeaderReturnChart'
+import type { ThemeStockRes } from '@/lib/apiTypes'
+import {
+  changeColorClass,
+  formatChangeOrDash,
+  formatCompactKrw,
+  formatPriceOrDash,
+} from '@/lib/format'
+import { DEFAULT_BAND, buildReturnChart } from '@/lib/leaderChart'
 import { fromState } from '@/lib/navigation'
-import { useCandles } from '@/lib/queries/useCandles'
+import { useCandlesCached } from '@/lib/queries/useCandles'
+import { changeStatusTag, marketCapLeaders } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
-const CHART_W = 560
-const CHART_H = 110
-const PAD = 6
+// 일봉을 한 번 받아 두고 칩에 따라 잘라 쓴다 — 1개월 ≈ 20거래일
+const RANGES = [
+  { key: '3M', label: '3개월', limit: 60 },
+  { key: '6M', label: '6개월', limit: 120 },
+  // 쌓인 일봉이 1년에 못 미치는 동안은 있는 만큼만 그린다
+  { key: '1Y', label: '1년', limit: 245 },
+] as const
+type RangeKey = (typeof RANGES)[number]['key']
 
-function toPctSeries(candles: CandleRes[]): number[] {
-  const base = candles[0]?.close || 1
-  return candles.map((c) => ((c.close - base) / base) * 100)
-}
+// 가장 긴 구간의 첫날에도 밴드가 나오도록 이동평균 창만큼 더 받는다
+const CANDLE_LIMIT = Math.max(...RANGES.map((r) => r.limit)) + DEFAULT_BAND.window - 1
 
-function linePath(pcts: number[], min: number, max: number): string {
-  const range = max - min || 1
-  return pcts
-    .map((p, i) => {
-      const x = ((i / (pcts.length - 1)) * CHART_W).toFixed(1)
-      const y = (PAD + (1 - (p - min) / range) * (CHART_H - PAD * 2)).toFixed(1)
-      return `${i === 0 ? 'M' : 'L'}${x} ${y}`
-    })
-    .join('')
-}
+/** 비중 막대 — 선과 같은 색을 연한 채움 + 또렷한 테두리로 쓴다 (뉴스 "분석" 뱃지와 같은 틀) */
+const BAR_CLASSES = [
+  'border-series-1/60 bg-series-1/15',
+  'border-series-2/60 bg-series-2/15',
+  'border-series-3/60 bg-series-3/15',
+]
 
 interface LeaderStockCardProps {
+  themeName: string
   stocks: ThemeStockRes[]
-  period: CandlePeriod
+  /** 다른 카드 안에 넣을 때 — 카드 면을 빼고 윗선으로만 구분하며, 제목에서 테마명을 뺀다 */
+  embedded?: boolean
 }
 
-export function LeaderStockCard({ stocks, period }: LeaderStockCardProps) {
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
+export function LeaderStockCard({ themeName, stocks, embedded = false }: LeaderStockCardProps) {
+  const { pathname, search } = useLocation()
+  const [hoveredTicker, setHoveredTicker] = useState<string | null>(null)
+  const [rangeKey, setRangeKey] = useState<RangeKey>('6M')
 
-  const top3 = stocks.slice(0, 3)
-  const leader: ThemeStockRes | undefined = top3[0]
+  const leaders = useMemo(() => marketCapLeaders(stocks), [stocks])
+  const range = RANGES.find((r) => r.key === rangeKey) ?? RANGES[1]
 
-  const { data: candles } = useCandles(leader?.ticker ?? null, period)
+  const first = useCandlesCached(leaders[0]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
+  const second = useCandlesCached(leaders[1]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
+  const third = useCandlesCached(leaders[2]?.stock.ticker ?? null, 'D', CANDLE_LIMIT)
 
-  const chart = useMemo(() => {
-    if (!candles || candles.length < 2) return null
-    const pcts = toPctSeries(candles)
-    const min = Math.min(...pcts)
-    const max = Math.max(...pcts)
-    return {
-      leaderPath: linePath(pcts, min, max),
-      zeroY:
-        min <= 0 && max >= 0
-          ? PAD + (1 - (0 - min) / (max - min || 1)) * (CHART_H - PAD * 2)
-          : null,
-      periodReturn: pcts[pcts.length - 1],
-    }
-  }, [candles])
+  // 세 종목을 같은 세로축에 올려야 누가 더 올랐는지 선 높이로 비교된다
+  const chart = useMemo(
+    () => buildReturnChart([first.data, second.data, third.data], range.limit),
+    [first.data, second.data, third.data, range.limit],
+  )
 
-  if (!leader) return null
+  if (leaders.length === 0) return null
 
-  const openStock = (ticker: string) =>
-    navigate(`/stock/${ticker}`, { state: fromState(pathname) })
+  const tickers = leaders.map((l) => l.stock.ticker)
+  const groupLabel = leaders.length === 3 ? '3대장' : '대장주'
+  // 행에 올려 둔 동안만 그 종목을 도드라지게 하고 나머지 선을 흐린다
+  const emphasizedIndex = hoveredTicker === null ? -1 : tickers.indexOf(hoveredTicker)
+  const candlesLoading = [first, second, third].some((c) => c.loading)
 
   return (
-    <section className="mt-4 card-surface p-5">
-      <div className="mb-[9px] flex flex-wrap items-baseline justify-between gap-2">
+    <section className={embedded ? 'mt-4 border-t border-border pt-4' : 'mt-4 card-surface p-5'}>
+      <div className="mb-[9px] flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-baseline gap-[9px]">
-          <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">대장주</h2>
-          <button
-            type="button"
-            onClick={() => openStock(leader.ticker)}
-            className="cursor-pointer text-sm font-semibold text-foreground hover:text-primary hover:underline"
-          >
-            {leader.name}
-          </button>
-          <span className="font-mono text-sm font-medium text-foreground">
-            {formatPriceOrDash(leader.price)}
-          </span>
-          <span
-            className={cn('font-mono text-xs font-medium', changeColorClass(leader.change ?? 0))}
-          >
-            {formatChangeOrDash(leader.change)}
-          </span>
-        </div>
-        {chart && (
+          <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
+            {/* 종목이 셋이 안 되는 테마에서 "3대장"이라 부르지 않는다 */}
+            {embedded ? groupLabel : `${themeName} ${groupLabel}`}
+          </h2>
           <span className="text-caption text-muted-foreground">
-            시가총액 기준 · 구간 수익률{' '}
-            <span className={cn('font-mono font-medium', changeColorClass(chart.periodReturn))}>
-              {formatChange(chart.periodReturn)}
-            </span>
+            시가총액 상위 <span className="font-mono tabular-nums">{leaders.length}</span>종목
           </span>
-        )}
-      </div>
-
-      <div className="mb-1.5 flex items-center justify-end gap-3 text-caption text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="h-0.5 w-4 rounded"
-            style={{ backgroundColor: 'var(--chart-1)' }}
-          />
-          {leader.name}
-        </span>
-      </div>
-      {chart ? (
-        <svg
-          viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-          preserveAspectRatio="none"
-          className="h-[110px] w-full"
-          role="img"
-          aria-label={`${leader.name}의 시작점 대비 수익률`}
-        >
-          {chart.zeroY !== null && (
-            <line
-              x1={0}
-              x2={CHART_W}
-              y1={chart.zeroY}
-              y2={chart.zeroY}
-              stroke="var(--border)"
-              strokeDasharray="2 4"
-              vectorEffect="non-scaling-stroke"
-            />
-          )}
-          <path
-            d={chart.leaderPath}
-            fill="none"
-            stroke="var(--chart-1)"
-            strokeWidth={1.8}
-            strokeLinejoin="round"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-      ) : (
-        <div className="h-[110px] w-full animate-pulse rounded-lg bg-muted" />
-      )}
-
-      {top3.length > 1 && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-surface-inset pt-3">
-          <span className="mr-[3px] text-caption text-muted-foreground">다음 주자</span>
-          {top3.slice(1).map((stock) => (
-            <button
-              key={stock.ticker}
-              type="button"
-              onClick={() => openStock(stock.ticker)}
-              className="flex cursor-pointer items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground hover:bg-surface-inset"
-            >
-              {stock.name}
-              <span className={cn('font-mono', changeColorClass(stock.change ?? 0))}>
-                {formatChangeOrDash(stock.change)}
-              </span>
-            </button>
-          ))}
         </div>
-      )}
+        <ChipGroup options={RANGES} value={rangeKey} onChange={setRangeKey} />
+      </div>
+
+      <div className="grid gap-x-5 gap-y-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <ol className="flex flex-col gap-1" onMouseLeave={() => setHoveredTicker(null)}>
+          {leaders.map(({ stock, share }, i) => {
+            const tag = changeStatusTag(stock.changeStatus)
+            return (
+              <li
+                key={stock.ticker}
+                onMouseEnter={() => setHoveredTicker(stock.ticker)}
+                className="group relative rounded-lg px-[9px] py-5 hover:bg-muted"
+              >
+                {/* 행 전체가 종목 상세로 가는 링크 — 올려 두는 동안 차트에서 그 종목 선을 도드라지게 한다 */}
+                <Link
+                  to={`/stock/${stock.ticker}`}
+                  state={fromState(pathname + search)}
+                  aria-label={`${stock.name} 종목 상세 보기`}
+                  onFocus={() => setHoveredTicker(stock.ticker)}
+                  onBlur={() => setHoveredTicker(null)}
+                  className="absolute inset-0 rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
+                />
+                <div className="pointer-events-none relative flex items-center gap-[9px]">
+                  <span className="w-3 shrink-0 text-center font-mono text-[13px] font-semibold text-foreground-tertiary">
+                    {i + 1}
+                  </span>
+                  <StockLogo ticker={stock.ticker} size={28} reserveSpace />
+                  {/* 폭이 모자라면 종목명을 자르기 전에 시장·상태 라벨부터 다음 줄로 넘겨 숨긴다 */}
+                  <span className="flex h-6 min-w-0 flex-1 flex-wrap items-center gap-x-[9px] overflow-hidden">
+                    <span className="max-w-full truncate text-[15px] leading-6 font-semibold text-foreground group-hover:underline">
+                      {stock.name}
+                    </span>
+                    <span className="shrink-0 rounded bg-surface-inset px-1.5 py-0.5 text-micro leading-none tracking-[0.4px] text-muted-foreground">
+                      {stock.market}
+                    </span>
+                    {tag && <ChangeStatusTag tag={tag} className="shrink-0" />}
+                  </span>
+                  <span className="shrink-0 font-mono text-[15px] font-medium text-foreground">
+                    {formatPriceOrDash(stock.price)}
+                  </span>
+                  <span
+                    className={cn(
+                      'w-[62px] shrink-0 text-right font-mono text-[13px] font-medium',
+                      stock.change === null
+                        ? 'text-foreground-tertiary'
+                        : changeColorClass(stock.change),
+                    )}
+                  >
+                    {formatChangeOrDash(stock.change)}
+                  </span>
+                </div>
+                <div className="pointer-events-none relative mt-3.5 flex items-baseline justify-between gap-3 pl-[21px] text-[13px] text-muted-foreground">
+                  <span className="whitespace-nowrap">
+                    시총{' '}
+                    <span className="font-mono text-foreground-secondary">
+                      {formatCompactKrw(stock.marketCap)}
+                    </span>
+                  </span>
+                  {share !== null && (
+                    <span className="whitespace-nowrap">
+                      테마 내 비중{' '}
+                      <span className="font-mono font-medium tabular-nums text-foreground-secondary">
+                        {share.toFixed(1)}%
+                      </span>
+                    </span>
+                  )}
+                </div>
+                {share !== null && (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none relative mt-3 ml-[21px] h-3 overflow-hidden rounded-[3px] bg-surface-inset"
+                  >
+                    {/* 막대 색이 차트에서 이 종목의 선 색이다 */}
+                    <span
+                      className={cn('block h-full rounded-[3px] border', BAR_CLASSES[i])}
+                      style={{ width: `max(${share}%, 6px)` }}
+                    />
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ol>
+
+        <LeaderReturnChart
+          chart={chart}
+          leaders={leaders}
+          rangeLabel={range.label}
+          groupLabel={groupLabel}
+          emphasizedIndex={emphasizedIndex}
+          candlesLoading={candlesLoading}
+        />
+      </div>
     </section>
   )
 }

@@ -167,7 +167,7 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
               <section className="mt-8 border-t border-border pt-6">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <h3 className="text-sm font-semibold text-foreground">관계 그래프</h3>
-                  {/* 종목 상세 페이지의 "지식그래프에서 보기"와 같은 버튼 — 첫 관련 종목을 중심으로 연다 */}
+                  {/* 첫 관련 종목을 중심으로 기업 그래프를 연다 */}
                   {graphTicker && (
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/graph/${graphTicker}`} onClick={() => onOpenChange(false)}>

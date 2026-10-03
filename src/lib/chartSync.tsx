@@ -125,8 +125,8 @@ export function syncMarks(
         kind === 'axis-label' ? (
           <AxisLabelCursor />
         ) : kind === 'bar' ? (
-          /* --foreground(#0a0b0d) 4% — recharts cursor는 객체 리터럴로만 받는다 */
-          { fill: 'rgba(10,11,13,0.04)' }
+          /* 잉크를 옅게 깐 막대 강조 — recharts cursor는 객체 리터럴로만 받는다 */
+          { fill: 'var(--chart-cursor)' }
         ) : (
           { stroke: RULE, strokeWidth: 1 }
         )

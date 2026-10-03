@@ -1,21 +1,13 @@
-import { ApiError } from '@/lib/api'
+import { ApiError, TIMEOUT_MS, parseJsonBody, qs, toFetchError } from '@/lib/api'
 
 const KG_API_BASE = (
   (import.meta.env.VITE_KG_API_BASE_URL as string | undefined) ?? '/kg/api'
 ).replace(/\/+$/, '')
 
-const TIMEOUT_MS = 10_000
-
-function qs(params?: Record<string, string | number | undefined>): string {
-  if (!params) return ''
-  const entries = Object.entries(params).filter(
-    (pair): pair is [string, string | number] => pair[1] !== undefined,
-  )
-  if (entries.length === 0) return ''
-  const search = new URLSearchParams(entries.map(([k, v]) => [k, String(v)]))
-  return `?${search.toString()}`
-}
-
+/**
+ * kg-api 전용 GET — 메인 백엔드와 달리 인증·refresh·엔벨로프가 없고,
+ * 에러 본문이 FastAPI `detail` 문자열이라 request()를 그대로 쓰지 않는다.
+ */
 export async function getKgData<T>(
   path: string,
   params?: Record<string, string | number | undefined>,
@@ -26,10 +18,7 @@ export async function getKgData<T>(
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
   } catch (e) {
-    if (e instanceof DOMException && e.name === 'TimeoutError') {
-      throw new ApiError('TIMEOUT', 0, `요청 시간 초과: ${path}`)
-    }
-    throw new ApiError('NETWORK_ERROR', 0, `네트워크 오류: ${path}`)
+    throw toFetchError(e, path)
   }
 
   if (!res.ok) {
@@ -47,9 +36,5 @@ export async function getKgData<T>(
     )
   }
 
-  try {
-    return (await res.json()) as T
-  } catch {
-    throw new ApiError('PARSE_ERROR', res.status, `응답 JSON 파싱 실패: ${path}`)
-  }
+  return parseJsonBody<T>(res, path)
 }

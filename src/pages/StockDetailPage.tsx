@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronUp, CircleAlert, RotateCw } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ChevronUp } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { ChipGroup } from '@/components/layout/ChipGroup'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { AnnualCharts } from '@/components/stock/AnnualCharts'
 import { CompanyOverview } from '@/components/stock/CompanyOverview'
 import { ContractSection } from '@/components/stock/ContractSection'
@@ -9,12 +11,12 @@ import { FinancialTable } from '@/components/stock/FinancialTable'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { IssueNewsPanel } from '@/components/stock/IssueNewsPanel'
 import { PriceIssueCard } from '@/components/stock/PriceIssueCard'
+import { StockLogo } from '@/components/stock/StockLogo'
+import { StockMetricsCard } from '@/components/stock/StockMetricsCard'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { SupplyStreakBadges } from '@/components/stock/SupplyStreakBadges'
 import { ThemePeerComparison } from '@/components/stock/ThemePeerComparison'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
-import { Button } from '@/components/ui/button'
-import { FilterChip } from '@/components/ui/filter-chip'
 import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
 import {
   ANNUAL_PERIODS,
@@ -31,11 +33,8 @@ import {
 } from '@/lib/apiTypes'
 import {
   changeColorClass,
-  formatAmountOrDash,
-  formatChange,
   formatChangeOrDash,
   formatPriceOrDash,
-  toEok,
 } from '@/lib/format'
 import { fromState, useBackTarget } from '@/lib/navigation'
 import { useCandles } from '@/lib/queries/useCandles'
@@ -46,13 +45,40 @@ import { useStockNews } from '@/lib/queries/useStockNews'
 import { lastTradingDate } from '@/lib/referenceDate'
 import { cn } from '@/lib/utils'
 
-interface StatTile {
-  label: string
-  value: string
-}
-
 // 섹션 사이 구분선 — 접힌 상태에서도 남아 어디서 다음 섹션이 시작하는지 보여준다
 const SECTION_HEADER = 'mb-[9px] mt-6 border-t border-border pt-6'
+
+const SUPPLY_FETCH_LIMIT = Math.max(...SUPPLY_RANGES.map((r) => r.limit))
+
+/** 접히는 섹션 제목 줄 — 펼친 동안만 오른쪽 옵션(칩)을 보이고, 화살표로 접고 편다 */
+function CollapsibleSectionHeader({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string
+  open: boolean
+  onToggle: () => void
+  children?: ReactNode
+}) {
+  return (
+    <div className={`${SECTION_HEADER} flex items-center justify-between`}>
+      <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">{title}</h2>
+      <div className="flex items-center gap-3">
+        {open && children}
+        <button
+          type="button"
+          onClick={onToggle}
+          className="cursor-pointer text-muted-foreground"
+          aria-label={open ? `${title} 접기` : `${title} 펼치기`}
+        >
+          <ChevronUp className={cn('size-4 transition-transform', !open && 'rotate-180')} />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function StockDetailPage() {
   const { stockCode } = useParams()
@@ -69,7 +95,8 @@ export default function StockDetailPage() {
 
   const { data: stock, loading, error, refetch } = useStockDetail(code)
   const { data: candleRes } = useCandles(code, period)
-  const { data: flowRes } = useInvestorFlows(code, SUPPLY_RANGE_LIMITS[supplyRange])
+  // 수급은 가장 긴 기간으로 한 번 받아 두고 칩에 따라 잘라 쓴다 — 뱃지(연속 일수·보유율 증감)는 칩과 무관하게 전체를 본다
+  const { data: flowRes } = useInvestorFlows(code, SUPPLY_FETCH_LIMIT)
   const { data: financialRows } = useFinancials(code)
   const { data: newsRows, loading: newsLoading } = useStockNews(code)
 
@@ -85,7 +112,10 @@ export default function StockDetailPage() {
         : [],
     [candleRes, newsRows, newsLoading, period],
   )
-  const supply = useMemo(() => (flowRes ?? []).map(toSupplyPoint), [flowRes])
+  const supply = useMemo(
+    () => (flowRes ?? []).slice(-SUPPLY_RANGE_LIMITS[supplyRange]).map(toSupplyPoint),
+    [flowRes, supplyRange],
+  )
   // 연간 실적 차트가 보는 연도 범위 — memo 자식이 헛돌지 않도록 참조를 유지 (표는 항상 전체 기간)
   const annualRows = useMemo(
     () => sliceRecentYears(financialRows ?? [], yearsFor(annualPeriod)),
@@ -100,32 +130,6 @@ export default function StockDetailPage() {
     dated.sort((a, b) => new Date(b.collectedAt).getTime() - new Date(a.collectedAt).getTime())
     return dated[0] ?? null
   }, [newsRows, newsLoading])
-
-  const statTiles: StatTile[] = useMemo(() => {
-    if (!stock) return []
-    return [
-      { label: '시가총액', value: `${formatAmountOrDash(toEok(stock.marketCap))}억` },
-      { label: 'PER', value: stock.per === null ? '—' : `${stock.per.toFixed(2)}배` },
-      { label: 'PBR', value: stock.pbr === null ? '—' : stock.pbr.toFixed(2) },
-      { label: 'ROE', value: stock.roe === null ? '—' : `${stock.roe.toFixed(2)}%` },
-      {
-        label: 'EPS',
-        value: stock.eps === null ? '—' : `${Math.round(stock.eps).toLocaleString('ko-KR')}원`,
-      },
-      {
-        label: '배당수익률',
-        value: stock.dividendYield === null ? '—' : `${stock.dividendYield.toFixed(2)}%`,
-      },
-      {
-        label: '외국인 보유율',
-        value: stock.foreignRatio === null ? '—' : `${stock.foreignRatio.toFixed(1)}%`,
-      },
-      {
-        label: '전년 대비 매출',
-        value: stock.revenueGrowth === null ? '—' : formatChange(stock.revenueGrowth),
-      },
-    ]
-  }, [stock])
 
   // 백엔드가 요청한 개수보다 적게 줄 수 있으므로(주봉·월봉 적재 이력이 짧음) 실제 마지막 캔들을 고른다
   useEffect(() => {
@@ -167,36 +171,22 @@ export default function StockDetailPage() {
       )}
 
       {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <h1 className="text-lg font-medium text-foreground">
-            {error.isNotFound ? '존재하지 않는 종목입니다' : '일시적인 오류'}
-          </h1>
-          <p className="text-body text-muted-foreground">
-            {error.isNotFound
-              ? `"${code}" 종목을 찾을 수 없습니다.`
-              : error.isRetryable
-                ? '일시적으로 데이터를 불러올 수 없습니다.'
-                : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isNotFound ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/stocks">주식 목록으로</Link>
-            </Button>
-          ) : (
-            error.isRetryable && (
-              <Button variant="outline" size="sm" onClick={refetch}>
-                <RotateCw data-icon="inline-start" />
-                다시 시도
-              </Button>
-            )
-          )}
-        </div>
+        <ErrorState
+          error={error}
+          onRetry={refetch}
+          notFound={{
+            title: '존재하지 않는 종목입니다',
+            message: `"${code}" 종목을 찾을 수 없습니다.`,
+            action: { to: '/stocks', label: '주식 목록으로' },
+          }}
+        />
       )}
 
       {!loading && !error && stock && (
         <>
           <div className="mb-3 flex flex-wrap items-baseline gap-[9px]">
+            {/* 행은 baseline 정렬이라 이미지만 가운데로 뺀다 — 장식이므로 대체 텍스트는 종목명(h1)에 맡긴다 */}
+            <StockLogo ticker={stock.ticker} className="self-center" />
             <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">
               {stock.name}
             </h1>
@@ -213,9 +203,13 @@ export default function StockDetailPage() {
             >
               {formatChangeOrDash(stock.change)}
             </span>
-            <Button variant="outline" size="sm" className="ml-auto" asChild>
-              <Link to={`/graph/${stock.ticker}`}>지식그래프에서 보기</Link>
-            </Button>
+            {/* 테마 대시보드의 "기업 그래프 →"와 같은 글자 링크 — 제목 줄이라 한 단계 크게 */}
+            <Link
+              to={`/graph/${stock.ticker}`}
+              className="ml-auto flex min-h-11 items-center text-sm font-semibold text-primary hover:underline md:min-h-0"
+            >
+              기업 그래프 →
+            </Link>
           </div>
 
           <CompanyOverview
@@ -237,19 +231,13 @@ export default function StockDetailPage() {
             </div>
           )}
 
-          <div className="mb-4 grid grid-cols-2 gap-[9px] md:grid-cols-4">
-            {statTiles.map((tile) => (
-              <div key={tile.label} className="rounded-xl bg-muted px-3 py-[9px]">
-                <div className="text-caption text-muted-foreground">{tile.label}</div>
-                <div className="font-mono text-sm font-medium leading-[1.3] text-foreground">
-                  {tile.value}
-                </div>
-              </div>
-            ))}
-          </div>
-
           <SupplyStreakBadges flows={flowRes ?? []} />
-          <ThemePeerComparison stock={stock} />
+
+          {/* 테마 비교(좌) · 투자지표(우) — 테마 비교가 없으면(null) 지표가 전체 폭을 쓴다 */}
+          <div className="mb-4 grid gap-4 lg:grid-cols-2 [&>*:only-child]:col-span-full">
+            <ThemePeerComparison stock={stock} />
+            <StockMetricsCard stock={stock} financials={financialRows} flows={flowRes} />
+          </div>
 
           {/* 캔들이 뉴스보다 먼저 오면 issues가 빈 배열이라 이슈 레인이 days[0]에서 깨진다 — 둘 다 준비되면 그린다 */}
           {candles.length > 0 && issues.length > 0 ? (
@@ -288,36 +276,13 @@ export default function StockDetailPage() {
             className={SECTION_HEADER}
           />
 
-          <div className={`${SECTION_HEADER} flex items-center justify-between`}>
-            <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
-              투자자별 수급
-            </h2>
-            <div className="flex items-center gap-3">
-              {supplyOpen && (
-                <div className="flex gap-1.5">
-                  {SUPPLY_RANGES.map((r) => (
-                    <FilterChip
-                      key={r.key}
-                      active={supplyRange === r.key}
-                      onClick={() => setSupplyRange(r.key)}
-                    >
-                      {r.label}
-                    </FilterChip>
-                  ))}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setSupplyOpen((open) => !open)}
-                className="cursor-pointer text-muted-foreground"
-                aria-label={supplyOpen ? '투자자별 수급 접기' : '투자자별 수급 펼치기'}
-              >
-                <ChevronUp
-                  className={cn('size-4 transition-transform', !supplyOpen && 'rotate-180')}
-                />
-              </button>
-            </div>
-          </div>
+          <CollapsibleSectionHeader
+            title="투자자별 수급"
+            open={supplyOpen}
+            onToggle={() => setSupplyOpen((open) => !open)}
+          >
+            <ChipGroup options={SUPPLY_RANGES} value={supplyRange} onChange={setSupplyRange} />
+          </CollapsibleSectionHeader>
           {supplyOpen &&
             (supply.length > 0 ? (
               // 기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록
@@ -326,38 +291,13 @@ export default function StockDetailPage() {
               <p className="text-caption text-muted-foreground">수급 데이터가 없습니다.</p>
             ))}
 
-          <div className={`${SECTION_HEADER} flex items-center justify-between`}>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">
-                연간 실적
-              </h2>
-            </div>
-            <div className="flex items-center gap-3">
-              {annualOpen && (
-                <div className="flex gap-1.5">
-                  {ANNUAL_PERIODS.map((p) => (
-                    <FilterChip
-                      key={p.key}
-                      active={annualPeriod === p.key}
-                      onClick={() => setAnnualPeriod(p.key)}
-                    >
-                      {p.label}
-                    </FilterChip>
-                  ))}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setAnnualOpen((open) => !open)}
-                className="cursor-pointer text-muted-foreground"
-                aria-label={annualOpen ? '연간 실적 접기' : '연간 실적 펼치기'}
-              >
-                <ChevronUp
-                  className={cn('size-4 transition-transform', !annualOpen && 'rotate-180')}
-                />
-              </button>
-            </div>
-          </div>
+          <CollapsibleSectionHeader
+            title="연간 실적"
+            open={annualOpen}
+            onToggle={() => setAnnualOpen((open) => !open)}
+          >
+            <ChipGroup options={ANNUAL_PERIODS} value={annualPeriod} onChange={setAnnualPeriod} />
+          </CollapsibleSectionHeader>
           {annualOpen &&
             (annualRows.length > 0 ? (
               // 종목·기간이 바뀌면 리마운트 — 고정(pin)된 인덱스가 새 데이터 길이를 벗어나지 않도록

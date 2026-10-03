@@ -8,7 +8,7 @@ export interface ContractSummary {
   latestDate: string | null
 }
 
-export const CONTRACT_WINDOW_DAYS = 365
+const CONTRACT_WINDOW_DAYS = 365
 
 function shiftDate(isoDate: string, days: number): string {
   const [y, m, d] = isoDate.split('-').map(Number)

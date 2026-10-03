@@ -1,12 +1,13 @@
+import { MarketStatusBadge } from '@/components/theme/MarketStatusBadge'
 import { ThemeMetricHelp } from '@/components/theme/ThemeMetricHelp'
 import { TreemapLegend } from '@/components/theme/TreemapLegend'
 import { FilterChip } from '@/components/ui/filter-chip'
 import type { ThemeMarketRes } from '@/lib/apiTypes'
-import { formatLocalDate, formatLocalTime, useNow } from '@/lib/marketClock'
+import { formatLocalDate, formatLocalTime, isKrxOpen, useNow } from '@/lib/marketClock'
 import { HOT_THEME_COUNTS } from '@/lib/queries/useHotThemes'
 import { formatTradingDate, priceBasisSuffix } from '@/lib/referenceDate'
 
-interface TreemapToolbarProps {
+interface DashboardToolbarProps {
   shownCount: number
   market: ThemeMarketRes | null
   referenceDate: string | null
@@ -26,7 +27,7 @@ function Divider() {
   )
 }
 
-export function TreemapToolbar({
+export function DashboardToolbar({
   shownCount,
   market,
   referenceDate,
@@ -36,7 +37,7 @@ export function TreemapToolbar({
   onToggleFavorites,
   maxUp,
   maxDown,
-}: TreemapToolbarProps) {
+}: DashboardToolbarProps) {
   const now = useNow()
   const baseDate = market?.baseDate ?? referenceDate
   const suffix = priceBasisSuffix(market)
@@ -45,15 +46,18 @@ export function TreemapToolbar({
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div>
         <h1 className="text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">
-          테마 트리맵
+          테마 대시보드
         </h1>
         <div className="mt-2 flex flex-col gap-1">
-          <time
-            dateTime={now.toISOString()}
-            className="font-mono text-sm font-medium tabular-nums text-foreground"
-          >
-            {formatLocalDate(now)} {formatLocalTime(now)}
-          </time>
+          <div className="flex flex-wrap items-center gap-2">
+            <time
+              dateTime={now.toISOString()}
+              className="font-mono text-sm font-medium tabular-nums text-foreground"
+            >
+              {formatLocalDate(now)} {formatLocalTime(now)}
+            </time>
+            <MarketStatusBadge open={isKrxOpen(now)} />
+          </div>
           <p className="flex flex-wrap items-center gap-y-1 text-body text-muted-foreground">
             {baseDate ? (
               <span>
