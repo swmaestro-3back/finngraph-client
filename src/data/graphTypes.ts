@@ -1,11 +1,5 @@
 export type EntityType = "company" | "theme" | "event";
 
-export const LABEL_TO_TYPE: Record<string, EntityType> = {
-  COMPANY: "company",
-  THEME: "theme",
-  EVENT: "event",
-};
-
 export type Predicate = "SUPPLIES_TO" | "ACQUIRES" | "INVESTS_IN" | "BELONGS_TO" | "HAS_EVENT";
 
 export type GraphFocus =
