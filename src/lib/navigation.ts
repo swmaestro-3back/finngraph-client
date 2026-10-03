@@ -13,6 +13,7 @@ function pathLabel(pathname: string): string | null {
   if (pathname === '/themes') return '테마 목록'
   if (pathname === '/stocks') return '주식 목록'
   if (pathname === '/graph') return '기업 그래프'
+  if (pathname === '/calendar') return '캘린더'
   if (pathname.startsWith('/theme/')) return '테마 상세'
   if (pathname.startsWith('/stock/')) return '주식 상세'
   return null
