@@ -2,7 +2,7 @@ import { COLOR_SATURATION_PCT } from '@/lib/treemapColor'
 
 export function ThemeLegend() {
   return (
-    <div className="fg-tlegend">
+    <div className="fg-tlegend fg-reveal">
       <span className="fg-tlegend__title">트리맵 보는 법</span>
       <span className="fg-tlegend__scale">
         <span className="fg-num fg-down">−{COLOR_SATURATION_PCT}%</span>

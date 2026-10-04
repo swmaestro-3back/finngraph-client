@@ -56,7 +56,7 @@ export function ThemeMembers({ stocks, loading, error, onRetry, leaderTicker, fr
   const shown = showAll ? rows : rows.slice(0, MEMBER_LIMIT)
   return (
     <>
-      <ul className="fg-mlist">
+      <ul className="fg-mlist fg-reveal">
         {shown.map((row) => (
           <li key={row.ticker}>
             <Link to={stockPath(row.ticker)} state={fromState(from)}>
@@ -80,7 +80,9 @@ export function ThemeMembers({ stocks, loading, error, onRetry, leaderTicker, fr
         ))}
       </ul>
       {!showAll && rows.length > MEMBER_LIMIT && (
-        <Button onClick={() => setShowAll(true)}>테마 종목 {rows.length}개 모두 보기</Button>
+        <Button className="fg-reveal" onClick={() => setShowAll(true)}>
+          테마 종목 {rows.length}개 모두 보기
+        </Button>
       )}
     </>
   )

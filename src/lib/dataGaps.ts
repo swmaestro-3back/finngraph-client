@@ -12,11 +12,6 @@ export const GAPS = {
     needs: '종목 응답에 52주 최고·최저와 날짜, 신고가·신저가 여부, 변동액, 당일 거래대금과 평소 대비 배수, 시장 안 시가총액 순위',
     owners: ['backend'],
   },
-  'theme-weighted-change': {
-    title: '테마 시가총액 가중 등락률',
-    needs: '테마 응답에 시가총액 가중(지수 기준) 등락률과 그 기준의 핫테마 선정',
-    owners: ['backend', 'etl'],
-  },
   'stock-themes': {
     title: '종목 소속 테마',
     needs: '종목 상세에 소속 테마 전체(id·이름·표시 순서)',

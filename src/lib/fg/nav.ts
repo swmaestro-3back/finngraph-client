@@ -51,13 +51,6 @@ export function outletKey(pathname: string): string {
   return REDESIGNED_BASES.find((base) => under(pathname, base)) ?? pathname
 }
 
-export const KEEP_SCROLL = { keepScroll: true } as const
-
-export function keepsScroll(state: unknown, navigationType: string): boolean {
-  if (navigationType === 'POP' || typeof state !== 'object' || state === null) return false
-  return 'keepScroll' in state && state.keepScroll === true
-}
-
 export type AuthSlot = 'pending' | 'login' | 'menu'
 
 export function authSlot(status: AuthStatus, hasUser: boolean): AuthSlot {

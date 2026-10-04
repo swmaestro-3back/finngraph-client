@@ -18,6 +18,7 @@ import {
   tileGrade,
   toMapCount,
   visibleThemes,
+  weightedChangeOf,
   type ChangeOf,
 } from '@/lib/fg/themes'
 
@@ -27,6 +28,7 @@ function theme(id: number, patch: Partial<ThemeRes> = {}): ThemeRes {
     name: `테마${id}`,
     description: null,
     change: null,
+    weightedChange: null,
     tradingValue: null,
     w1: null,
     m1: null,
@@ -55,28 +57,35 @@ const byChange: ChangeOf = (t) => t.change
 
 describe('parseThemeQuery / themeQueryString', () => {
   it('알 수 없는 값은 기본값으로 읽는다', () => {
-    expect(parseThemeQuery('?view=grid&sort=cap&count=15&fav=yes')).toEqual({
+    expect(parseThemeQuery('?view=grid&sort=cap&count=15&fav=yes&id=abc')).toEqual({
       view: null,
       sort: null,
       count: 20,
       fav: false,
+      id: null,
     })
   })
 
   it('정상 값을 그대로 읽는다', () => {
-    expect(parseThemeQuery('?view=map&sort=value&count=30&fav=1')).toEqual({
+    expect(parseThemeQuery('?view=map&sort=value&count=30&fav=1&id=59')).toEqual({
       view: 'map',
       sort: 'value',
       count: 30,
       fav: true,
+      id: 59,
     })
   })
 
   it('기본값은 URL에 남기지 않는다', () => {
-    expect(themeQueryString({ view: null, sort: null, count: 20, fav: false })).toBe('')
-    expect(themeQueryString({ view: 'table', sort: 'change', count: 10, fav: true })).toBe(
+    expect(themeQueryString({ view: null, sort: null, count: 20, fav: false, id: null })).toBe('')
+    expect(themeQueryString({ view: 'table', sort: 'change', count: 10, fav: true, id: null })).toBe(
       '?view=table&sort=change&count=10&fav=1',
     )
+  })
+
+  it('목록에서 고른 테마는 id 쿼리로 남긴다', () => {
+    expect(themeQueryString({ view: null, sort: null, count: 20, fav: false, id: 1016 })).toBe('?id=1016')
+    expect(themeQueryString({ view: 'table', sort: null, count: 20, fav: false, id: 7 })).toBe('?view=table&id=7')
   })
 
   it('표시 개수는 10·20·30만 받는다', () => {
@@ -90,6 +99,7 @@ describe('parseThemeId', () => {
   it('양의 정수만 테마 id로 읽는다', () => {
     expect(parseThemeId('59')).toBe(59)
     expect(parseThemeId(undefined)).toBeNull()
+    expect(parseThemeId(null)).toBeNull()
     expect(parseThemeId('0')).toBeNull()
     expect(parseThemeId('-3')).toBeNull()
     expect(parseThemeId('12a')).toBeNull()
@@ -97,21 +107,33 @@ describe('parseThemeId', () => {
   })
 })
 
+describe('weightedChangeOf', () => {
+  it('테마 등락률은 절사평균이 아닌 가중 등락률이다', () => {
+    expect(weightedChangeOf(theme(1, { change: 2.27, weightedChange: 1.41 }))).toBe(1.41)
+  })
+
+  it('가중 등락률이 없으면 절사평균이 있어도 null', () => {
+    expect(weightedChangeOf(theme(1, { change: 2.27, weightedChange: null }))).toBeNull()
+  })
+
+  it('필드가 없는 옛 응답이어도 null', () => {
+    const { weightedChange, ...old } = theme(1, { change: 2.27, weightedChange: 1 })
+    expect(weightedChange).toBe(1)
+    expect(weightedChangeOf(old as ThemeRes)).toBeNull()
+  })
+})
+
 describe('resolveView / resolveSort', () => {
-  it('등락률이 없으면 지도 없이 표, 거래대금 순만 쓴다', () => {
-    expect(resolveView('map', false, false)).toBe('table')
-    expect(resolveSort('change', false)).toBe('value')
-  })
-
   it('요청이 없으면 넓은 화면은 지도, 좁은 화면은 표', () => {
-    expect(resolveView(null, true, false)).toBe('map')
-    expect(resolveView(null, true, true)).toBe('table')
-    expect(resolveView('map', true, true)).toBe('map')
+    expect(resolveView(null, false)).toBe('map')
+    expect(resolveView(null, true)).toBe('table')
+    expect(resolveView('map', true)).toBe('map')
+    expect(resolveView('table', false)).toBe('table')
   })
 
-  it('등락률이 있으면 기본 정렬은 등락률 순', () => {
-    expect(resolveSort(null, true)).toBe('change')
-    expect(resolveSort('value', true)).toBe('value')
+  it('기본 정렬은 등락률 순', () => {
+    expect(resolveSort(null)).toBe('change')
+    expect(resolveSort('value')).toBe('value')
   })
 })
 
@@ -131,8 +153,14 @@ describe('sortThemes', () => {
     expect(sortThemes(list, 'change', byChange).map((t) => t.id)).toEqual([3, 2, 1, 4])
   })
 
-  it('등락률 출처가 없으면 등락률 순이어도 거래대금으로 정렬한다', () => {
-    expect(sortThemes(list, 'change', null).map((t) => t.id)).toEqual([2, 4, 1, 3])
+  it('가중 등락률 순은 가중 등락률로 정렬하고 없는 테마는 맨 뒤', () => {
+    const weighted = [
+      theme(1, { name: '가', change: 9, weightedChange: -2 }),
+      theme(2, { name: '나', change: -9, weightedChange: 3 }),
+      theme(3, { name: '다', change: 5, weightedChange: null }),
+      theme(4, { name: '라', change: 0, weightedChange: 0.5 }),
+    ]
+    expect(sortThemes(weighted, 'change', weightedChangeOf).map((t) => t.id)).toEqual([2, 4, 1, 3])
   })
 })
 
@@ -166,7 +194,7 @@ describe('defaultThemeId', () => {
 
   it('지도 칸이 없으면 표 규칙으로, 테마가 없으면 null', () => {
     expect(defaultThemeId('map', sorted, [], byChange)).toBe(1)
-    expect(defaultThemeId('table', [], [], null)).toBeNull()
+    expect(defaultThemeId('table', [], [], byChange)).toBeNull()
   })
 })
 
@@ -301,6 +329,14 @@ describe('tileAria / themeTiles', () => {
     expect(tiles[1].detail).toBeNull()
     expect(tiles[0].size).toBeGreaterThanOrEqual(tiles[1].size)
     expect(tiles[1].size).toBeGreaterThan(0)
+  })
+
+  it('가중 등락률이 없는 테마는 절사평균이 있어도 칸에서 뺀다', () => {
+    const tiles = themeTiles(
+      [theme(1, { change: 2, weightedChange: 1.5 }), theme(2, { change: 4, weightedChange: null })],
+      weightedChangeOf,
+    )
+    expect(tiles.map((t) => [t.id, t.change])).toEqual([[1, 1.5]])
   })
 })
 

@@ -27,6 +27,7 @@ export interface ThemeRes {
   name: string
   description: string | null
   change: number | null
+  weightedChange: number | null
   tradingValue: number | null
   w1: number | null
   m1: number | null
@@ -90,6 +91,21 @@ export interface ThemeIndexCandleRes {
   close: number
   volume: number
   tradeValue: number | null
+}
+
+export interface ThemeIndexRes {
+  date: string
+  close: number
+  change: number | null
+  r1w: number | null
+  r1m: number | null
+  r3m: number | null
+  r1y: number | null
+  ytd: number | null
+  high52w: number
+  low52w: number
+  fromHigh52w: number | null
+  streak: number
 }
 
 export interface ThemeMarketRes {
@@ -358,6 +374,7 @@ interface FavoriteThemeRes {
   id: number
   name: string
   change: number | null
+  weightedChange: number | null
   baseDate: string | null
   stockCount: number
   pricedCount?: number

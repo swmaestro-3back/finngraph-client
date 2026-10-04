@@ -4,6 +4,8 @@ import { intradayTime, type PriceBasis } from '@/lib/referenceDate'
 
 export const AUTO_REFRESH_MS = 5 * 60 * 1000
 
+export const REFRESH_CACHE_TTL_MS = AUTO_REFRESH_MS / 2
+
 const KST_DATE = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Seoul',
   year: 'numeric',

@@ -10,9 +10,12 @@ export interface BackTarget {
 /** 경로 → 뒤로가기 버튼에 쓸 라벨 (모르는 경로면 null) */
 export function pathLabel(pathname: string): string | null {
   if (pathname === '/') return '테마 대시보드'
-  if (pathname === '/themes' || pathname.startsWith('/themes/')) return '테마'
+  if (pathname === '/themes') return '테마'
+  if (pathname.startsWith('/themes/')) return '테마 상세'
   if (pathname === '/stocks') return '주식 목록'
-  if (pathname === '/graph') return '기업 그래프'
+  if (pathname.startsWith('/stocks/')) return '종목'
+  if (pathname === '/news' || pathname.startsWith('/news/')) return '뉴스'
+  if (pathname === '/graph' || pathname.startsWith('/graph/')) return '관계 탐색'
   if (pathname === '/calendar') return '캘린더'
   if (pathname.startsWith('/theme/')) return '테마 상세'
   if (pathname.startsWith('/stock/')) return '주식 상세'
@@ -24,12 +27,16 @@ export function fromState(pathname: string): { from: string } {
   return { from: pathname }
 }
 
-/** state.from이 있으면 그 페이지로, 없으면(직접 진입·새로고침) fallback으로 */
-export function useBackTarget(fallback: BackTarget): BackTarget {
-  const { state } = useLocation()
+export function resolveBackTarget(state: unknown, fallback: BackTarget): BackTarget {
   const from = (state as { from?: unknown } | null)?.from
   if (typeof from !== 'string') return fallback
 
-  const label = pathLabel(from.split('?')[0])
+  const label = pathLabel(from.split(/[?#]/)[0])
   return label ? { to: from, label } : fallback
+}
+
+/** state.from이 있으면 그 페이지로, 없으면(직접 진입·새로고침) fallback으로 */
+export function useBackTarget(fallback: BackTarget): BackTarget {
+  const { state } = useLocation()
+  return resolveBackTarget(state, fallback)
 }

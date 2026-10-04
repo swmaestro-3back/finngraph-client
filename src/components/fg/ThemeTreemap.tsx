@@ -80,7 +80,7 @@ export function ThemeTreemap({ tiles, selectedId, onSelect, label }: ThemeTreema
   }, [size, tiles])
 
   return (
-    <div ref={ref} className="fg-tmap" role="group" aria-label={label}>
+    <div ref={ref} className="fg-tmap fg-reveal" role="group" aria-label={label}>
       {nodes.map(({ tile, left, top, width, height }) => {
         const colors = paint(tile.change, stops)
         return (

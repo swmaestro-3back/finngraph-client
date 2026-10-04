@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useLocation, useNavigate, useNavigationType, useParams } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip } from '@/components/fg/FilterChip'
@@ -17,10 +17,7 @@ import { useAuth } from '@/lib/auth'
 import { useAutoRefresh } from '@/lib/autoRefresh'
 import { useFavorites } from '@/lib/favorites'
 import { formatChange } from '@/lib/format'
-import { KEEP_SCROLL, keepsScroll } from '@/lib/fg/nav'
-import { themePath } from '@/lib/fg/paths'
 import {
-  parseThemeId,
   parseThemeQuery,
   resolveSort,
   resolveView,
@@ -33,6 +30,7 @@ import {
   themeTiles,
   toMapCount,
   visibleThemes,
+  weightedChangeOf,
   type HeldDefault,
   type ThemeQuery,
   type ThemeSort,
@@ -46,9 +44,6 @@ import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { useGap } from '@/lib/useGap'
 
-const loadChange = import.meta.env.DEV
-  ? () => import('@/dev/fixtures/themes').then((m) => m.weightedChangeFixture)
-  : null
 const loadIssue = import.meta.env.DEV
   ? () => import('@/dev/fixtures/themes').then((m) => m.themeIssueFixture)
   : null
@@ -66,10 +61,9 @@ const COUNT_OPTIONS: readonly TabOption<string>[] = [
   { value: '20', label: '20개' },
   { value: '30', label: '30개' },
 ]
-const SUB = '같은 이슈로 묶인 종목 그룹이에요'
-const SUB_WITH_CHANGE = `${SUB} · 테마 등락률은 테마 종목의 시가총액 가중 평균이에요`
+const SUB = '같은 이슈로 묶인 종목 그룹이에요 · 테마 등락률은 테마 종목의 시가총액 가중 평균이에요'
 const FOOTNOTE =
-  '거래대금은 테마 종목 합 · 주도주는 테마가 움직인 방향으로 오늘 가장 크게 움직인 종목이에요(추천이 아니에요)'
+  '등락률은 테마 지수 기준 · 시가총액 가중(종목당 최대 25%) · 거래대금은 테마 종목 합 · 주도주는 테마가 움직인 방향으로 오늘 가장 크게 움직인 종목이에요(추천이 아니에요)'
 const MAP_LABEL = '테마 지도. 칸 크기는 등락률 크기, 색은 오늘 등락률이에요'
 
 interface ThemePick {
@@ -78,21 +72,17 @@ interface ThemePick {
 }
 
 export default function ThemesPage() {
-  const { themeId } = useParams()
-  const { pathname, search, state } = useLocation()
-  const navigationType = useNavigationType()
+  const { pathname, search } = useLocation()
   const navigate = useNavigate()
   const { status } = useAuth()
   const { has } = useFavorites()
   const narrow = useMediaQuery('(max-width: 767px)')
   const inline = useMediaQuery('(max-width: 1023px)')
   const query = useMemo(() => parseThemeQuery(search), [search])
-  const changeGap = useGap('theme-weighted-change', loadChange)
   const issueGap = useGap('theme-issue', loadIssue)
-  const changeOf = changeGap.status === 'mock' ? changeGap.data : null
   const issueOf = issueGap.status === 'mock' ? issueGap.data : null
-  const view = resolveView(query.view, changeOf !== null, narrow)
-  const sort = resolveSort(query.sort, changeOf !== null)
+  const view = resolveView(query.view, narrow)
+  const sort = resolveSort(query.sort)
   const favOn = query.fav && status === 'authenticated'
   const [showAll, setShowAll] = useState(false)
 
@@ -100,17 +90,17 @@ export default function ThemesPage() {
   const market = useThemeMarket()
   const hot = useHotThemes(query.count, view === 'map')
   const list = themes.data
-  const sorted = useMemo(() => sortThemes(list ?? [], sort, changeOf), [list, sort, changeOf])
+  const sorted = useMemo(() => sortThemes(list ?? [], sort, weightedChangeOf), [list, sort])
   const mapThemes = useMemo(() => {
     const items = hot.data ?? []
     return favOn ? items.filter((theme) => has('THEME', String(theme.id))) : items
   }, [hot.data, favOn, has])
-  const tiles = useMemo(() => (changeOf ? themeTiles(mapThemes, changeOf) : []), [mapThemes, changeOf])
+  const tiles = useMemo(() => themeTiles(mapThemes, weightedChangeOf), [mapThemes])
 
-  const requestedId = parseThemeId(themeId)
+  const requestedId = query.id
   const heldDefault = useRef<HeldDefault | null>(null)
-  const defaultId = stableDefaultId(heldDefault.current, view, sort, sorted, mapThemes, changeOf)
-  const defaultReady = changeGap.status !== 'loading' && (view === 'map' ? hot.data !== null : list !== null)
+  const defaultId = stableDefaultId(heldDefault.current, view, sort, sorted, mapThemes, weightedChangeOf)
+  const defaultReady = view === 'map' ? hot.data !== null : list !== null
   useEffect(() => {
     if (requestedId !== null || !defaultReady) return
     heldDefault.current = defaultId === null ? null : { view, sort, id: defaultId }
@@ -125,9 +115,9 @@ export default function ThemesPage() {
   const [pick, setPick] = useState<ThemePick | null>(null)
   const panelRef = useRef<HTMLElement>(null)
   const rowRef = useRef<HTMLDivElement>(null)
-  const [entryReveal] = useState(() => requestedId !== null && !keepsScroll(state, navigationType))
+  const [entryReveal] = useState(() => requestedId !== null)
   const entry = useRef<'wait' | 'loading' | 'done'>('wait')
-  const entryReady = list !== null && changeGap.status !== 'loading'
+  const entryReady = list !== null
   const selectedKey = selected?.id ?? null
   useEffect(() => {
     if (!entryReveal || entry.current === 'done') return
@@ -156,9 +146,9 @@ export default function ThemesPage() {
   const select = useCallback(
     (id: number) => {
       setPick({ id, reveal: view === 'map' && inline })
-      navigate({ pathname: themePath(id), search }, { replace: true, state: KEEP_SCROLL })
+      navigate({ pathname, search: themeQueryString({ ...query, id }) }, { replace: true })
     },
-    [navigate, search, view, inline],
+    [navigate, pathname, query, view, inline],
   )
   const setQuery = (patch: Partial<ThemeQuery>) =>
     navigate({ pathname, search: themeQueryString({ ...query, ...patch }) }, { replace: true })
@@ -185,7 +175,7 @@ export default function ThemesPage() {
   const listSkeleton = useDelayed(themes.loading && list === null)
   const mapSkeleton = useDelayed(hot.loading && hot.data === null)
   const basis = themeBasisLabel(market.data)
-  const lead = changeOf && list ? themeLead(list, changeOf) : null
+  const lead = list ? themeLead(list, weightedChangeOf) : null
   const leader = selected ? themeLeader(selected) : null
   const caption =
     view === 'map'
@@ -274,7 +264,7 @@ export default function ThemesPage() {
         onShowAll={() => setShowAll(true)}
         selectedId={selectedId}
         onSelect={select}
-        changeOf={changeOf}
+        changeOf={weightedChangeOf}
         issueOf={issueOf}
         expanded={inline ? expansion : null}
         selectedRef={rowRef}
@@ -284,7 +274,16 @@ export default function ThemesPage() {
 
   let panel: ReactNode = null
   if (selected) {
-    panel = <ThemePanel ref={panelRef} theme={selected} changeOf={changeOf} issueOf={issueOf} members={members} />
+    panel = (
+      <ThemePanel
+        key={selected.id}
+        ref={panelRef}
+        theme={selected}
+        changeOf={weightedChangeOf}
+        issueOf={issueOf}
+        members={members}
+      />
+    )
   } else if (requestedId !== null && list !== null) {
     panel = (
       <section className="fg-section fg-tdet fg-rail__wide">
@@ -304,7 +303,7 @@ export default function ThemesPage() {
       <header className="fg-pagehead">
         <div>
           <h1 className="fg-pagehead__title">테마</h1>
-          <p className="fg-pagehead__sub">{changeOf ? SUB_WITH_CHANGE : SUB}</p>
+          <p className="fg-pagehead__sub">{SUB}</p>
         </div>
         {basis && <span className="fg-pagehead__meta">{basis}</span>}
       </header>
@@ -315,7 +314,7 @@ export default function ThemesPage() {
               <h2 id="fg-themes-main" className="fg-section__title">
                 오늘 움직인 테마
               </h2>
-              {(changeOf || issueOf) && <MockBadge />}
+              {issueOf && <MockBadge />}
             </div>
             {lead && (
               <p className="fg-tlead">
@@ -330,14 +329,12 @@ export default function ThemesPage() {
             {list && list.length > 0 && (
               <div className="fg-ttools">
                 <div className="fg-ttools__l">
-                  {changeOf && (
-                    <Segment
-                      label="보기"
-                      options={VIEW_OPTIONS}
-                      value={view}
-                      onChange={(next) => setQuery({ view: next })}
-                    />
-                  )}
+                  <Segment
+                    label="보기"
+                    options={VIEW_OPTIONS}
+                    value={view}
+                    onChange={(next) => setQuery({ view: next })}
+                  />
                   {view === 'map' && (
                     <>
                       <Segment
@@ -351,7 +348,7 @@ export default function ThemesPage() {
                       </FilterChip>
                     </>
                   )}
-                  {view === 'table' && changeOf && (
+                  {view === 'table' && (
                     <Segment
                       label="정렬"
                       options={SORT_OPTIONS}

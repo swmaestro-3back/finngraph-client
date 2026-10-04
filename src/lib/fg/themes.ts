@@ -15,6 +15,8 @@ export const MEMBER_LIMIT = 10
 
 export type ChangeOf = (theme: ThemeRes) => number | null
 
+export const weightedChangeOf: ChangeOf = (theme) => theme.weightedChange ?? null
+
 export interface ThemeIssueRef {
   id: number
   title: string
@@ -28,6 +30,7 @@ export interface ThemeQuery {
   sort: ThemeSort | null
   count: ThemeMapCount
   fav: boolean
+  id: number | null
 }
 
 export function toMapCount(value: string | null): ThemeMapCount {
@@ -44,6 +47,7 @@ export function parseThemeQuery(search: string): ThemeQuery {
     sort: sort === 'change' || sort === 'value' ? sort : null,
     count: toMapCount(params.get('count')),
     fav: params.get('fav') === '1',
+    id: parseThemeId(params.get('id')),
   }
 }
 
@@ -53,29 +57,27 @@ export function themeQueryString(query: ThemeQuery): string {
   if (query.sort) params.set('sort', query.sort)
   if (query.count !== DEFAULT_MAP_COUNT) params.set('count', String(query.count))
   if (query.fav) params.set('fav', '1')
+  if (query.id !== null) params.set('id', String(query.id))
   const text = params.toString()
   return text ? `?${text}` : ''
 }
 
-export function parseThemeId(raw: string | undefined): number | null {
+export function parseThemeId(raw: string | null | undefined): number | null {
   if (!raw || !/^[1-9]\d*$/.test(raw)) return null
   const id = Number(raw)
   return Number.isSafeInteger(id) ? id : null
 }
 
-export function resolveView(requested: ThemeView | null, mapAvailable: boolean, narrow: boolean): ThemeView {
-  if (!mapAvailable) return 'table'
+export function resolveView(requested: ThemeView | null, narrow: boolean): ThemeView {
   return requested ?? (narrow ? 'table' : 'map')
 }
 
-export function resolveSort(requested: ThemeSort | null, changeAvailable: boolean): ThemeSort {
-  if (!changeAvailable) return 'value'
+export function resolveSort(requested: ThemeSort | null): ThemeSort {
   return requested ?? 'change'
 }
 
-export function sortThemes(themes: readonly ThemeRes[], sort: ThemeSort, changeOf: ChangeOf | null): ThemeRes[] {
-  const key = (theme: ThemeRes): number | null =>
-    sort === 'change' && changeOf ? changeOf(theme) : theme.tradingValue
+export function sortThemes(themes: readonly ThemeRes[], sort: ThemeSort, changeOf: ChangeOf): ThemeRes[] {
+  const key = (theme: ThemeRes): number | null => (sort === 'change' ? changeOf(theme) : theme.tradingValue)
   return [...themes].sort(
     (a, b) => compareNullLast(key(a), key(b), true) || a.name.localeCompare(b.name, 'ko'),
   )
@@ -102,9 +104,9 @@ export function defaultThemeId(
   view: ThemeView,
   sorted: readonly ThemeRes[],
   mapThemes: readonly ThemeRes[],
-  changeOf: ChangeOf | null,
+  changeOf: ChangeOf,
 ): number | null {
-  if (view === 'map' && changeOf) {
+  if (view === 'map') {
     const move = largestMove(mapThemes, changeOf)
     if (move) return move.id
   }
@@ -123,7 +125,7 @@ export function stableDefaultId(
   sort: ThemeSort,
   sorted: readonly ThemeRes[],
   mapThemes: readonly ThemeRes[],
-  changeOf: ChangeOf | null,
+  changeOf: ChangeOf,
 ): number | null {
   const candidates = view === 'map' && mapThemes.length > 0 ? mapThemes : sorted
   const sameKey = held !== null && held.view === view && held.sort === sort

@@ -30,7 +30,7 @@ export function GapGallery() {
           대표 이슈 <GapValue gap="theme-issue" mock={issue.status === 'mock' ? issue.data : null} />
         </span>
         <span>
-          문구형 <GapValue gap="theme-weighted-change" label="등락률 준비 중" />
+          문구형 <GapValue gap="theme-issue" label="대표 이슈 준비 중" />
         </span>
         {(quote.status === 'mock' || issue.status === 'mock') && <MockBadge />}
       </div>

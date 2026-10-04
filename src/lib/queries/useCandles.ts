@@ -1,6 +1,6 @@
 import { getData } from '@/lib/api'
 import { CANDLE_COUNTS, type CandlePeriod, type CandleRes } from '@/lib/apiTypes'
-import { AUTO_REFRESH_MS } from '@/lib/autoRefresh'
+import { REFRESH_CACHE_TTL_MS } from '@/lib/autoRefresh'
 import { createTtlCache } from '@/lib/queries/ttlCache'
 import { useApi, type ApiState } from '@/lib/queries/useApi'
 
@@ -20,8 +20,7 @@ export function useCandles(
   )
 }
 
-// 시세 자동 갱신과 같은 주기 — 그보다 오래 묵은 캔들은 쓰지 않는다
-const cached = createTtlCache<CandleRes[]>(AUTO_REFRESH_MS)
+const cached = createTtlCache<CandleRes[]>(REFRESH_CACHE_TTL_MS)
 
 /**
  * 캐시를 타는 캔들 — 여러 종목의 추이를 견주는 보조 차트(테마 대장주)가 쓴다.

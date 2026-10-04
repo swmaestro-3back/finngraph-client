@@ -3,8 +3,6 @@ import {
   activeMenu,
   authSlot,
   canvasFor,
-  KEEP_SCROLL,
-  keepsScroll,
   MAIN_MENU,
   outletKey,
   SIDE_LINKS,
@@ -83,23 +81,6 @@ describe('outletKey', () => {
 
   it('기준 경로로 시작하기만 하는 경로는 개편된 화면이 아니다', () => {
     expect(outletKey('/newsletter')).toBe('/newsletter')
-  })
-})
-
-describe('keepsScroll', () => {
-  it('화면 안에서 고른 이동만 스크롤을 유지한다', () => {
-    expect(keepsScroll(KEEP_SCROLL, 'REPLACE')).toBe(true)
-    expect(keepsScroll({ keepScroll: true }, 'PUSH')).toBe(true)
-  })
-
-  it('표시가 없거나 true가 아니면 맨 위에서 시작한다', () => {
-    expect(keepsScroll(null, 'REPLACE')).toBe(false)
-    expect(keepsScroll({ from: '/' }, 'PUSH')).toBe(false)
-    expect(keepsScroll({ keepScroll: 'true' }, 'REPLACE')).toBe(false)
-  })
-
-  it('뒤로·앞으로 가기는 표시가 남아 있어도 맨 위에서 시작한다', () => {
-    expect(keepsScroll(KEEP_SCROLL, 'POP')).toBe(false)
   })
 })
 
