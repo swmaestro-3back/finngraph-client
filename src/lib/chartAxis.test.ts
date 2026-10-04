@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { annualTickInterval, issueBarHeight, issueBarRatio } from '@/lib/chartAxis'
+import { annualTickInterval, issueBarHeight, issueBarRatio, priceAtY, roundToTick } from '@/lib/chartAxis'
 
 describe('annualTickInterval', () => {
   it('목표 라벨 수 이하면 전부 표시(0)', () => {
@@ -47,5 +47,46 @@ describe('issueBarHeight', () => {
   it('최소 2px을 보장하고 최대값은 절반(50%)을 채운다', () => {
     expect(issueBarHeight(77, 77)).toBe('max(2px, calc(50% - 0.5px))')
     expect(issueBarHeight(1, 77)).toMatch(/^max\(2px, calc\(5\.\d+% - 0\.5px\)\)$/)
+  })
+})
+
+describe('priceAtY', () => {
+  it('맨 위는 최댓값, 맨 아래는 최솟값, 가운데는 중간값', () => {
+    expect(priceAtY(0, 300, 180_000, 380_000)).toBe(380_000)
+    expect(priceAtY(300, 300, 180_000, 380_000)).toBe(180_000)
+    expect(priceAtY(150, 300, 180_000, 380_000)).toBe(280_000)
+  })
+
+  it('영역 밖 좌표는 범위 안으로 자른다', () => {
+    expect(priceAtY(-10, 300, 100, 200)).toBe(200)
+    expect(priceAtY(310, 300, 100, 200)).toBe(100)
+  })
+
+  it('높이가 0이면 최댓값', () => {
+    expect(priceAtY(0, 0, 100, 200)).toBe(200)
+  })
+})
+
+describe('roundToTick', () => {
+  it('KRX 호가 단위 경계마다 단위가 바뀐다', () => {
+    expect(roundToTick(1_999.4)).toBe(1_999)
+    expect(roundToTick(2_002)).toBe(2_000)
+    expect(roundToTick(4_998)).toBe(5_000)
+    expect(roundToTick(5_004)).toBe(5_000)
+    expect(roundToTick(19_996)).toBe(20_000)
+    expect(roundToTick(20_024)).toBe(20_000)
+    expect(roundToTick(49_976)).toBe(50_000)
+    expect(roundToTick(50_049)).toBe(50_000)
+    expect(roundToTick(199_951)).toBe(200_000)
+    expect(roundToTick(200_249)).toBe(200_000)
+    expect(roundToTick(301_044)).toBe(301_000)
+    expect(roundToTick(499_751)).toBe(500_000)
+    expect(roundToTick(500_499)).toBe(500_000)
+    expect(roundToTick(1_776_620)).toBe(1_777_000)
+  })
+
+  it('0 이하는 0', () => {
+    expect(roundToTick(0)).toBe(0)
+    expect(roundToTick(-5)).toBe(0)
   })
 })

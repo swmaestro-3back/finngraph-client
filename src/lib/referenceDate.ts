@@ -41,3 +41,11 @@ export function priceBasisSuffix(basis: PriceBasis | null | undefined): string {
   const time = intradayTime(basis)
   return time ? `${time} 기준` : '종가 기준'
 }
+
+export function stockPriceBasisLabel(basis: Pick<PriceBasis, 'baseDate' | 'valuationDate'> | null | undefined): string | null {
+  if (!basis?.baseDate) return null
+  const [, m, d] = basis.baseDate.split('-').map(Number)
+  if (!m || !d) return null
+  const day = `${m}/${d}`
+  return basis.valuationDate && basis.valuationDate < basis.baseDate ? `${day} 시세 · 장중 매시 갱신` : `${day} 종가`
+}

@@ -97,3 +97,24 @@ export function issueBarHeight(count: number, maxSide: number): string {
   const pct = issueBarRatio(count, maxSide) * 50
   return `max(${ISSUE_BAR_MIN_PX}px, calc(${pct}% - 0.5px))`
 }
+
+export function priceAtY(y: number, height: number, min: number, max: number): number {
+  if (height <= 0) return max
+  const ratio = Math.min(1, Math.max(0, y / height))
+  return max - ratio * (max - min)
+}
+
+const KRX_TICKS: [number, number][] = [
+  [2_000, 1],
+  [5_000, 5],
+  [20_000, 10],
+  [50_000, 50],
+  [200_000, 100],
+  [500_000, 500],
+]
+
+export function roundToTick(price: number): number {
+  if (price <= 0) return 0
+  const tick = KRX_TICKS.find(([limit]) => price < limit)?.[1] ?? 1_000
+  return Math.round(price / tick) * tick
+}
