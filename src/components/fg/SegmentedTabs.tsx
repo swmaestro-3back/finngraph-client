@@ -1,6 +1,7 @@
-import type { KeyboardEvent } from 'react'
+import { useRef, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { nextTabIndex } from '@/lib/fg/tabs'
+import { useSlidingMark } from '@/lib/fg/useSlidingMark'
 import { cn } from '@/lib/utils'
 
 export interface TabOption<T extends string> {
@@ -60,16 +61,24 @@ function TabButtons<T extends string>({ options, value, onChange, tabClass }: Ta
 }
 
 export function UnderlineTabs<T extends string>({ label, className, options, value, onChange }: TabListProps<T>) {
+  const list = useRef<HTMLDivElement>(null)
+  const mark = useRef<HTMLSpanElement>(null)
+  useSlidingMark(list, mark, options.findIndex((option) => option.value === value))
   return (
-    <div className={cn('fg-tabs', className)} role="tablist" aria-label={label}>
+    <div ref={list} className={cn('fg-tabs', className)} role="tablist" aria-label={label}>
+      <span ref={mark} className="fg-tabs__mark" aria-hidden="true" />
       <TabButtons tabClass="fg-tab" options={options} value={value} onChange={onChange} />
     </div>
   )
 }
 
 export function Segment<T extends string>({ label, className, options, value, onChange }: TabListProps<T>) {
+  const list = useRef<HTMLDivElement>(null)
+  const mark = useRef<HTMLSpanElement>(null)
+  useSlidingMark(list, mark, options.findIndex((option) => option.value === value))
   return (
-    <div className={cn('fg-seg', className)} role="tablist" aria-label={label}>
+    <div ref={list} className={cn('fg-seg', className)} role="tablist" aria-label={label}>
+      <span ref={mark} className="fg-seg__mark" aria-hidden="true" />
       <TabButtons options={options} value={value} onChange={onChange} />
     </div>
   )
