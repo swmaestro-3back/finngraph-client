@@ -73,10 +73,23 @@ export interface ThemeStockRes {
   tradingValue: number | null
   marketCap: number | null
   reason: string | null
+  r1w?: number | null
+  r1m?: number | null
+  r3m?: number | null
   changeStatus?: ThemeStockChangeStatus
   tradingSuspended?: boolean
   underAdministration?: boolean
   delistingTrade?: boolean
+}
+
+export interface ThemeIndexCandleRes {
+  date: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+  tradeValue: number | null
 }
 
 export interface ThemeMarketRes {
@@ -139,8 +152,20 @@ export interface StockDetailRes {
   description: string | null
   descriptionSource: string | null
   descriptionRceptNo: string | null
+  profile?: CompanyProfileRes | null
   baseDate?: string | null
   valuationDate?: string | null
+}
+
+export interface CompanyProfileRes {
+  ceoName: string | null
+  establishedOn: string | null
+  listedOn: string | null
+  fiscalMonth: string | null
+  listedShares: number | null
+  parValue: number | null
+  homepage: string | null
+  address: string | null
 }
 
 export interface InvestorFlowRes {

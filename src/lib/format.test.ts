@@ -1,5 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { formatDateTime, formatTrillion, pressOf } from '@/lib/format'
+import { formatCompactKrw, formatDateTime, formatSignedWon, formatTrillion, formatVolume, pressOf } from '@/lib/format'
+
+describe('formatCompactKrw — 원 금액을 조·억으로', () => {
+  it('1조 이상은 소수 첫째 자리 조', () => {
+    expect(formatCompactKrw(1.2e12)).toBe('1.2조')
+    expect(formatCompactKrw(1e12)).toBe('1.0조')
+    expect(formatCompactKrw(228.74e12)).toBe('228.7조')
+    expect(formatCompactKrw(999.94e12)).toBe('999.9조')
+  })
+
+  it('1,000조 이상은 천 단위를 묶는다', () => {
+    expect(formatCompactKrw(4791.3e12)).toBe('4,791.3조')
+    expect(formatCompactKrw(1000e12)).toBe('1,000.0조')
+  })
+
+  it('1조 미만은 정수 억, null은 대시', () => {
+    expect(formatCompactKrw(9820e8)).toBe('9,820억')
+    expect(formatCompactKrw(5e8)).toBe('5억')
+    expect(formatCompactKrw(0)).toBe('0억')
+    expect(formatCompactKrw(null)).toBe('—')
+  })
+})
 
 describe('formatTrillion — 조 단위 숫자를 1조 기준으로 조/억 전환', () => {
   it('1조 이상은 소수 첫째 자리 조', () => {
@@ -37,6 +58,28 @@ describe('formatDateTime — 기사 입력 시각 "2026. 09. 18. 09:11"', () => 
   it('잘못된 값이면 빈 문자열', () => {
     expect(formatDateTime('')).toBe('')
     expect(formatDateTime('not-a-date')).toBe('')
+  })
+})
+
+describe('formatSignedWon — 부호 있는 원 금액', () => {
+  it('양수는 +, 음수는 U+2212, 0은 부호 없이', () => {
+    expect(formatSignedWon(34_000)).toBe('+34,000원')
+    expect(formatSignedWon(-1)).toBe('−1원')
+    expect(formatSignedWon(0)).toBe('0원')
+  })
+})
+
+describe('formatVolume — 주 단위 거래량을 만주로', () => {
+  it('1만 주 이상은 만주로 반올림한다', () => {
+    expect(formatVolume(26_804_038)).toBe('2,680만주')
+    expect(formatVolume(706_184_719)).toBe('70,618만주')
+    expect(formatVolume(10_000)).toBe('1만주')
+    expect(formatVolume(14_999)).toBe('1만주')
+  })
+
+  it('1만 주 미만은 주 그대로', () => {
+    expect(formatVolume(9_999)).toBe('9,999주')
+    expect(formatVolume(0)).toBe('0주')
   })
 })
 
