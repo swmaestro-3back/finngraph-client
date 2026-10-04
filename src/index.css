@@ -5,6 +5,7 @@
 @import "./styles/fg/tokens.css";
 @import "./styles/fg/components.css" layer(components);
 @import "./styles/fg/shell.css" layer(components);
+@import "./styles/fg/themes.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
