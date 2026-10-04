@@ -8,6 +8,11 @@
 @import "./styles/fg/themes.css" layer(components);
 @import "./styles/fg/theme-detail.css" layer(components);
 @import "./styles/fg/theme-detail-charts.css" layer(components);
+@import "./styles/fg/stocks.css" layer(components);
+@import "./styles/fg/stock-detail.css" layer(components);
+@import "./styles/fg/stock-news.css" layer(components);
+@import "./styles/fg/stock-links.css" layer(components);
+@import "./styles/fg/stock-finance.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
