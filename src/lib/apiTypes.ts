@@ -14,7 +14,7 @@ interface ThemeTopStockRes {
   name: string
 }
 
-interface ThemeLeaderRes {
+export interface ThemeLeaderRes {
   ticker: string
   name: string
   change: number | null
@@ -27,6 +27,7 @@ export interface ThemeRes {
   name: string
   description: string | null
   change: number | null
+  weightedChange: number | null
   tradingValue: number | null
   w1: number | null
   m1: number | null
@@ -73,10 +74,38 @@ export interface ThemeStockRes {
   tradingValue: number | null
   marketCap: number | null
   reason: string | null
+  r1w?: number | null
+  r1m?: number | null
+  r3m?: number | null
   changeStatus?: ThemeStockChangeStatus
   tradingSuspended?: boolean
   underAdministration?: boolean
   delistingTrade?: boolean
+}
+
+export interface ThemeIndexCandleRes {
+  date: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+  tradeValue: number | null
+}
+
+export interface ThemeIndexRes {
+  date: string
+  close: number
+  change: number | null
+  r1w: number | null
+  r1m: number | null
+  r3m: number | null
+  r1y: number | null
+  ytd: number | null
+  high52w: number
+  low52w: number
+  fromHigh52w: number | null
+  streak: number
 }
 
 export interface ThemeMarketRes {
@@ -139,8 +168,20 @@ export interface StockDetailRes {
   description: string | null
   descriptionSource: string | null
   descriptionRceptNo: string | null
+  profile?: CompanyProfileRes | null
   baseDate?: string | null
   valuationDate?: string | null
+}
+
+export interface CompanyProfileRes {
+  ceoName: string | null
+  establishedOn: string | null
+  listedOn: string | null
+  fiscalMonth: string | null
+  listedShares: number | null
+  parValue: number | null
+  homepage: string | null
+  address: string | null
 }
 
 export interface InvestorFlowRes {
@@ -285,7 +326,7 @@ export interface AnnualFinancials {
   payoutRatio: number | null
 }
 
-type AuthProviderKind = 'EMAIL' | 'KAKAO'
+export type AuthProviderKind = 'EMAIL' | 'KAKAO'
 
 export interface MeRes {
   nickname: string
@@ -333,6 +374,7 @@ interface FavoriteThemeRes {
   id: number
   name: string
   change: number | null
+  weightedChange: number | null
   baseDate: string | null
   stockCount: number
   pricedCount?: number

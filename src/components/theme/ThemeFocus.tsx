@@ -4,6 +4,7 @@ import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { LeaderStockCard } from '@/components/theme/LeaderStockCard'
 import { CloseDate, ThemeMetricCaption } from '@/components/theme/ThemeMetricSummary'
 import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
+import { themePath } from '@/lib/fg/paths'
 import { changeColorClass, formatChange, formatChangeOrDash, formatCompactKrw } from '@/lib/format'
 import { countLabel, hasBreadth, turnoverFact } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
@@ -102,7 +103,8 @@ const TEXT_LINK = 'flex min-h-11 items-center hover:underline md:min-h-0'
 export function ThemeFocus({ theme, stocks, from }: ThemeFocusProps) {
   const state = { from }
   const periods = PERIODS.filter((p) => theme[p.key] !== null)
-  const changeTone = theme.change === null ? 'text-muted-foreground' : changeColorClass(theme.change)
+  const changeTone =
+    theme.weightedChange === null ? 'text-muted-foreground' : changeColorClass(theme.weightedChange)
   const turnover = turnoverFact(theme.tradingValueRatio)
 
   return (
@@ -117,14 +119,14 @@ export function ThemeFocus({ theme, stocks, from }: ThemeFocusProps) {
           </h2>
           <span className="inline-flex items-baseline gap-1.5">
             <span className={cn('font-mono text-base font-medium tabular-nums', changeTone)}>
-              {formatChangeOrDash(theme.change)}
+              {formatChangeOrDash(theme.weightedChange)}
             </span>
             <CloseDate baseDate={theme.baseDate} />
           </span>
           <FavoriteStar type="THEME" targetKey={String(theme.id)} label={theme.name} size="sm" />
         </div>
         <div className="flex shrink-0 items-center gap-4 text-xs font-semibold text-primary sm:pt-1">
-          <Link to={`/theme/${theme.id}`} state={state} className={TEXT_LINK}>
+          <Link to={themePath(theme.id)} state={state} className={TEXT_LINK}>
             테마 상세 →
           </Link>
           <Link

@@ -1,39 +1,37 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
-/* 워드마크 전용 — dynamic subset이라 실사용 글리프(라틴 청크)만 로드된다 */
 @import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+@import "./styles/fg/tokens.css";
+@import "./styles/fg/components.css" layer(components);
+@import "./styles/fg/shell.css" layer(components);
+@import "./styles/fg/themes.css" layer(components);
+@import "./styles/fg/theme-detail.css" layer(components);
+@import "./styles/fg/theme-detail-charts.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* shadcn 변수 ← Finngraph DS 토큰 (design-specs/DESIGN.md — opencode식 terminal-paper 체계)
-     중립색은 따뜻한 크림·잉크 계열, 액션색은 Finngraph Blue 하나만 쓴다. */
-  --background: #fdfcfc;
-  --foreground: #201d1d;
-  --card: #fdfcfc;
-  --card-foreground: #201d1d;
-  --popover: #fdfcfc;
-  --popover-foreground: #201d1d;
-  --primary: #0052ff;
-  --primary-foreground: #fdfcfc;
-  --secondary: #f1eeee;
-  --secondary-foreground: #201d1d;
-  --muted: #f8f7f7;
-  --muted-foreground: #646262;
-  --accent: #f1eeee;
-  --accent-foreground: #201d1d;
-  --destructive: #cf202f;
-  --destructive-foreground: #fdfcfc;
-  /* hairline = rgba(15,0,0,0.12)를 크림 캔버스 위에 합성한 불투명값 — 겹쳐 그려도 진해지지 않게 */
-  --border: #e0dddd;
-  --input: #e0dddd;
-  --ring: #0052ff;
+  --background: var(--bg-surface);
+  --foreground: var(--text-primary);
+  --card: var(--bg-surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--action-primary);
+  --primary-foreground: var(--action-on-primary);
+  --secondary: var(--bg-subtle);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-subtle);
+  --muted-foreground: var(--text-tertiary);
+  --accent: var(--bg-subtle);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--feedback-error);
+  --destructive-foreground: var(--action-on-primary);
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--focus-ring);
   --radius: 4px;
-  /* 차트 계열색 — 실측 팔레트(구 design-specs/stock-detail.md §0-4)를 정본으로 승격.
-     recharts는 var() 참조로, d3 캔버스(graphTypes.ts)는 리터럴+주석 계약으로 소비한다. */
   --chart-1: #1f897d;
   --chart-2: #8b99af;
   --chart-3: #874ef5;
@@ -47,10 +45,8 @@
   --series-2: #5b45c9;
   --series-3: #e56a2c;
   --chart-grid: #efecec;
-
-  /* 커스텀 토큰 */
-  --primary-pressed: #003ecc;
-  --surface-inset: #f1eeee;
+  --primary-pressed: var(--action-primary-hover);
+  --surface-inset: var(--bg-page);
   /* 유일한 다크 면 — 터미널/TUI 느낌의 강조 블록 한 곳에만 쓴다 */
   --surface-dark: #201d1d;
   --surface-dark-elevated: #302c2c;
@@ -58,23 +54,14 @@
   --on-dark-muted: #9a9898;
   /* 강한 구분선 — 탭 스트립 하단, 강조 구분선 */
   --border-strong: #646262;
-
-  /* 텍스트 회색 단계 — foreground(#201d1d) > secondary > muted-foreground(#646262) > tertiary */
-  --foreground-secondary: #424245;
-  --foreground-tertiary: #8f8c8c;
-  /* 재무 테이블 수치 전용 잉크 — 밀집 숫자를 잉크보다 한 단계 눌러 읽힌다 */
-  --foreground-numeric: #302c2c;
-
-  /* 주황 강조 — 추정치(E) 배지·역대 최저 PBR 하이라이트 */
+  --foreground-secondary: var(--text-secondary);
+  --foreground-tertiary: var(--text-tertiary);
+  --foreground-numeric: var(--text-primary);
   --accent-warm: #ae4400;
   --accent-warm-bg: #fcf2bf;
-
-  /* 시세 색 — 페이지 디자인 기준 (kr 컨벤션: 상승=red-500, 하락=blue-500) */
-  --stock-up: #cf202f;
-  --stock-up-soft: #fdeaec;
-  --stock-down: #0052ff;
-
-  /* 재무 지표 연속 추세 강조 — 개선=초록, 악화=빨강. 시세 색(상승=빨강)과는 뜻이 달라 토큰을 따로 둔다 */
+  --stock-up: var(--market-up);
+  --stock-up-soft: var(--market-up-subtle);
+  --stock-down: var(--market-down);
   --trend-positive: #15803d;
   --trend-negative: #b91c1c;
 
@@ -91,10 +78,9 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', 'Apple SD Gothic Neo', 'Pretendard', -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
-  /* 제목·수치·라벨은 모노. 한글 글리프는 모노에 없으므로 sans와 같은 한글 폴백을 잇는다 */
-  --font-mono: 'JetBrains Mono Variable', 'Apple SD Gothic Neo', 'Pretendard', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-heading: var(--font-mono);
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   --color-series-1: var(--series-1);
   --color-series-2: var(--series-2);
   --color-series-3: var(--series-3);
@@ -184,14 +170,8 @@
     @apply font-sans;
     accent-color: var(--primary);
   }
-  /* 제목은 모노로 — 터미널 문서 같은 위계는 크기·굵기만으로 만든다 */
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: var(--font-heading);
-    /* 모노 공백(0.6em)이 한글 어절 사이를 벌려 놓으므로 한글 본문 공백 폭에 가깝게 당긴다 */
-    word-spacing: -0.25em;
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
   ::selection {
     background-color: color-mix(in oklch, var(--primary) 16%, transparent);

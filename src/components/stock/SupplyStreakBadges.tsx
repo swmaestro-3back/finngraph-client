@@ -29,9 +29,8 @@ function streakBadge(subject: string, streak: SupplyStreak): ReactNode {
   )
 }
 
-// 상세 페이지가 이미 받은 수급 데이터(최대 기간)를 재사용한다 — 훅을 다시 부르면 같은 GET이 중복 발생
-export function SupplyStreakBadges({ flows }: { flows: InvestorFlowRes[] }) {
-  if (flows.length === 0) return null
+export function supplyStreakBadges(flows: InvestorFlowRes[]): ReactNode[] {
+  if (flows.length === 0) return []
 
   const { foreign, institution } = calcSupplyStreaks(flows)
   const badges: ReactNode[] = []
@@ -46,7 +45,11 @@ export function SupplyStreakBadges({ flows }: { flows: InvestorFlowRes[] }) {
   if (foreignBadge) badges.push(foreignBadge)
   const institutionBadge = streakBadge('기관', institution)
   if (institutionBadge) badges.push(institutionBadge)
+  return badges
+}
 
+export function SupplyStreakBadges({ flows, className }: { flows: InvestorFlowRes[]; className?: string }) {
+  const badges = supplyStreakBadges(flows)
   if (badges.length === 0) return null
-  return <div className="mb-4 flex flex-wrap items-center gap-2">{badges}</div>
+  return <div className={cn('flex flex-wrap items-center gap-2', className)}>{badges}</div>
 }

@@ -11,7 +11,6 @@ import {
   leadStock,
   marketCapLeaders,
   metricCaption,
-  sensitivityLabel,
   tileDetail,
   tileDetailPlacement,
   tileLabel,
@@ -24,6 +23,7 @@ const base: ThemeRes = {
   name: '캔서문샷',
   description: null,
   change: 3.1,
+  weightedChange: null,
   tradingValue: null,
   w1: null,
   m1: null,
@@ -75,37 +75,31 @@ describe('캡션 · 타일 문구', () => {
     downCount: 1,
     flatCount: 0,
     trimCount: 1,
+    weightedChange: 2.45,
     meanChange: 9.03,
     sensitivity: 2.81,
     leaders: [{ ticker: '328130', name: '루닛', change: 13.8 }],
   }
 
-  it('감도 1%p 이상일 때만 문구', () => {
-    expect(sensitivityLabel(0.9)).toBeNull()
-    expect(sensitivityLabel(null)).toBeNull()
-    expect(sensitivityLabel(2.81)).toBe('한 종목 제외 시 최대 ±2.8%p')
-  })
-
-  it('metricCaption 은 단순평균 · 감도 순', () => {
-    expect(metricCaption(theme)).toEqual([
-      '단순평균 +9.03%',
-      '한 종목 제외 시 최대 ±2.8%p',
-    ])
+  it('metricCaption 은 단순평균만 쓴다 — 절사평균 감도는 가중 등락률과 맞지 않는다', () => {
+    expect(metricCaption(theme)).toEqual(['단순평균 +9.03%'])
+    expect(metricCaption({ ...theme, meanChange: null })).toBeNull()
     expect(metricCaption(base)).toBeNull()
   })
 
-  it('타일 3행과 aria-label', () => {
+  it('타일 3행과 aria-label — 등락률은 가중 등락률이다', () => {
     expect(tileDetail(theme)).toBe('▲11 ▼1')
     expect(tileDetail(base)).toBeNull()
     expect(tileLabel(theme, '2026-09-26')).toBe(
-      '캔서문샷 +3.10% · 집계 12/12 · ▲11 ·0 ▼1 · 9/26 종가',
+      '캔서문샷 +2.45% · 집계 12/12 · ▲11 ·0 ▼1 · 9/26 종가',
     )
-    expect(tileLabel(base, null)).toBe('캔서문샷 +3.10%')
+    expect(tileLabel({ ...base, weightedChange: -1.2 }, null)).toBe('캔서문샷 −1.20%')
+    expect(tileLabel(base, null)).toBe('캔서문샷 —')
   })
 
   it('배율은 타일 라벨에 들어가지 않는다', () => {
     expect(tileLabel({ ...theme, tradingValueRatio: 3.2456 }, '2026-09-26')).toBe(
-      '캔서문샷 +3.10% · 집계 12/12 · ▲11 ·0 ▼1 · 9/26 종가',
+      '캔서문샷 +2.45% · 집계 12/12 · ▲11 ·0 ▼1 · 9/26 종가',
     )
   })
 })

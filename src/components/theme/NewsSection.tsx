@@ -14,6 +14,7 @@ interface NewsSectionProps {
   relationFilter?: boolean
   /** 카드 틀 없이 본문 안에 섹션으로 녹일 때 (뉴스 모달) — 제목도 작게 */
   plain?: boolean
+  limit?: number
 }
 
 // 왼쪽은 제목+메타 세로 묶음, 오른쪽 분석 뱃지는 행 전체 높이 기준 세로 중앙
@@ -28,10 +29,14 @@ export function NewsSection({
   onItemClick,
   relationFilter = false,
   plain = false,
+  limit,
 }: NewsSectionProps) {
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const visible =
     relationFilter && analyzedOnly ? items.filter((item) => item.tripleExtracted === true) : items
+  const capped = limit !== undefined && !expanded ? visible.slice(0, limit) : visible
+  const hidden = visible.length - capped.length
 
   return (
     <section
@@ -71,7 +76,7 @@ export function NewsSection({
       </div>
 
       <div className={cn(listClassName)}>
-        {visible.map((item) => {
+        {capped.map((item) => {
           const row = (
             <>
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -93,6 +98,17 @@ export function NewsSection({
           )
         })}
       </div>
+      {limit !== undefined && visible.length > limit && (
+        <div className="pt-3 text-center">
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="cursor-pointer rounded text-xs font-semibold text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            {expanded ? '접기' : `더 보기 · ${hidden}건`}
+          </button>
+        </div>
+      )}
     </section>
   )
 }

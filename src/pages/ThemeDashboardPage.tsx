@@ -30,7 +30,7 @@ const LIST_CLASS =
 function largestTile(themes: ThemeRes[]): ThemeRes | null {
   let best: ThemeRes | null = null
   for (const t of themes) {
-    if (best === null || Math.abs(t.change ?? 0) > Math.abs(best.change ?? 0)) best = t
+    if (best === null || Math.abs(t.weightedChange ?? 0) > Math.abs(best.weightedChange ?? 0)) best = t
   }
   return best
 }
@@ -64,16 +64,16 @@ export default function ThemeDashboardPage() {
   const firstLoading = loading && !hotThemes
 
   const treemapThemes = useMemo(() => {
-    const list = hotThemes ?? []
+    const list = (hotThemes ?? []).filter((t) => t.weightedChange !== null)
     return onlyFavorites ? list.filter((t) => has('THEME', String(t.id))) : list
   }, [has, hotThemes, onlyFavorites])
 
   const treemapItems: TreemapItem[] = useMemo(() => {
-    const sizes = normalizeSizes(treemapThemes.map((t) => tileSize(t.change)))
+    const sizes = normalizeSizes(treemapThemes.map((t) => tileSize(t.weightedChange)))
     return treemapThemes.map((t, i) => ({
       id: String(t.id),
       name: t.name,
-      change: t.change ?? 0,
+      change: t.weightedChange ?? 0,
       size: sizes[i],
       detail: tileDetail(t) ?? undefined,
       label: tileLabel(t, baseDate),
@@ -81,8 +81,8 @@ export default function ThemeDashboardPage() {
   }, [treemapThemes, baseDate])
 
   const { maxUp, maxDown } = useMemo(() => {
-    const ups = treemapThemes.map((t) => t.change ?? 0).filter((c) => c > 0)
-    const downs = treemapThemes.map((t) => t.change ?? 0).filter((c) => c < 0)
+    const ups = treemapThemes.map((t) => t.weightedChange ?? 0).filter((c) => c > 0)
+    const downs = treemapThemes.map((t) => t.weightedChange ?? 0).filter((c) => c < 0)
     return {
       maxUp: ups.length ? Math.max(...ups) : null,
       maxDown: downs.length ? Math.max(...downs.map(Math.abs)) : null,

@@ -15,7 +15,12 @@ createRoot(document.getElementById('root')!).render(
         <FavoriteProvider>
           <App />
           {/* 별표가 목록 한가운데서 눌려 인라인 문구는 시야 밖이다 — 화면 하단 고정 */}
-          <Toaster position="bottom-center" richColors />
+          <Toaster
+            position="bottom-center"
+            richColors
+            offset={{ bottom: 'calc(var(--space-6) + var(--fg-btabs-space))' }}
+            mobileOffset={{ bottom: 'calc(var(--space-4) + var(--fg-btabs-space))' }}
+          />
         </FavoriteProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -96,3 +96,22 @@ export function normalizeSizes(sizes: number[], maxShare = MAX_TILE_SHARE): numb
   }
   return shares
 }
+
+export type Rgb = readonly [number, number, number]
+
+export function parseHexColor(value: string): Rgb | null {
+  const match = /^#([0-9a-f]{6})$/i.exec(value.trim())
+  if (!match) return null
+  const n = Number.parseInt(match[1], 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+export function mixRgb(from: Rgb, to: Rgb, k: number): Rgb {
+  const t = Math.min(1, Math.max(0, k))
+  const at = (i: 0 | 1 | 2) => Math.round(from[i] + (to[i] - from[i]) * t)
+  return [at(0), at(1), at(2)]
+}
+
+export function rgbText(rgb: readonly number[]): string {
+  return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
+}

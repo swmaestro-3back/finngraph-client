@@ -52,6 +52,12 @@ export function formatWon(value: number | null): string {
   return `${value.toLocaleString('ko-KR')}원`
 }
 
+export function formatSignedWon(value: number): string {
+  if (value > 0) return `+${formatWon(value)}`
+  if (value < 0) return `−${formatWon(Math.abs(value))}`
+  return formatWon(0)
+}
+
 export function formatMultiple(value: number | null): string {
   if (value === null) return '-'
   return `${value.toFixed(2)}배`
@@ -67,7 +73,9 @@ export function toMillion(won: number | null): number | null {
 
 export function formatCompactKrw(won: number | null): string {
   if (won === null) return '—'
-  if (won >= 1e12) return `${(won / 1e12).toFixed(1)}조`
+  if (won >= 1e12) {
+    return `${(won / 1e12).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}조`
+  }
   return `${Math.round(won / 1e8).toLocaleString('ko-KR')}억`
 }
 

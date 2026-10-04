@@ -1,27 +1,41 @@
-import type { ReactNode } from 'react'
-import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { lazy, Suspense, type ReactNode } from 'react'
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
+import { AppShell } from '@/components/fg/AppShell'
 import { AuthLayout } from '@/components/layout/AuthLayout'
-import { SiteLayout } from '@/components/layout/SiteLayout'
+import { MyPageLayout } from '@/components/layout/MyPageLayout'
 import { useAuth } from '@/lib/auth'
+import { themePath } from '@/lib/fg/paths'
 import LoginPage from '@/pages/LoginPage'
 import KakaoCallbackPage from '@/pages/KakaoCallbackPage'
 import LegalPage from '@/pages/LegalPage'
-import MyPage from '@/pages/MyPage'
+import AccountSettingsPage from '@/pages/AccountSettingsPage'
+import MyFavoritesPage from '@/pages/MyFavoritesPage'
+import WithdrawPage from '@/pages/WithdrawPage'
 import ThemeDashboardPage from '@/pages/ThemeDashboardPage'
-import ThemeDetailPage from '@/pages/ThemeDetailPage'
 import StockDetailPage from '@/pages/StockDetailPage'
 import CorpGraphPage from '@/pages/CorpGraphPage'
-import ThemeListPage from '@/pages/ThemeListPage'
+import ThemesPage from '@/pages/themes/ThemesPage'
+import ThemeDetailPage from '@/pages/themes/ThemeDetailPage'
 import StockListPage from '@/pages/StockListPage'
 import BriefingPage from '@/pages/BriefingPage'
 import CalendarPage from '@/pages/CalendarPage'
+import NewsPage from '@/pages/news/NewsPage'
+import IssuePage from '@/pages/news/IssuePage'
 
-function ThemesAliasRedirect() {
+const FgGallery = import.meta.env.DEV ? lazy(() => import('@/dev/FgGallery')) : null
+
+function LegacyThemeRedirect() {
   const { themeId } = useParams()
-  return <Navigate to={`/theme/${themeId}`} replace />
+  const { search, hash, state } = useLocation()
+  return (
+    <Navigate
+      to={{ pathname: themeId ? themePath(themeId) : '/themes', search, hash }}
+      state={state}
+      replace
+    />
+  )
 }
 
-// 로그인 필요 라우트 가드 — Design Ref: §5.2. loading 중엔 판단을 미뤄 깜빡 리다이렉트를 막는다
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
   if (status === 'loading') return null
@@ -32,14 +46,16 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function App() {
   return (
     <Routes>
-      <Route element={<SiteLayout />}>
+      <Route element={<AppShell />}>
         <Route path="/" element={<ThemeDashboardPage />} />
-        <Route path="/themes" element={<ThemeListPage />} />
-        <Route path="/themes/:themeId" element={<ThemesAliasRedirect />} />
-        <Route path="/theme/:themeId" element={<ThemeDetailPage />} />
+        <Route path="/news" element={<NewsPage />} />
+        <Route path="/news/:issueId" element={<IssuePage />} />
+        <Route path="/themes" element={<ThemesPage />} />
+        <Route path="/themes/:themeId" element={<ThemeDetailPage />} />
+        <Route path="/theme/:themeId" element={<LegacyThemeRedirect />} />
         <Route path="/stocks" element={<StockListPage />} />
+        <Route path="/stocks/:stockCode" element={<StockDetailPage />} />
         <Route path="/stock/:stockCode" element={<StockDetailPage />} />
-        {/* 더 구체적인 테마 경로를 먼저 둔다 — /graph/theme/… 가 :ticker 로 잡히지 않도록 */}
         <Route path="/graph/theme/:name" element={<CorpGraphPage />} />
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="/briefing" element={<BriefingPage />} />
@@ -50,10 +66,24 @@ function App() {
           path="/me"
           element={
             <RequireAuth>
-              <MyPage />
+              <MyPageLayout />
             </RequireAuth>
           }
-        />
+        >
+          <Route index element={<MyFavoritesPage />} />
+          <Route path="account" element={<AccountSettingsPage />} />
+          <Route path="account/withdraw" element={<WithdrawPage />} />
+        </Route>
+        {FgGallery && (
+          <Route
+            path="/dev/fg"
+            element={
+              <Suspense fallback={null}>
+                <FgGallery />
+              </Suspense>
+            }
+          />
+        )}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
       <Route element={<AuthLayout />}>

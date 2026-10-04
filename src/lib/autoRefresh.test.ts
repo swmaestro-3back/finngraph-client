@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AUTO_REFRESH_MS, shouldAutoRefresh, startAutoRefresh } from '@/lib/autoRefresh'
+import { AUTO_REFRESH_MS, REFRESH_CACHE_TTL_MS, shouldAutoRefresh, startAutoRefresh } from '@/lib/autoRefresh'
+import { createTtlCache } from '@/lib/queries/ttlCache'
 
 const kst = (local: string) => new Date(`${local}+09:00`)
 
@@ -111,6 +112,25 @@ describe('startAutoRefresh', () => {
     expect(refresh).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
     expect(refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('자동 갱신이 부르는 캐시는 화면이 늦게 받아 둔 응답도 갱신 때 다시 받는다', async () => {
+    const cached = createTtlCache<number>(REFRESH_CACHE_TTL_MS)
+    let version = 0
+    const fetcher = vi.fn(() => Promise.resolve(++version))
+    const seen: number[] = []
+    const stop = startAutoRefresh({
+      intervalMs: AUTO_REFRESH_MS,
+      refresh: () => void cached('k', fetcher).then((v) => seen.push(v)),
+      active: () => true,
+      page: new FakePage(),
+    })
+
+    vi.advanceTimersByTime(1000)
+    expect(await cached('k', fetcher)).toBe(1)
+    await vi.advanceTimersByTimeAsync(AUTO_REFRESH_MS - 1000)
+    expect(seen).toEqual([2])
+    stop()
   })
 
   it('멈추면 타이머와 리스너를 모두 푼다', () => {

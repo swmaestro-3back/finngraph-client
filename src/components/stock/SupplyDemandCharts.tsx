@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 // 투자자별 수급 4카드 (design-specs/stock-detail.md §1-6)
 const PRIMARY = 'var(--primary)'
 
-const axisTick = { fontSize: 9, fill: 'var(--muted-foreground)', fontFamily: 'JetBrains Mono Variable, monospace' }
+const axisTick = { fontSize: 9, fill: 'var(--muted-foreground)', fontFamily: 'var(--font-sans)', fontVariantNumeric: 'tabular-nums' }
 
 // 4카드가 같은 거래일 축을 쓴다 — 한 곳을 짚으면 나머지도 같은 날을 가리킨다
 const SYNC_ID = 'supply-demand'

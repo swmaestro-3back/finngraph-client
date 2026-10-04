@@ -39,12 +39,11 @@ export function SortableHeaderRow<K extends string>({
           'whitespace-nowrap',
           cellClassName,
           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
-          col.className,
         )
 
         if (col.key === null) {
           return (
-            <span key={col.label} className={cn(base, inactiveClassName)}>
+            <span key={col.label} className={cn(base, inactiveClassName, col.className)}>
               {col.label}
             </span>
           )
@@ -62,6 +61,7 @@ export function SortableHeaderRow<K extends string>({
               'inline-flex cursor-pointer items-center gap-1',
               col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start',
               isActive ? activeClassName : inactiveClassName,
+              col.className,
             )}
           >
             <span className={cn(col.align === 'center' && 'relative')}>

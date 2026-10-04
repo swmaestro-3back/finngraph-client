@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { CircleAlert, ExternalLink, RotateCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,6 @@ import {
   summarizeContracts,
 } from '@/lib/contracts'
 import { formatCompactKrw } from '@/lib/format'
-import { useStockContracts } from '@/lib/queries/useStockContracts'
 import { cn } from '@/lib/utils'
 
 const GRID =
@@ -23,9 +22,13 @@ const ROLE_LABEL: Record<StockContractRes['role'], string> = {
 }
 
 interface ContractSectionProps {
-  ticker: string
+  data: StockContractRes[] | null
+  loading: boolean
+  error: ApiError | null
+  onRetry: () => void
   referenceDate: string | null
   from: string
+  limit?: number
   className?: string
 }
 
@@ -158,10 +161,21 @@ function ContractRow({ row, from }: { row: StockContractRes; from: string }) {
   )
 }
 
-export function ContractSection({ ticker, referenceDate, from, className }: ContractSectionProps) {
-  const { data, loading, error, refetch } = useStockContracts(ticker)
+export function ContractSection({
+  data,
+  loading,
+  error,
+  onRetry,
+  referenceDate,
+  from,
+  limit,
+  className,
+}: ContractSectionProps) {
+  const [expanded, setExpanded] = useState(false)
   const rows = useMemo(() => data ?? [], [data])
   const summary = useMemo(() => summarizeContracts(rows, referenceDate), [rows, referenceDate])
+  const collapsible = limit !== undefined && rows.length > limit
+  const visible = collapsible && !expanded ? rows.slice(0, limit) : rows
 
   return (
     <section aria-labelledby="contract-section-title">
@@ -199,7 +213,7 @@ export function ContractSection({ ticker, referenceDate, from, className }: Cont
       <div className="card-surface p-5">
         {loading && <ContractListSkeleton rows={3} />}
 
-        {!loading && error && <ContractListError error={error} onRetry={refetch} />}
+        {!loading && error && <ContractListError error={error} onRetry={onRetry} />}
 
         {!loading && !error && rows.length === 0 && (
           <div className="flex flex-col items-center gap-1.5 py-8 text-center">
@@ -219,9 +233,16 @@ export function ContractSection({ ticker, referenceDate, from, className }: Cont
               <span className="hidden sm:block">매출 대비</span>
               <span className="hidden sm:block" />
             </div>
-            {rows.map((row) => (
+            {visible.map((row) => (
               <ContractRow key={row.rceptNo} row={row} from={from} />
             ))}
+            {collapsible && (
+              <div className="flex justify-center pt-3">
+                <Button variant="outline" size="sm" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)}>
+                  {expanded ? '접기' : `더 보기 · ${rows.length - (limit ?? 0)}건`}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

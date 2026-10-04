@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatTradingDate, intradayTime, lastTradingDate, priceBasisSuffix } from '@/lib/referenceDate'
+import { formatTradingDate, intradayTime, lastTradingDate, priceBasisSuffix, stockPriceBasisLabel } from '@/lib/referenceDate'
 
 const candle = (date: string) => ({ date, open: 1, high: 1, low: 1, close: 1, volume: 1 })
 
@@ -37,5 +37,21 @@ describe('priceBasisSuffix', () => {
     expect(priceBasisSuffix(null)).toBe('종가 기준')
     expect(priceBasisSuffix({ baseDate: '2026-10-01' })).toBe('종가 기준')
     expect(priceBasisSuffix({ baseDate: '2026-10-01', valuationDate: '2026-09-30', updatedAt: 'invalid' })).toBe('종가 기준')
+  })
+})
+
+describe('stockPriceBasisLabel', () => {
+  it('가격 기준일과 밸류에이션 기준일이 같으면 그날 종가', () => {
+    expect(stockPriceBasisLabel({ baseDate: '2026-09-30', valuationDate: '2026-09-30' })).toBe('9/30 종가')
+  })
+
+  it('밸류에이션이 전일이면 장중 시세로 표시한다', () => {
+    expect(stockPriceBasisLabel({ baseDate: '2026-10-01', valuationDate: '2026-09-30' })).toBe('10/1 시세 · 장중 매시 갱신')
+  })
+
+  it('기준일이 없으면 표시하지 않는다', () => {
+    expect(stockPriceBasisLabel(null)).toBeNull()
+    expect(stockPriceBasisLabel({ baseDate: null })).toBeNull()
+    expect(stockPriceBasisLabel({ baseDate: '2026-09-30' })).toBe('9/30 종가')
   })
 })

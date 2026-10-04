@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 
-const FREE_ISSUE_SLOTS = 3
+export const FREE_ISSUE_SLOTS = 3
 
 export function lockedIssueCount(total: number, locked: boolean): number {
   return locked ? Math.max(0, total - FREE_ISSUE_SLOTS) : 0

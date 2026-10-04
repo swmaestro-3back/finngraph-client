@@ -3,11 +3,13 @@
 // 비회원에게도 별표를 보여주는 이유: 로그인하면 무엇이 생기는지 알려주는 자리가
 // 여기뿐이다. 숨기면 기능의 존재 자체가 전달되지 않는다.
 import { Star } from 'lucide-react'
+import { useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import type { FavoriteKind } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
+import { MOTION_BASE_MS, MOTION_EASE, STAR_POP, motionAllowed } from '@/lib/fg/motion'
 import { cn } from '@/lib/utils'
 
 interface FavoriteStarProps {
@@ -36,6 +38,7 @@ export function FavoriteStar({
   const { has, isFull, toggle, limit } = useFavorites()
   const navigate = useNavigate()
   const location = useLocation()
+  const icon = useRef<SVGSVGElement>(null)
 
   const active = status === 'authenticated' && has(type, targetKey)
 
@@ -53,6 +56,7 @@ export function FavoriteStar({
       toast.error(`관심 목록은 ${limit}개까지예요`)
       return
     }
+    if (!active && motionAllowed()) icon.current?.animate(STAR_POP, { duration: MOTION_BASE_MS, easing: MOTION_EASE })
     void toggle(type, targetKey)
   }
 
@@ -64,14 +68,15 @@ export function FavoriteStar({
       aria-label={active ? `${label} 관심 해제` : `${label} 관심 등록`}
       title={active ? '관심 해제' : '관심 등록'}
       className={cn(
-        'inline-flex cursor-pointer items-center justify-center rounded p-1 transition-colors',
+        'inline-flex cursor-pointer items-center justify-center rounded p-1',
+        'transition-[color,scale] duration-(--fg-motion-fast) ease-(--fg-ease) motion-reduce:transition-none motion-reduce:duration-0 active:scale-[0.97]',
         'outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
         'text-muted-foreground hover:text-foreground',
         active && 'text-foreground hover:text-foreground-secondary',
         className,
       )}
     >
-      <Star className={cn(SIZE_CLASS[size], active && 'fill-current')} />
+      <Star ref={icon} className={cn(SIZE_CLASS[size], active && 'fill-current')} />
     </button>
   )
 }

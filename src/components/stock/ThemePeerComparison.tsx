@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { RailCard } from '@/components/stock/StockOverviewLayout'
 import { Badge } from '@/components/ui/badge'
 import { InfoPopover } from '@/components/ui/info-popover'
 import type { StockDetailRes } from '@/lib/apiTypes'
+import { themePath } from '@/lib/fg/paths'
 import { formatCompactKrw } from '@/lib/format'
 import { rangeZone, rankPosition } from '@/lib/rangeZone'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
@@ -48,6 +51,20 @@ const METRICS: MetricDef[] = [
     hint: '자본으로 이익을 잘 내는 편',
   },
 ]
+
+interface PeerRow extends MetricDef {
+  myValue: number | null
+  medianValue: number | null
+  poolCount: number
+  rank: number | null
+}
+
+interface ThemePeers {
+  loading: boolean
+  themeName: string | null
+  peerCount: number
+  rows: PeerRow[]
+}
 
 /** 색 구간 — rangeZone과 같은 3등분. 대표 위치로 색을 뽑아 막대와 범례가 어긋나지 않게 한다 */
 const ZONE_LEGEND = [
@@ -126,6 +143,30 @@ const TABLE_GRID =
   'grid grid-cols-[48px_1fr_auto] gap-x-2 sm:grid-cols-[56px_1fr_auto] sm:gap-x-3'
 const ROW = 'col-span-3 grid grid-cols-subgrid items-center'
 
+function useThemePeers(stock: StockDetailRes): ThemePeers {
+  const { data, loading } = useStocksCached()
+  const themeName = stock.themeName
+
+  return useMemo(() => {
+    if (!themeName || !data) return { loading, themeName, peerCount: 0, rows: [] }
+    const themeStocks = data.filter((s) => s.themeName === themeName)
+    const peers = themeStocks.filter((s) => s.ticker !== stock.ticker)
+    const rows = METRICS.map((metric) => {
+      const myValue = stock[metric.key]
+      const peerValues = peers.map((s) => s[metric.key]).filter((v): v is number => v !== null)
+      const pool = myValue === null ? peerValues : [...peerValues, myValue]
+      return {
+        ...metric,
+        myValue,
+        medianValue: median(pool),
+        poolCount: pool.length,
+        rank: myValue === null ? null : rankOf(myValue, pool, metric.lowerIsBetter),
+      }
+    })
+    return { loading, themeName, peerCount: peers.length, rows }
+  }, [data, loading, stock, themeName])
+}
+
 /**
  * 꼴찌 ──┼──●── 1위 — 값 크기가 아니라 순위로 점을 놓는다.
  * 값 비례 막대는 동료 중 극단값 하나에 나머지가 전부 바닥에 붙고, 음수는 그릴 수도 없다.
@@ -158,44 +199,27 @@ function RankTrack({ label, rank, total }: { label: string; rank: number | null;
   )
 }
 
-export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
-  const { data, loading } = useStocksCached()
-  const themeName = stock.themeName
-
-  const themeStocks = useMemo(
-    () => (data && themeName ? data.filter((s) => s.themeName === themeName) : []),
-    [data, themeName],
+function RankBadge({ rank, poolCount }: { rank: number | null; poolCount: number }) {
+  if (rank === null) return <span className="font-mono text-caption text-muted-foreground">—</span>
+  return (
+    <Badge variant="secondary" className="font-mono">
+      {rank}/{poolCount}위
+    </Badge>
   )
+}
+
+export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
+  const { loading, themeName, peerCount, rows } = useThemePeers(stock)
 
   if (!themeName) return null
-  if (loading) return <div className="min-h-44 animate-pulse rounded bg-muted" />
-  if (!data) return null
-
-  const peerCount = themeStocks.filter((s) => s.ticker !== stock.ticker).length
+  if (loading && rows.length === 0) return <div className="min-h-44 animate-pulse rounded bg-muted" />
   if (peerCount < 2) return null
-
-  const rows = METRICS.map((metric) => {
-    const myValue = stock[metric.key]
-    // 목록 API의 내 종목 값은 상세 API와 어긋날 수 있으므로 빼고 상세 값(myValue)을 넣는다 — "6/5위" 모순 방지
-    const peerValues = themeStocks
-      .filter((s) => s.ticker !== stock.ticker)
-      .map((s) => s[metric.key])
-      .filter((v): v is number => v !== null)
-    const pool = myValue === null ? peerValues : [...peerValues, myValue]
-    return {
-      ...metric,
-      myValue,
-      medianValue: median(pool),
-      poolCount: pool.length,
-      rank: myValue === null ? null : rankOf(myValue, pool, metric.lowerIsBetter),
-    }
-  })
 
   return (
     <section className="card-surface flex flex-col p-4">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex items-center gap-1">
-          <h2 className="text-sm font-semibold text-foreground">테마 내 비교 · {themeName}</h2>
+          <h3 className="text-sm font-semibold text-foreground">테마 내 비교 · {themeName}</h3>
           <PeerRankHelp />
         </div>
         <span className="text-xs text-muted-foreground">동료 {peerCount}종목 기준</span>
@@ -251,5 +275,45 @@ export function ThemePeerComparison({ stock }: { stock: StockDetailRes }) {
         </div>
       </div>
     </section>
+  )
+}
+
+export function ThemePeerRanks({ stock }: { stock: StockDetailRes }) {
+  const { loading, themeName, peerCount, rows } = useThemePeers(stock)
+
+  if (!themeName) return null
+  if (loading && rows.length === 0) return <div className="h-36 animate-pulse rounded-xl bg-muted" />
+  if (peerCount < 2) return null
+
+  return (
+    <RailCard
+      title="테마 내 위치"
+      aside={
+        stock.themeId != null ? (
+          <Link to={themePath(stock.themeId)} className="hover:text-primary hover:underline">
+            {themeName} · {peerCount + 1}종목
+          </Link>
+        ) : (
+          `${themeName} · ${peerCount + 1}종목`
+        )
+      }
+    >
+      <dl className="flex flex-col">
+        {rows.map((row) => (
+          <div
+            key={row.key}
+            className="flex items-center justify-between gap-3 border-b border-surface-inset py-1.5 first:pt-0 last:border-b-0 last:pb-0"
+          >
+            <dt className="text-caption text-foreground">{row.label}</dt>
+            <dd className="flex items-center gap-2">
+              <span className="font-mono text-caption tabular-nums text-muted-foreground">
+                {row.myValue === null ? '—' : row.format(row.myValue)}
+              </span>
+              <RankBadge rank={row.rank} poolCount={row.poolCount} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </RailCard>
   )
 }

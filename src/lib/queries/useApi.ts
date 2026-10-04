@@ -7,6 +7,7 @@ export interface ApiState<T> {
   error: ApiError | null
   refetch: () => void
   refresh: () => void
+  mutate: (next: T) => void
 }
 
 export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]): ApiState<T> {
@@ -61,7 +62,15 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]): ApiState<
     )
   }, [])
 
-  return { data, loading, error, refetch, refresh }
+  const mutate = useCallback((next: T) => {
+    generation.current += 1
+    inFlight.current = false
+    setData(next)
+    setError(null)
+    setLoading(false)
+  }, [])
+
+  return { data, loading, error, refetch, refresh, mutate }
 }
 
 /**

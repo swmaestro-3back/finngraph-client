@@ -103,7 +103,7 @@ export default function BriefingPage() {
                 기준일에 3건 이상 묶인 이슈가 없습니다.
               </p>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {briefing.issues.map((issue) => (
                   <IssueCard key={issue.clusterId} issue={issue} locked={locked !== null} />
                 ))}

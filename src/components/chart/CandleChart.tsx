@@ -4,12 +4,15 @@ import type { Candle } from '@/lib/apiTypes'
 import {
   AXIS_GUTTER,
   DOWN,
+  RULE,
   UP,
   barLeft,
   barWidth,
   dateTickIndexes,
   emphasis,
   indexFromX,
+  priceAtY,
+  roundToTick,
   slotCenter,
 } from '@/lib/chartAxis'
 import { changeColorClass, formatChange, formatPrice, formatVolume } from '@/lib/format'
@@ -40,6 +43,7 @@ interface HoverState {
   index: number
   x: number
   y: number
+  price: number
   flipX: boolean
   flipY: boolean
 }
@@ -176,6 +180,7 @@ export function CandleChart({
       index,
       x,
       y,
+      price: roundToTick(priceAtY(y, rect.height, min, max)),
       // 오른쪽/위쪽 끝에서 툴팁이 잘리면 반대편으로 뒤집는다
       flipX: x + TOOLTIP_OFFSET + TOOLTIP_W > rect.width,
       flipY: y - TOOLTIP_OFFSET - TOOLTIP_H < 0,
@@ -223,6 +228,21 @@ export function CandleChart({
           crosshairIndex={crosshairIndex}
           count={count}
         />
+
+        {hover && (
+          <div className="pointer-events-none absolute inset-0">
+            <div
+              className="absolute right-0 left-0 h-px"
+              style={{ top: hover.y, backgroundColor: RULE }}
+            />
+            <span
+              className="absolute left-full z-10 ml-1 -translate-y-1/2 rounded-sm bg-foreground px-1 py-px font-mono text-micro font-medium whitespace-nowrap text-background"
+              style={{ top: `clamp(9px, ${hover.y}px, calc(100% - 9px))` }}
+            >
+              {formatPrice(hover.price)}
+            </span>
+          </div>
+        )}
 
         {/* 커서를 따라다니는 툴팁 */}
         {hovered && hover && (
