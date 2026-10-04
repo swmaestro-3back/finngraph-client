@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react'
+import { sortGlyph } from '@/lib/fg/format'
 import { cn } from '@/lib/utils'
+
+type SortDirection = 'ascending' | 'descending' | 'none'
 
 export interface Column<T> {
   key: string
   header: ReactNode
   cell: (row: T) => ReactNode
   align?: 'left' | 'right'
-  sort?: 'ascending' | 'descending' | 'none'
+  sort?: SortDirection
   onSort?: () => void
   note?: string
 }
@@ -18,6 +21,30 @@ interface DataTableProps<T> {
   rowKey: (row: T) => string
   variant?: 'default' | 'financials'
   className?: string
+}
+
+interface SortButtonProps {
+  sort?: SortDirection
+  onSort: () => void
+  children: ReactNode
+}
+
+export function SortButton({ sort, onSort, children }: SortButtonProps) {
+  return (
+    <button type="button" className="fg-table__sort" onClick={onSort}>
+      {children}
+      <SortMark sort={sort} />
+    </button>
+  )
+}
+
+function SortMark({ sort }: { sort?: SortDirection }) {
+  const glyph = sortGlyph(sort)
+  return glyph ? (
+    <span className="fg-table__glyph" aria-hidden="true">
+      {glyph}
+    </span>
+  ) : null
 }
 
 export function DataTable<T>({ label, columns, rows, rowKey, variant = 'default', className }: DataTableProps<T>) {
@@ -34,11 +61,14 @@ export function DataTable<T>({ label, columns, rows, rowKey, variant = 'default'
                 className={column.align === 'left' ? 'fg-table__left' : undefined}
               >
                 {column.onSort ? (
-                  <button type="button" className="fg-table__sort" onClick={column.onSort}>
+                  <SortButton sort={column.sort} onSort={column.onSort}>
                     {column.header}
-                  </button>
+                  </SortButton>
                 ) : (
-                  column.header
+                  <>
+                    {column.header}
+                    <SortMark sort={column.sort} />
+                  </>
                 )}
                 {column.note && <span className="fg-table__note">{column.note}</span>}
               </th>

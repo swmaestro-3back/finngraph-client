@@ -71,12 +71,19 @@ export function toMillion(won: number | null): number | null {
   return won === null ? null : won / 1e6
 }
 
+function compactKrw(won: number): string {
+  const man = Math.round(won / 1e4)
+  if (man < 1e4) return `${man.toLocaleString('ko-KR')}만`
+  const eok = Math.round(won / 1e8)
+  if (eok < 1e4) return `${eok.toLocaleString('ko-KR')}억`
+  return `${(won / 1e12).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}조`
+}
+
 export function formatCompactKrw(won: number | null): string {
   if (won === null) return '—'
-  if (won >= 1e12) {
-    return `${(won / 1e12).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}조`
-  }
-  return `${Math.round(won / 1e8).toLocaleString('ko-KR')}억`
+  if (won === 0) return '0'
+  if (Math.abs(won) < 1e4) return '1만 미만'
+  return won < 0 ? `−${compactKrw(-won)}` : compactKrw(won)
 }
 
 export function formatChangeOrDash(value: number | null): string {

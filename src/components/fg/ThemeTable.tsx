@@ -1,14 +1,15 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react'
+import { Fragment, type ReactNode, type Ref } from 'react'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { GapValue } from '@/components/fg/Gap'
 import { ChangeText } from '@/components/fg/PriceChange'
+import { RowExpansion } from '@/components/fg/RowExpansion'
 import { ThemeRatio } from '@/components/fg/ThemeRatio'
 import type { ThemeRes } from '@/lib/apiTypes'
 import { formatChange, formatCompactKrw } from '@/lib/format'
 import { toneClass } from '@/lib/fg/format'
-import { MOTION_SLOW_MS, closesBelow, motionAllowed } from '@/lib/fg/motion'
 import { themeLeader, type ChangeOf, type IssueOf } from '@/lib/fg/themes'
+import { useRowFold } from '@/lib/fg/useRowFold'
 
 interface ThemeTableProps {
   themes: readonly ThemeRes[]
@@ -22,11 +23,6 @@ interface ThemeTableProps {
   selectedRef?: Ref<HTMLDivElement>
 }
 
-interface Expansion {
-  id: number | null
-  node: ReactNode
-}
-
 export function ThemeTable({
   themes,
   total,
@@ -38,34 +34,13 @@ export function ThemeTable({
   expanded,
   selectedRef,
 }: ThemeTableProps) {
-  const anchor = useRef<{ id: number; el: HTMLElement; top: number } | null>(null)
-  useLayoutEffect(() => {
-    const held = anchor.current
-    anchor.current = null
-    if (!held || held.id !== selectedId || !held.el.isConnected) return
-    const shift = held.el.getBoundingClientRect().top - held.top
-    if (Math.abs(shift) >= 1) window.scrollBy(0, shift)
-  }, [selectedId])
-  const [opened, setOpened] = useState<number | null>(null)
-  const [closing, setClosing] = useState<Expansion | null>(null)
-  const lastExpansion = useRef<Expansion>({ id: null, node: null })
-  useLayoutEffect(() => {
-    const prev = lastExpansion.current
-    lastExpansion.current = { id: selectedId, node: expanded }
-    if (prev.id === null || prev.id === selectedId || !prev.node || selectedId === null) return
-    if (!motionAllowed() || !closesBelow(themes.map((theme) => theme.id), prev.id, selectedId)) return
-    setClosing(prev)
-  }, [selectedId, expanded, themes])
-  useEffect(() => {
-    if (!closing) return
-    const timer = window.setTimeout(() => setClosing(null), MOTION_SLOW_MS)
-    return () => window.clearTimeout(timer)
-  }, [closing])
+  const { hold, opened, closing } = useRowFold(
+    themes.map((theme) => theme.id),
+    selectedId,
+    expanded,
+  )
   const pick = (id: number, el: HTMLElement) => {
-    if (id !== selectedId) {
-      anchor.current = { id, el, top: el.getBoundingClientRect().top }
-      setOpened(id)
-    }
+    hold(id, el)
     onSelect(id)
   }
   return (
@@ -87,7 +62,7 @@ export function ThemeTable({
             const change = changeOf(theme)
             const leader = themeLeader(theme)
             const issue = issueOf ? issueOf(theme) : null
-            const folding = !selected && closing?.id === theme.id ? closing.node : null
+            const folding = !selected && closing?.key === theme.id ? closing.node : null
             return (
               <Fragment key={theme.id}>
                 <div
@@ -144,20 +119,8 @@ export function ThemeTable({
                     )}
                   </span>
                 </div>
-                {selected && expanded && (
-                  <div className="fg-trow__more" role="row" data-opening={opened === theme.id ? 'true' : undefined}>
-                    <div role="cell" className="fg-trow__exp">
-                      <div className="fg-trow__expin">{expanded}</div>
-                    </div>
-                  </div>
-                )}
-                {folding && (
-                  <div className="fg-trow__more" role="row" data-closing="true" inert>
-                    <div role="cell" className="fg-trow__exp">
-                      <div className="fg-trow__expin">{folding}</div>
-                    </div>
-                  </div>
-                )}
+                {selected && expanded && <RowExpansion opening={opened === theme.id}>{expanded}</RowExpansion>}
+                {folding && <RowExpansion closing>{folding}</RowExpansion>}
               </Fragment>
             )
           })}

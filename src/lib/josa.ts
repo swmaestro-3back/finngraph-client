@@ -10,11 +10,13 @@ function lastSoundChar(word: string): string | null {
   return null
 }
 
-export function josa(word: string, pair: '이/가' | '으로/로' | '은/는'): string {
+export function josa(word: string, pair: '이/가' | '으로/로' | '은/는' | '와/과' | '을/를'): string {
   const ch = lastSoundChar(word)
   const final = ch ? (ch.charCodeAt(0) - 0xac00) % 28 : 0
   if (pair === '이/가') return final > 0 ? '이' : '가'
   if (pair === '은/는') return final > 0 ? '은' : '는'
+  if (pair === '와/과') return final > 0 ? '과' : '와'
+  if (pair === '을/를') return final > 0 ? '을' : '를'
   // ㄹ 받침(종성 인덱스 8)은 '로'와 결합한다 (예: 일로, 팔로)
   return final > 0 && final !== 8 ? '으로' : '로'
 }

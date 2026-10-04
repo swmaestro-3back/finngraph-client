@@ -56,6 +56,9 @@ describe('canvasFor', () => {
     expect(canvasFor('/themes')).toBe('page')
     expect(canvasFor('/themes/59')).toBe('page')
     expect(canvasFor('/theme/59')).toBe('surface')
+    expect(canvasFor('/stocks')).toBe('page')
+    expect(canvasFor('/stocks/005930')).toBe('page')
+    expect(canvasFor('/stock/005930')).toBe('surface')
     expect(canvasFor('/')).toBe('surface')
     expect(canvasFor('/briefing')).toBe('surface')
     expect(canvasFor('/newsletter')).toBe('surface')
@@ -77,6 +80,8 @@ describe('outletKey', () => {
     expect(outletKey('/dev/fg')).toBe('/dev')
     expect(outletKey('/themes')).toBe('/themes')
     expect(outletKey('/themes/59')).toBe('/themes')
+    expect(outletKey('/stocks')).toBe('/stocks')
+    expect(outletKey('/stocks/005930')).toBe('/stocks')
   })
 
   it('기준 경로로 시작하기만 하는 경로는 개편된 화면이 아니다', () => {

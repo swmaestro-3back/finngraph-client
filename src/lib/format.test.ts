@@ -26,8 +26,29 @@ describe('formatCompactKrw — 원 금액을 조·억으로', () => {
   it('1조 미만은 정수 억, null은 대시', () => {
     expect(formatCompactKrw(9820e8)).toBe('9,820억')
     expect(formatCompactKrw(5e8)).toBe('5억')
-    expect(formatCompactKrw(0)).toBe('0억')
+    expect(formatCompactKrw(1e8)).toBe('1억')
     expect(formatCompactKrw(null)).toBe('—')
+  })
+
+  it('1억 미만은 만 단위, 1만 미만은 "1만 미만", 0은 0', () => {
+    expect(formatCompactKrw(2_200_000)).toBe('220만')
+    expect(formatCompactKrw(49_990_000)).toBe('4,999만')
+    expect(formatCompactKrw(10_000)).toBe('1만')
+    expect(formatCompactKrw(9_999)).toBe('1만 미만')
+    expect(formatCompactKrw(1)).toBe('1만 미만')
+    expect(formatCompactKrw(0)).toBe('0')
+  })
+
+  it('반올림해서 윗단위가 되면 윗단위로 올린다', () => {
+    expect(formatCompactKrw(99_995_000)).toBe('1억')
+    expect(formatCompactKrw(999_960_000_000)).toBe('1.0조')
+  })
+
+  it('음수는 U+2212를 붙이고 양수와 같은 단위로 바꾼다', () => {
+    expect(formatCompactKrw(-7_730_313_000_000)).toBe('−7.7조')
+    expect(formatCompactKrw(-104_217_336_541)).toBe('−1,042억')
+    expect(formatCompactKrw(-2_200_000)).toBe('−220만')
+    expect(formatCompactKrw(-5_000)).toBe('1만 미만')
   })
 })
 

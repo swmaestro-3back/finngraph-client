@@ -40,7 +40,7 @@ const QUOTE_COLUMNS: Column<QuoteRow>[] = [
     ),
   },
   { key: 'price', header: '현재가', cell: (row) => row.price },
-  { key: 'change', header: '등락률', sort: 'descending', cell: (row) => <ChangeText value={row.change} /> },
+  { key: 'change', header: '등락률', cell: (row) => <ChangeText value={row.change} /> },
   { key: 'high', header: '52주 최고', cell: (row) => row.high },
   { key: 'gap', header: '최고가 대비', cell: (row) => <span className="fg-w52__gap">{row.gap}</span> },
   { key: 'value', header: '거래대금', note: '준비 중', cell: (row) => row.value },
@@ -82,18 +82,39 @@ const FIN_COLUMNS: Column<FinRow>[] = [
 export function CompositeGallery() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const opener = useRef<HTMLButtonElement>(null)
+  const [changeSort, setChangeSort] = useState<'descending' | 'ascending'>('descending')
+  const quoteColumns = QUOTE_COLUMNS.map((column) =>
+    column.key === 'change'
+      ? {
+          ...column,
+          sort: changeSort,
+          onSort: () => setChangeSort((sort) => (sort === 'descending' ? 'ascending' : 'descending')),
+        }
+      : column,
+  )
+  const quotes = [...QUOTES].sort((a, b) => (changeSort === 'descending' ? b.change - a.change : a.change - b.change))
   return (
     <>
       <GallerySection title="Week52Range">
         <div className="fg-gal__narrow fg-stack">
-          <Week52Range name="한빛반도체" price={72400} high={74900} low={38200} />
-          <Week52Range name="동해전선" price={23150} high={23150} low={14020} state="high" />
-          <Week52Range name="누리소재" price={41050} high={46800} low={28300} variant="compact" />
-          <Week52Range name="세진정밀" price={9880} high={15200} low={9880} state="low" variant="compact" />
+          <Week52Range
+            name="한빛반도체"
+            price={72400}
+            high={74900}
+            low={38150}
+            basis="intraday"
+            asOf="2026-10-02"
+            highDate="2026-09-28"
+            lowDate="2025-12-03"
+          />
+          <Week52Range name="동해전선" price={23150} high={23150} low={14020} basis="close" state="high" />
+          <Week52Range name="누리소재" price={41050} high={46800} low={28300} basis="intraday" variant="compact" />
+          <Week52Range name="세진정밀" price={9880} high={15200} low={9880} basis="close" state="low" variant="compact" />
+          <Week52Range name="이음정밀" price={30200} high={32150} low={18400} basis="close" variant="bar" />
         </div>
       </GallerySection>
       <GallerySection title="DataTable">
-        <DataTable label="종목 표" columns={QUOTE_COLUMNS} rows={QUOTES} rowKey={(row) => row.name} />
+        <DataTable label="종목 표" columns={quoteColumns} rows={quotes} rowKey={(row) => row.name} />
         <DataTable label="재무 지표" columns={FIN_COLUMNS} rows={FIN_ROWS} rowKey={(row) => row.item} variant="financials" />
       </GallerySection>
       <GallerySection title="MemberGate">

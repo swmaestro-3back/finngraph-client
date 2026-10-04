@@ -13,3 +13,7 @@ export function useFinancials(ticker: string): ApiState<AnnualFinancials[]> {
     [ticker],
   )
 }
+
+export function useAnnualFinancials(ticker: string): ApiState<AnnualFinancialsRes[]> {
+  return useApi<AnnualFinancialsRes[]>(() => getData<AnnualFinancialsRes[]>(`/v1/stocks/${ticker}/financials`), [ticker])
+}

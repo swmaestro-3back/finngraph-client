@@ -4,7 +4,7 @@ import { REFRESH_CACHE_TTL_MS } from '@/lib/autoRefresh'
 import { createTtlCache } from '@/lib/queries/ttlCache'
 import { useApi, type ApiState } from '@/lib/queries/useApi'
 
-function fetchCandles(ticker: string, period: CandlePeriod, limit: number): Promise<CandleRes[]> {
+export function fetchCandles(ticker: string, period: CandlePeriod, limit: number): Promise<CandleRes[]> {
   return getData<CandleRes[]>(`/v1/stocks/${ticker}/candles`, { period, limit })
 }
 
