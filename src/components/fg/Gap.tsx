@@ -43,14 +43,22 @@ export function NotReadyPage({ gap, heading, title, description }: NotReadyPageP
 interface GapValueProps {
   gap: GapId
   mock?: ReactNode
+  label?: string
   className?: string
 }
 
-export function GapValue({ gap, mock = null, className }: GapValueProps) {
+export function GapValue({ gap, mock = null, label, className }: GapValueProps) {
   if (mock !== null && mock !== undefined) {
     return (
       <span className={cn('fg-gapv', className)} data-gap={gap} data-mock="true">
         {mock}
+      </span>
+    )
+  }
+  if (label) {
+    return (
+      <span className={cn('fg-gapv', className)} data-gap={gap}>
+        {label}
       </span>
     )
   }
