@@ -4,6 +4,7 @@ import { RailCard } from '@/components/stock/StockOverviewLayout'
 import { Badge } from '@/components/ui/badge'
 import { InfoPopover } from '@/components/ui/info-popover'
 import type { StockDetailRes } from '@/lib/apiTypes'
+import { themePath } from '@/lib/fg/paths'
 import { formatCompactKrw } from '@/lib/format'
 import { rangeZone, rankPosition } from '@/lib/rangeZone'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
@@ -289,7 +290,7 @@ export function ThemePeerRanks({ stock }: { stock: StockDetailRes }) {
       title="테마 내 위치"
       aside={
         stock.themeId != null ? (
-          <Link to={`/theme/${stock.themeId}`} className="hover:text-primary hover:underline">
+          <Link to={themePath(stock.themeId)} className="hover:text-primary hover:underline">
             {themeName} · {peerCount + 1}종목
           </Link>
         ) : (

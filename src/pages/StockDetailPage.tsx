@@ -35,6 +35,7 @@ import {
   type CandlePeriod,
   type SupplyRange,
 } from '@/lib/apiTypes'
+import { themePath } from '@/lib/fg/paths'
 import { defaultIssueIndex } from '@/lib/issueSelection'
 import { FREE_ISSUE_SLOTS, lockedIssueCount, useMemberGate } from '@/lib/memberGate'
 import { MOVE_WINDOW, notableMoves } from '@/lib/moves'
@@ -274,7 +275,7 @@ export default function StockDetailPage() {
           <>
             <span className="text-caption text-foreground-tertiary">/</span>
             <Link
-              to={`/theme/${stock.themeId}`}
+              to={themePath(stock.themeId)}
               state={fromState(pathname)}
               className="text-caption text-muted-foreground hover:text-primary hover:underline"
             >

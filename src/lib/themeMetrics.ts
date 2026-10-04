@@ -10,6 +10,7 @@ export const DATA_SOURCE_NOTICE =
   '시세는 한국투자증권 API 장마감 일봉 기준입니다. 참고용이며 투자 결과에 대한 책임은 지지 않습니다.'
 
 export const METRIC_HELP_LINES = {
+  method: '테마 지수 기준 · 시가총액 가중(종목당 최대 25%, 4종목 이하는 동일 가중)',
   universe: '집계 대상: 활성 보통주 · 거래정지·정리매매·시세 결손 제외',
   hot: '핫 테마 = 5종목 이상 집계 · 시장보다 넓은 방향성 · 신뢰구간 하한 기준',
 } as const
@@ -45,20 +46,10 @@ export function closeDateLabel(baseDate: string | null | undefined): string | nu
   return baseDate ? `${formatMonthDay(baseDate)} 종가` : null
 }
 
-export function sensitivityLabel(sensitivity: number | null | undefined): string | null {
-  if (sensitivity === null || sensitivity === undefined || sensitivity < 1) return null
-  return `한 종목 제외 시 최대 ±${sensitivity.toFixed(1)}%p`
-}
-
 export function metricCaption(theme: ThemeRes): string[] | null {
   if (theme.pricedCount === undefined) return null
-  const parts: string[] = []
-  if (theme.meanChange !== null && theme.meanChange !== undefined) {
-    parts.push(`단순평균 ${formatChange(theme.meanChange)}`)
-  }
-  const sensitivity = sensitivityLabel(theme.sensitivity)
-  if (sensitivity) parts.push(sensitivity)
-  return parts.length > 0 ? parts : null
+  if (theme.meanChange === null || theme.meanChange === undefined) return null
+  return [`단순평균 ${formatChange(theme.meanChange)}`]
 }
 
 export function hasBreadth(
@@ -126,7 +117,7 @@ export function turnoverFact(ratio: number | null | undefined): TurnoverFact | n
 }
 
 export function tileLabel(theme: ThemeRes, baseDate: string | null | undefined): string {
-  const parts = [`${theme.name} ${theme.change === null ? '—' : formatChange(theme.change)}`]
+  const parts = [`${theme.name} ${theme.weightedChange === null ? '—' : formatChange(theme.weightedChange)}`]
   if (hasBreadth(theme)) {
     parts.push(`집계 ${theme.pricedCount}/${theme.stockCount}`)
     parts.push(themeBreadthLabel(theme) as string)

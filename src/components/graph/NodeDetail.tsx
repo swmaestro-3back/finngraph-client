@@ -1,5 +1,5 @@
 import { ArrowRight, Crosshair, ExternalLink, Network, Newspaper } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   CATEGORY_LABELS,
   nodeCategory,
@@ -23,6 +23,7 @@ import { StockLogo } from '@/components/stock/StockLogo'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { fromState } from '@/lib/navigation'
 import { useThemeIdIndex } from '@/lib/queries/useThemesCached'
 import { themeDetailPath } from '@/lib/themeRoute'
 import { cn } from '@/lib/utils'
@@ -101,6 +102,7 @@ export function NodeDetail({
   centerShortcuts,
 }: Props) {
   const isMobile = useIsMobile()
+  const { pathname, search } = useLocation()
   const isTheme = node.type === 'theme'
   const isCenter = node.id === centerId
   const ticker = node.data.ticker
@@ -259,7 +261,7 @@ export function NodeDetail({
         {detailPath &&
           (detailAvailable ? (
             <Button variant="outline" size="sm" asChild>
-              <Link to={detailPath}>
+              <Link to={detailPath} state={fromState(`${pathname}${search}`)}>
                 {isTheme ? '테마 상세' : '종목 상세'}
                 <ExternalLink data-icon="inline-end" />
               </Link>

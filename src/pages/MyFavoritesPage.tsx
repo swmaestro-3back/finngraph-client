@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { toNewsItem } from '@/lib/apiMappers'
 import type { FavoriteItemRes } from '@/lib/apiTypes'
 import { useFavorites } from '@/lib/favorites'
+import { themePath } from '@/lib/fg/paths'
 import { changeColorClass, formatChangeOrDash, formatPriceOrDash } from '@/lib/format'
 import { useFavoriteNews } from '@/lib/queries/useFavoriteNews'
 import { cn } from '@/lib/utils'
@@ -57,9 +58,9 @@ export default function MyFavoritesPage() {
   )
 
   const renderRow = (item: FavoriteItemRes) => {
-    const to = item.type === 'STOCK' ? `/stock/${item.key}` : `/theme/${item.key}`
+    const to = item.type === 'STOCK' ? `/stock/${item.key}` : themePath(item.key)
     const name = item.stock?.name ?? item.theme?.name ?? item.key
-    const change = item.stock?.change ?? item.theme?.change ?? null
+    const change = item.stock?.change ?? item.theme?.weightedChange ?? null
     const open = () => navigate(to)
 
     return (
