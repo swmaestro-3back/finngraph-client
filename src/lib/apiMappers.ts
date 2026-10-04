@@ -1,6 +1,5 @@
 import { formatRelativeTime, pressOf } from '@/lib/format'
 import {
-  CANDLE_COUNTS,
   type AnnualFinancials,
   type AnnualFinancialsRes,
   type Candle,
@@ -15,25 +14,6 @@ import {
   type NewsRes,
   type SupplyPoint,
 } from '@/lib/apiTypes'
-
-function calendarDate(index: number, count: number, period: CandlePeriod): CandleDate {
-  const now = new Date()
-  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const stepDays = period === 'D' ? 1 : period === 'W' ? 7 : 30
-  const d = new Date(base)
-  d.setDate(base.getDate() - (count - 1 - index) * stepDays)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  return {
-    label: period === 'M' ? `${y}.${m}` : `${d.getMonth() + 1}/${d.getDate()}`,
-    date: `${y}.${m}.${String(d.getDate()).padStart(2, '0')}`,
-  }
-}
-
-export function candleDates(period: CandlePeriod): CandleDate[] {
-  const count = CANDLE_COUNTS[period]
-  return Array.from({ length: count }, (_, i) => calendarDate(i, count, period))
-}
 
 export function toNewsDetail(raw: NewsRes): NewsDetail {
   return {
@@ -109,7 +89,7 @@ export function toCandleView(res: CandleRes, period: CandlePeriod): Candle {
   }
 }
 
-export function toCandleDates(candles: CandleRes[], period: CandlePeriod): CandleDate[] {
+export function toCandleDates(candles: Pick<CandleRes, 'date'>[], period: CandlePeriod): CandleDate[] {
   return candles.map((c) => {
     const [y, m, d] = c.date.split('-').map(Number)
     return {
