@@ -1,5 +1,6 @@
 import { BasicsGallery } from '@/dev/gallery/BasicsGallery'
 import { CompositeGallery } from '@/dev/gallery/CompositeGallery'
+import { GapGallery } from '@/dev/gallery/GapGallery'
 import '@/dev/gallery/gallery.css'
 
 export default function FgGallery() {
@@ -13,6 +14,7 @@ export default function FgGallery() {
       </header>
       <BasicsGallery />
       <CompositeGallery />
+      <GapGallery />
     </div>
   )
 }
