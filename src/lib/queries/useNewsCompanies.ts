@@ -1,8 +1,7 @@
 import { getData } from '@/lib/api'
 import type { RelatedCompanyRes } from '@/lib/apiTypes'
 import { useApi, type ApiState } from '@/lib/queries/useApi'
-
-const isApiId = (id: string) => /^\d+$/.test(id)
+import { isApiId } from '@/lib/queries/useNewsDetail'
 
 export function useNewsCompanies(newsId: string | null): ApiState<RelatedCompanyRes[]> {
   return useApi<RelatedCompanyRes[]>(

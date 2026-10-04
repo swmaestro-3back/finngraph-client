@@ -17,6 +17,7 @@ import CorpGraphPage from '@/pages/CorpGraphPage'
 import ThemesPage from '@/pages/themes/ThemesPage'
 import StockListPage from '@/pages/StockListPage'
 import BriefingPage from '@/pages/BriefingPage'
+import CalendarPage from '@/pages/CalendarPage'
 import NewsPage from '@/pages/news/NewsPage'
 import IssuePage from '@/pages/news/IssuePage'
 
@@ -56,6 +57,7 @@ function App() {
         <Route path="/graph/theme/:name" element={<CorpGraphPage />} />
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="/briefing" element={<BriefingPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/terms" element={<LegalPage doc="terms" />} />
         <Route path="/privacy" element={<LegalPage doc="privacy" />} />
         <Route

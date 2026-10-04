@@ -9,7 +9,7 @@ export interface NewsRes {
   tripleExtracted?: boolean | null
 }
 
-export interface ThemeTopStockRes {
+interface ThemeTopStockRes {
   ticker: string
   name: string
 }
@@ -20,7 +20,7 @@ export interface ThemeLeaderRes {
   change: number | null
 }
 
-export type ThemeHotSide = 'UP' | 'DOWN'
+type ThemeHotSide = 'UP' | 'DOWN'
 
 export interface ThemeRes {
   id: number
@@ -206,11 +206,17 @@ export interface AnnualFinancialsRes {
 export type CandlePeriod = 'D' | 'W' | 'M'
 
 /**
- * 기간별 캔들 개수 — 일봉 6개월(≈120거래일). 백엔드 limit 상한은 500.
- * 주봉·월봉은 ETL 적재 이력(STOCK_PERIOD_LOOKBACK_DAYS=120, 2026-05-18~)에 맞춘 값이라
- * 백필 후에는 주봉 52(1년)·월봉 36(3년)으로 올린다.
+ * 기간별 캔들 개수 — 일봉 6개월(≈120거래일)·주봉 1년·월봉 3년. 백엔드 limit 상한은 500.
+ * 길게 볼수록 봉을 굵게 — 상장이 짧은 종목은 백엔드가 더 적게 줄 수 있다.
  */
-export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 120, W: 18, M: 7 }
+export const CANDLE_COUNTS: Record<CandlePeriod, number> = { D: 120, W: 52, M: 36 }
+
+/** 캔들 기간 칩 — 종목 상세 차트와 테마 이슈 타임라인이 같은 순서·문구를 쓴다 */
+export const CANDLE_PERIODS: { key: CandlePeriod; label: string; chartLabel: string }[] = [
+  { key: 'D', label: '1일', chartLabel: '일봉' },
+  { key: 'W', label: '1주', chartLabel: '주봉' },
+  { key: 'M', label: '1달', chartLabel: '월봉' },
+]
 
 /** 투자자별 수급 조회 기간 — 백엔드는 거래일 개수(limit)만 받으므로 1개월 ≈ 20거래일로 환산한다 */
 export type SupplyRange = '1M' | '3M' | '6M' | '1Y'
@@ -322,6 +328,7 @@ export interface AuthTokenRes {
 
 export type FavoriteKind = 'STOCK' | 'THEME'
 
+/** @public */
 export interface FavoriteRes {
   type: FavoriteKind
   key: string
@@ -338,7 +345,7 @@ export interface FavoriteItemRes {
   theme: FavoriteThemeRes | null
 }
 
-export interface FavoriteStockRes {
+interface FavoriteStockRes {
   ticker: string
   name: string
   market: string
@@ -347,7 +354,7 @@ export interface FavoriteStockRes {
   marketCap: number | null
 }
 
-export interface FavoriteThemeRes {
+interface FavoriteThemeRes {
   id: number
   name: string
   change: number | null
@@ -362,7 +369,7 @@ export interface FavoriteListRes {
   items: FavoriteItemRes[]
 }
 
-export type ContractRole = 'FILER' | 'COUNTERPARTY'
+type ContractRole = 'FILER' | 'COUNTERPARTY'
 
 export interface StockContractRes {
   rceptNo: string
@@ -409,7 +416,7 @@ export interface CitationRes {
   url: string | null
 }
 
-export interface BriefingSentenceRes {
+interface BriefingSentenceRes {
   text: string
   citations: CitationRes[]
 }
@@ -419,19 +426,19 @@ export interface BriefingHeadlineRes {
   citations: CitationRes[]
 }
 
-export interface BriefingStockRes {
+interface BriefingStockRes {
   ticker: string
   name: string
   market: string | null
   change: number | null
 }
 
-export interface BriefingStockRefRes {
+interface BriefingStockRefRes {
   ticker: string
   name: string
 }
 
-export interface BriefingArticleRes {
+interface BriefingArticleRes {
   newsId: number
   title: string
   url: string | null
@@ -450,13 +457,13 @@ export interface BriefingIssueRes {
   commentary: { sentences: BriefingSentenceRes[] } | null
 }
 
-export interface BriefingLeaderRes {
+interface BriefingLeaderRes {
   ticker: string
   name: string
   change: number
 }
 
-export interface BriefingThemeRes {
+interface BriefingThemeRes {
   id: number
   name: string
   change: number | null
@@ -526,7 +533,7 @@ export interface AnalyzedNewsRes {
   relations: RelationLineRes[] | null
 }
 
-export interface RelationGraphNodeRes {
+interface RelationGraphNodeRes {
   id: string
   name: string
   ticker: string | null
@@ -534,7 +541,7 @@ export interface RelationGraphNodeRes {
   change: number | null
 }
 
-export interface RelationGraphEdgeRes {
+interface RelationGraphEdgeRes {
   id: string
   source: string
   target: string
@@ -583,4 +590,241 @@ export interface BriefingSummaryRes {
   status: BriefingStatus
   generatedAt: string
   headline: string | null
+}
+
+export type CalendarEventKind =
+  | 'DIV_EX'
+  | 'DIV_RECORD'
+  | 'DIV_PAY'
+  | 'BONUS_EX'
+  | 'BONUS_LIST'
+  | 'RIGHTS_EX'
+  | 'RIGHTS_SUBSCRIBE'
+  | 'RIGHTS_LIST'
+  | 'AGM'
+
+export interface CalendarEventRes {
+  date: string
+  kind: CalendarEventKind
+  ticker: string
+  stockName: string
+  endDate: string | null
+  amount: number | null
+  ratio: number | null
+  label: string | null
+  agenda: string[]
+  agendaTruncated: boolean
+  estimated: boolean
+  favorite: boolean
+}
+
+export interface CalendarRes {
+  from: string
+  to: string
+  asOf: string | null
+  closedDates: string[]
+  events: CalendarEventRes[]
+}
+
+export type IpoStatus = 'FILED' | 'UPCOMING' | 'SUBSCRIBING' | 'LISTING_PENDING' | 'LISTED'
+
+export type IpoPriceBasis = 'CONFIRMED' | 'PLANNED'
+
+export interface IpoRes {
+  ticker: string | null
+  corpCode: string | null
+  name: string
+  status: IpoStatus
+  spac: boolean
+  subscrStart: string
+  subscrEnd: string
+  offerPrice: number | null
+  priceBasis: IpoPriceBasis
+  leadManagers: string | null
+  payDate: string | null
+  refundDate: string | null
+  listingDate: string | null
+}
+
+export interface IpoListRes {
+  asOf: string | null
+  offerings: IpoRes[]
+}
+
+export interface IpoScheduleRes {
+  subscrStart: string | null
+  subscrEnd: string | null
+  payDate: string | null
+  refundDate: string | null
+  listingDate: string | null
+}
+
+export interface IpoUnderwriterRes {
+  name: string
+  role: string | null
+  shares: number | null
+  amount: number | null
+  method: string | null
+}
+
+export interface IpoFundUseRes {
+  purpose: string
+  amount: number
+  share: number | null
+}
+
+export interface IpoSellerRes {
+  holder: string
+  relation: string | null
+  before: number | null
+  sold: number | null
+  after: number | null
+}
+
+export interface IpoPutbackRes {
+  reason: string | null
+  investors: string | null
+  shares: string | null
+  period: string | null
+  price: string | null
+}
+
+export interface IpoOfferingRes {
+  price: number | null
+  priceBasis: IpoPriceBasis
+  shares: number | null
+  amount: number | null
+  method: string | null
+  underwriters: IpoUnderwriterRes[] | null
+  fundUses: IpoFundUseRes[] | null
+  fundUsesWithheld: boolean
+  sellers: IpoSellerRes[] | null
+  oldShareRatio: number | null
+  putback: IpoPutbackRes | null
+}
+
+export interface IpoCompanyRes {
+  ceo: string | null
+  establishedOn: string | null
+  address: string | null
+  homepage: string | null
+  description: string | null
+  descriptionSource: string | null
+  descriptionRceptNo: string | null
+}
+
+export interface IpoAfterListingRes {
+  listingDate: string
+  open: number
+  close: number
+  openReturn: number | null
+  closeReturn: number | null
+  price: number | null
+  currentReturn: number | null
+  priceDate: string | null
+}
+
+export interface IpoFilingRes {
+  firstRceptNo: string
+  latestRceptNo: string
+  latestReportName: string
+}
+
+export interface IpoDetailRes {
+  corpCode: string | null
+  ticker: string | null
+  name: string
+  status: IpoStatus
+  spac: boolean
+  schedule: IpoScheduleRes
+  offering: IpoOfferingRes
+  company: IpoCompanyRes | null
+  afterListing: IpoAfterListingRes | null
+  filing: IpoFilingRes | null
+  asOf: string | null
+}
+
+export type CalendarFamily = 'DIV' | 'BONUS' | 'RIGHTS' | 'AGM'
+
+export interface ActionStepRes {
+  kind: CalendarEventKind
+  date: string
+  endDate: string | null
+  estimated: boolean
+}
+
+export interface AgendaItemRes {
+  text: string
+  tags: string[]
+}
+
+export type DpsBasis = 'CURRENT' | 'PREVIOUS'
+
+export interface DividendMetricsRes {
+  dps: number | null
+  dpsBasis: DpsBasis | null
+  expectedYield: number | null
+}
+
+export type ExPriceBasis = 'PREVIOUS_CLOSE' | 'CURRENT_PRICE'
+
+export interface ExPriceRes {
+  theoretical: number | null
+  basis: ExPriceBasis
+  actualOpen: number | null
+}
+
+export interface RightsMetricsRes {
+  dilution: number | null
+  issuePrice: number | null
+  priceVsIssue: number | null
+  exPrice: ExPriceRes
+}
+
+export interface BonusMetricsRes {
+  exPrice: ExPriceRes
+  returnAfter5: number | null
+  returnAfter20: number | null
+}
+
+export interface CorporateActionRes {
+  family: CalendarFamily
+  label: string | null
+  basisDate: string
+  lastBuyDate: string
+  lastBuyEstimated: boolean
+  steps: ActionStepRes[]
+  amount: number | null
+  ratio: number | null
+  agenda: AgendaItemRes[]
+  agendaTruncated: boolean
+  dividend: DividendMetricsRes | null
+  rights: RightsMetricsRes | null
+  bonus: BonusMetricsRes | null
+}
+
+export interface StockCalendarRes {
+  ticker: string
+  stockName: string
+  market: string
+  price: number | null
+  change: number | null
+  priceDate: string | null
+  from: string
+  to: string
+  asOf: string | null
+  actions: CorporateActionRes[]
+}
+
+export interface DividendReactionRes {
+  recordDate: string
+  kind: string
+  dps: number
+  exDate: string
+  prevClose: number
+  exOpen: number
+  theoreticalDrop: number
+  openGap: number
+  recoveryDays: number | null
+  pending: boolean
 }

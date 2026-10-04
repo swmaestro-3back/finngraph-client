@@ -51,7 +51,7 @@ type HighlightMode = 'none' | 'trend' | 'improving'
 
 // 표는 차트의 기간 칩과 무관하게 마지막 데이터 연도를 오른쪽 끝에 두고 한 화면에 이만큼 보여준다.
 // 그 이전 연도는 왼쪽으로 스크롤하면 이어진다. 늦게 상장한 종목은 앞쪽이 '-'로 채워져 열 수가 이 밑으로 줄지 않는다
-const VISIBLE_YEARS = 12
+const VISIBLE_YEARS = 16
 
 // 항목 열은 스크롤 밖의 고정 패널 — 연도 패널과 행 높이를 같은 상수로 맞춰 줄이 어긋나지 않게 한다
 const LABEL_COL_WIDTH = 84

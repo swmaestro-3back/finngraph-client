@@ -16,6 +16,16 @@ export const MAIN_MENU: readonly MenuItem[] = [
   { key: 'graph', label: '관계 탐색', to: '/graph' },
 ]
 
+interface SideLink {
+  label: string
+  to: string
+}
+
+export const SIDE_LINKS: readonly SideLink[] = [
+  { label: '브리핑', to: '/briefing' },
+  { label: '캘린더', to: '/calendar' },
+]
+
 function under(pathname: string, base: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`)
 }

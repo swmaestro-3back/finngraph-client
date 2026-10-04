@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { ChipGroup } from '@/components/layout/ChipGroup'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { AnnualCharts } from '@/components/stock/AnnualCharts'
 import { CompanyOverview } from '@/components/stock/CompanyOverview'
@@ -13,12 +14,12 @@ import { ReasonTab } from '@/components/stock/ReasonTab'
 import { StockHeader } from '@/components/stock/StockHeader'
 import { RailCard, StockOverviewLayout } from '@/components/stock/StockOverviewLayout'
 import { StockSectionTabs, useStockTab, type StockTab } from '@/components/stock/StockSectionTabs'
+import { StockMetricsCard } from '@/components/stock/StockMetricsCard'
 import { StockStatGrid } from '@/components/stock/StockStatGrid'
 import { SupplyDemandCharts } from '@/components/stock/SupplyDemandCharts'
 import { supplyStreakBadges } from '@/components/stock/SupplyStreakBadges'
 import { ThemePeerComparison, ThemePeerRanks } from '@/components/stock/ThemePeerComparison'
 import { Button } from '@/components/ui/button'
-import { FilterChip } from '@/components/ui/filter-chip'
 import { buildIssueTimeline, toCandleDates, toCandleView, toSupplyPoint } from '@/lib/apiMappers'
 import { profileRows } from '@/lib/companyOverview'
 import {
@@ -47,6 +48,8 @@ import { useStockNews } from '@/lib/queries/useStockNews'
 import { lastTradingDate } from '@/lib/referenceDate'
 
 const CONTRACT_PREVIEW = 10
+
+const SUPPLY_FETCH_LIMIT = Math.max(...SUPPLY_RANGES.map((r) => r.limit))
 
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -100,7 +103,7 @@ export default function StockDetailPage() {
   const overviewRows = profileRows(stock?.profile)
   const { data: dailyRes } = useCandles(code, 'D')
   const { data: periodRes } = useCandles(period === 'D' ? null : code, period)
-  const { data: flowRes } = useInvestorFlows(code, Math.max(SUPPLY_RANGE_LIMITS[supplyRange], MOVE_WINDOW))
+  const { data: flowRes } = useInvestorFlows(code, Math.max(SUPPLY_FETCH_LIMIT, MOVE_WINDOW))
   const { data: financialRows } = useFinancials(code)
   const { data: newsRows, loading: newsLoading } = useStockNews(code)
   const contracts = useStockContracts(code)
@@ -187,15 +190,7 @@ export default function StockDetailPage() {
             <PanelHeader
               title="투자자별 수급"
               hint="외국인·기관·개인 순매수 수량"
-              actions={
-                <div className="flex gap-1.5">
-                  {SUPPLY_RANGES.map((r) => (
-                    <FilterChip key={r.key} active={supplyRange === r.key} onClick={() => setSupplyRange(r.key)}>
-                      {r.label}
-                    </FilterChip>
-                  ))}
-                </div>
-              }
+              actions={<ChipGroup options={SUPPLY_RANGES} value={supplyRange} onChange={setSupplyRange} />}
             />
             {supply.length > 0 ? (
               <SupplyDemandCharts key={supplyRange} points={supply} />
@@ -206,18 +201,11 @@ export default function StockDetailPage() {
         ),
         financials: (
           <div className="flex flex-col gap-8">
+            <StockMetricsCard stock={stock} financials={financialRows} flows={flowRes} />
             <div>
               <PanelHeader
                 title="연간 실적"
-                actions={
-                  <div className="flex gap-1.5">
-                    {ANNUAL_PERIODS.map((p) => (
-                      <FilterChip key={p.key} active={annualPeriod === p.key} onClick={() => setAnnualPeriod(p.key)}>
-                        {p.label}
-                      </FilterChip>
-                    ))}
-                  </div>
-                }
+                actions={<ChipGroup options={ANNUAL_PERIODS} value={annualPeriod} onChange={setAnnualPeriod} />}
               />
               {annualRows.length > 0 ? (
                 <AnnualCharts key={`${code}-${annualPeriod}`} rows={annualRows} />
@@ -299,31 +287,15 @@ export default function StockDetailPage() {
       {loading && <PageSkeleton />}
 
       {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <h1 className="text-lg font-medium text-foreground">
-            {error.isNotFound ? '존재하지 않는 종목입니다' : '일시적인 오류'}
-          </h1>
-          <p className="text-body text-muted-foreground">
-            {error.isNotFound
-              ? `"${code}" 종목을 찾을 수 없습니다.`
-              : error.isRetryable
-                ? '일시적으로 데이터를 불러올 수 없습니다.'
-                : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isNotFound ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/stocks">주식 목록으로</Link>
-            </Button>
-          ) : (
-            error.isRetryable && (
-              <Button variant="outline" size="sm" onClick={refetch}>
-                <RotateCw data-icon="inline-start" />
-                다시 시도
-              </Button>
-            )
-          )}
-        </div>
+        <ErrorState
+          error={error}
+          onRetry={refetch}
+          notFound={{
+            title: '존재하지 않는 종목입니다',
+            message: `"${code}" 종목을 찾을 수 없습니다.`,
+            action: { to: '/stocks', label: '주식 목록으로' },
+          }}
+        />
       )}
 
       {!loading && !error && stock && (

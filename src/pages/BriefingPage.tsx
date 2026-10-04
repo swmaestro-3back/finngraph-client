@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { BriefingHeader } from '@/components/briefing/BriefingHeader'
 import { HeadlineCard } from '@/components/briefing/HeadlineCard'
@@ -9,6 +8,7 @@ import { RelationDigest } from '@/components/briefing/RelationDigest'
 import { RiskList } from '@/components/briefing/RiskList'
 import { WatchPointList } from '@/components/briefing/WatchPointList'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { Button } from '@/components/ui/button'
 import { AI_NOTICE, adjacentDates, lockedTeaser } from '@/lib/briefing'
@@ -72,22 +72,7 @@ export default function BriefingPage() {
         </div>
       )}
 
-      {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <p className="text-body text-muted-foreground">
-            {error.isRetryable
-              ? '일시적으로 데이터를 불러올 수 없습니다.'
-              : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isRetryable && (
-            <Button variant="outline" size="sm" onClick={refetch}>
-              <RotateCw data-icon="inline-start" />
-              다시 시도
-            </Button>
-          )}
-        </div>
-      )}
+      {!loading && error && <ErrorState error={error} onRetry={refetch} />}
 
       {!loading && notFound && (
         <div className="card-surface flex flex-col items-center gap-2 px-6 py-12 text-center">

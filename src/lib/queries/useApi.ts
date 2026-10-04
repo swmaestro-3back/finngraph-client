@@ -72,3 +72,18 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]): ApiState<
 
   return { data, loading, error, refetch, refresh, mutate }
 }
+
+/**
+ * 탭이 살아 있는 동안 한 번만 받는 모듈 캐시 — 전종목·테마 목록처럼 여러 화면이 공유하는 큰 응답용.
+ * 실패한 Promise는 버려 다음 호출이 다시 시도한다.
+ */
+export function cachedLoader<T>(load: () => Promise<T>): () => Promise<T> {
+  let cache: Promise<T> | null = null
+  return () => {
+    cache ??= load().catch((err: unknown) => {
+      cache = null
+      throw err
+    })
+    return cache
+  }
+}

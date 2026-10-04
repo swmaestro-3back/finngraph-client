@@ -42,7 +42,7 @@ import { useDelayed } from '@/lib/fg/useDelayed'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { useHotThemes } from '@/lib/queries/useHotThemes'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
-import { useThemes } from '@/lib/queries/useThemes'
+import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { useGap } from '@/lib/useGap'
 
@@ -96,7 +96,7 @@ export default function ThemesPage() {
   const favOn = query.fav && status === 'authenticated'
   const [showAll, setShowAll] = useState(false)
 
-  const themes = useThemes()
+  const themes = useThemesCached()
   const market = useThemeMarket()
   const hot = useHotThemes(query.count, view === 'map')
   const list = themes.data

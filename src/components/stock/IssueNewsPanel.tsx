@@ -1,5 +1,5 @@
 import { memo, useMemo, type ReactNode } from 'react'
-import { Lock } from 'lucide-react'
+import { LockedHint } from '@/components/gate/LockedHint'
 import type { IssueDay, IssueKind, IssueNews } from '@/lib/apiTypes'
 import { lockedIssueCount, useMemberGate } from '@/lib/memberGate'
 import { cn } from '@/lib/utils'
@@ -139,14 +139,7 @@ export const IssueNewsPanel = memo(function IssueNewsPanel({
           </button>
         ) : (
           lockedUntil > 0 && (
-            <button
-              type="button"
-              onClick={promptLogin}
-              className="-mx-1 flex cursor-pointer items-center gap-1 rounded-sm px-1 text-caption text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <Lock className="size-3 shrink-0" strokeWidth={2.5} />
-              이전 기간 뉴스는 로그인 후 볼 수 있어요
-            </button>
+            <LockedHint onLogin={promptLogin}>이전 기간 뉴스는 로그인 후 볼 수 있어요</LockedHint>
           )
         )}
       </div>

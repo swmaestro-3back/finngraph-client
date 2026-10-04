@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
 import { SearchBox } from '@/components/fg/SearchBox'
 import { UserMenu } from '@/components/fg/UserMenu'
-import { activeMenu, MAIN_MENU } from '@/lib/fg/nav'
+import { activeMenu, MAIN_MENU, SIDE_LINKS } from '@/lib/fg/nav'
 import { isSearchShortcut } from '@/lib/fg/search'
 
 const WIDE_SEARCH = '(min-width: 1024px)'
@@ -61,9 +61,16 @@ export function AppHeader() {
           )}
         </button>
         <div className="fg-gh__right">
-          <Link to="/briefing" className="fg-gh__link" aria-current={pathname === '/briefing' ? 'page' : undefined}>
-            브리핑
-          </Link>
+          {SIDE_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="fg-gh__link"
+              aria-current={pathname === link.to ? 'page' : undefined}
+            >
+              {link.label}
+            </Link>
+          ))}
           <UserMenu />
         </div>
       </div>

@@ -1,13 +1,16 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Search } from 'lucide-react'
 import { CATEGORY_COLORS, type GraphFocus } from '@/data/graphTypes'
+import { StockLogo } from '@/components/stock/StockLogo'
 import { Input } from '@/components/ui/input'
+import { isBareKey } from '@/lib/keyboard'
 import { searchResults, type SearchableStock, type SearchableTheme } from '@/lib/searchResults'
 import { cn } from '@/lib/utils'
 
 interface Props {
   stocks: readonly SearchableStock[]
-  themes: readonly SearchableTheme[]
+  /** 생략하면 종목만 검색한다(헤더) */
+  themes?: readonly SearchableTheme[]
   /** 고른 항목 — 헤더는 상세 페이지로, 그래프는 원점 변경으로 이어 간다 */
   onSelect: (focus: GraphFocus) => void
   /** outline: 테두리 있는 rounded-lg(그래프 사이드바), pill: 테두리 없이 배경색만(헤더) — 모서리는 outline과 같다 */
@@ -21,9 +24,14 @@ interface Props {
   className?: string
   /** 드롭다운 폭·위치 — 기본은 입력창과 같은 폭 */
   dropdownClassName?: string
+  /** 이 키를 누르면 어디서든 검색창으로 들어온다(헤더 '/') — 입력창 안에 키 표시도 띄운다 */
+  shortcutKey?: string
 }
 
 const LISTBOX_ID = 'search-results'
+
+// 기본값을 인라인 []로 두면 렌더마다 새 배열이라 결과 메모가 깨진다
+const NO_THEMES: readonly SearchableTheme[] = []
 
 const INPUT_VARIANT = {
   outline: 'rounded-lg pl-11 text-sm',
@@ -37,7 +45,7 @@ const ICON_VARIANT = {
 
 export function SearchBar({
   stocks,
-  themes,
+  themes = NO_THEMES,
   onSelect,
   variant = 'outline',
   placeholder = '종목 · 테마 검색',
@@ -46,6 +54,7 @@ export function SearchBar({
   notice,
   className,
   dropdownClassName = 'right-0 left-0',
+  shortcutKey,
 }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -53,6 +62,20 @@ export function SearchBar({
   // Enter로 이동하지 못한 검색어 — 침묵시키면 검색창이 "고장난 것처럼" 보인다
   const [noMatch, setNoMatch] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!shortcutKey) return
+    const handler = (e: KeyboardEvent) => {
+      if (!isBareKey(e, shortcutKey)) return
+      const input = inputRef.current
+      // 좁은 화면에서 숨겨진(display:none) 검색창은 포커스할 수 없다 — 키를 가로채지 않는다
+      if (!input || input.offsetParent === null) return
+      e.preventDefault()
+      input.focus()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [shortcutKey])
 
   const results = useMemo(() => searchResults(query, stocks, themes), [query, stocks, themes])
 
@@ -126,13 +149,23 @@ export function SearchBar({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         aria-label={placeholder}
-        className={cn('h-10', INPUT_VARIANT[variant])}
+        className={cn('peer h-10', INPUT_VARIANT[variant], shortcutKey && 'pr-10')}
         role="combobox"
         aria-expanded={showList}
         aria-controls={LISTBOX_ID}
         aria-autocomplete="list"
         aria-activedescendant={showList ? `${LISTBOX_ID}-${activeIndex}` : undefined}
+        aria-keyshortcuts={shortcutKey}
       />
+      {/* 단축키 안내 — 입력 중에는 글자와 겹치지 않게 숨긴다 */}
+      {shortcutKey && !query && (
+        <kbd
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 right-3 flex size-5 -translate-y-1/2 items-center justify-center rounded border border-border bg-background font-mono text-caption text-muted-foreground peer-focus:hidden"
+        >
+          {shortcutKey}
+        </kbd>
+      )}
 
       {showMessage && (
         <p
@@ -170,10 +203,15 @@ export function SearchBar({
                 i === activeIndex && 'bg-surface-inset',
               )}
             >
-              <span
-                className="size-2.5 shrink-0 rounded-full"
-                style={{ background: CATEGORY_COLORS[r.category] }}
-              />
+              {/* 종목은 주식 목록의 종목명 칸과 같은 로고, 테마는 색 점 */}
+              {r.focus.kind === 'company' ? (
+                <StockLogo ticker={r.focus.ticker} size={24} reserveSpace />
+              ) : (
+                <span
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{ background: CATEGORY_COLORS[r.category] }}
+                />
+              )}
               <span className="truncate text-body font-semibold text-foreground">{r.label}</span>
               <span className="ml-auto shrink-0 font-mono text-caption text-muted-foreground">
                 {r.meta}

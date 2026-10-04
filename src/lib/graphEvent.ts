@@ -8,6 +8,8 @@ export interface EventInfo {
   companies: string[]
   /** 뉴스 건수 */
   memberCount: number | null
+  /** 기사 목록으로 불러올 뉴스 id — 응답에 목록이 없으면 대표 뉴스 하나로 대신한다 */
+  newsIds: number[]
   firstPublishedAt: string | null
   lastPublishedAt: string | null
   representativeNewsId: number | null
@@ -16,10 +18,16 @@ export interface EventInfo {
 /** GraphNode.data의 선택 필드를 확정된 형태로 — 소비자가 undefined 분기를 반복하지 않도록 */
 export function eventInfo(node: GraphNode): EventInfo {
   const d = node.data
+  const newsIds = d.newsIds?.length
+    ? d.newsIds
+    : d.representativeNewsId != null
+      ? [d.representativeNewsId]
+      : []
   return {
     keywords: d.keywords ?? [],
     companies: d.companies ?? [],
     memberCount: d.memberCount ?? null,
+    newsIds,
     firstPublishedAt: d.firstPublishedAt ?? null,
     lastPublishedAt: d.lastPublishedAt ?? null,
     representativeNewsId: d.representativeNewsId ?? null,

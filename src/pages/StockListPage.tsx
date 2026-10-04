@@ -1,21 +1,16 @@
-import { useMemo, useState } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useMemo } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DataNotice } from '@/components/layout/DataNotice'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
+import { ListPagination } from '@/components/table/ListPagination'
 import { SortableHeaderRow, type TableColumn } from '@/components/table/SortableHeaderRow'
 import { StockFilterBar } from '@/components/table/StockFilterBar'
+import { LinkRow, NUM } from '@/components/table/LinkRow'
 import { StockIdentity } from '@/components/table/StockIdentity'
-import { Button } from '@/components/ui/button'
+import { TableSkeleton } from '@/components/table/TableSkeleton'
 import { FilterChip } from '@/components/ui/filter-chip'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
+import type { StockRowRes } from '@/lib/apiTypes'
 import {
   changeColorClass,
   formatAmountOrDash,
@@ -25,53 +20,36 @@ import {
 } from '@/lib/format'
 import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
-import { fromState } from '@/lib/navigation'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
+import { writePage } from '@/lib/listParams'
 import {
   applyStockFilters,
-  DEFAULT_FILTER,
+  filterFromParams,
+  filterToParams,
   isFilterActive,
   type FilterState,
 } from '@/lib/stockFilter'
-import { useTableSort } from '@/lib/useTableSort'
+import { usePagedRows, useUrlTableSort } from '@/lib/useListParams'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 20
 
-const NUM = 'text-center font-mono text-sm leading-none tabular-nums'
-
 const GRID =
   'grid grid-cols-[36px_28px_minmax(190px,1fr)_92px_76px_76px_76px_76px_96px_64px_64px_64px_64px] items-center gap-2'
 
-type SortKey =
-  | 'name'
-  | 'change'
-  | 'w1'
-  | 'm1'
-  | 'm3'
-  | 'marketCap'
-  | 'per'
-  | 'pbr'
-  | 'roe'
-  | 'dividendYield'
-
-interface StockRow {
-  ticker: string
-  name: string
-  market: string
-  price: number | null
-  change: number | null
-  w1: number | null
-  m1: number | null
-  m3: number | null
-  marketCap: number | null
-  per: number | null
-  pbr: number | null
-  roe: number | null
-  dividendYield: number | null
-  themeId: number | null
-  themeName: string | null
-}
+const SORT_KEYS = [
+  'name',
+  'change',
+  'w1',
+  'm1',
+  'm3',
+  'marketCap',
+  'per',
+  'pbr',
+  'roe',
+  'dividendYield',
+] as const
+type SortKey = (typeof SORT_KEYS)[number]
 
 const COLUMNS: TableColumn<SortKey>[] = [
   { key: null, label: '#', align: 'left' },
@@ -92,14 +70,22 @@ const COLUMNS: TableColumn<SortKey>[] = [
 export default function StockListPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const [page, setPage] = useState(1)
-  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
-  const [onlyFavorites, setOnlyFavorites] = useState(false)
+  // 페이지·정렬·필터는 주소 쿼리에 둔다 — 상세에 다녀와도 보던 목록으로 돌아온다
+  const [params, setParams] = useSearchParams()
+  // 필터에 관한 쿼리만 뽑아 키로 삼는다 — 페이지·정렬이 바뀌어도 filter 참조가 유지돼 3천 행을 다시 거르지 않는다
+  const filterKey = useMemo(() => {
+    const only = new URLSearchParams()
+    filterToParams(filterFromParams(params), only)
+    return only.toString()
+  }, [params])
+  const filter = useMemo(() => filterFromParams(new URLSearchParams(filterKey)), [filterKey])
   const { status } = useAuth()
+  // 로그아웃 상태로 ?fav=1 주소에 들어오면 빈 목록 대신 전체를 보인다
+  const onlyFavorites = params.get('fav') === '1' && status !== 'anonymous'
   const { has } = useFavorites()
   const { data: stocks, loading, error, refetch } = useStocksCached()
 
-  const allRows: StockRow[] = useMemo(() => stocks ?? [], [stocks])
+  const allRows: StockRowRes[] = useMemo(() => stocks ?? [], [stocks])
   const filteredRows = useMemo(() => applyStockFilters(allRows, filter), [allRows, filter])
   const filterActive = isFilterActive(filter)
   // 관심 필터는 FilterState 밖에 둔다 — stockFilter.ts는 순수 모듈이라 로그인 상태를 모른다
@@ -108,37 +94,33 @@ export default function StockListPage() {
     [filteredRows, has, onlyFavorites],
   )
 
-  const handleFilterChange = (next: FilterState) => {
-    setFilter(next)
-    setPage(1)
+  // 필터가 바뀌면 보던 페이지 번호는 의미가 없으니 같은 갱신에서 1페이지로 돌린다.
+  // 범위 입력은 글자마다 불리므로 히스토리에 쌓지 않는다
+  const updateParams = (mutate: (next: URLSearchParams) => void) => {
+    const next = new URLSearchParams(params)
+    mutate(next)
+    writePage(next, 1)
+    setParams(next, { replace: true })
   }
 
-  const { sorted, sortKey, sortDesc, handleSort } = useTableSort<StockRow, SortKey>(
+  const handleFilterChange = (next: FilterState) => {
+    updateParams((p) => filterToParams(next, p))
+  }
+
+  const toggleFavorites = () => {
+    updateParams((p) => {
+      if (onlyFavorites) p.delete('fav')
+      else p.set('fav', '1')
+    })
+  }
+
+  const { sorted, sortKey, sortDesc, handleSort } = useUrlTableSort<StockRowRes, SortKey>(
     visibleRows,
+    SORT_KEYS,
     'w1',
   )
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
-  const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  const sortBy = (key: SortKey) => {
-    handleSort(key)
-    setPage(1)
-  }
-
-  const goToPage = (next: number) => {
-    setPage(Math.min(totalPages, Math.max(1, next)))
-    window.scrollTo(0, 0)
-  }
-
-  const pageNumbers = useMemo(() => {
-    const window_ = 3
-    const start = Math.max(1, Math.min(page - window_, totalPages - window_ * 2))
-    const end = Math.min(totalPages, Math.max(page + window_, window_ * 2 + 1))
-    const list: number[] = []
-    for (let n = start; n <= end; n++) list.push(n)
-    return list
-  }, [page, totalPages])
+  const { page, totalPages, goToPage, pageRows } = usePagedRows(sorted, PAGE_SIZE)
 
   return (
     <div className="page-container pb-12 pt-7">
@@ -155,30 +137,9 @@ export default function StockListPage() {
         </div>
       </div>
 
-      {loading && (
-        <div className="card-surface overflow-hidden p-4">
-          {Array.from({ length: 10 }, (_, i) => (
-            <div key={i} className="mb-2 h-8 animate-pulse rounded bg-muted" />
-          ))}
-        </div>
-      )}
+      {loading && <TableSkeleton rows={10} />}
 
-      {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <p className="text-body text-muted-foreground">
-            {error.isRetryable
-              ? '일시적으로 데이터를 불러올 수 없습니다.'
-              : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isRetryable && (
-            <Button variant="outline" size="sm" onClick={refetch}>
-              <RotateCw data-icon="inline-start" />
-              다시 시도
-            </Button>
-          )}
-        </div>
-      )}
+      {!loading && error && <ErrorState error={error} onRetry={refetch} />}
 
       {!loading && !error && (
         <>
@@ -190,8 +151,7 @@ export default function StockListPage() {
                   navigate('/login', { state: { next: pathname } })
                   return
                 }
-                setOnlyFavorites((prev) => !prev)
-                setPage(1)
+                toggleFavorites()
               }}
             >
               내 관심만
@@ -204,7 +164,6 @@ export default function StockListPage() {
           </div>
 
           <StockFilterBar
-            stocks={allRows}
             value={filter}
             onChange={handleFilterChange}
             matchCount={filteredRows.length}
@@ -217,30 +176,12 @@ export default function StockListPage() {
                   columns={COLUMNS}
                   sortKey={sortKey}
                   sortDesc={sortDesc}
-                  onSort={sortBy}
+                  onSort={handleSort}
                   className={cn(GRID, 'border-b border-border bg-muted px-4 py-2.5')}
                 />
 
                 {pageRows.map((row, index) => (
-                  // 별표가 행 안에 들어가 button 중첩이 되므로 행을 div+role로 바꿨다
-                  <div
-                    key={row.ticker}
-                    role="link"
-                    tabIndex={0}
-                    onClick={() =>
-                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname) })
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter' && event.key !== ' ') return
-                      event.preventDefault()
-                      navigate(`/stock/${row.ticker}`, { state: fromState(pathname) })
-                    }}
-                    className={cn(
-                      GRID,
-                      'w-full cursor-pointer border-b border-surface-inset px-4 py-2.5 text-left hover:bg-muted',
-                      index % 2 === 1 && 'bg-foreground/[0.016]',
-                    )}
-                  >
+                  <LinkRow key={row.ticker} to={`/stock/${row.ticker}`} index={index} gridClassName={GRID}>
                     <span className="font-mono text-caption leading-[1.4] text-foreground-tertiary">
                       {(page - 1) * PAGE_SIZE + index + 1}
                     </span>
@@ -286,54 +227,13 @@ export default function StockListPage() {
                     <span className={cn(NUM, 'text-foreground-secondary')}>
                       {row.dividendYield === null ? '—' : `${row.dividendYield.toFixed(2)}%`}
                     </span>
-                  </div>
+                  </LinkRow>
                 ))}
               </div>
             </div>
           </div>
 
-          <Pagination className="mt-5">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  text="이전"
-                  href="#"
-                  aria-disabled={page === 1}
-                  className={cn(page === 1 && 'pointer-events-none opacity-50')}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    goToPage(page - 1)
-                  }}
-                />
-              </PaginationItem>
-              {pageNumbers.map((n) => (
-                <PaginationItem key={n}>
-                  <PaginationLink
-                    href="#"
-                    isActive={n === page}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      goToPage(n)
-                    }}
-                  >
-                    {n}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  text="다음"
-                  href="#"
-                  aria-disabled={page === totalPages}
-                  className={cn(page === totalPages && 'pointer-events-none opacity-50')}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    goToPage(page + 1)
-                  }}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <ListPagination page={page} totalPages={totalPages} onPageChange={goToPage} className="mt-5" />
         </>
       )}
 

@@ -18,10 +18,6 @@ export function mixColor(dir: 'up' | 'down', t: number): { bg: string; k: number
   return { bg: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`, k, rgb }
 }
 
-export function treemapTileColor(dir: TreemapDirection, t: number): string {
-  return mixColor(dir, t).bg
-}
-
 const TINTED_INK = { up: [122, 15, 24], down: [11, 42, 107] } as const
 const PAPER_INK = [10, 11, 13] as const
 const WHITE = [255, 255, 255] as const
@@ -32,7 +28,7 @@ function channel(value: number): number {
   return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
 }
 
-export function relativeLuminance(rgb: readonly number[]): number {
+function relativeLuminance(rgb: readonly number[]): number {
   return 0.2126 * channel(rgb[0]) + 0.7152 * channel(rgb[1]) + 0.0722 * channel(rgb[2])
 }
 
@@ -54,7 +50,7 @@ export function tileInk(rgb: readonly number[], dir: TreemapDirection): string {
 }
 
 export const COLOR_SATURATION_PCT = 5
-export const MAX_TILE_SHARE = 0.25
+const MAX_TILE_SHARE = 0.25
 const MIN_TILE_CHANGE = 0.5
 
 export function changeStrength(change: number): number {

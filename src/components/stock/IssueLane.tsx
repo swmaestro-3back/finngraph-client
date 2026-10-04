@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Lock } from 'lucide-react'
 import { AxisRules, DateTicks } from '@/components/chart/AxisMarks'
+import { LockedHint } from '@/components/gate/LockedHint'
 import type { IssueDay } from '@/lib/apiTypes'
 import {
   AXIS_GUTTER,
@@ -116,14 +116,9 @@ export function IssueLane({
                 : '막대를 누르면 아래에 그 구간 뉴스가 열립니다'}
           </span>
           {lockedUntil > 0 && (
-            <button
-              type="button"
-              onClick={promptLogin}
-              className="-mx-1 flex cursor-pointer items-center gap-1 rounded-sm px-1 text-caption text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <Lock className="size-3 shrink-0" strokeWidth={2.5} />
+            <LockedHint onLogin={promptLogin}>
               최근 {count - lockedUntil}개 구간만 열려 있어요 · 로그인하고 전체 보기
-            </button>
+            </LockedHint>
           )}
         </span>
       </div>

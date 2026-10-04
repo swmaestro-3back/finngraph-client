@@ -1,7 +1,7 @@
 import { RailCard } from '@/components/stock/StockOverviewLayout'
 import type { StockDetailRes } from '@/lib/apiTypes'
 import { formatAmountOrDash, formatChange, toEok } from '@/lib/format'
-import { formatShortDate } from '@/lib/themeMetrics'
+import { formatMonthDay } from '@/lib/themeMetrics'
 
 interface StatItem {
   label: string
@@ -27,7 +27,7 @@ export function StockStatGrid({ stock }: { stock: StockDetailRes }) {
   return (
     <RailCard
       title="핵심 지표"
-      aside={basisDate ? <span className="font-mono">{formatShortDate(basisDate)} 기준</span> : undefined}
+      aside={basisDate ? <span className="font-mono">{formatMonthDay(basisDate)} 기준</span> : undefined}
     >
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-4 lg:grid-cols-2">
         {statItems(stock).map((item) => (

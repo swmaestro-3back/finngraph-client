@@ -1,9 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { activeMenu, authSlot, canvasFor, KEEP_SCROLL, keepsScroll, MAIN_MENU, outletKey } from '@/lib/fg/nav'
+import {
+  activeMenu,
+  authSlot,
+  canvasFor,
+  KEEP_SCROLL,
+  keepsScroll,
+  MAIN_MENU,
+  outletKey,
+  SIDE_LINKS,
+} from '@/lib/fg/nav'
 
 describe('MAIN_MENU', () => {
   it('디자인대로 다섯 메뉴를 이 순서로 둔다', () => {
     expect(MAIN_MENU.map((item) => item.label)).toEqual(['홈', '뉴스', '테마', '종목', '관계 탐색'])
+  })
+})
+
+describe('SIDE_LINKS', () => {
+  it('오른쪽 링크는 브리핑 옆에 캘린더를 둔다', () => {
+    expect(SIDE_LINKS.map((link) => [link.label, link.to])).toEqual([
+      ['브리핑', '/briefing'],
+      ['캘린더', '/calendar'],
+    ])
   })
 })
 
@@ -51,6 +69,7 @@ describe('outletKey', () => {
     expect(outletKey('/graph/005930')).toBe('/graph/005930')
     expect(outletKey('/stock/005930')).toBe('/stock/005930')
     expect(outletKey('/me/account')).toBe('/me/account')
+    expect(outletKey('/calendar')).toBe('/calendar')
     expect(outletKey('/graph/005930')).not.toBe(outletKey('/graph/028050'))
   })
 

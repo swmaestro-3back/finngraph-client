@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
-import { Button } from '@/components/ui/button'
+import { StockLogo } from '@/components/stock/StockLogo'
 import type { StockDetailRes } from '@/lib/apiTypes'
 import { changeColorClass, formatChangeOrDash, formatPriceOrDash } from '@/lib/format'
 import { stockPriceBasisLabel } from '@/lib/referenceDate'
@@ -13,6 +13,7 @@ export function StockHeader({ stock }: { stock: StockDetailRes }) {
     <header className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <StockLogo ticker={stock.ticker} />
           <h1 className="text-display font-normal leading-[1.1] tracking-[-0.8px] text-foreground">{stock.name}</h1>
           <FavoriteStar type="STOCK" targetKey={stock.ticker} label={stock.name} />
           <span className="font-mono text-body text-muted-foreground">
@@ -29,9 +30,12 @@ export function StockHeader({ stock }: { stock: StockDetailRes }) {
           {basis && <span className="font-mono text-caption text-muted-foreground">{basis}</span>}
         </div>
       </div>
-      <Button variant="outline" size="sm" asChild>
-        <Link to={`/graph/${stock.ticker}`}>지식그래프에서 보기</Link>
-      </Button>
+      <Link
+        to={`/graph/${stock.ticker}`}
+        className="flex min-h-11 items-center text-sm font-semibold text-primary hover:underline md:min-h-0"
+      >
+        기업 그래프 →
+      </Link>
     </header>
   )
 }

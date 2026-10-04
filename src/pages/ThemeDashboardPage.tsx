@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CircleAlert, Info, RotateCw } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { ErrorState } from '@/components/layout/ErrorState'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { StockSection } from '@/components/theme/StockSection'
 import { ThemeFocus } from '@/components/theme/ThemeFocus'
 import { Treemap, type TreemapItem } from '@/components/theme/Treemap'
-import { TreemapToolbar } from '@/components/theme/TreemapToolbar'
-import { Button } from '@/components/ui/button'
+import { DashboardToolbar } from '@/components/theme/DashboardToolbar'
 import { toNewsItem } from '@/lib/apiMappers'
 import type { ThemeRes } from '@/lib/apiTypes'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -60,6 +60,8 @@ export default function ThemeDashboardPage() {
   const candleDate = useReferenceDate(fallbackTicker)
   const referenceDate = baseDate ?? candleDate
   const banner = coverageBanner(market?.coverage, hotThemes ? hotThemes.length : null)
+  // 표시 개수를 바꿔 다시 받는 동안에는 이전 화면을 그대로 둔다 — 뼈대로 갈아엎으면 아래 차트가 사라졌다 다시 생긴다
+  const firstLoading = loading && !hotThemes
 
   const treemapThemes = useMemo(() => {
     const list = hotThemes ?? []
@@ -118,7 +120,7 @@ export default function ThemeDashboardPage() {
 
   return (
     <div className="page-container pb-12 pt-7">
-      <TreemapToolbar
+      <DashboardToolbar
         shownCount={treemapThemes.length}
         market={market}
         referenceDate={referenceDate}
@@ -136,7 +138,7 @@ export default function ThemeDashboardPage() {
         }}
       />
 
-      {loading && (
+      {firstLoading && (
         <>
           <div className="aspect-[1200/520] w-full animate-pulse rounded-2xl bg-muted" />
           <div className="mt-3 h-4 w-1/2 animate-pulse rounded bg-muted" />
@@ -148,24 +150,9 @@ export default function ThemeDashboardPage() {
         </>
       )}
 
-      {!loading && error && (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <p className="text-body text-muted-foreground">
-            {error.isRetryable
-              ? '일시적으로 데이터를 불러올 수 없습니다.'
-              : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
-          </p>
-          {error.isRetryable && (
-            <Button variant="outline" size="sm" onClick={refetch}>
-              <RotateCw data-icon="inline-start" />
-              다시 시도
-            </Button>
-          )}
-        </div>
-      )}
+      {!firstLoading && error && <ErrorState error={error} onRetry={refetch} />}
 
-      {!loading && !error && hotThemes && (
+      {!error && hotThemes && (
         <>
           {banner && (
             <div
@@ -199,7 +186,7 @@ export default function ThemeDashboardPage() {
               key={`focus-${selected.id}`}
               className="mt-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300"
             >
-              <ThemeFocus theme={selected} from={from} stocks={themeStocks ?? []} />
+              <ThemeFocus theme={selected} stocks={themeStocks ?? []} from={from} />
 
               <div className="mt-4 grid items-stretch gap-4 lg:grid-cols-[1.08fr_0.92fr]">
                 <div className="min-w-0 [&>section]:h-full">

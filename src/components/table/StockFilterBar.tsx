@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FilterChip } from '@/components/ui/filter-chip'
+import { InfoPopover } from '@/components/ui/info-popover'
 import { Input } from '@/components/ui/input'
-import type { StockRowRes } from '@/lib/apiTypes'
 import {
   DEFAULT_FILTER,
   isFilterActive,
+  LARGE_CAP_RANK,
   type FilterState,
   type PresetKey,
   type RangeKey,
@@ -19,12 +20,35 @@ const MARKETS: { value: FilterState['market']; label: string }[] = [
   { value: 'KOSDAQ', label: 'KOSDAQ' },
 ]
 
-const PRESETS: { key: PresetKey; label: string }[] = [
-  { key: 'lowPer', label: '저PER' },
-  { key: 'highDividend', label: '고배당' },
-  { key: 'highRoe', label: '고ROE' },
-  { key: 'largeCap', label: '대형주' },
+const PRESETS: { key: PresetKey; label: string; rule: string }[] = [
+  { key: 'largeCap', label: '대형주', rule: `시가총액 순위 1~${LARGE_CAP_RANK}위` },
+  { key: 'lowPer', label: '저PER', rule: 'PER이 0보다 크고 10 미만' },
+  { key: 'highRoe', label: '고ROE', rule: 'ROE 10% 이상' },
+  { key: 'highDividend', label: '고배당', rule: '배당률 5% 이상' },
 ]
+
+/** 프리셋 칩 기준 — 칩 이름만으로는 어디서 끊는지 알 수 없다 */
+function PresetHelp() {
+  return (
+    <InfoPopover title="칩 기준">
+      <div className="flex flex-col gap-3 text-caption leading-relaxed text-foreground-secondary break-keep [text-wrap:pretty]">
+        <dl className="flex flex-col gap-1">
+          {PRESETS.map(({ key, label, rule }) => (
+            <div key={key} className="flex gap-2">
+              <dt className="w-12 shrink-0 font-medium text-foreground">{label}</dt>
+              <dd>{rule}</dd>
+            </div>
+          ))}
+        </dl>
+        <p>
+          대형주 순위는 KOSPI·KOSDAQ을 합친 전체 종목에서 매겨요. 저PER은 적자라 PER이 음수인
+          종목을 빼요.
+        </p>
+        <p>칩을 여러 개 켜면 모두 만족하는 종목만 남고, 해당 값이 없는 종목은 빠져요.</p>
+      </div>
+    </InfoPopover>
+  )
+}
 
 const RANGES: { key: RangeKey; label: string }[] = [
   { key: 'marketCap', label: '시총(억)' },
@@ -35,22 +59,15 @@ const RANGES: { key: RangeKey; label: string }[] = [
 ]
 
 interface StockFilterBarProps {
-  stocks: StockRowRes[]
   value: FilterState
   onChange: (next: FilterState) => void
   matchCount: number
 }
 
-export function StockFilterBar({ stocks, value, onChange, matchCount }: StockFilterBarProps) {
+export function StockFilterBar({ value, onChange, matchCount }: StockFilterBarProps) {
   const [open, setOpen] = useState(false)
   // 입력 도중 문자열("3." 등)을 보존하려고 화면용 원문은 따로 든다 — 숫자만 상위로 올린다
   const [rangeText, setRangeText] = useState<Record<string, string>>({})
-
-  const themes = useMemo(() => {
-    const set = new Set<string>()
-    for (const stock of stocks) if (stock.themeName) set.add(stock.themeName)
-    return [...set].sort((a, b) => a.localeCompare(b, 'ko'))
-  }, [stocks])
 
   const togglePreset = (key: PresetKey) => {
     const presets = new Set(value.presets)
@@ -99,19 +116,7 @@ export function StockFilterBar({ stocks, value, onChange, matchCount }: StockFil
             {label}
           </FilterChip>
         ))}
-
-        <select
-          value={value.theme ?? ''}
-          onChange={(e) => onChange({ ...value, theme: e.target.value || null })}
-          className="h-[30px] cursor-pointer rounded border border-border bg-transparent px-2 text-caption font-medium text-foreground-secondary outline-none focus-visible:border-ring"
-        >
-          <option value="">전체 테마</option>
-          {themes.map((theme) => (
-            <option key={theme} value={theme}>
-              {theme}
-            </option>
-          ))}
-        </select>
+        <PresetHelp />
 
         <Button variant="ghost" size="sm" onClick={() => setOpen((prev) => !prev)}>
           상세 필터

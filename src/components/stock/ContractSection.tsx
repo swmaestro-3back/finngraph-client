@@ -32,7 +32,7 @@ interface ContractSectionProps {
   className?: string
 }
 
-export function SalesRatioCell({ ratio, muted = false }: { ratio: number | null; muted?: boolean }) {
+function SalesRatioCell({ ratio, muted = false }: { ratio: number | null; muted?: boolean }) {
   return (
     <div className="flex items-center gap-2">
       <span
@@ -53,6 +53,64 @@ export function SalesRatioCell({ ratio, muted = false }: { ratio: number | null;
         {formatSalesRatio(ratio)}
       </span>
     </div>
+  )
+}
+
+/** 계약 목록 로딩 자리 — 행 수만 다르다 */
+export function ContractListSkeleton({ rows }: { rows: number }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="h-11 animate-pulse rounded-lg bg-muted" />
+      ))}
+    </div>
+  )
+}
+
+/** 계약 목록 조회 실패 — 카드 안에 작게. 페이지 전체용 ErrorState와는 크기·문구가 다르다 */
+export function ContractListError({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-8 text-center">
+      <CircleAlert className="size-6 text-muted-foreground" />
+      <p className="text-caption text-muted-foreground">
+        {error.isRetryable ? '공시 정보를 잠시 불러올 수 없어요.' : '공시 정보를 불러오지 못했어요.'}
+      </p>
+      {error.isRetryable && (
+        <Button variant="outline" size="sm" onClick={onRetry}>
+          <RotateCw data-icon="inline-start" />
+          다시 시도
+        </Button>
+      )}
+    </div>
+  )
+}
+
+interface AmountCellsRow {
+  contractAmount: number | null
+  salesRatio: number | null
+  link: string
+}
+
+/** 계약금액 · 매출 대비 · DART 원문 — 두 목록(종목 상세·브리핑 보드)의 오른쪽 세 칸 */
+export function ContractAmountCells({ row, muted = false }: { row: AmountCellsRow; muted?: boolean }) {
+  return (
+    <>
+      <span className="text-right font-mono text-sm font-medium tabular-nums text-foreground">
+        {formatCompactKrw(row.contractAmount)}
+      </span>
+      <div className="hidden sm:block">
+        <SalesRatioCell ratio={row.salesRatio} muted={muted} />
+      </div>
+      <a
+        href={row.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="DART 공시 원문 열기"
+        className="hidden justify-self-end text-muted-foreground transition-colors hover:text-primary sm:block"
+      >
+        <ExternalLink className="size-4" strokeWidth={2} />
+      </a>
+    </>
   )
 }
 
@@ -98,21 +156,7 @@ function ContractRow({ row, from }: { row: StockContractRes; from: string }) {
           {row.isCorrection && <span className="ml-1.5 text-accent-warm">정정</span>}
         </p>
       </div>
-      <span className="text-right font-mono text-sm font-medium tabular-nums text-foreground">
-        {formatCompactKrw(row.contractAmount)}
-      </span>
-      <div className="hidden sm:block">
-        <SalesRatioCell ratio={row.salesRatio} muted={row.role === 'COUNTERPARTY'} />
-      </div>
-      <a
-        href={row.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="DART 공시 원문 열기"
-        className="hidden justify-self-end text-muted-foreground transition-colors hover:text-primary sm:block"
-      >
-        <ExternalLink className="size-4" strokeWidth={2} />
-      </a>
+      <ContractAmountCells row={row} muted={row.role === 'COUNTERPARTY'} />
     </div>
   )
 }
@@ -167,28 +211,9 @@ export function ContractSection({
       </div>
 
       <div className="card-surface p-5">
-        {loading && (
-          <div className="flex flex-col gap-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-11 animate-pulse rounded-lg bg-muted" />
-            ))}
-          </div>
-        )}
+        {loading && <ContractListSkeleton rows={3} />}
 
-        {!loading && error && (
-          <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <CircleAlert className="size-6 text-muted-foreground" />
-            <p className="text-caption text-muted-foreground">
-              {error.isRetryable ? '공시 정보를 잠시 불러올 수 없어요.' : '공시 정보를 불러오지 못했어요.'}
-            </p>
-            {error.isRetryable && (
-              <Button variant="outline" size="sm" onClick={onRetry}>
-                <RotateCw data-icon="inline-start" />
-                다시 시도
-              </Button>
-            )}
-          </div>
-        )}
+        {!loading && error && <ContractListError error={error} onRetry={onRetry} />}
 
         {!loading && !error && rows.length === 0 && (
           <div className="flex flex-col items-center gap-1.5 py-8 text-center">

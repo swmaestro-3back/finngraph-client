@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { StockLogo } from '@/components/stock/StockLogo'
+import { ChangeStatusTag } from '@/components/theme/ChangeStatusTag'
 import type { ThemeStockRes } from '@/lib/apiTypes'
 import {
   changeColorClass,
@@ -9,12 +11,7 @@ import {
   toEok,
   toMillion,
 } from '@/lib/format'
-import {
-  changeStatusTag,
-  excludedFromMeanLabel,
-  TRIMMED_TITLE,
-  trimmedTickers,
-} from '@/lib/themeMetrics'
+import { changeStatusTag, compareNullLast } from '@/lib/themeMetrics'
 import { cn } from '@/lib/utils'
 
 const GRID =
@@ -29,17 +26,11 @@ interface StockSectionProps {
 }
 
 export function StockSection({ stocks, from, className, listClassName }: StockSectionProps) {
+  // 등락률 내림차순, 등락률 없는 종목은 뒤로
   const sorted = useMemo(
-    () =>
-      [...stocks].sort((a, b) => {
-        if (a.change === null && b.change === null) return 0
-        if (a.change === null) return 1
-        if (b.change === null) return -1
-        return b.change - a.change
-      }),
+    () => [...stocks].sort((a, b) => compareNullLast(a.change, b.change, true)),
     [stocks],
   )
-  const excluded = excludedFromMeanLabel(trimmedTickers(stocks).size)
 
   return (
     <section className={cn('card-surface p-5', className)}>
@@ -47,12 +38,6 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
         <h2 className="text-lg font-medium tracking-[-0.5px] text-foreground">구성 종목</h2>
         <span className="text-caption text-muted-foreground">
           등락률순 · <span className="font-mono tabular-nums">{sorted.length}</span>개
-          {excluded && (
-            <span title={TRIMMED_TITLE}>
-              {' · '}
-              {excluded}
-            </span>
-          )}
         </span>
       </div>
 
@@ -74,7 +59,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
         )}
         {sorted.map((stock) => {
           const tag = changeStatusTag(stock.changeStatus)
-          const priced = stock.change !== null && (!tag || tag.keepsChange)
+          const priced = stock.change !== null && !tag
           return (
           <Link
             key={stock.ticker}
@@ -86,6 +71,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
             )}
           >
             <span className="flex min-w-0 items-center gap-[9px] overflow-hidden">
+              <StockLogo ticker={stock.ticker} size={24} reserveSpace />
               <span className="truncate text-sm font-semibold text-foreground">{stock.name}</span>
               <span className="shrink-0 font-mono text-caption text-muted-foreground">
                 {stock.ticker}
@@ -111,14 +97,7 @@ export function StockSection({ stocks, from, className, listClassName }: StockSe
               >
                 {stock.change === null ? '—' : formatChange(stock.change)}
               </span>
-              {tag && (
-                <span
-                  title={tag.title}
-                  className="rounded border border-border px-1.5 py-0.5 text-caption leading-none text-muted-foreground"
-                >
-                  {tag.label}
-                </span>
-              )}
+              {tag && <ChangeStatusTag tag={tag} />}
             </span>
           </Link>
           )
