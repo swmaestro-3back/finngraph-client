@@ -15,6 +15,7 @@ import ThemeDashboardPage from '@/pages/ThemeDashboardPage'
 import StockDetailPage from '@/pages/StockDetailPage'
 import CorpGraphPage from '@/pages/CorpGraphPage'
 import ThemesPage from '@/pages/themes/ThemesPage'
+import ThemeDetailPage from '@/pages/themes/ThemeDetailPage'
 import StockListPage from '@/pages/StockListPage'
 import BriefingPage from '@/pages/BriefingPage'
 import CalendarPage from '@/pages/CalendarPage'
@@ -49,7 +50,8 @@ function App() {
         <Route path="/" element={<ThemeDashboardPage />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/news/:issueId" element={<IssuePage />} />
-        <Route path="/themes/:themeId?" element={<ThemesPage />} />
+        <Route path="/themes" element={<ThemesPage />} />
+        <Route path="/themes/:themeId" element={<ThemeDetailPage />} />
         <Route path="/theme/:themeId" element={<LegacyThemeRedirect />} />
         <Route path="/stocks" element={<StockListPage />} />
         <Route path="/stocks/:stockCode" element={<StockDetailPage />} />
