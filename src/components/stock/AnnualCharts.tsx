@@ -38,7 +38,7 @@ interface ChartCtx {
   data: AnnualDatum[]
 }
 
-const axisTick = { fontSize: 10, fill: 'var(--muted-foreground)', fontFamily: 'JetBrains Mono Variable, monospace' }
+const axisTick = { fontSize: 10, fill: 'var(--muted-foreground)', fontFamily: 'var(--font-sans)', fontVariantNumeric: 'tabular-nums' }
 
 // 6개 카드가 같은 연도 축을 쓴다 — 한 곳을 짚으면 나머지도 같은 해를 가리킨다
 const SYNC_ID = 'annual-financials'
