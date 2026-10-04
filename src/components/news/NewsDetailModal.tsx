@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { ArrowUpRight, CircleAlert, RotateCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
@@ -23,9 +23,10 @@ import { cn } from '@/lib/utils'
 interface Props {
   newsId: string | null
   onOpenChange: (open: boolean) => void
+  returnFocusRef?: RefObject<HTMLElement | null>
 }
 
-export function NewsDetailModal({ newsId, onOpenChange }: Props) {
+export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props) {
   const [currentId, setCurrentId] = useState<string | null>(newsId)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [hop, setHop] = useState<Hop>(1)
@@ -70,7 +71,14 @@ export function NewsDetailModal({ newsId, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          const target = returnFocusRef?.current
+          if (!target?.isConnected) return
+          event.preventDefault()
+          target.focus()
+        }}
+        className={cn(
           'flex flex-col gap-0 overflow-hidden p-0 sm:max-w-[1080px]',
           // 오버레이가 헤더까지 덮으므로 헤더 아래가 아니라 화면 위 32px에 상단 고정 — 요약과 관계 그래프가 한 화면에 들어온다
           'top-8 max-h-[calc(100vh-56px)] translate-y-0',

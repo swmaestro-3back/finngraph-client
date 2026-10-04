@@ -14,12 +14,19 @@ import {
   themeLeader,
   themeQueryString,
   themeTiles,
+  TILE_ENTER_MS,
+  TILE_REFLOW_HOLD_MS,
+  TILE_REFLOW_MS,
+  enteringIds,
   tileAria,
+  tileEnterDelay,
   tileGrade,
+  tileText,
   toMapCount,
   visibleThemes,
   weightedChangeOf,
   type ChangeOf,
+  type MeasureText,
 } from '@/lib/fg/themes'
 
 function theme(id: number, patch: Partial<ThemeRes> = {}): ThemeRes {
@@ -298,14 +305,220 @@ describe('themeLeader / memberRows', () => {
 })
 
 describe('tileGrade', () => {
-  it('칸 크기로 글자 등급을 정한다', () => {
+  it('아주 작은 칸은 글씨를 숨기는 xs', () => {
     expect(tileGrade(50, 100)).toBe('xs')
+    expect(tileGrade(55, 200)).toBe('xs')
     expect(tileGrade(100, 30)).toBe('xs')
-    expect(tileGrade(200, 50)).toBe('s')
-    expect(tileGrade(110, 100)).toBe('m')
-    expect(tileGrade(200, 80)).toBe('m')
-    expect(tileGrade(240, 160)).toBe('xl')
-    expect(tileGrade(200, 100)).toBe('l')
+    expect(tileGrade(56, 36)).toBe('s')
+  })
+
+  it('글자 크기는 칸 폭으로 정한다', () => {
+    expect(tileGrade(71, 100)).toBe('s')
+    expect(tileGrade(72, 100)).toBe('m')
+    expect(tileGrade(129, 100)).toBe('m')
+    expect(tileGrade(130, 100)).toBe('l')
+    expect(tileGrade(199, 100)).toBe('l')
+    expect(tileGrade(200, 100)).toBe('xl')
+  })
+
+  it('낮은 칸은 이름 한 줄과 등락률이 들어가는 크기까지 줄인다', () => {
+    expect(tileGrade(200, 39)).toBe('s')
+    expect(tileGrade(200, 51)).toBe('xl')
+    expect(tileGrade(200, 50)).toBe('l')
+    expect(tileGrade(199, 48)).toBe('l')
+    expect(tileGrade(300, 46)).toBe('m')
+    expect(tileGrade(100, 45)).toBe('m')
+    expect(tileGrade(100, 44)).toBe('s')
+  })
+})
+
+describe('tileText', () => {
+  const em: MeasureText = (text, font) => [...text].length * font.size
+  const parts = (name: string, change = '+2.81%', detail: string | null = '▲11 ▼1') => ({ name, change, detail })
+
+  it('xs 칸은 글씨를 그리지 않는다', () => {
+    expect(tileText(50, 100, parts('철강'), em)).toBeNull()
+    expect(tileText(120, 30, parts('철강'), em)).toBeNull()
+  })
+
+  it('공간이 넉넉하면 이름·등락률·종목 수를 줄로 모두 보인다', () => {
+    expect(tileText(240, 160, parts('반도체 소재'), em)).toEqual({
+      grade: 'xl',
+      name: '반도체 소재',
+      nameLines: 1,
+      nameFit: 'full',
+      sub: null,
+      change: true,
+      detail: 'line',
+    })
+  })
+
+  it('괄호 이름은 큰 줄과 작은 줄로 나눈다', () => {
+    expect(tileText(240, 160, parts('강관업체(Steel pipe)'), em)).toMatchObject({
+      name: '강관업체',
+      sub: '(Steel pipe)',
+      change: true,
+      detail: 'line',
+    })
+  })
+
+  it('종목 수 줄이 안 들어가면 등락률 옆에 붙인다', () => {
+    expect(tileText(180, 56, parts('철강', '+1.67%', '▲36 ▼9'), em)).toMatchObject({
+      grade: 'l',
+      name: '철강',
+      change: true,
+      detail: 'inline',
+    })
+  })
+
+  it('종목 수를 가장 먼저 뺀다', () => {
+    expect(tileText(150, 56, parts('철강', '+1.67%', '▲36 ▼9'), em)).toMatchObject({
+      name: '철강',
+      nameFit: 'full',
+      change: true,
+      detail: null,
+    })
+  })
+
+  it('높이가 모자라면 종목 수 다음으로 괄호 줄을 뺀다', () => {
+    expect(tileText(110, 50, parts('HBM(고대역)', '+0.75%', '▲26 ▼7'), em)).toEqual({
+      grade: 'm',
+      name: 'HBM',
+      nameLines: 1,
+      nameFit: 'full',
+      sub: null,
+      change: true,
+      detail: null,
+    })
+  })
+
+  it('괄호 줄이 높이 때문에 빠지면 종목 수도 보이지 않는다', () => {
+    expect(tileText(180, 60, parts('HBM(고대역)', '+0.75%', '▲26 ▼7'), em)).toEqual({
+      grade: 'l',
+      name: 'HBM',
+      nameLines: 1,
+      nameFit: 'full',
+      sub: null,
+      change: true,
+      detail: null,
+    })
+  })
+
+  it('괄호 줄이 폭에 안 들어가면 그 줄만 빼고 종목 수는 보인다', () => {
+    expect(tileText(110, 100, parts('HBM(고대역폭메모리)', '+0.75%', '▲26 ▼7'), em)).toMatchObject({
+      name: 'HBM',
+      sub: null,
+      change: true,
+      detail: 'line',
+    })
+  })
+
+  it('이름은 단어 단위로 두 줄까지 쓴다', () => {
+    expect(tileText(110, 100, parts('반도체 전공정 장비', '+2.45%', '▲1 ▼1'), em)).toEqual({
+      grade: 'm',
+      name: '반도체 전공정 장비',
+      nameLines: 2,
+      nameFit: 'full',
+      sub: null,
+      change: true,
+      detail: 'line',
+    })
+  })
+
+  it('등락률을 빼기 전에 이름을 단어 경계에서 한 줄로 줄인다', () => {
+    expect(tileText(110, 50, parts('반도체 전공정 장비', '+2.45%', '▲1 ▼1'), em)).toEqual({
+      grade: 'm',
+      name: '반도체…',
+      nameLines: 1,
+      nameFit: 'word',
+      sub: null,
+      change: true,
+      detail: null,
+    })
+  })
+
+  it('좁고 낮은 칸은 여백과 줄 간격을 줄여 등락률을 넣는다', () => {
+    expect(tileText(70, 100, parts('철강', '0.00%'), em)).toMatchObject({ grade: 's', change: true })
+    expect(tileText(70, 38, parts('철강', '0.00%'), em)).toMatchObject({ grade: 's', change: true })
+    expect(tileText(70, 37, parts('철강', '0.00%'), em)).toMatchObject({ grade: 's', change: false })
+  })
+
+  it('등락률이 폭에 안 들어가면 이름만 남긴다', () => {
+    expect(tileText(60, 100, parts('철강'), em)).toEqual({
+      grade: 's',
+      name: '철강',
+      nameLines: 1,
+      nameFit: 'full',
+      sub: null,
+      change: false,
+      detail: null,
+    })
+  })
+
+  it('등락률을 뺀 뒤에는 이름을 두 줄까지 쓴다', () => {
+    expect(tileText(60, 100, parts('LED 장비'), em)).toMatchObject({
+      name: 'LED 장비',
+      nameLines: 2,
+      nameFit: 'full',
+      change: false,
+    })
+  })
+
+  it('단어 중간 말줄임은 마지막 수단이고 등락률은 들어갈 때만 붙인다', () => {
+    expect(tileText(60, 100, parts('고체산화물연료'), em)).toMatchObject({
+      name: '고체산화물연료',
+      nameLines: 1,
+      nameFit: 'char',
+      change: false,
+    })
+    expect(tileText(80, 100, parts('고체산화물연료', '0.00%'), em)).toMatchObject({
+      name: '고체산화물연료',
+      nameFit: 'char',
+      change: true,
+      detail: null,
+    })
+  })
+
+  it('이름을 잘라야 하면 한 단계 작은 글자로 다시 맞춰 본다', () => {
+    expect(tileText(72, 98, parts('우주태양광'), em)).toMatchObject({
+      grade: 's',
+      name: '우주태양광',
+      nameFit: 'full',
+    })
+    expect(tileText(100, 49, parts('전고체 배터리', '+1.96%', '▲15 ▼2'), em)).toMatchObject({
+      grade: 's',
+      name: '전고체 배터리',
+      nameFit: 'full',
+      change: true,
+    })
+  })
+
+  it('작은 글자로도 이름이 안 들어가면 원래 크기를 쓴다', () => {
+    expect(tileText(110, 50, parts('반도체 전공정 장비', '+2.45%', '▲1 ▼1'), em)).toMatchObject({
+      grade: 'm',
+      nameFit: 'word',
+    })
+  })
+
+  it('등락률 자체는 자르지 않는다', () => {
+    const wide: MeasureText = (text, font) => (text.includes('%') ? 1000 : [...text].length * font.size)
+    expect(tileText(240, 160, parts('반도체 소재'), wide)).toMatchObject({ change: false, detail: null })
+  })
+})
+
+describe('지도 칸 재배치 모션', () => {
+  it('새로 들어온 칸은 순서대로 22ms씩 늦게, 최대 400ms까지', () => {
+    expect([0, 1, 10, 18, 19, 30].map(tileEnterDelay)).toEqual([0, 22, 220, 396, 400, 400])
+  })
+
+  it('이전에 없던 테마 id만 새 칸으로 본다', () => {
+    expect(enteringIds([{ id: 1 }, { id: 2 }], [{ id: 2 }, { id: 3 }, { id: 4 }])).toEqual(new Set([3, 4]))
+    expect(enteringIds([{ id: 1 }], [{ id: 1 }])).toEqual(new Set())
+  })
+
+  it('재배치 표시는 이동과 가장 늦은 등장이 끝날 때까지 유지한다', () => {
+    expect(TILE_REFLOW_HOLD_MS).toBeGreaterThanOrEqual(TILE_REFLOW_MS)
+    expect(TILE_REFLOW_HOLD_MS).toBeGreaterThanOrEqual(tileEnterDelay(Number.MAX_SAFE_INTEGER) + TILE_ENTER_MS)
   })
 })
 

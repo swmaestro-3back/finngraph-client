@@ -230,7 +230,13 @@ export default function ThemesPage() {
   } else {
     mapBody = (
       <>
-        <ThemeTreemap tiles={tiles} selectedId={selectedId} onSelect={select} label={MAP_LABEL} />
+        <ThemeTreemap
+          tiles={tiles}
+          selectedId={selectedId}
+          onSelect={select}
+          label={MAP_LABEL}
+          layoutKey={`${query.count}:${favOn ? 'fav' : 'all'}`}
+        />
         <ThemeLegend />
       </>
     )

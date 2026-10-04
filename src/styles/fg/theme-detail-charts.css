@@ -510,7 +510,15 @@
 .fg-tnw__row:hover {
   text-decoration: none;
 }
-a.fg-tnw__row:hover .fg-tnw__title {
+button.fg-tnw__row {
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fg-tnw__row:is(a, button):hover .fg-tnw__title {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
