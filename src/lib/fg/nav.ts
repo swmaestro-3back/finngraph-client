@@ -31,7 +31,7 @@ export function activeMenu(pathname: string): MenuKey | null {
 
 export type Canvas = 'page' | 'surface'
 
-export const REDESIGNED_BASES: readonly string[] = ['/news', '/dev']
+export const REDESIGNED_BASES: readonly string[] = ['/news', '/themes', '/dev']
 
 export function canvasFor(pathname: string): Canvas {
   return REDESIGNED_BASES.some((base) => under(pathname, base)) ? 'page' : 'surface'

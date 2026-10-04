@@ -37,6 +37,9 @@ describe('canvasFor', () => {
     expect(canvasFor('/news')).toBe('page')
     expect(canvasFor('/news/1')).toBe('page')
     expect(canvasFor('/dev/fg')).toBe('page')
+    expect(canvasFor('/themes')).toBe('page')
+    expect(canvasFor('/themes/59')).toBe('page')
+    expect(canvasFor('/theme/59')).toBe('surface')
     expect(canvasFor('/')).toBe('surface')
     expect(canvasFor('/briefing')).toBe('surface')
     expect(canvasFor('/newsletter')).toBe('surface')
@@ -55,6 +58,8 @@ describe('outletKey', () => {
     expect(outletKey('/news')).toBe('/news')
     expect(outletKey('/news/12')).toBe('/news')
     expect(outletKey('/dev/fg')).toBe('/dev')
+    expect(outletKey('/themes')).toBe('/themes')
+    expect(outletKey('/themes/59')).toBe('/themes')
   })
 
   it('기준 경로로 시작하기만 하는 경로는 개편된 화면이 아니다', () => {
