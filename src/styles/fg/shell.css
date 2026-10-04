@@ -7,6 +7,10 @@
   flex-direction: column;
   word-break: keep-all;
 }
+.fg-sidesheet,
+.fg-umenu {
+  word-break: keep-all;
+}
 .fg-app[data-canvas='page'] {
   background: var(--bg-page);
 }

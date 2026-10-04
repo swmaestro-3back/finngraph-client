@@ -1,3 +1,4 @@
+import { themePath } from '@/lib/fg/paths'
 import type { ThemeRes } from '@/lib/apiTypes'
 
 export type ThemeIdIndex = Map<string, number>
@@ -19,5 +20,5 @@ export function themeIdIndex(themes: readonly NamedTheme[]): ThemeIdIndex {
 
 export function themeDetailPath(name: string, index: ThemeIdIndex | null): string | null {
   const id = index?.get(key(name))
-  return id === undefined ? null : `/theme/${id}`
+  return id === undefined ? null : themePath(id)
 }

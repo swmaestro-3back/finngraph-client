@@ -5,9 +5,13 @@ import { useGap, useGapMode } from '@/lib/useGap'
 
 export function GapGallery() {
   const mode = useGapMode()
-  const sample = useGap(
+  const quote = useGap(
     'stock-quote-ext',
-    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture) : null,
+    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.gapFromHigh) : null,
+  )
+  const issue = useGap(
+    'theme-issue',
+    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.issueTitle) : null,
   )
   return (
     <GallerySection title="데이터 갭">
@@ -20,12 +24,15 @@ export function GapGallery() {
       </div>
       <div className="fg-gal__row">
         <span>
-          52주 최고 대비 <GapValue gap="stock-quote-ext" mock={sample.status === 'mock' ? sample.data.gapFromHigh : null} />
+          52주 최고 대비 <GapValue gap="stock-quote-ext" mock={quote.status === 'mock' ? quote.data : null} />
         </span>
         <span>
-          대표 이슈 <GapValue gap="theme-issue" mock={sample.status === 'mock' ? sample.data.issueTitle : null} />
+          대표 이슈 <GapValue gap="theme-issue" mock={issue.status === 'mock' ? issue.data : null} />
         </span>
-        {sample.status === 'mock' && <MockBadge />}
+        <span>
+          문구형 <GapValue gap="theme-weighted-change" label="등락률 준비 중" />
+        </span>
+        {(quote.status === 'mock' || issue.status === 'mock') && <MockBadge />}
       </div>
       <NotReady gap="issues" />
     </GallerySection>
