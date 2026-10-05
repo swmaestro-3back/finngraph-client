@@ -554,16 +554,16 @@ describe('tileAria / themeTiles', () => {
 })
 
 describe('themeBasisLabel', () => {
-  it('장 마감 뒤에는 종가 기준', () => {
+  it('장 마감 뒤에는 종가 기준이고 통합 시세임을 붙인다', () => {
     expect(
       themeBasisLabel({ baseDate: '2026-10-02', valuationDate: '2026-10-02', updatedAt: '2026-10-02T07:10:00Z' }),
-    ).toBe('10월 2일(금) 종가 기준')
+    ).toBe('10월 2일(금) 종가 기준 · 통합(KRX+NXT)')
   })
 
   it('장중에는 갱신 시각(KST) 기준', () => {
     expect(
       themeBasisLabel({ baseDate: '2026-10-02', valuationDate: '2026-10-01', updatedAt: '2026-10-02T01:12:00Z' }),
-    ).toBe('10월 2일(금) 10:12 기준')
+    ).toBe('10월 2일(금) 10:12 기준 · 통합(KRX+NXT)')
   })
 
   it('기준일이 없으면 null', () => {

@@ -16,6 +16,8 @@ export function formatTradingDate(isoDate: string): string {
   return `${isoDate} (${weekday})`
 }
 
+export const QUOTE_SOURCE_LABEL = '통합(KRX+NXT)'
+
 export interface PriceBasis {
   baseDate?: string | null
   valuationDate?: string | null

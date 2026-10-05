@@ -184,13 +184,13 @@ describe('streakLabels', () => {
 describe('stockBasisLabel', () => {
   it('장 마감 뒤에는 종목 기준일의 종가 기준', () => {
     expect(stockBasisLabel({ baseDate: '2026-09-30', valuationDate: '2026-09-30' }, { updatedAt: '2026-09-30T07:10:00Z' })).toBe(
-      '9월 30일(수) 종가 기준',
+      '9월 30일(수) 종가 기준 · 통합(KRX+NXT)',
     )
   })
 
   it('장중에는 시세 갱신 시각', () => {
     expect(stockBasisLabel({ baseDate: '2026-10-05', valuationDate: '2026-10-02' }, { updatedAt: '2026-10-05T02:05:00Z' })).toBe(
-      '10월 5일(월) 11:05 기준',
+      '10월 5일(월) 11:05 기준 · 통합(KRX+NXT)',
     )
   })
 

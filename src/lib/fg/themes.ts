@@ -1,6 +1,6 @@
 import type { ThemeLeaderRes, ThemeMarketRes, ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
-import { priceBasisSuffix } from '@/lib/referenceDate'
+import { priceBasisSuffix, QUOTE_SOURCE_LABEL } from '@/lib/referenceDate'
 import { compareNullLast, tileDetail } from '@/lib/themeMetrics'
 import { normalizeSizes, tileSize } from '@/lib/treemapColor'
 
@@ -415,7 +415,7 @@ export function themeBasisLabel(
   const [year, month, day] = (market?.baseDate ?? '').split('-').map(Number)
   if (!year || !month || !day) return null
   const weekday = WEEKDAYS[new Date(year, month - 1, day).getDay()]
-  return `${month}월 ${day}일(${weekday}) ${priceBasisSuffix(market)}`
+  return `${month}월 ${day}일(${weekday}) ${priceBasisSuffix(market)} · ${QUOTE_SOURCE_LABEL}`
 }
 
 export const TILE_REFLOW_MS = 500
