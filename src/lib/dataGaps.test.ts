@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { GAP_IDS, GAPS } from '@/lib/dataGaps'
 
 describe('GAPS', () => {
-  it('API 갭 문서에서 해소되지 않은 15개 id를 문서 순서대로 갖는다', () => {
+  it('API 갭 문서에서 해소되지 않은 13개 id를 문서 순서대로 갖는다', () => {
     expect(GAP_IDS).toEqual([
       'stock-quote-ext',
       'stock-themes',
@@ -10,9 +10,7 @@ describe('GAPS', () => {
       'stock-keystats-compare',
       'issues',
       'issue-timeline',
-      'theme-issue',
       'stock-issues',
-      'watchlist-issues',
       'linked-companies',
       'disclosures',
       'investor-flow-amount',

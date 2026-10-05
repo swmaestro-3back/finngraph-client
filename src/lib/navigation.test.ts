@@ -19,7 +19,7 @@ describe('pathLabel', () => {
   })
 
   it('다른 경로 라벨은 그대로', () => {
-    expect(pathLabel('/')).toBe('테마 대시보드')
+    expect(pathLabel('/')).toBe('홈')
     expect(pathLabel('/calendar')).toBe('캘린더')
     expect(pathLabel('/stock/005930')).toBe('주식 상세')
     expect(pathLabel('/briefing')).toBeNull()

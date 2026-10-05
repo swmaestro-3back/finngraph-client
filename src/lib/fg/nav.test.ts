@@ -82,7 +82,7 @@ describe('canvasFor', () => {
     expect(canvasFor('/stocks')).toBe('page')
     expect(canvasFor('/stocks/005930')).toBe('page')
     expect(canvasFor('/stock/005930')).toBe('surface')
-    expect(canvasFor('/')).toBe('surface')
+    expect(canvasFor('/')).toBe('page')
     expect(canvasFor('/briefing')).toBe('surface')
     expect(canvasFor('/issuesboard')).toBe('surface')
   })
@@ -98,6 +98,7 @@ describe('outletKey', () => {
   })
 
   it('개편된 화면은 기준 경로를 키로 써서 그 안에서는 유지된다', () => {
+    expect(outletKey('/')).toBe('/')
     expect(outletKey('/issues/12')).toBe('/issues')
     expect(outletKey('/issues/export')).toBe('/issues')
     expect(outletKey('/dev/fg')).toBe('/dev')
