@@ -21,3 +21,17 @@ export function RetryText({ subject, onRetry, className }: RetryTextProps) {
     </button>
   )
 }
+
+interface QuoteRetryNoteProps {
+  onRetry: () => void
+  className?: string
+}
+
+export function QuoteRetryNote({ onRetry, className }: QuoteRetryNoteProps) {
+  return (
+    <p className={cn('fg-qretry', className)} role="status">
+      <span>시세를 불러오지 못했어요</span>
+      <RetryText subject="시세" onRetry={onRetry} />
+    </p>
+  )
+}

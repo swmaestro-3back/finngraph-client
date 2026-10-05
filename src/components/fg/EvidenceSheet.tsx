@@ -1,5 +1,5 @@
 import { ExternalLink } from 'lucide-react'
-import { Fragment, type RefObject } from 'react'
+import { Fragment, type ReactNode, type RefObject } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button, ButtonLink } from '@/components/fg/Button'
@@ -14,8 +14,24 @@ import { STRENGTH_LABEL } from '@/lib/fg/stockDetail'
 import { evidenceCountLabel, LINK_TYPE_LABEL, type LinkedCompany } from '@/lib/fg/stockLinks'
 import { fromState } from '@/lib/navigation'
 
+export function IssuePathLead({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <>
+      <span className="fg-rpath__node fg-rpath__node--event">
+        <i className="fg-rpath__dia" aria-hidden="true" />
+        {title}
+      </span>
+      <span className="fg-rpath__seg">
+        <span className="fg-rpath__line" aria-hidden="true" />
+        {children}
+      </span>
+    </>
+  )
+}
+
 interface EvidenceSheetProps {
   stockName: string
+  lead?: string | null
   company: LinkedCompany | null
   watched: boolean
   onToggleWatch: () => void
@@ -23,7 +39,7 @@ interface EvidenceSheetProps {
   onClose: () => void
 }
 
-export function EvidenceSheet({ stockName, company, watched, onToggleWatch, returnFocusRef, onClose }: EvidenceSheetProps) {
+export function EvidenceSheet({ stockName, lead = null, company, watched, onToggleWatch, returnFocusRef, onClose }: EvidenceSheetProps) {
   const { pathname, search } = useLocation()
   const kind = company?.confirmed ? 'direct' : 'inferred'
   return (
@@ -47,7 +63,13 @@ export function EvidenceSheet({ stockName, company, watched, onToggleWatch, retu
       {company && (
         <>
           <div className="fg-rpath" role="group" aria-label="관계 경로">
-            <span className="fg-rpath__node">{stockName}</span>
+            {lead ? (
+              <IssuePathLead title={lead}>
+                <span className="fg-rpath__node">{stockName}</span>
+              </IssuePathLead>
+            ) : (
+              <span className="fg-rpath__node">{stockName}</span>
+            )}
             {company.hops.map((hop, i) => (
               <Fragment key={`${hop.node}-${i}`}>
                 <span className="fg-rpath__edge" data-kind={kind}>

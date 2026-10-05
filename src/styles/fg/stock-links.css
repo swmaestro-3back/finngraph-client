@@ -424,3 +424,30 @@ a.fg-hlist__link:hover {
     inset: -6px 0;
   }
 }
+.fg-rpath__node--event {
+  gap: var(--space-2);
+  max-width: 100%;
+  height: auto;
+  min-height: 32px;
+  box-sizing: border-box;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-control);
+  white-space: normal;
+}
+.fg-rpath__dia {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--relation-event);
+  transform: rotate(45deg);
+}
+.fg-rpath__line {
+  flex-shrink: 0;
+  width: 20px;
+  border-top: 2px solid var(--relation-direct);
+}
+.fg-rpath__seg {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
