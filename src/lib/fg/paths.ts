@@ -15,5 +15,5 @@ export function themeSelectPath(id: number | string): string {
 }
 
 export function issuePath(id: number | string): string {
-  return `/news/${encodeURIComponent(String(id))}`
+  return `/issues/${encodeURIComponent(String(id))}`
 }

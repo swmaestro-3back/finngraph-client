@@ -5,7 +5,7 @@ describe('paths', () => {
   it('새 경로 규칙', () => {
     expect(stockPath('005930')).toBe('/stocks/005930')
     expect(themePath(12)).toBe('/themes/12')
-    expect(issuePath('77')).toBe('/news/77')
+    expect(issuePath('77')).toBe('/issues/77')
   })
 
   it('테마 경로는 상세, 목록에서 고르는 경로는 쿼리', () => {
