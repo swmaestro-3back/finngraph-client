@@ -14,7 +14,7 @@ interface Props {
  * 초록은 이 앱에서 '상승'을 뜻해 쓰지 않는다.
  */
 export function NewsSummary({ summary, stocks, onNavigate }: Props) {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const tickerOf = new Map(stocks.map((s) => [s.companyName, s.ticker]))
   const names = stocks.map((s) => s.companyName)
   const sentences = splitSentences(summary)
@@ -36,7 +36,7 @@ export function NewsSummary({ summary, stocks, onNavigate }: Props) {
               <Link
                 key={j}
                 to={`/stock/${ticker}`}
-                state={fromState(pathname)}
+                state={fromState(`${pathname}${search}`)}
                 onClick={onNavigate}
                 className={`${box} transition-colors hover:bg-accent-warm/25`}
               >

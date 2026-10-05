@@ -9,6 +9,7 @@ interface MemberVeilProps {
   pending?: boolean
   onLogin: () => void
   className?: string
+  actionClassName?: string
 }
 
 export function MemberVeil({
@@ -18,6 +19,7 @@ export function MemberVeil({
   pending = false,
   onLogin,
   className,
+  actionClassName,
 }: MemberVeilProps) {
   const compact = size === 'sm'
 
@@ -46,7 +48,7 @@ export function MemberVeil({
               {description}
             </p>
           )}
-          <Button size={compact ? 'xs' : 'sm'} className="mt-1" onClick={onLogin}>
+          <Button size={compact ? 'xs' : 'sm'} className={cn('mt-1', actionClassName)} onClick={onLogin}>
             로그인하고 보기
           </Button>
         </>

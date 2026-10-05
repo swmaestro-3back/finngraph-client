@@ -34,6 +34,8 @@ const GRAPH_HEIGHT = 'clamp(300px, 44vh, 460px)'
 /** 홉 표시 — 기사에 나온 관계가 0홉, 그 주변이 1·2홉. 서버 hop(1~3)과는 1 차이 난다 */
 const HOP_LABELS: Record<Hop, string> = { 1: '0', 2: '1', 3: '2' }
 
+const TARGET_SIZE = 'size-10 max-md:size-11'
+
 interface Props {
   /** 현재 범위만큼 펼쳐진 그래프 */
   graph: GraphData
@@ -154,22 +156,27 @@ export function NewsGraphSection({
           description="이 기사에서 추출한 기업 관계와 근거 문장을 그래프로 따라갈 수 있습니다."
           pending={pending}
           onLogin={promptLogin}
+          className="max-md:pt-20"
+          actionClassName="h-10 max-md:h-11"
         />
       )}
       {/* 좌상단 캡션이 제목 역할 — 범위를 바꾸면 문장이 따라 바뀐다 */}
-      <p className="pointer-events-none absolute top-4 left-4 z-10 rounded-md bg-background/90 px-2.5 py-1 text-caption font-medium text-foreground-secondary backdrop-blur">
-        {captionOf(gatedHop, relations.length, neighborCount, truncated)}
-      </p>
-      <div className="absolute top-4 right-4 z-10">
-        <HopSelector
-          value={gatedHop}
-          onChange={onHopChange}
-          labels={HOP_LABELS}
-          lockedFrom={locked ? 2 : undefined}
-          onLockedSelect={promptLogin}
-        />
+      <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex flex-wrap items-start justify-between gap-2">
+        <p className="rounded-md bg-background/90 px-2.5 py-1 text-caption font-medium text-foreground-secondary backdrop-blur">
+          {captionOf(gatedHop, relations.length, neighborCount, truncated)}
+        </p>
+        <div className="pointer-events-auto ml-auto">
+          <HopSelector
+            value={gatedHop}
+            onChange={onHopChange}
+            labels={HOP_LABELS}
+            lockedFrom={locked ? 2 : undefined}
+            onLockedSelect={promptLogin}
+            itemClassName="h-10 min-w-10 max-md:h-11 max-md:min-w-11"
+          />
+        </div>
       </div>
-      <Legend visibleCategories={presentCategories} />
+      <Legend visibleCategories={presentCategories} toggleClassName={TARGET_SIZE} />
       {/* 확대·축소는 휠로 충분하다 — 초기화만 우하단에 */}
       <Toolbar
         onZoomIn={() => canvasRef.current?.zoomIn()}
@@ -181,6 +188,7 @@ export function NewsGraphSection({
         isMobile={isMobile}
         resetOnly
         placement="bottom"
+        buttonClassName={TARGET_SIZE}
       />
     </div>
   )

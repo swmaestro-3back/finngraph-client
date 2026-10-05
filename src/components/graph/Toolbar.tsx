@@ -13,6 +13,7 @@ interface Props {
   resetOnly?: boolean
   /** 세로 위치. 기본은 데스크톱 위, 모바일 아래 */
   placement?: 'top' | 'bottom'
+  buttonClassName?: string
 }
 
 export function Toolbar({
@@ -22,6 +23,7 @@ export function Toolbar({
   isMobile = false,
   resetOnly = false,
   placement,
+  buttonClassName,
 }: Props) {
   const actions = [
     { Icon: Plus, onClick: onZoomIn, label: '확대' },
@@ -46,7 +48,7 @@ export function Toolbar({
                 size="icon-lg"
                 onClick={onClick}
                 aria-label={label}
-                className="bg-background/90 shadow-soft backdrop-blur hover:border-primary hover:text-primary"
+                className={cn('bg-background/90 shadow-soft backdrop-blur hover:border-primary hover:text-primary', buttonClassName)}
               >
                 <Icon className="size-[18px]" strokeWidth={2} />
               </Button>
