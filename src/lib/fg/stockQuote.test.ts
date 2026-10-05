@@ -149,6 +149,19 @@ describe('changeAmount', () => {
     expect(changeAmount(candles.slice(1), 268500, -1.4679)).toBeNull()
     expect(changeAmount(candles, null, -1.4679)).toBeNull()
   })
+
+  it('서버 변동액이 있으면 두 종가 차이와 달라도 그 값을 쓴다', () => {
+    const nxt = [candle('2026-09-30', 212800), candle('2026-10-01', 212000)]
+    expect(changeAmount(nxt, 212000, -0.2353)).toBeNull()
+    expect(changeAmount(nxt, 212000, -0.2353, -500)).toBe(-500)
+    expect(changeAmount([], 212000, -0.2353, -500)).toBe(-500)
+    expect(changeAmount(nxt, 212000, 0, 0)).toBe(0)
+  })
+
+  it('서버 변동액이 null이거나 없으면 두 종가로 계산한다', () => {
+    expect(changeAmount(candles, 268500, -1.4679, null)).toBe(-4000)
+    expect(changeAmount(candles, 268500, -1.4679, undefined)).toBe(-4000)
+  })
 })
 
 describe('sparkModel', () => {
@@ -279,6 +292,13 @@ describe('stockSummary', () => {
       tradingFailed: false,
       status: null,
     })
+  })
+
+  it('서버 변동액이 있으면 캔들을 기다리지 않고 그 값을 쓴다', () => {
+    const input = { ticker: '990101', price: 1100, change: 9.89, flows: null, themeStocks: null }
+    expect(stockSummary({ ...input, amount: 99, candles: null }).amount).toBe(99)
+    expect(stockSummary({ ...input, amount: 99, candles }).amount).toBe(99)
+    expect(stockSummary({ ...input, amount: null, candles: null }).amount).toBeNull()
   })
 
   it('받지 못한 것은 로딩도 빈 값도 아닌 실패로 둔다', () => {

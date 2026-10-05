@@ -223,7 +223,7 @@ function StockDetailView({ code }: { code: string }) {
         <StockHeader
           stock={stock}
           basis={stockBasisLabel(stock, market.data)}
-          amount={rows ? changeAmount(rows, stock.price, stock.change) : null}
+          amount={changeAmount(rows ?? [], stock.price, stock.change, stock.changeAmount)}
           week52={rows ? week52Summary(rows) : null}
           week52Loading={rows === null && !candlesFailed}
           status={status}

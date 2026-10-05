@@ -145,6 +145,7 @@ export default function StocksPage() {
             ticker: selected.ticker,
             price: selected.price,
             change: selected.change,
+            amount: selected.changeAmount,
             candles: candles.loading ? null : (candles.data ?? []),
             flows: flows.loading ? null : (flows.data ?? []),
             themeStocks: themeStocks.loading ? null : (themeStocks.data ?? []),

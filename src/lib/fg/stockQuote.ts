@@ -71,7 +71,13 @@ export function stockStatus(
   return last !== null && last.volume === 0 ? 'SUSPENDED' : null
 }
 
-export function changeAmount(candles: readonly CandleRes[], price: number | null, change: number | null): number | null {
+export function changeAmount(
+  candles: readonly CandleRes[],
+  price: number | null,
+  change: number | null,
+  reported?: number | null,
+): number | null {
+  if (typeof reported === 'number') return reported
   if (candles.length < 2 || price === null || change === null) return null
   const last = candles[candles.length - 1]
   const prev = candles[candles.length - 2]
@@ -209,20 +215,30 @@ interface StockSummaryInput {
   ticker: string
   price: number | null
   change: number | null
+  amount?: number | null
   candles: readonly CandleRes[] | null
   flows: readonly InvestorFlowRes[] | null
   themeStocks: readonly ThemeStockRow[] | null
   failed?: SummaryFailures
 }
 
-export function stockSummary({ ticker, price, change, candles, flows, themeStocks, failed = {} }: StockSummaryInput): StockSummary {
+export function stockSummary({
+  ticker,
+  price,
+  change,
+  amount,
+  candles,
+  flows,
+  themeStocks,
+  failed = {},
+}: StockSummaryInput): StockSummary {
   const candlesFailed = failed.candles === true
   const flowsFailed = failed.flows === true
   const tradingFailed = failed.themeStocks === true
   return {
     loading: candles === null && !candlesFailed,
     candlesFailed,
-    amount: candles ? changeAmount(candles, price, change) : null,
+    amount: changeAmount(candles ?? [], price, change, amount),
     week52: candles ? week52Summary(candles) : null,
     spark: candles ? sparkModel(candles, SPARK_MONTHS) : null,
     flows: flows ? flowTotals(flows) : null,
