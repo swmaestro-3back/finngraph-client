@@ -101,6 +101,38 @@ function toSpan(range: LogicalRange): LogicalSpan {
   return { from: range.from, to: range.to }
 }
 
+interface TooltipPoint {
+  x: number
+  y: number
+}
+
+function placeTooltip(
+  point: TooltipPoint,
+  size: { width: number; height: number },
+  bounds: { width: number; height: number },
+  gap = 12,
+): { left: number; top: number } {
+  const left = point.x + gap + size.width > bounds.width ? point.x - gap - size.width : point.x + gap
+  const top = point.y + gap + size.height > bounds.height ? point.y - gap - size.height : point.y + gap
+  return { left: Math.max(0, left), top: Math.max(0, top) }
+}
+
+function showTooltip(el: HTMLDivElement | null, host: HTMLDivElement, point: TooltipPoint): void {
+  if (!el) return
+  const { left, top } = placeTooltip(
+    point,
+    { width: el.offsetWidth, height: el.offsetHeight },
+    { width: host.clientWidth, height: host.clientHeight },
+  )
+  el.style.left = `${left}px`
+  el.style.top = `${top}px`
+  el.style.opacity = '1'
+}
+
+function hideTooltip(el: HTMLDivElement | null): void {
+  if (el) el.style.opacity = '0'
+}
+
 function showPeriod(
   view: Mounted | null,
   candles: readonly CandleRes[],
@@ -132,6 +164,7 @@ export function PriceChart({
 }: PriceChartProps) {
   const hintId = useId()
   const hostRef = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const mounted = useRef<Mounted | null>(null)
   const expected = useRef<LogicalSpan | null>(null)
   const latest = useRef({ candles, markers, onSelect, refYear: 0 })
@@ -210,6 +243,11 @@ export function PriceChart({
       setHover(index)
       const hovered = param.point ? layer.find(param.point.x, param.point.y) : null
       if (hovered !== layer.hovered) layer.set({ hovered })
+      if (param.sourceEvent !== undefined && index !== null && param.point) {
+        showTooltip(tooltipRef.current, host, param.point)
+      } else {
+        hideTooltip(tooltipRef.current)
+      }
     }
     const onClick = (param: MouseEventParams<Time>) => {
       const id = param.hoveredInfo?.objectId
@@ -308,6 +346,7 @@ export function PriceChart({
       view.chart.clearCrosshairPosition()
       setKb(null)
       setHover(null)
+      hideTooltip(tooltipRef.current)
       return
     }
     if (key === 'Enter' || key === ' ') {
@@ -391,6 +430,31 @@ export function PriceChart({
         onKeyDown={onKeyDown}
       >
         <div ref={hostRef} className="fg-pc__host" />
+        <div ref={tooltipRef} className="fg-pc__tip" aria-hidden="true">
+          {legend && (
+            <>
+              <b className="fg-pc__tip-date">{legend.date}</b>
+              <dl className="fg-pc__tip-grid">
+                <dt>시가</dt>
+                <dd>{legend.open}</dd>
+                <dt>고가</dt>
+                <dd>{legend.high}</dd>
+                <dt>저가</dt>
+                <dd>{legend.low}</dd>
+                <dt>종가</dt>
+                <dd>{legend.close}</dd>
+                {legend.change !== null && (
+                  <>
+                    <dt>등락률</dt>
+                    <dd className={toneClass(legend.change)}>{formatChange(legend.change)}</dd>
+                  </>
+                )}
+                <dt>거래량</dt>
+                <dd>{legend.volume}</dd>
+              </dl>
+            </>
+          )}
+        </div>
         {away && (
           <Button
             size="sm"
