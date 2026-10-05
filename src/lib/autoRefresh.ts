@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { isKrxOpen } from '@/lib/marketClock'
+import { isQuoteHours } from '@/lib/marketClock'
 import { intradayTime, type PriceBasis } from '@/lib/referenceDate'
 
 export const AUTO_REFRESH_MS = 5 * 60 * 1000
@@ -14,7 +14,7 @@ const KST_DATE = new Intl.DateTimeFormat('en-CA', {
 })
 
 export function shouldAutoRefresh(now: Date, basis: PriceBasis | null | undefined): boolean {
-  if (isKrxOpen(now)) return true
+  if (isQuoteHours(now)) return true
   return intradayTime(basis) !== null && basis?.baseDate === KST_DATE.format(now)
 }
 
