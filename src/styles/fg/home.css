@@ -1317,7 +1317,7 @@ a.fg-hq:hover .fg-hq__name {
     display: contents;
   }
   .fg-home__slot[data-slot='feed'],
-  .fg-home__slot[data-slot='themes'],
+  .fg-home__slot[data-slot='hub-table'],
   .fg-home__slot[data-slot='note'] {
     grid-column: 1 / -1;
   }
@@ -1333,7 +1333,7 @@ a.fg-hq:hover .fg-hq__name {
   .fg-home__slot[data-slot='watchlist'] {
     order: 3;
   }
-  .fg-home__slot[data-slot='themes'] {
+  .fg-home__slot[data-slot='hub-table'] {
     order: 4;
   }
   .fg-home__slot[data-slot='note'] {

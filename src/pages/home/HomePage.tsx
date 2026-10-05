@@ -1,18 +1,21 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAutoRefresh } from '@/lib/autoRefresh'
 import { kstToday } from '@/lib/calendar'
-import { HUB_HOT_COUNT } from '@/lib/fg/hub'
+import { HUB_HOT_COUNT, parseHubQuery } from '@/lib/fg/hub'
 import { themeBasisLabel } from '@/lib/fg/themes'
 import { useHotThemes } from '@/lib/queries/useHotThemes'
 import { useThemeIssues } from '@/lib/queries/useHubSlots'
 import { refreshStocks } from '@/lib/queries/useStocksCached'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { HomeHub } from '@/pages/home/HomeHub'
-import { HomeFeed, HomeMovers, HomeNote, HomeThemeTable, HomeWatchlist } from '@/pages/home/HomeSlots'
+import { HomeFeed, HomeMovers, HomeNote, HomeStockTable, HomeThemeTable, HomeWatchlist } from '@/pages/home/HomeSlots'
 
 export default function HomePage() {
   const [today] = useState(() => kstToday(new Date()))
   const [refreshKey, setRefreshKey] = useState(0)
+  const { search } = useLocation()
+  const hubTab = useMemo(() => parseHubQuery(search).hub, [search])
   const market = useThemeMarket()
   const hot = useHotThemes(HUB_HOT_COUNT)
   const { refresh: refreshMarket } = market
@@ -26,6 +29,7 @@ export default function HomePage() {
   useAutoRefresh(refresh, market.data)
   const hotIds = useMemo(() => (hot.data ?? []).map((theme) => theme.id), [hot.data])
   const themeIssues = useThemeIssues(hotIds, null)
+  const basis = themeBasisLabel(market.data)
 
   return (
     <div className="fg-main fg-wrap fg-home">
@@ -35,8 +39,9 @@ export default function HomePage() {
           <div className="fg-home__slot" data-slot="feed">
             <HomeFeed hot={hot.data} themeIssues={themeIssues} today={today} />
           </div>
-          <div className="fg-home__slot" data-slot="themes">
-            <HomeThemeTable hot={hot} issues={themeIssues} basis={themeBasisLabel(market.data)} />
+          <div className="fg-home__slot" data-slot="hub-table">
+            {hubTab === 'themes' && <HomeThemeTable hot={hot} issues={themeIssues} basis={basis} />}
+            {hubTab === 'stocks' && <HomeStockTable basis={basis} />}
           </div>
         </div>
         <aside className="fg-home__rail" aria-label="종목에서 이슈로">

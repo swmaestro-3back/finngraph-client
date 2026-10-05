@@ -83,6 +83,7 @@ describe('주식 필터 쿼리', () => {
       market: 'KOSDAQ',
       presets: new Set(['highRoe', 'lowPer']),
       ranges: { per: { max: 10 }, marketCap: { min: 1000, max: 5000 }, roe: { min: -2.5 } },
+      themeId: null,
     }
     const params = new URLSearchParams()
     filterToParams(state, params)

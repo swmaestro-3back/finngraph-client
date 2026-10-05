@@ -1,28 +1,51 @@
 import type { StockRowRes } from '@/lib/apiTypes'
+import { week52Mark } from '@/lib/fg/stockQuote'
 
-export type PresetKey = 'largeCap' | 'lowPer' | 'highRoe' | 'highDividend'
-export type RangeKey = 'marketCap' | 'per' | 'pbr' | 'roe' | 'dividendYield'
+export type PresetKey =
+  | 'largeCap'
+  | 'lowPer'
+  | 'highRoe'
+  | 'highDividend'
+  | 'week52High'
+  | 'week52Low'
+  | 'rising'
+  | 'falling'
+  | 'valueTop100'
+export type RangeKey = 'marketCap' | 'per' | 'pbr' | 'roe' | 'dividendYield' | 'change'
 
 export interface FilterState {
   market: 'ALL' | 'KOSPI' | 'KOSDAQ'
   presets: Set<PresetKey>
   ranges: Partial<Record<RangeKey, { min?: number; max?: number }>>
+  themeId?: number | null
+}
+
+export interface FilterContext {
+  basisDate?: string | null
+  themeTickers?: ReadonlySet<string> | null
 }
 
 export const DEFAULT_FILTER: FilterState = {
   market: 'ALL',
   presets: new Set<PresetKey>(),
   ranges: {},
+  themeId: null,
 }
 
 /** 대형주 = 전체 종목 중 시가총액 순위 1~LARGE_CAP_RANK위 */
 export const LARGE_CAP_RANK = 100
+/** 거래대금 상위 = 지금 시장 탭 안에서 거래대금 순위 1~VALUE_TOP_RANK위 */
+export const VALUE_TOP_RANK = 100
 
-// 값만 보면 되는 프리셋 — 대형주는 순위라 전체 목록이 필요해 applyStockFilters에서 따로 가린다
-const VALUE_PRESET_TESTS: Record<Exclude<PresetKey, 'largeCap'>, (row: StockRowRes) => boolean> = {
+type SpecialPreset = 'largeCap' | 'valueTop100' | 'week52High' | 'week52Low'
+
+// 값만 보면 되는 프리셋 — 대형주·거래대금 상위는 순위, 52주 신고가·신저가는 기준일이 필요해 따로 가린다
+const VALUE_PRESET_TESTS: Record<Exclude<PresetKey, SpecialPreset>, (row: StockRowRes) => boolean> = {
   lowPer: (row) => row.per !== null && row.per > 0 && row.per < 10,
   highRoe: (row) => row.roe !== null && row.roe >= 10,
   highDividend: (row) => row.dividendYield !== null && row.dividendYield >= 5,
+  rising: (row) => row.change !== null && row.change > 0,
+  falling: (row) => row.change !== null && row.change < 0,
 }
 
 /** 시가총액 상위 LARGE_CAP_RANK종목의 ticker — 시장 필터와 무관하게 받은 목록 전체에서 센다 */
@@ -36,6 +59,18 @@ function largeCapTickers(rows: StockRowRes[]): Set<string> {
   )
 }
 
+/** 거래대금 상위 VALUE_TOP_RANK종목의 ticker — 지금 고른 시장 탭 안에서만 센다 */
+function tradeValueTopTickers(rows: StockRowRes[], market: FilterState['market']): Set<string> {
+  const pool = market === 'ALL' ? rows : rows.filter((row) => row.market === market)
+  return new Set(
+    pool
+      .filter((row) => row.tradeValue != null)
+      .sort((a, b) => (b.tradeValue ?? 0) - (a.tradeValue ?? 0))
+      .slice(0, VALUE_TOP_RANK)
+      .map((row) => row.ticker),
+  )
+}
+
 // 범위 입력은 화면 표기 단위(시총=억)로 받으므로 비교 전에 원 단위로 되돌린다
 const RANGE_SCALE: Record<RangeKey, number> = {
   marketCap: 1e8,
@@ -43,14 +78,16 @@ const RANGE_SCALE: Record<RangeKey, number> = {
   pbr: 1,
   roe: 1,
   dividendYield: 1,
+  change: 1,
 }
 
-const RANGE_KEYS: RangeKey[] = ['marketCap', 'per', 'pbr', 'roe', 'dividendYield']
+const RANGE_KEYS: RangeKey[] = ['marketCap', 'per', 'pbr', 'roe', 'dividendYield', 'change']
 
 export function isFilterActive(state: FilterState): boolean {
   return (
     state.market !== 'ALL' ||
     state.presets.size > 0 ||
+    (state.themeId ?? null) !== null ||
     RANGE_KEYS.some((key) => {
       const range = state.ranges[key]
       return range !== undefined && (range.min !== undefined || range.max !== undefined)
@@ -58,13 +95,32 @@ export function isFilterActive(state: FilterState): boolean {
   )
 }
 
-export function applyStockFilters(rows: StockRowRes[], state: FilterState): StockRowRes[] {
+/** 시가총액·PER·PBR·등락률 범위 + ROE·배당수익률 최소 등 패널 필터만 센다(시장·조건 칩은 뺀다) */
+export function panelFilterCount(state: Pick<FilterState, 'ranges' | 'themeId'>): number {
+  const rangeCount = RANGE_KEYS.filter((key) => {
+    const range = state.ranges[key]
+    return range !== undefined && (range.min !== undefined || range.max !== undefined)
+  }).length
+  return rangeCount + ((state.themeId ?? null) !== null ? 1 : 0)
+}
+
+export function applyStockFilters(rows: StockRowRes[], state: FilterState, context: FilterContext = {}): StockRowRes[] {
   const largeCaps = state.presets.has('largeCap') ? largeCapTickers(rows) : null
+  const valueTops = state.presets.has('valueTop100') ? tradeValueTopTickers(rows, state.market) : null
+  const basisDate = context.basisDate ?? null
+  const themeId = state.themeId ?? null
   return rows.filter((row) => {
     if (state.market !== 'ALL' && row.market !== state.market) return false
+    if (themeId !== null && !context.themeTickers?.has(row.ticker)) return false
     for (const preset of state.presets) {
       if (preset === 'largeCap') {
         if (!largeCaps?.has(row.ticker)) return false
+      } else if (preset === 'valueTop100') {
+        if (!valueTops?.has(row.ticker)) return false
+      } else if (preset === 'week52High') {
+        if (week52Mark(row, basisDate) !== 'high') return false
+      } else if (preset === 'week52Low') {
+        if (week52Mark(row, basisDate) !== 'low') return false
       } else if (!VALUE_PRESET_TESTS[preset](row)) return false
     }
     for (const key of RANGE_KEYS) {
@@ -82,10 +138,20 @@ export function applyStockFilters(rows: StockRowRes[], state: FilterState): Stoc
 
 // ── 주소 쿼리 직렬화 ──
 // 필터도 주소에 둔다 — 상세에 다녀왔을 때 페이지 번호만 남고 필터가 풀리면 다른 목록이 뜬다.
-// market=KOSPI · preset=lowPer,highRoe · per=..10 · marketCap=1000..5000 (범위는 화면 표기 단위)
+// market=KOSPI · preset=lowPer,highRoe · per=..10 · marketCap=1000..5000(범위는 화면 표기 단위) · theme=12
 
 const MARKETS: FilterState['market'][] = ['KOSPI', 'KOSDAQ']
-const PRESET_KEYS: PresetKey[] = ['largeCap', 'lowPer', 'highRoe', 'highDividend']
+const PRESET_KEYS: PresetKey[] = [
+  'largeCap',
+  'lowPer',
+  'highRoe',
+  'highDividend',
+  'week52High',
+  'week52Low',
+  'rising',
+  'falling',
+  'valueTop100',
+]
 const RANGE_SEPARATOR = '..'
 
 function parseBound(raw: string | undefined): number | undefined {
@@ -106,7 +172,9 @@ export function filterFromParams(params: URLSearchParams): FilterState {
     const range = { min: parseBound(min), max: parseBound(max) }
     if (range.min !== undefined || range.max !== undefined) ranges[key] = range
   }
-  return { market, presets, ranges }
+  const themeRaw = params.get('theme')
+  const themeId = themeRaw !== null && /^\d+$/.test(themeRaw) ? Number(themeRaw) : null
+  return { market, presets, ranges, themeId }
 }
 
 /** params의 필터 항목을 state로 덮어쓴다 (다른 항목은 건드리지 않는다) */
@@ -126,4 +194,8 @@ export function filterToParams(state: FilterState, params: URLSearchParams): voi
       params.set(key, `${range.min ?? ''}${RANGE_SEPARATOR}${range.max ?? ''}`)
     }
   }
+
+  const themeId = state.themeId ?? null
+  if (themeId === null) params.delete('theme')
+  else params.set('theme', String(themeId))
 }

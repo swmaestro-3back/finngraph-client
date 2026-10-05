@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
@@ -7,13 +8,16 @@ import { Pager } from '@/components/fg/Pager'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
+import { RANGE_FIELDS, StockFilterSheet, type RangeFieldSpec } from '@/components/fg/StockFilterSheet'
 import { StockFold, StockPanel, type PanelRetry } from '@/components/fg/StockPanel'
 import { StockTable } from '@/components/fg/StockTable'
+import type { StockRowRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
 import { useAutoRefresh } from '@/lib/autoRefresh'
 import { kstToday } from '@/lib/calendar'
 import { useFavorites } from '@/lib/favorites'
 import { FLOW_DAYS, QUOTE_CANDLE_LIMIT, stockSummary } from '@/lib/fg/stockQuote'
+import { formatCompactKrw, formatMultiple, formatPercent } from '@/lib/format'
 import {
   filterStocks,
   keepCode,
@@ -45,20 +49,45 @@ import { useKeyed } from '@/lib/queries/useKeyed'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { fetchThemeStocks } from '@/lib/queries/useThemeStocks'
-import { LARGE_CAP_RANK, type PresetKey } from '@/lib/stockFilter'
+import { useThemesCached } from '@/lib/queries/useThemesCached'
+import { LARGE_CAP_RANK, panelFilterCount, VALUE_TOP_RANK, type PresetKey, type RangeKey } from '@/lib/stockFilter'
+import { useOverflowFade } from '@/lib/useOverflowFade'
 
 const MARKETS: readonly { value: StockMarket; label: string }[] = [
   { value: 'ALL', label: '전체' },
   { value: 'KOSPI', label: '코스피' },
   { value: 'KOSDAQ', label: '코스닥' },
 ]
-const PRESETS: readonly { value: PresetKey; label: string; rule: string }[] = [
+const CONDITION_PRESETS: readonly { value: PresetKey; label: string; rule: string }[] = [
   { value: 'largeCap', label: '대형주', rule: `코스피·코스닥을 합친 시가총액 1~${LARGE_CAP_RANK}위` },
   { value: 'lowPer', label: '저PER', rule: 'PER 0 초과 10 미만' },
   { value: 'highRoe', label: '고ROE', rule: 'ROE 10% 이상' },
   { value: 'highDividend', label: '고배당', rule: '배당수익률 5% 이상' },
 ]
+const QUOTE_PRESETS: readonly { value: PresetKey; label: string; rule: string }[] = [
+  { value: 'week52High', label: '52주 신고가', rule: '가격 기준일 종가가 52주 신고가' },
+  { value: 'week52Low', label: '52주 신저가', rule: '가격 기준일 종가가 52주 신저가' },
+  { value: 'rising', label: '상승', rule: '등락률 0% 초과' },
+  { value: 'falling', label: '하락', rule: '등락률 0% 미만' },
+  { value: 'valueTop100', label: '거래대금 상위', rule: `지금 고른 시장 탭 안에서 거래대금 상위 ${VALUE_TOP_RANK}위` },
+]
+const PRESETS = [...CONDITION_PRESETS, ...QUOTE_PRESETS]
 const FOOTNOTE = `조건 칩 기준은 ${PRESETS.map((preset) => `${preset.label} ${preset.rule}`).join(' · ')}이에요 · 52주 범위는 최근 1년 종가 기준이에요`
+
+function rangeChipValue(key: RangeKey, value: number): string {
+  if (key === 'marketCap') return formatCompactKrw(value * 1e8)
+  if (key === 'per' || key === 'pbr') return formatMultiple(value)
+  return formatPercent(value)
+}
+
+function rangeChipLabel(field: RangeFieldSpec, range: { min?: number; max?: number }): string {
+  if (range.min !== undefined && range.max !== undefined) {
+    return `${field.label} ${rangeChipValue(field.key, range.min)}~${rangeChipValue(field.key, range.max)}`
+  }
+  if (range.min !== undefined) return `${field.label} ${rangeChipValue(field.key, range.min)} 이상`
+  if (range.max !== undefined) return `${field.label} ${rangeChipValue(field.key, range.max)} 이하`
+  return field.label
+}
 
 function sortOptions(valueReady: boolean): TabOption<StockSort>[] {
   return [
@@ -67,6 +96,52 @@ function sortOptions(valueReady: boolean): TabOption<StockSort>[] {
     { value: 'rise', label: '상승률 순' },
     { value: 'fall', label: '하락률 순' },
   ]
+}
+
+function ConditionChips({
+  presets,
+  onToggle,
+}: {
+  presets: readonly PresetKey[]
+  onToggle: (preset: PresetKey) => void
+}) {
+  const { scrollRef, showFade, showLeftFade } = useOverflowFade<HTMLDivElement>()
+  const fade = showFade && showLeftFade ? 'both' : showFade ? 'end' : showLeftFade ? 'start' : undefined
+  return (
+    <div className="fg-cflt__row fg-stable" ref={scrollRef} data-fade={fade}>
+      <div className="fg-cflt__group" role="group" aria-label="조건">
+        <span className="fg-cflt__label" aria-hidden="true">
+          조건
+        </span>
+        {CONDITION_PRESETS.map((preset) => (
+          <FilterChip
+            key={preset.value}
+            pressed={presets.includes(preset.value)}
+            title={preset.rule}
+            onClick={() => onToggle(preset.value)}
+          >
+            {preset.label}
+          </FilterChip>
+        ))}
+      </div>
+      <span className="fg-cflt__div" aria-hidden="true" />
+      <div className="fg-cflt__group" role="group" aria-label="시세">
+        <span className="fg-cflt__label" aria-hidden="true">
+          시세
+        </span>
+        {QUOTE_PRESETS.map((preset) => (
+          <FilterChip
+            key={preset.value}
+            pressed={presets.includes(preset.value)}
+            title={preset.rule}
+            onClick={() => onToggle(preset.value)}
+          >
+            {preset.label}
+          </FilterChip>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function StocksPage() {
@@ -89,9 +164,20 @@ export default function StocksPage() {
   const valueReady = useMemo(() => (all ?? []).some((row) => row.tradeValue != null), [all])
   const sort = resolveStockSort(query.sort, valueReady)
   const isFavorite = useCallback((ticker: string) => has('STOCK', ticker), [has])
+  const themes = useThemesCached()
+  const activeThemeName = useMemo(
+    () => (query.themeId === null ? null : themes.data?.find((theme) => theme.id === query.themeId)?.name ?? null),
+    [query.themeId, themes.data],
+  )
+  const filterThemeStocks = useKeyed(query.themeId, fetchThemeStocks)
+  const themeTickers = useMemo(
+    () => (filterThemeStocks.data ? new Set(filterThemeStocks.data.map((stock) => stock.ticker)) : null),
+    [filterThemeStocks.data],
+  )
+  const filterContext = useMemo(() => ({ basisDate, themeTickers }), [basisDate, themeTickers])
   const filtered = useMemo(
-    () => filterStocks(all ?? [], query, favOnly, isFavorite),
-    [all, query, favOnly, isFavorite],
+    () => filterStocks(all ?? [], query, favOnly, isFavorite, filterContext),
+    [all, query, favOnly, isFavorite, filterContext],
   )
   const valueOf = useCallback<ValueOf>((stock) => stock.tradeValue ?? null, [])
   const sorted = useMemo(() => sortStocks(filtered, sort, valueOf), [filtered, sort, valueOf])
@@ -215,16 +301,89 @@ export default function StocksPage() {
       navigate('/login', { state: { next: from } })
       return
     }
-    const rows = filterStocks(all ?? [], { market: nextMarket, presets: query.presets }, fav, isFavorite)
+    const rows = filterStocks(
+      all ?? [],
+      { market: nextMarket, presets: query.presets, ranges: query.ranges, themeId: query.themeId },
+      fav,
+      isFavorite,
+      filterContext,
+    )
     go({ market: fav ? 'ALL' : nextMarket, fav, page: null, code: keepCode(query.code, rows) })
   }
   const togglePreset = (preset: PresetKey) => {
     const presets = query.presets.includes(preset)
       ? query.presets.filter((value) => value !== preset)
       : [...query.presets, preset]
-    const rows = filterStocks(all ?? [], { market: query.market, presets }, favOnly, isFavorite)
+    const rows = filterStocks(
+      all ?? [],
+      { market: query.market, presets, ranges: query.ranges, themeId: query.themeId },
+      favOnly,
+      isFavorite,
+      filterContext,
+    )
     go({ presets, page: null, code: keepCode(query.code, rows) })
   }
+  const applyFilters = (ranges: StockQuery['ranges'], themeId: number | null, rows: readonly StockRowRes[]) => {
+    go({ ranges, themeId, page: null, code: keepCode(query.code, rows) })
+  }
+  const resetFilters = () => {
+    const rows = filterStocks(
+      all ?? [],
+      { market: query.market, presets: [], ranges: {}, themeId: null },
+      favOnly,
+      isFavorite,
+      filterContext,
+    )
+    go({ presets: [], ranges: {}, themeId: null, page: null, code: keepCode(query.code, rows) })
+  }
+  const clearRange = (key: RangeKey) => {
+    const ranges = { ...query.ranges }
+    delete ranges[key]
+    const rows = filterStocks(
+      all ?? [],
+      { market: query.market, presets: query.presets, ranges, themeId: query.themeId },
+      favOnly,
+      isFavorite,
+      filterContext,
+    )
+    go({ ranges, page: null, code: keepCode(query.code, rows) })
+  }
+  const clearTheme = () => {
+    const rows = filterStocks(
+      all ?? [],
+      { market: query.market, presets: query.presets, ranges: query.ranges, themeId: null },
+      favOnly,
+      isFavorite,
+      filterContext,
+    )
+    go({ themeId: null, page: null, code: keepCode(query.code, rows) })
+  }
+  const clearPanelFilters = () => {
+    const rows = filterStocks(
+      all ?? [],
+      { market: query.market, presets: query.presets, ranges: {}, themeId: null },
+      favOnly,
+      isFavorite,
+      filterContext,
+    )
+    go({ ranges: {}, themeId: null, page: null, code: keepCode(query.code, rows) })
+  }
+  const [filterOpen, setFilterOpen] = useState(false)
+  const filterTrigger = useRef<HTMLElement | null>(null)
+  const openFilter = () => {
+    filterTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setFilterOpen(true)
+  }
+  const filterBadge = panelFilterCount(query)
+  const activeRangeChips = useMemo(
+    () =>
+      RANGE_FIELDS.flatMap((field) => {
+        const range = query.ranges[field.key]
+        if (range === undefined || (range.min === undefined && range.max === undefined)) return []
+        return [{ key: field.key, label: rangeChipLabel(field, range) }]
+      }),
+    [query.ranges],
+  )
 
   const listSkeleton = useDelayed(!listReady && !stocks.error)
   const basis = themeBasisLabel(market.data)
@@ -254,11 +413,21 @@ export default function StocksPage() {
       </div>
     ) : null
   } else if (sorted.length === 0) {
+    const hasConditions = query.presets.length > 0 || filterBadge > 0
     body =
-      favOnly && query.presets.length === 0 ? (
+      favOnly && !hasConditions ? (
         <StateBlock kind="empty" title="관심 종목이 없어요" description="종목 상세에서 관심 종목을 추가해 보세요" />
       ) : (
-        <StateBlock kind="empty" title="조건에 맞는 종목이 없어요" description="조건 칩을 줄여 보세요" />
+        <StateBlock
+          kind="empty"
+          title="조건에 맞는 종목이 없어요"
+          description="조건을 줄이거나 초기화해 보세요"
+          action={
+            <Button size="sm" onClick={resetFilters}>
+              조건 초기화
+            </Button>
+          }
+        />
       )
   } else {
     body = (
@@ -313,38 +482,70 @@ export default function StocksPage() {
               </h2>
             </div>
             {all && (
-              <div className="fg-ttools">
-                <div className="fg-ttools__l">
-                  <div className="fg-chiprow" role="group" aria-label="시장과 관심 종목">
-                    {MARKETS.map((option) => (
-                      <FilterChip
-                        key={option.value}
-                        pressed={!favOnly && query.market === option.value}
-                        onClick={() => setScope(option.value, false)}
-                      >
-                        {option.label}
+              <>
+                <div className="fg-ttools">
+                  <div className="fg-ttools__l">
+                    <div className="fg-chiprow" role="group" aria-label="시장과 관심 종목">
+                      {MARKETS.map((option) => (
+                        <FilterChip
+                          key={option.value}
+                          pressed={!favOnly && query.market === option.value}
+                          onClick={() => setScope(option.value, false)}
+                        >
+                          {option.label}
+                        </FilterChip>
+                      ))}
+                      <FilterChip pressed={favOnly} onClick={() => setScope('ALL', true)}>
+                        관심 종목
                       </FilterChip>
-                    ))}
-                    <FilterChip pressed={favOnly} onClick={() => setScope('ALL', true)}>
-                      관심 종목
+                    </div>
+                    <Segment label="정렬" options={sortOptions(valueReady)} value={sort} onChange={setSort} />
+                    <FilterChip
+                      pressed={filterBadge > 0}
+                      count={filterBadge > 0 ? filterBadge : null}
+                      aria-haspopup="dialog"
+                      aria-expanded={filterOpen}
+                      onClick={openFilter}
+                    >
+                      필터
                     </FilterChip>
                   </div>
-                  <div className="fg-chiprow" role="group" aria-label="조건">
-                    {PRESETS.map((preset) => (
-                      <FilterChip
-                        key={preset.value}
-                        pressed={query.presets.includes(preset.value)}
-                        title={preset.rule}
-                        onClick={() => togglePreset(preset.value)}
-                      >
-                        {preset.label}
-                      </FilterChip>
-                    ))}
-                  </div>
-                  <Segment label="정렬" options={sortOptions(valueReady)} value={sort} onChange={setSort} />
+                  <span className="fg-ttools__cap">{caption}</span>
                 </div>
-                <span className="fg-ttools__cap">{caption}</span>
-              </div>
+                <div className="fg-cflt">
+                  <ConditionChips presets={query.presets} onToggle={togglePreset} />
+                  {filterBadge > 0 && (
+                    <div className="fg-cflt__active">
+                      {activeRangeChips.map((chip) => (
+                        <FilterChip
+                          key={chip.key}
+                          pressed
+                          className="fg-cflt__rm"
+                          aria-label={`${chip.label} 필터 해제`}
+                          onClick={() => clearRange(chip.key)}
+                        >
+                          {chip.label}
+                          <X size={14} strokeWidth={2} aria-hidden="true" />
+                        </FilterChip>
+                      ))}
+                      {query.themeId !== null && (
+                        <FilterChip
+                          pressed
+                          className="fg-cflt__rm"
+                          aria-label={`테마 ${activeThemeName ?? ''} 필터 해제`}
+                          onClick={clearTheme}
+                        >
+                          테마 {activeThemeName ?? ''}
+                          <X size={14} strokeWidth={2} aria-hidden="true" />
+                        </FilterChip>
+                      )}
+                      <Button variant="text" className="fg-cflt__clear" onClick={clearPanelFilters}>
+                        전체 해제
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
             {body}
             {listReady && sorted.length > 0 && (
@@ -369,6 +570,20 @@ export default function StocksPage() {
       <p className="fg-sr" aria-live="polite">
         {pick && selected?.ticker === pick ? `${selected.name} 골랐어요` : ''}
       </p>
+      <StockFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        returnFocusRef={filterTrigger}
+        allRows={all ?? []}
+        market={query.market}
+        presets={query.presets}
+        favOnly={favOnly}
+        isFavorite={isFavorite}
+        basisDate={basisDate}
+        ranges={query.ranges}
+        themeId={query.themeId}
+        onApply={applyFilters}
+      />
     </div>
   )
 }

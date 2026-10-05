@@ -7,6 +7,7 @@ export const FEED_STOCK_CHIPS = 3
 export const FEED_THEME_CHIPS = 5
 export const RAIL_MOVERS = 4
 export const WATCH_ROWS = 5
+export const HOME_STOCK_ROWS = 10
 export const DEFAULT_FEED_SORT: IssueSort = 'media'
 
 export const FEED_SORTS: readonly { value: IssueSort; label: string }[] = [
