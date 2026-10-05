@@ -4,6 +4,7 @@ import {
   applyStockFilters,
   filterFromParams,
   filterToParams,
+  type FilterContext,
   type FilterState,
   type PresetKey,
 } from '@/lib/stockFilter'
@@ -23,6 +24,8 @@ export interface StockQuery {
   sort: StockSort | null
   page: number | null
   code: string | null
+  ranges: FilterState['ranges']
+  themeId: number | null
 }
 
 export type ValueOf = (stock: StockRowRes) => number | null
@@ -52,12 +55,17 @@ export function parseStockQuery(search: string): StockQuery {
     sort: sort === 'cap' ? null : sort,
     page: page > 1 ? page : null,
     code: parseStockCode(params.get('code')),
+    ranges: filter.ranges,
+    themeId: filter.themeId ?? null,
   }
 }
 
 export function stockQueryString(query: StockQuery): string {
   const params = new URLSearchParams()
-  filterToParams({ market: query.market, presets: new Set(query.presets), ranges: {} }, params)
+  filterToParams(
+    { market: query.market, presets: new Set(query.presets), ranges: query.ranges, themeId: query.themeId },
+    params,
+  )
   if (query.fav) params.set('fav', '1')
   if (query.sort && query.sort !== 'cap') params.set('sort', query.sort)
   writePage(params, query.page ?? 1)
@@ -83,15 +91,21 @@ export function sortStocks(rows: readonly StockRowRes[], sort: StockSort, valueO
 
 export function filterStocks(
   rows: readonly StockRowRes[],
-  query: Pick<StockQuery, 'market' | 'presets'>,
+  query: Pick<StockQuery, 'market' | 'presets' | 'ranges' | 'themeId'>,
   favOnly: boolean,
   isFavorite: (ticker: string) => boolean,
+  context: FilterContext = {},
 ): StockRowRes[] {
-  const filtered = applyStockFilters([...rows], {
-    market: favOnly ? 'ALL' : query.market,
-    presets: new Set(query.presets),
-    ranges: {},
-  })
+  const filtered = applyStockFilters(
+    [...rows],
+    {
+      market: favOnly ? 'ALL' : query.market,
+      presets: new Set(query.presets),
+      ranges: query.ranges,
+      themeId: query.themeId,
+    },
+    context,
+  )
   return favOnly ? filtered.filter((stock) => isFavorite(stock.ticker)) : filtered
 }
 

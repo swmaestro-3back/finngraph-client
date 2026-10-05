@@ -44,7 +44,16 @@ function row(ticker: string, patch: Partial<StockRowRes> = {}): StockRowRes {
   }
 }
 
-const BASE: StockQuery = { market: 'ALL', presets: [], fav: false, sort: null, page: null, code: null }
+const BASE: StockQuery = {
+  market: 'ALL',
+  presets: [],
+  fav: false,
+  sort: null,
+  page: null,
+  code: null,
+  ranges: {},
+  themeId: null,
+}
 
 describe('parseStockQuery / stockQueryString', () => {
   it('빈 주소는 기본값이다', () => {
@@ -61,8 +70,11 @@ describe('parseStockQuery / stockQueryString', () => {
     })
   })
 
-  it('모르는 값과 범위 필터·옛 정렬은 버린다', () => {
-    expect(parseStockQuery('?market=NYSE&sort=per&dir=asc&per=..10&page=0&code=abc')).toEqual(BASE)
+  it('모르는 값과 옛 정렬은 버리고, 범위 필터는 읽는다', () => {
+    expect(parseStockQuery('?market=NYSE&sort=per&dir=asc&per=..10&page=0&code=abc')).toEqual({
+      ...BASE,
+      ranges: { per: { max: 10 } },
+    })
     expect(parseStockQuery('?sort=w1&page=-2&code=0059300')).toEqual(BASE)
   })
 
@@ -79,6 +91,8 @@ describe('parseStockQuery / stockQueryString', () => {
       sort: 'rise',
       page: 2,
       code: '000660',
+      ranges: {},
+      themeId: null,
     }
     const text = stockQueryString(query)
     expect(text).toBe('?market=KOSPI&preset=largeCap%2ChighDividend&fav=1&sort=rise&page=2&code=000660')
