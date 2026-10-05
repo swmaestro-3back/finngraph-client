@@ -34,6 +34,13 @@ describe('newsDays', () => {
     expect(days[0].change).toBe(0)
   })
 
+  it('그날 봉에 API 등락률이 있으면 직전 종가 대신 그 값을 단다', () => {
+    const rated = candles.map((c) => (c.date === '2026-09-28' ? { ...c, changeRate: 9.6 } : c))
+    const days = newsDays(items, rated)
+    expect(days[2].change).toBe(9.6)
+    expect(days[1].change).toBeCloseTo(-5, 6)
+  })
+
   it('봉이 없으면 묶지 않는다', () => {
     expect(newsDays(items, [])).toEqual([])
   })

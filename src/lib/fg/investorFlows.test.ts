@@ -59,6 +59,15 @@ describe('수급 행', () => {
     expect(flowDays(flows, null)[1]).toMatchObject({ close: null, change: null })
   })
 
+  it('일봉에 API 등락률이 있으면 직전 종가 대신 그 값을 붙인다', () => {
+    const rated = candles.map((c) => (c.date === '2026-09-29' ? { ...c, changeRate: 0.3 } : c))
+    const days = flowDays(flows, rated)
+    expect(days[1].change).toBe(0.3)
+    expect(days[0].change).toBeCloseTo(0.9259, 3)
+    expect(flowDays([flow('2026-09-22', 1, 1, 1)], [{ ...candles[0], changeRate: -0.5 }])[0].change).toBe(-0.5)
+    expect(flowDays([flow('2026-09-22', 1, 1, 1)], [{ ...candles[0], changeRate: null }])[0].change).toBeNull()
+  })
+
   it('기간 선택지는 가진 기록을 넘는 만큼만', () => {
     expect(flowRangeOptions(2).map((r) => r.value)).toEqual(['20'])
     expect(flowRangeOptions(21).map((r) => r.value)).toEqual(['20', '60'])

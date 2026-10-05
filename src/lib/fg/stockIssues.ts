@@ -1,5 +1,5 @@
-import type { CandleRes } from '@/lib/apiTypes'
 import { addDays, daysBetween } from '@/lib/calendar'
+import { candleChangeAt, type RatedCandle } from '@/lib/fg/candleChange'
 import { volumeRatio } from '@/lib/fg/priceChart'
 import { dayLabel } from '@/lib/fg/themeCharts'
 
@@ -46,7 +46,7 @@ export interface PlacedIssue {
 
 export const RECENT_ISSUE_COUNT = 5
 
-export function placeIssues(fixture: IssueFlowsFixture, candles: readonly CandleRes[]): PlacedIssue[] {
+export function placeIssues(fixture: IssueFlowsFixture, candles: readonly RatedCandle[]): PlacedIssue[] {
   if (candles.length === 0) return []
   const first = candles[0].date
   const shift = daysBetween(fixture.anchor, candles[candles.length - 1].date)
@@ -56,7 +56,6 @@ export function placeIssues(fixture: IssueFlowsFixture, candles: readonly Candle
       const index = candles.findIndex((candle) => candle.date >= date)
       if (date < first || index < 0) return []
       const candle = candles[index]
-      const prev = candles[index - 1]
       return [
         {
           key: `${flow.id}-${k}`,
@@ -67,7 +66,7 @@ export function placeIssues(fixture: IssueFlowsFixture, candles: readonly Candle
           date,
           index,
           sameDay: candle.date === date,
-          change: prev && prev.close > 0 ? (candle.close / prev.close - 1) * 100 : null,
+          change: candleChangeAt(candles, index),
           close: candle.close,
           volumeRatio: volumeRatio(candles, index),
           title: issue.title,

@@ -66,6 +66,13 @@ describe('placeIssues', () => {
     expect(placed[0]).toMatchObject({ sameDay: true, with: ['솔빛장비', '다온전자'], more: 4 })
   })
 
+  it('그날 봉에 API 등락률이 있으면 직전 종가 대신 그 값을 단다', () => {
+    const rated = candles.map((c) => (c.date === '2026-09-28' ? { ...c, changeRate: -9.5 } : c))
+    const issues = placeIssues(fixture, rated)
+    expect(issues.find((issue) => issue.key === 'export-0')?.change).toBe(-9.5)
+    expect(issues.find((issue) => issue.key === 'hbm-0')?.change).toBeCloseTo((1000 / 990 - 1) * 100, 6)
+  })
+
   it('봉이 없으면 비운다', () => {
     expect(placeIssues(fixture, [])).toEqual([])
   })

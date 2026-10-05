@@ -1,4 +1,4 @@
-import type { CandleRes } from '@/lib/apiTypes'
+import { candleChangeAt, type RatedCandle } from '@/lib/fg/candleChange'
 import { volumeRatio } from '@/lib/fg/priceChart'
 import type { ThemeNewsItem } from '@/lib/fg/themeNews'
 
@@ -12,7 +12,7 @@ export interface NewsDay {
   volumeRatio: number | null
 }
 
-export function newsDays(items: readonly ThemeNewsItem[], candles: readonly CandleRes[]): NewsDay[] {
+export function newsDays(items: readonly ThemeNewsItem[], candles: readonly RatedCandle[]): NewsDay[] {
   const indexOf = new Map(candles.map((candle, i) => [candle.date, i]))
   const days = new Map<string, NewsDay>()
   for (const item of items) {
@@ -23,12 +23,11 @@ export function newsDays(items: readonly ThemeNewsItem[], candles: readonly Cand
       day.items.push(item)
       continue
     }
-    const prev = candles[index - 1]
     days.set(item.tradeDay, {
       tradeDay: item.tradeDay,
       index,
       items: [item],
-      change: prev && prev.close > 0 ? (candles[index].close / prev.close - 1) * 100 : null,
+      change: candleChangeAt(candles, index),
       volumeRatio: volumeRatio(candles, index),
     })
   }

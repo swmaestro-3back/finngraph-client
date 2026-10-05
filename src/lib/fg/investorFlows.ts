@@ -1,6 +1,7 @@
-import type { CandleRes, InvestorFlowRes } from '@/lib/apiTypes'
+import type { InvestorFlowRes } from '@/lib/apiTypes'
 import { WEEKDAY_LABELS } from '@/lib/calendar'
 import { formatChange } from '@/lib/format'
+import { candleChangeAt, type RatedCandle } from '@/lib/fg/candleChange'
 import { toneOf, type Tone } from '@/lib/fg/format'
 import { formatManShares, formatRatio } from '@/lib/fg/stockQuote'
 import { dayLabel } from '@/lib/fg/themeCharts'
@@ -58,14 +59,13 @@ export function formatAxisShares(man: number): string {
   return man < 0 && /[1-9]/.test(text) ? `${MINUS}${text}` : text
 }
 
-export function flowDays(flows: readonly InvestorFlowRes[], candles: readonly CandleRes[] | null): FlowDay[] {
+export function flowDays(flows: readonly InvestorFlowRes[], candles: readonly RatedCandle[] | null): FlowDay[] {
   const index = new Map((candles ?? []).map((c, i) => [c.date, i]))
   return [...flows]
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((flow) => {
       const at = index.get(flow.date)
       const candle = at === undefined || !candles ? null : candles[at]
-      const prev = at === undefined || !candles || at === 0 ? null : candles[at - 1]
       return {
         date: flow.date,
         foreign: flow.foreignNet,
@@ -73,7 +73,7 @@ export function flowDays(flows: readonly InvestorFlowRes[], candles: readonly Ca
         individual: flow.individualNet,
         ratio: flow.foreignRatio,
         close: candle?.close ?? null,
-        change: candle && prev && prev.close > 0 ? (candle.close / prev.close - 1) * 100 : null,
+        change: at === undefined || !candles ? null : candleChangeAt(candles, at),
       }
     })
 }
