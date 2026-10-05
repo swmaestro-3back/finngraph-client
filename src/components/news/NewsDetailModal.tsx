@@ -13,12 +13,14 @@ import { NewsGraphSection } from '@/components/news/NewsGraphSection'
 import { NewsSummary } from '@/components/news/NewsSummary'
 import { NewsStockChips } from '@/components/news/NewsStockChips'
 import { NewsSection } from '@/components/theme/NewsSection'
-import { toNewsItem } from '@/lib/apiMappers'
-import { formatDateTime, pressOf } from '@/lib/format'
+import { sourceUrl, toNewsItem } from '@/lib/apiMappers'
+import { formatDateTime, pressName } from '@/lib/format'
 import { useNewsGraph } from '@/lib/useNewsGraph'
 import { useNewsCompanies } from '@/lib/queries/useNewsCompanies'
 import { useNewsDetail } from '@/lib/queries/useNewsDetail'
 import { cn } from '@/lib/utils'
+
+const TARGET_HEIGHT = 'h-10 max-md:h-11'
 
 interface Props {
   newsId: string | null
@@ -68,6 +70,7 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
   const graphTicker = relatedTickers[0] ?? null
 
   const open = newsId !== null
+  const original = news ? sourceUrl(news) : ''
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,12 +114,12 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
                     : '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'}
               </p>
               {error.isRetryable ? (
-                <Button variant="outline" size="sm" onClick={refetch}>
+                <Button variant="outline" size="sm" className={TARGET_HEIGHT} onClick={refetch}>
                   <RotateCw data-icon="inline-start" />
                   다시 시도
                 </Button>
               ) : (
-                <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                <Button variant="outline" size="sm" className={TARGET_HEIGHT} onClick={() => onOpenChange(false)}>
                   닫기
                 </Button>
               )}
@@ -132,16 +135,16 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
               </DialogTitle>
               <div className="mt-4 flex items-center justify-between gap-4">
                 <DialogDescription className="flex items-center gap-2.5 text-caption text-muted-foreground">
-                  <span className="text-xs font-semibold text-foreground">{pressOf(news.url)}</span>
+                  <span className="text-xs font-semibold text-foreground">{pressName(original)}</span>
                   <span aria-hidden className="h-3 w-px bg-border" />
                   <span>입력 {formatDateTime(news.collectedAt)}</span>
                 </DialogDescription>
-                {news.url && (
+                {original && (
                   <a
-                    href={news.url}
+                    href={original}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    className="-my-3 -mr-2 inline-flex min-h-10 shrink-0 items-center gap-0.5 px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground max-md:-my-3.5 max-md:min-h-11"
                   >
                     원문 보기
                     <ArrowUpRight className="size-3.5" />
@@ -177,7 +180,7 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
                   <h3 className="text-sm font-semibold text-foreground">관계 그래프</h3>
                   {/* 첫 관련 종목을 중심으로 기업 그래프를 연다 */}
                   {graphTicker && (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" className={TARGET_HEIGHT} asChild>
                       <Link to={`/graph/${graphTicker}`} onClick={() => onOpenChange(false)}>
                         기업 그래프에서 보기
                       </Link>

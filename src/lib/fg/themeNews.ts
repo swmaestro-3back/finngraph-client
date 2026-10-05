@@ -1,6 +1,7 @@
+import { sourceUrl } from '@/lib/apiMappers'
 import type { NewsDetail } from '@/lib/apiTypes'
 import { addDays, isWeekend } from '@/lib/calendar'
-import { pressOf } from '@/lib/format'
+import { pressName } from '@/lib/format'
 import { dayLabel, minusMonths, monthDayLabel } from '@/lib/fg/themeCharts'
 
 export interface ThemeNewsItem {
@@ -57,12 +58,13 @@ export function toThemeNews(news: readonly NewsDetail[], tradingDays: readonly s
     .flatMap((n) => {
       const at = kstDayTime(n.collectedAt)
       if (!at) return []
+      const url = sourceUrl(n)
       return [
         {
           id: n.id,
           title: n.title,
-          url: n.url,
-          press: pressOf(n.url),
+          url,
+          press: pressName(url),
           day: at.day,
           time: at.time,
           tradeDay: tradeDayOf(at.day, tradingDays),

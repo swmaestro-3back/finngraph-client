@@ -6,7 +6,7 @@ import { RelationLineRow } from '@/components/briefing/RelationLineRow'
 import { NewsRelationBadge } from '@/components/news/NewsRelationBadge'
 import type { AnalyzedNewsRes, BriefingLockedRes, RelationGraphRes } from '@/lib/apiTypes'
 import { relationDigestCaption } from '@/lib/briefing'
-import { changeColorClass, formatChangeOrDash, formatRelativeTime, pressOf } from '@/lib/format'
+import { changeColorClass, formatChangeOrDash, formatRelativeTime, pressName } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
@@ -42,7 +42,7 @@ function AnalyzedNewsCard({
         <NewsRelationBadge tripleExtracted />
       </div>
       <p className="flex items-center gap-2 text-caption text-muted-foreground">
-        {news.url && <span className="font-medium text-foreground-secondary">{pressOf(news.url)}</span>}
+        {news.url && <span className="font-medium text-foreground-secondary">{pressName(news.url)}</span>}
         {news.publishedAt && <span className="font-mono tabular-nums">{formatRelativeTime(news.publishedAt)}</span>}
         <span>
           관계 <span className="font-mono tabular-nums">{news.relationCount}</span>건

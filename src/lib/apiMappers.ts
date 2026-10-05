@@ -1,4 +1,4 @@
-import { formatRelativeTime, pressOf } from '@/lib/format'
+import { formatRelativeTime, pressName } from '@/lib/format'
 import {
   type AnnualFinancials,
   type AnnualFinancialsRes,
@@ -21,17 +21,23 @@ export function toNewsDetail(raw: NewsRes): NewsDetail {
     title: raw.title ?? '(제목 없음)',
     summary: raw.summary ?? '',
     url: raw.url ?? '',
+    originalUrl: raw.originalUrl || null,
     collectedAt: raw.publishedAt ?? raw.collectedAt ?? '',
     tripleExtracted: raw.tripleExtracted ?? null,
   }
 }
 
+export function sourceUrl(news: Pick<NewsDetail, 'url' | 'originalUrl'>): string {
+  return news.originalUrl || news.url
+}
+
 export function toNewsItem(news: NewsDetail): NewsItem {
+  const url = sourceUrl(news)
   return {
     id: news.id,
     title: news.title,
-    meta: `${pressOf(news.url)} · ${formatRelativeTime(news.collectedAt)}`,
-    url: news.url || null,
+    meta: `${pressName(url)} · ${formatRelativeTime(news.collectedAt)}`,
+    url: url || null,
     tripleExtracted: news.tripleExtracted,
   }
 }

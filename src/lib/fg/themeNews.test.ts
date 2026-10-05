@@ -16,12 +16,12 @@ import {
 
 const TRADING = ['2026-09-24', '2026-09-25', '2026-09-28', '2026-09-29', '2026-09-30']
 
-function raw(id: number, at: string, analyzed: boolean | null = true, url = 'https://www.newspim.com/news/view/1'): NewsDetail {
+function raw(id: number, at: string, analyzed: boolean | null = true, url = 'https://www.press-a.test/news/view/1'): NewsDetail {
   return { id: String(id), title: `기사 ${id}`, summary: '', url, collectedAt: at, tripleExtracted: analyzed }
 }
 
 function item(id: number, day: string, tradeDay = day, analyzed = true, time = '09:00'): ThemeNewsItem {
-  return { id: String(id), title: `기사 ${id}`, url: '', press: '뉴스핌', day, time, tradeDay, analyzed }
+  return { id: String(id), title: `기사 ${id}`, url: '', press: '예시경제', day, time, tradeDay, analyzed }
 }
 
 describe('kstDayTime', () => {
@@ -53,7 +53,7 @@ describe('toThemeNews', () => {
     const items = toThemeNews(
       [
         raw(1, '2026-09-25T10:00:00+09:00', false),
-        raw(2, '2026-09-27T17:30:00+09:00', true, 'https://n.news.naver.com/mnews/article/1'),
+        raw(2, '2026-09-27T17:30:00+09:00', true, 'https://portal.test/mnews/article/1'),
         raw(3, '2026-09-28T09:10:00+09:00', null),
         raw(4, ''),
       ],
@@ -63,14 +63,26 @@ describe('toThemeNews', () => {
     expect(items[1]).toEqual({
       id: '2',
       title: '기사 2',
-      url: 'https://n.news.naver.com/mnews/article/1',
-      press: '네이버 뉴스',
+      url: 'https://portal.test/mnews/article/1',
+      press: 'portal.test',
       day: '2026-09-27',
       time: '17:30',
       tradeDay: '2026-09-28',
       analyzed: true,
     })
     expect(items[0].analyzed).toBe(false)
+  })
+
+  it('원문 주소가 있으면 매체와 링크를 원문으로 정해요', () => {
+    const [withOriginal] = toThemeNews(
+      [{ ...raw(5, '2026-09-28T09:10:00+09:00', true, 'https://portal.test/mnews/article/008/1'), originalUrl: 'https://www.press-b.test/stock/1' }],
+      TRADING,
+    )
+    expect(withOriginal.url).toBe('https://www.press-b.test/stock/1')
+    expect(withOriginal.press).toBe('press-b.test')
+    const [plain] = toThemeNews([raw(6, '2026-09-28T09:10:00+09:00', true, 'https://portal.test/mnews/article/2')], TRADING)
+    expect(plain.url).toBe('https://portal.test/mnews/article/2')
+    expect(plain.press).toBe('portal.test')
   })
 })
 
@@ -205,8 +217,8 @@ describe('newsListView', () => {
       ['9월 24일(목)', 1, ['4']],
       ['9월 10일(목)', 1, ['5']],
     ])
-    expect(view.groups[0].rows[0].meta).toBe('뉴스핌 · 11:00')
-    expect(view.groups[1].rows[0].meta).toBe('뉴스핌 · 9월 27일(일) 17:30')
+    expect(view.groups[0].rows[0].meta).toBe('예시경제 · 11:00')
+    expect(view.groups[1].rows[0].meta).toBe('예시경제 · 9월 27일(일) 17:30')
     expect(view.analyzedCount).toBe(3)
     expect(view.empty).toBeNull()
     expect(view.gated).toBe(false)

@@ -7,7 +7,7 @@ import {
   formatSignedWon,
   formatTrillion,
   formatVolume,
-  pressOf,
+  pressName,
 } from '@/lib/format'
 
 describe('formatCompactKrw — 원 금액을 조·억으로', () => {
@@ -113,11 +113,44 @@ describe('formatVolume — 주 단위 거래량을 만주로', () => {
   })
 })
 
-describe('pressOf — 수집 뉴스 도메인은 언론사 이름으로', () => {
-  it('네이버 뉴스와 이투데이·아주경제 도메인을 안다', () => {
-    expect(pressOf('https://n.news.naver.com/mnews/article/366/0001193190')).toBe('네이버 뉴스')
-    expect(pressOf('https://www.etoday.co.kr/news/view/1')).toBe('이투데이')
-    expect(pressOf('https://www.ajunews.com/view/1')).toBe('아주경제')
+describe('pressName — 기사 주소나 매체 호스트를 언론사 이름 하나로', () => {
+  const NAMES = {
+    'press-a.test': '예시경제',
+    'news.press-b.test': '예시산업신문',
+    'portal.test': '가상포털',
+  }
+
+  it('기사 주소에서 호스트를 읽어 이름을 찾아요', () => {
+    expect(pressName('https://press-a.test/stock/2026/09/16/1', NAMES)).toBe('예시경제')
+    expect(pressName('https://news.press-b.test/view/1?division=PORTAL', NAMES)).toBe('예시산업신문')
+    expect(pressName('http://portal.test/article/366/1', NAMES)).toBe('가상포털')
+  })
+
+  it('www가 있든 없든 같은 이름이에요', () => {
+    for (const source of ['https://www.press-a.test/view/1', 'https://press-a.test/view/1', 'www.press-a.test', 'press-a.test']) {
+      expect(pressName(source, NAMES)).toBe('예시경제')
+    }
+    expect(pressName('https://www.news.press-b.test/1', NAMES)).toBe('예시산업신문')
+  })
+
+  it('대소문자와 앞뒤 공백은 가리지 않아요', () => {
+    expect(pressName('HTTPS://WWW.PRESS-A.TEST/View/1', NAMES)).toBe('예시경제')
+    expect(pressName('  Press-A.Test  ', NAMES)).toBe('예시경제')
+  })
+
+  it('사전에 없는 매체는 www를 뺀 도메인 그대로예요', () => {
+    expect(pressName('https://www.press-c.test/a/1', NAMES)).toBe('press-c.test')
+    expect(pressName('press-c.test', NAMES)).toBe('press-c.test')
+    expect(pressName('https://sub.press-a.test/1', NAMES)).toBe('sub.press-a.test')
+    expect(pressName('https://www.press-c.test/a/1')).toBe('press-c.test')
+  })
+
+  it('주소가 없거나 읽을 수 없으면 출처 미상이에요', () => {
+    expect(pressName(null, NAMES)).toBe('출처 미상')
+    expect(pressName(undefined, NAMES)).toBe('출처 미상')
+    expect(pressName('', NAMES)).toBe('출처 미상')
+    expect(pressName('   ', NAMES)).toBe('출처 미상')
+    expect(pressName('not a url', NAMES)).toBe('출처 미상')
   })
 })
 

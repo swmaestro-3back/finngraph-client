@@ -137,6 +137,7 @@ export interface StockRowRes {
   market: string
   price: number | null
   change: number | null
+  changeAmount?: number | null
   w1: number | null
   m1: number | null
   m3: number | null
@@ -155,6 +156,7 @@ export interface StockDetailRes {
   market: string
   price: number | null
   change: number | null
+  changeAmount?: number | null
   themeId: number | null
   themeName: string | null
   marketCap: number | null
@@ -269,6 +271,7 @@ export interface NewsDetail {
   title: string
   summary: string
   url: string
+  originalUrl?: string | null
   collectedAt: string
   /** 트리플 추출 결과 관계가 있는 뉴스 — 상세 모달에 관계망이 그려진다. 응답에 없으면 null */
   tripleExtracted: boolean | null
@@ -844,4 +847,38 @@ export interface DividendReactionRes {
   openGap: number
   recoveryDays: number | null
   pending: boolean
+}
+
+export interface IssueCompanyRes {
+  ticker: string
+  name: string
+  mentionCount: number
+}
+
+export interface IssueArticleRes {
+  id: number
+  title: string | null
+  url: string | null
+  press: string | null
+  publishedAt: string | null
+  summary: string | null
+  tripleExtracted: boolean
+}
+
+export interface IssueSummaryRes {
+  id: number
+  title: string | null
+  titleSource: 'cluster' | 'article'
+  articleCount: number
+  mediaCount: number
+  firstPublishedAt: string | null
+  lastPublishedAt: string | null
+  keywords: string[]
+  summary: string | null
+  representativeNewsId: number
+  companies: IssueCompanyRes[]
+}
+
+export interface IssueDetailRes extends IssueSummaryRes {
+  articles: IssueArticleRes[]
 }
