@@ -25,6 +25,11 @@ export interface ThemeIssueRef {
 
 export type IssueOf = (theme: ThemeRes) => ThemeIssueRef | null
 
+export type ThemeIssueView =
+  | { status: 'loading' }
+  | { status: 'error'; retry: () => void }
+  | { status: 'ready'; issue: ThemeIssueRef | null; date: string | null }
+
 export interface ThemeQuery {
   view: ThemeView | null
   sort: ThemeSort | null

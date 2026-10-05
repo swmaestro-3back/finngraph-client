@@ -129,6 +129,7 @@ export interface CandleRes {
   low: number
   close: number
   volume: number
+  changeRate?: number | null
 }
 
 export interface StockRowRes {
@@ -138,6 +139,11 @@ export interface StockRowRes {
   price: number | null
   change: number | null
   changeAmount?: number | null
+  tradeValue?: number | null
+  high52w?: number | null
+  high52wDate?: string | null
+  low52w?: number | null
+  low52wDate?: string | null
   w1: number | null
   m1: number | null
   m3: number | null
@@ -157,6 +163,11 @@ export interface StockDetailRes {
   price: number | null
   change: number | null
   changeAmount?: number | null
+  tradeValue?: number | null
+  high52w?: number | null
+  high52wDate?: string | null
+  low52w?: number | null
+  low52wDate?: string | null
   themeId: number | null
   themeName: string | null
   marketCap: number | null
@@ -879,6 +890,34 @@ export interface IssueSummaryRes {
   companies: IssueCompanyRes[]
 }
 
+export interface IssueListMeta {
+  date: string | null
+  prevDate: string | null
+  nextDate: string | null
+}
+
+export type IssueSort = 'media' | 'recent'
+
 export interface IssueDetailRes extends IssueSummaryRes {
   articles: IssueArticleRes[]
+}
+
+export interface StockIssueRes extends IssueSummaryRes {
+  mentionCount: number
+}
+
+export interface LatestStockIssueRes {
+  ticker: string
+  issue: StockIssueRes | null
+}
+
+export interface ThemeIssuesRes {
+  themeId: number
+  issueCount: number
+  issueIds: number[]
+  issues: IssueSummaryRes[]
+}
+
+export interface ThemeIssuesMeta {
+  date: string | null
 }

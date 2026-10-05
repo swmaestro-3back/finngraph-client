@@ -9,6 +9,7 @@ export interface IssueStock {
   price?: number | null
   gapFromHigh?: number | null
   position?: number | null
+  newHigh?: boolean
   role?: string | null
   mentionIds?: readonly string[]
 }

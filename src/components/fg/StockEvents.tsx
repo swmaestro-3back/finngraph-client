@@ -11,6 +11,7 @@ export type EventAction =
   | { kind: 'sheet'; href: string; open: () => void }
   | { kind: 'modal'; open: () => void }
   | { kind: 'link'; url: string }
+  | { kind: 'route'; to: string; state?: unknown }
   | { kind: 'button'; run: () => void }
 
 export interface EventRow {
@@ -45,6 +46,13 @@ function EventLink({ action, className, children, onPick, selected }: ActionProp
       <a {...common} href={action.url} target="_blank" rel="noopener noreferrer">
         {children}
       </a>
+    )
+  }
+  if (action.kind === 'route') {
+    return (
+      <Link {...common} to={action.to} state={action.state}>
+        {children}
+      </Link>
     )
   }
   if (action.kind === 'modal') {

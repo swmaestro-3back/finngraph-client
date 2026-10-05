@@ -7,11 +7,11 @@ export function GapGallery() {
   const mode = useGapMode()
   const quote = useGap(
     'stock-quote-ext',
-    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.gapFromHigh) : null,
+    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.tradingRatio) : null,
   )
   const issue = useGap(
-    'theme-issue',
-    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.issueTitle) : null,
+    'issue-timeline',
+    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.flowTitle) : null,
   )
   return (
     <GallerySection title="데이터 갭">
@@ -24,13 +24,13 @@ export function GapGallery() {
       </div>
       <div className="fg-gal__row">
         <span>
-          52주 최고 대비 <GapValue gap="stock-quote-ext" mock={quote.status === 'mock' ? quote.data : null} />
+          거래대금 <GapValue gap="stock-quote-ext" mock={quote.status === 'mock' ? quote.data : null} />
         </span>
         <span>
-          대표 이슈 <GapValue gap="theme-issue" mock={issue.status === 'mock' ? issue.data : null} />
+          이어진 흐름 <GapValue gap="issue-timeline" mock={issue.status === 'mock' ? issue.data : null} />
         </span>
         <span>
-          문구형 <GapValue gap="theme-issue" label="대표 이슈 준비 중" />
+          문구형 <GapValue gap="issue-timeline" label="이슈 흐름 준비 중" />
         </span>
         {(quote.status === 'mock' || issue.status === 'mock') && <MockBadge />}
       </div>

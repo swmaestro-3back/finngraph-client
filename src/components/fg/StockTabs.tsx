@@ -6,7 +6,7 @@ import { navState, STOCK_TABS, stockTabSearch, type StockTab } from '@/lib/fg/st
 import { cn } from '@/lib/utils'
 
 export interface TabCount {
-  gap: GapId
+  gap?: GapId
   value: number
 }
 
@@ -37,7 +37,8 @@ export function StockTabs({ label, current, counts, className, ref }: StockTabsP
                 aria-current={tab.value === current ? 'page' : undefined}
               >
                 {tab.label}
-                {count && <GapValue gap={count.gap} mock={count.value} className="fg-ptab__count fg-num" />}
+                {count?.gap && <GapValue gap={count.gap} mock={count.value} className="fg-ptab__count fg-num" />}
+                {count && !count.gap && <span className="fg-ptab__count fg-num">{count.value}</span>}
               </Link>
             </li>
           )

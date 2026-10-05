@@ -1,28 +1,52 @@
 import type { ReactNode, Ref } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
-import { GapValue, MockBadge } from '@/components/fg/Gap'
+import { RetryText } from '@/components/fg/RetryText'
+import { Skeleton } from '@/components/fg/Skeleton'
 import { ThemeDetailLink, ThemeGraphLink, ThemeStar } from '@/components/fg/ThemeActions'
 import { ThemeRatio } from '@/components/fg/ThemeRatio'
 import type { ThemeRes } from '@/lib/apiTypes'
 import { formatChange, formatCompactKrw } from '@/lib/format'
 import { toneClass } from '@/lib/fg/format'
+import { monthDayWord } from '@/lib/fg/hub'
 import { issuePath, themePath } from '@/lib/fg/paths'
-import type { ChangeOf, IssueOf } from '@/lib/fg/themes'
+import type { ChangeOf, ThemeIssueView } from '@/lib/fg/themes'
 import { fromState } from '@/lib/navigation'
 
 interface ThemePanelProps {
   theme: ThemeRes
   changeOf: ChangeOf
-  issueOf: IssueOf | null
+  issue: ThemeIssueView
   members: ReactNode
   ref?: Ref<HTMLElement>
 }
 
-export function ThemePanel({ theme, changeOf, issueOf, members, ref }: ThemePanelProps) {
+function ThemeIssue({ view, state }: { view: ThemeIssueView; state: unknown }) {
+  if (view.status === 'loading') return <Skeleton height={44} />
+  if (view.status === 'error')
+    return (
+      <p className="fg-tdet__none">
+        대표 이슈를 불러오지 못했어요 <RetryText subject="대표 이슈" onRetry={view.retry} />
+      </p>
+    )
+  const day = view.date ? monthDayWord(view.date) : null
+  if (!view.issue)
+    return <p className="fg-tdet__none">{`${day ? `${day} ` : ''}이 테마 종목이 나온 이슈가 없어요`}</p>
+  return (
+    <Link to={issuePath(view.issue.id)} state={state} className="fg-tdet__issue">
+      <i className="fg-dia" aria-hidden="true" />
+      <span>
+        <b>{view.issue.title}</b>
+        <small>{`${day ? `${day} · ` : ''}${view.issue.mediaCount}개 매체 보도 · 이 테마 종목이 나온 이슈`}</small>
+      </span>
+    </Link>
+  )
+}
+
+export function ThemePanel({ theme, changeOf, issue, members, ref }: ThemePanelProps) {
   const { pathname, search } = useLocation()
   const change = changeOf(theme)
-  const issue = issueOf ? issueOf(theme) : null
+  const state = fromState(`${pathname}${search}`)
   const up = theme.upCount ?? 0
   const down = theme.downCount ?? 0
   return (
@@ -30,11 +54,10 @@ export function ThemePanel({ theme, changeOf, issueOf, members, ref }: ThemePane
       <div className="fg-tdet__kick">
         <Badge>고른 테마</Badge>
         <span className="fg-tdet__count fg-num">{theme.stockCount}종목</span>
-        {issueOf && <MockBadge />}
         <ThemeStar theme={theme} />
       </div>
       <h2 id="fg-tdet-name" className="fg-tdet__name">
-        <Link to={themePath(theme.id)} state={fromState(`${pathname}${search}`)} title="테마 상세 보기">
+        <Link to={themePath(theme.id)} state={state} title="테마 상세 보기">
           {theme.name}
           <span className="fg-tdet__chev" aria-hidden="true">
             ›
@@ -68,19 +91,7 @@ export function ThemePanel({ theme, changeOf, issueOf, members, ref }: ThemePane
       </div>
       <div className="fg-tdet__sec">
         <span className="fg-tdet__label">대표 이슈</span>
-        {!issueOf ? (
-          <GapValue gap="theme-issue" label="준비 중이에요" className="fg-tdet__none" />
-        ) : issue ? (
-          <Link to={issuePath(issue.id)} className="fg-tdet__issue">
-            <i className="fg-dia" aria-hidden="true" />
-            <span>
-              <b>{issue.title}</b>
-              <small>{issue.mediaCount}개 매체 보도 · 이 테마 종목이 나온 이슈</small>
-            </span>
-          </Link>
-        ) : (
-          <p className="fg-tdet__none">오늘 이 테마 종목이 나온 이슈가 없어요</p>
-        )}
+        <ThemeIssue view={issue} state={state} />
       </div>
       <div className="fg-tdet__sec">
         <span className="fg-tdet__label">테마 종목 · 오늘 등락률 순</span>

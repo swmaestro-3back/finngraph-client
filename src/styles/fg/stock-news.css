@@ -414,6 +414,35 @@
 .fg-sdisc__all {
   align-self: flex-start;
 }
+.fg-sic__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fg-sic__list > .fg-hcard:first-child {
+  padding-top: var(--space-2);
+}
+.fg-sic__chg {
+  margin-left: auto;
+  color: var(--text-secondary);
+}
+.fg-sic__chgv {
+  font-weight: 700;
+}
+.fg-sic__with {
+  font: 500 12px/17px var(--font-sans);
+  color: var(--text-tertiary);
+}
+.fg-sic__more {
+  align-self: center;
+}
+.fg-sic__note {
+  margin: 0;
+  font: 500 12px/17px var(--font-sans);
+  color: var(--text-tertiary);
+}
 @media (prefers-reduced-motion: no-preference) {
   .fg-flow,
   .fg-sfl__nav button {

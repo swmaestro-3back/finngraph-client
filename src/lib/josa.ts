@@ -1,10 +1,12 @@
 // 받침 유무에 따른 조사 선택 — 숫자는 한국어 독음 기준(0=영, 1=일 …)
 const DIGIT_SOUND = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구']
+const LETTER_SOUND: Readonly<Record<string, string>> = { L: '엘', M: '엠', N: '엔', R: '알' }
 
 function lastSoundChar(word: string): string | null {
   for (let i = word.length - 1; i >= 0; i--) {
     const ch = word[i]
     if (/[0-9]/.test(ch)) return DIGIT_SOUND[Number(ch)]
+    if (/[A-Za-z]/.test(ch)) return LETTER_SOUND[ch.toUpperCase()] ?? '이'
     if (/[가-힣]/.test(ch)) return ch
   }
   return null

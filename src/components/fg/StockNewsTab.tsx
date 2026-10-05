@@ -1,32 +1,26 @@
 import { ExternalLink } from 'lucide-react'
-import { useMemo, type ReactNode } from 'react'
-import { Button } from '@/components/fg/Button'
+import { useMemo } from 'react'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { DisclosureList } from '@/components/fg/DisclosureList'
 import { MockBadge, NotReady } from '@/components/fg/Gap'
 import { Skeleton } from '@/components/fg/Skeleton'
-import { StateBlock } from '@/components/fg/StateBlock'
+import { StockIssueCards, type StockIssueState } from '@/components/fg/StockIssueCards'
 import { StockIssueFlows } from '@/components/fg/StockIssueFlows'
 import { StockNewsList } from '@/components/fg/StockNewsList'
 import type { CandleRes, StockDetailRes } from '@/lib/apiTypes'
 import { placeDisclosures } from '@/lib/fg/disclosures'
 import { issueFlows } from '@/lib/fg/stockFlows'
 import { shortDate, type PlacedIssue } from '@/lib/fg/stockIssues'
-import { useDelayed } from '@/lib/fg/useDelayed'
-import { useGap, type GapState } from '@/lib/useGap'
+import { useGap } from '@/lib/useGap'
 
 const loadDisclosures = import.meta.env.DEV
   ? () => import('@/dev/fixtures/stockDetail').then((m) => m.stockDisclosuresFixture)
   : null
 
-export type IssueMode = GapState<unknown>['status']
-
 interface StockNewsTabProps {
   stock: StockDetailRes
   candles: CandleRes[] | null
-  candlesFailed: boolean
-  onRetryCandles: () => void
-  issueMode: IssueMode
+  issues: StockIssueState
   placed: readonly PlacedIssue[] | null
   today: string
   refreshKey: number
@@ -34,31 +28,7 @@ interface StockNewsTabProps {
   onOpenNews: (id: string) => void
 }
 
-function FlowsHead({ mock }: { mock: boolean }) {
-  return (
-    <div className="fg-section__head">
-      <span className="fg-sev__title">
-        <h2 id="fg-sfl-title" className="fg-section__title">
-          이 종목이 나온 이슈 흐름
-        </h2>
-        {mock && <MockBadge />}
-      </span>
-    </div>
-  )
-}
-
-export function StockNewsTab({
-  stock,
-  candles,
-  candlesFailed,
-  onRetryCandles,
-  issueMode,
-  placed,
-  today,
-  refreshKey,
-  onOpenIssue,
-  onOpenNews,
-}: StockNewsTabProps) {
+export function StockNewsTab({ stock, candles, issues, placed, today, refreshKey, onOpenIssue, onOpenNews }: StockNewsTabProps) {
   const disclosures = useGap('disclosures', loadDisclosures)
   const flows = useMemo(() => (placed && candles ? issueFlows(placed, candles, today) : null), [placed, candles, today])
   const lastDate = candles && candles.length > 0 ? candles[candles.length - 1].date : null
@@ -70,44 +40,13 @@ export function StockNewsTab({
         : [],
     [disclosureData, lastDate],
   )
-  const flowsWaiting = useDelayed(issueMode !== 'not-ready' && flows === null && !candlesFailed)
-
-  let flowPart: ReactNode
-  if (issueMode === 'not-ready') {
-    flowPart = (
-      <section className="fg-section" aria-labelledby="fg-sfl-title">
-        <FlowsHead mock={false} />
-        <NotReady gap="stock-issues" />
-      </section>
-    )
-  } else if (flows && candles) {
-    flowPart = (
-      <StockIssueFlows stockName={stock.name} flows={flows} candles={candles} today={today} onOpenIssue={onOpenIssue} />
-    )
-  } else if (candlesFailed) {
-    flowPart = (
-      <section className="fg-section" aria-labelledby="fg-sfl-title">
-        <FlowsHead mock />
-        <StateBlock
-          kind="error"
-          title="주가를 불러오지 못했어요"
-          description="이슈 흐름은 주가와 함께 보여 드려요 · 잠시 후 다시 시도해 주세요"
-          action={
-            <Button size="sm" onClick={onRetryCandles}>
-              다시 시도
-            </Button>
-          }
-        />
-      </section>
-    )
-  } else {
-    flowPart = <div aria-hidden="true">{flowsWaiting && <Skeleton height={420} shape="card" />}</div>
-  }
-
   return (
     <div className="fg-grid fg-reveal">
       <div className="fg-col">
-        {flowPart}
+        {flows && candles && (
+          <StockIssueFlows stockName={stock.name} flows={flows} candles={candles} today={today} onOpenIssue={onOpenIssue} />
+        )}
+        <StockIssueCards key={stock.ticker} ticker={stock.ticker} issues={issues} today={today} />
         <StockNewsList
           ticker={stock.ticker}
           candles={candles}

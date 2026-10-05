@@ -8,11 +8,11 @@ import { Disclaimer } from '@/components/fg/Disclaimer'
 import { IssueGraph } from '@/components/fg/IssueGraph'
 import { MemberGate } from '@/components/fg/MemberGate'
 import { ChangeText } from '@/components/fg/PriceChange'
-import { QuoteRetryNote } from '@/components/fg/RetryText'
+import { QuoteRetryNote, RetryText } from '@/components/fg/RetryText'
+import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { StockChip } from '@/components/fg/StockChip'
-import { formatChange } from '@/lib/format'
-import { formatGapPct, marketLabel, toneClass } from '@/lib/fg/format'
+import { LinkedRailRow } from '@/components/fg/StockLinkedRail'
 import {
   graphSentence,
   issueFlow,
@@ -21,18 +21,19 @@ import {
   summaryCaption,
   type IssueFlowModel,
 } from '@/lib/fg/issuePage'
-import type { IssueBook, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
+import type { IssueBook, IssueLink, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
 import { connectedCount, representativeCaption, type IssueSubject, type LiveIssue } from '@/lib/fg/issueSubject'
 import { issuePath } from '@/lib/fg/paths'
-import { navState, STRENGTH_LABEL } from '@/lib/fg/stockDetail'
+import { navState } from '@/lib/fg/stockDetail'
 import { useIssueTabTarget } from '@/lib/fg/useIssueTab'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { useMemberGate } from '@/lib/memberGate'
 import { fromState } from '@/lib/navigation'
+import type { IssueLinksState } from '@/lib/queries/useLinkedCompanies'
 import { cn } from '@/lib/utils'
 
 const NARROW = '(max-width: 767px)'
-const LIVE_GAPS_NOTE = '핵심 포인트·이어진 흐름·관계 그래프·이어진 기업은 준비 중이에요'
+const LIVE_GAPS_NOTE = '핵심 포인트·이어진 흐름·관계 그래프는 준비 중이에요'
 
 function SummaryCard({ record }: { record: IssueRecord }) {
   const tabTarget = useIssueTabTarget()
@@ -284,12 +285,27 @@ function IssueStockChip({ stock }: { stock: IssueStock }) {
   )
 }
 
-function InferredRail({ record }: { record: IssueRecord }) {
+interface InferredRailProps {
+  stocks: readonly IssueStock[]
+  links: readonly IssueLink[] | null
+  error: boolean
+  onRetry: () => void
+}
+
+function InferredRail({ stocks, links, error, onRetry }: InferredRailProps) {
   const tabTarget = useIssueTabTarget()
-  const { locked } = useMemberGate()
-  const rail = issueRail({ stocks: record.stocks, links: record.links })
+  const { locked, pending } = useMemberGate()
+  const rail = issueRail({ stocks, links: links ?? [] })
   let inferred: ReactNode
-  if (rail.inferred === 0) inferred = <p className="fg-irail__empty">아직 이어진 기업이 없어요</p>
+  if (links === null && error)
+    inferred = (
+      <p className="fg-irail__empty" role="status">
+        <span>이어진 기업을 불러오지 못했어요</span>
+        <RetryText subject="이어진 기업" onRetry={onRetry} />
+      </p>
+    )
+  else if (links === null || pending) inferred = <Skeleton height={168} />
+  else if (rail.inferred === 0) inferred = <p className="fg-irail__empty">아직 이어진 기업이 없어요</p>
   else if (locked) inferred = <MemberGate subject={`이런 기업 ${rail.inferred}곳`} variant="compact" className="fg-irail__gate" />
   return (
     <div className="fg-irail__inf">
@@ -301,29 +317,7 @@ function InferredRail({ record }: { record: IssueRecord }) {
       {inferred ?? (
         <div className="fg-slr__rows">
           {rail.top.map(({ company }) => (
-            <Link key={company.id} {...tabTarget('stocks')} className="fg-slr__row fg-num">
-              <span className="fg-slr__top">
-                <span className="fg-slr__id">
-                  <CompanyLogo name={company.name} size={24} />
-                  <span className="fg-slr__name">{company.name}</span>
-                  <span className="fg-slr__mkt">{marketLabel(company.market)}</span>
-                </span>
-                <span className={cn('fg-slr__chg', toneClass(company.change))}>{formatChange(company.change)}</span>
-              </span>
-              <span className="fg-slr__rel">{company.relation}</span>
-              <span className="fg-slr__foot fg-irail__foot">
-                <span>
-                  52주 최고 대비 <b>{formatGapPct(company.gapFromHigh)}</b>
-                </span>
-                <span className="fg-strength">
-                  근거 강도
-                  {[1, 2, 3].map((bar) => (
-                    <i key={bar} className={cn(bar <= company.strength && 'on')} aria-hidden="true" />
-                  ))}
-                  <b>{STRENGTH_LABEL[company.strength]}</b>
-                </span>
-              </span>
-            </Link>
+            <LinkedRailRow key={company.id} company={company} {...tabTarget('stocks')} footClassName="fg-irail__foot" />
           ))}
         </div>
       )}
@@ -331,10 +325,17 @@ function InferredRail({ record }: { record: IssueRecord }) {
   )
 }
 
-function StocksRail({ issue, onRetryQuotes }: { issue: IssueSubject; onRetryQuotes: (() => void) | null }) {
+interface StocksRailProps {
+  issue: IssueSubject
+  linked: IssueLinksState | null
+  onRetryQuotes: (() => void) | null
+}
+
+function StocksRail({ issue, linked, onRetryQuotes }: StocksRailProps) {
   const tabTarget = useIssueTabTarget()
-  const rail = issueRail({ stocks: issue.stocks, links: issue.kind === 'mock' ? issue.record.links : [] })
-  const connected = connectedCount(issue)
+  const links = issue.kind === 'mock' ? issue.record.links : (linked?.links ?? null)
+  const rail = issueRail({ stocks: issue.stocks, links: links ?? [] })
+  const connected = issue.kind === 'mock' ? connectedCount(issue) : rail.connected
   return (
     <section className="fg-section fg-irail" aria-labelledby="fg-irail-title">
       <h2 id="fg-irail-title" className="fg-section__title">
@@ -367,7 +368,14 @@ function StocksRail({ issue, onRetryQuotes }: { issue: IssueSubject; onRetryQuot
         )}
         {onRetryQuotes && rail.stocks.length > 0 && <QuoteRetryNote onRetry={onRetryQuotes} />}
       </div>
-      {issue.kind === 'mock' && <InferredRail record={issue.record} />}
+      {(issue.kind === 'mock' || linked) && (
+        <InferredRail
+          stocks={issue.stocks}
+          links={links}
+          error={Boolean(linked?.error)}
+          onRetry={linked?.retry ?? (() => undefined)}
+        />
+      )}
       {connected > 0 && (
         <ButtonLink {...tabTarget('stocks')} className="fg-irail__all">
           {`연결된 종목 ${connected} 모두 보기`}
@@ -380,11 +388,12 @@ function StocksRail({ issue, onRetryQuotes }: { issue: IssueSubject; onRetryQuot
 
 interface IssueSummaryTabProps {
   issue: IssueSubject
+  linked: IssueLinksState | null
   onOpenNews: (id: string) => void
   onRetryQuotes: (() => void) | null
 }
 
-export function IssueSummaryTab({ issue, onOpenNews, onRetryQuotes }: IssueSummaryTabProps) {
+export function IssueSummaryTab({ issue, linked, onOpenNews, onRetryQuotes }: IssueSummaryTabProps) {
   const narrow = useMediaQuery(NARROW)
   return (
     <div className="fg-grid fg-iss">
@@ -400,7 +409,7 @@ export function IssueSummaryTab({ issue, onOpenNews, onRetryQuotes }: IssueSumma
         )}
       </div>
       <aside className="fg-rail fg-iss__rail" aria-label="이 이슈와 연결된 종목">
-        <StocksRail issue={issue} onRetryQuotes={onRetryQuotes} />
+        <StocksRail issue={issue} linked={linked} onRetryQuotes={onRetryQuotes} />
         {issue.kind === 'live' && <SoonNote />}
         <Disclaimer />
       </aside>

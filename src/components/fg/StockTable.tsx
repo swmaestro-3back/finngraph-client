@@ -2,15 +2,14 @@ import { Fragment, type ReactNode, type Ref } from 'react'
 import { Badge } from '@/components/fg/Badge'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { SortButton } from '@/components/fg/DataTable'
-import { GapValue } from '@/components/fg/Gap'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { RowExpansion } from '@/components/fg/RowExpansion'
 import { StatusTag } from '@/components/fg/StatusTag'
 import type { StockRowRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
 import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
-import type { StockStatus } from '@/lib/fg/stockQuote'
-import { columnSort, nextColumnSort, type QuoteOf, type StockColumn, type StockSort } from '@/lib/fg/stocks'
+import { week52Mark, week52Of, type StockStatus } from '@/lib/fg/stockQuote'
+import { columnSort, nextColumnSort, type StockColumn, type StockSort } from '@/lib/fg/stocks'
 import { useRowFold } from '@/lib/fg/useRowFold'
 import { gapFromHigh } from '@/lib/fg/week52'
 import { useOverflowFade } from '@/lib/useOverflowFade'
@@ -20,7 +19,9 @@ interface StockTableProps {
   label: string
   sort: StockSort
   onSort: (sort: StockSort) => void
-  quoteOf: QuoteOf | null
+  highReady: boolean
+  valueReady: boolean
+  baseDate: string | null
   selectedCode: string | null
   selectedStatus: StockStatus | null
   onSelect: (code: string) => void
@@ -33,16 +34,18 @@ export function StockTable({
   label,
   sort,
   onSort,
-  quoteOf,
+  highReady,
+  valueReady,
+  baseDate,
   selectedCode,
   selectedStatus,
   onSelect,
   expanded,
   selectedRef,
 }: StockTableProps) {
-  const { scrollRef, showFade, showLeftFade } = useOverflowFade<HTMLDivElement>([rows.length, quoteOf])
+  const { scrollRef, showFade, showLeftFade } = useOverflowFade<HTMLDivElement>([rows.length, highReady, valueReady])
   const fade = showFade && showLeftFade ? 'both' : showFade ? 'end' : showLeftFade ? 'start' : undefined
-  const gapCols = quoteOf ? undefined : 'true'
+  const gapCols = valueReady ? undefined : 'true'
   const { hold, opened, closing } = useRowFold(
     rows.map((stock) => stock.ticker),
     selectedCode,
@@ -59,7 +62,6 @@ export function StockTable({
         <SortButton sort={direction} onSort={() => onSort(nextColumnSort(sort, column))}>
           {text}
         </SortButton>
-        {column === 'value' && !quoteOf && <span className="fg-trow__gap">준비 중</span>}
       </span>
     )
   }
@@ -81,22 +83,20 @@ export function StockTable({
           {head('change', '등락률')}
           <span role="columnheader" className="fg-trow__num" data-col="high">
             최고가 대비
-            {!quoteOf && <span className="fg-trow__gap">준비 중</span>}
           </span>
-          {quoteOf ? (
+          {valueReady ? (
             head('value', '거래대금')
           ) : (
             <span role="columnheader" className="fg-trow__num" data-col="value">
               거래대금
-              <span className="fg-trow__gap">준비 중</span>
             </span>
           )}
           {head('cap', '시가총액')}
         </div>
         {rows.map((stock) => {
           const selected = stock.ticker === selectedCode
-          const quote = quoteOf ? quoteOf(stock) : null
-          const newHigh = quote !== null && stock.price !== null && stock.price >= quote.high52
+          const range = week52Of(stock)
+          const newHigh = stock.price !== null && week52Mark(stock, baseDate) === 'high'
           const folding = !selected && closing?.key === stock.ticker ? closing.node : null
           return (
             <Fragment key={stock.ticker}>
@@ -141,24 +141,18 @@ export function StockTable({
                   role="cell"
                   className="fg-trow__num fg-srow__sub"
                   data-col="high"
-                  data-gap-cell={quoteOf ? undefined : 'true'}
-                  title={quote ? `52주 최고 ${formatPriceWon(quote.high52)}` : undefined}
+                  data-gap-cell={highReady ? undefined : 'true'}
+                  title={range ? `52주 최고 ${formatPriceWon(range.high)}` : undefined}
                 >
-                  <GapValue
-                    gap="stock-quote-ext"
-                    mock={quote && stock.price !== null ? formatGapPct(gapFromHigh(stock.price, quote.high52)) : null}
-                  />
+                  {range && stock.price !== null ? formatGapPct(gapFromHigh(stock.price, range.high)) : '—'}
                 </span>
                 <span
                   role="cell"
                   className="fg-trow__num fg-srow__sub"
                   data-col="value"
-                  data-gap-cell={quoteOf ? undefined : 'true'}
+                  data-gap-cell={valueReady ? undefined : 'true'}
                 >
-                  <GapValue
-                    gap="stock-quote-ext"
-                    mock={quote && quote.tradingValue !== null ? formatCompactKrw(quote.tradingValue) : null}
-                  />
+                  {formatCompactKrw(stock.tradeValue ?? null)}
                 </span>
                 <span role="cell" className="fg-trow__num fg-srow__sub">
                   {formatCompactKrw(stock.marketCap)}

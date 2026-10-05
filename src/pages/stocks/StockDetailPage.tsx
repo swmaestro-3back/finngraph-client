@@ -9,9 +9,10 @@ import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { StockFinanceTab } from '@/components/fg/StockFinanceTab'
 import { StockHeader } from '@/components/fg/StockHeader'
+import type { StockIssueState } from '@/components/fg/StockIssueCards'
 import { StockLinksTab } from '@/components/fg/StockLinksTab'
 import { StockNewsTab } from '@/components/fg/StockNewsTab'
-import { StockOverview } from '@/components/fg/StockOverview'
+import { StockOverview, type EventSource } from '@/components/fg/StockOverview'
 import { StockPinBar } from '@/components/fg/StockPinBar'
 import type { TabCounts } from '@/components/fg/StockTabs'
 import { useAutoRefresh } from '@/lib/autoRefresh'
@@ -24,22 +25,23 @@ import {
   stockBasisLabel,
   withIssue,
 } from '@/lib/fg/stockDetail'
-import { flowSteps, placeIssues } from '@/lib/fg/stockIssues'
-import { changeAmount, QUOTE_CANDLE_LIMIT, statusOf, week52Summary } from '@/lib/fg/stockQuote'
+import { firstHopOf } from '@/lib/fg/linkedCompanies'
+import { flowSteps, placeIssues, placeStockIssues } from '@/lib/fg/stockIssues'
+import { changeAmount, QUOTE_CANDLE_LIMIT, statusOf, week52Resolved } from '@/lib/fg/stockQuote'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { usePinned } from '@/lib/fg/usePinned'
 import { useBackTarget } from '@/lib/navigation'
 import { useCandles } from '@/lib/queries/useCandles'
+import { useLinkedCompanies } from '@/lib/queries/useLinkedCompanies'
 import { useStockDetail } from '@/lib/queries/useStockDetail'
+import { useStockIssues } from '@/lib/queries/useStockIssues'
+import { refreshStocks } from '@/lib/queries/useStocksCached'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { useGap } from '@/lib/useGap'
 
 const loadIssues = import.meta.env.DEV
   ? () => import('@/dev/fixtures/stockDetail').then((m) => m.stockIssueFlowsFixture)
-  : null
-const loadLinked = import.meta.env.DEV
-  ? () => import('@/dev/fixtures/stockDetail').then((m) => m.linkedPreviewFixture)
   : null
 const loadRatio = import.meta.env.DEV
   ? () => import('@/dev/fixtures/stockDetail').then((m) => m.tradingRatioFixture)
@@ -63,8 +65,8 @@ function StockDetailView({ code }: { code: string }) {
   const candles = useCandles(code, 'D', QUOTE_CANDLE_LIMIT)
   const themeStocks = useThemeStocks(detail.data?.themeId ?? null)
   const market = useThemeMarket()
+  const stockIssues = useStockIssues(code === '' ? null : code)
   const issuesGap = useGap('stock-issues', loadIssues)
-  const linkedGap = useGap('linked-companies', loadLinked)
   const ratioGap = useGap('stock-quote-ext', loadRatio)
   const [today] = useState(() => kstToday(new Date()))
   const [refreshKey, setRefreshKey] = useState(0)
@@ -84,6 +86,7 @@ function StockDetailView({ code }: { code: string }) {
     refreshCandles()
     refreshThemeStocks()
     refreshMarket()
+    refreshStocks()
     setRefreshKey((key) => key + 1)
   }, [refreshDetail, refreshCandles, refreshThemeStocks, refreshMarket])
   useAutoRefresh(refreshPrices, market.data)
@@ -104,16 +107,31 @@ function StockDetailView({ code }: { code: string }) {
 
   const stock = detail.data
   const rows = candles.data
+  const basisDate = stock?.baseDate ?? market.data?.baseDate
+  const week52 = stock ? week52Resolved(stock, basisDate, rows) : null
+  const linked = useLinkedCompanies(code === '' ? null : code, stock?.name ?? null, basisDate)
+  const linkedCount = linked.list ? firstHopOf(linked.list).length : 0
   const status = statusOf(themeStocks.data, code, rows)
   const candlesFailed = candles.error !== null && rows === null
   const issueFixture = issuesGap.status === 'mock' ? issuesGap.data : null
   const placed = useMemo(() => (issueFixture && rows ? placeIssues(issueFixture, rows) : null), [issueFixture, rows])
-  const eventSource = issuesGap.status === 'not-ready' ? 'news' : issuesGap.status === 'mock' ? 'issues' : null
-  const linked = linkedGap.status === 'mock' ? linkedGap.data : null
+  const issuePage = stockIssues.data
+  const issueEvents = useMemo(() => {
+    if (issuePage === null) return null
+    if (rows) return placeStockIssues(issuePage.items, rows)
+    return candlesFailed ? placeStockIssues(issuePage.items, []) : null
+  }, [issuePage, rows, candlesFailed])
+  let issueState: StockIssueState = { status: 'loading' }
+  if (issuePage && issueEvents) issueState = { status: 'ready', events: issueEvents, total: issuePage.total }
+  else if (stockIssues.error) issueState = { status: 'error', retry: stockIssues.retry }
+  let eventSource: EventSource | null = null
+  if (issueState.status === 'error') eventSource = 'issues'
+  else if (issueState.status === 'ready') eventSource = issueState.total > 0 ? 'issues' : 'news'
+  const issueTotal = issueState.status === 'ready' ? issueState.total : 0
   const tradingRatio = ratioGap.status === 'mock' ? ratioGap.data : null
   const counts: TabCounts = {
-    ...(placed ? { news: { gap: 'stock-issues', value: placed.length } } : {}),
-    ...(linked ? { links: { gap: 'linked-companies', value: linked.total } } : {}),
+    ...(issueTotal > 0 ? { news: { value: issueTotal } } : {}),
+    ...(linkedCount > 0 ? { links: { value: linkedCount } } : {}),
   }
   const skeleton = useDelayed(stock === null && detail.error === null)
   const notFound = code === '' || detail.error?.isNotFound === true
@@ -186,9 +204,7 @@ function StockDetailView({ code }: { code: string }) {
         <StockNewsTab
           stock={stock}
           candles={rows}
-          candlesFailed={candlesFailed}
-          onRetryCandles={candles.refetch}
-          issueMode={issuesGap.status}
+          issues={issueState}
           placed={placed}
           today={today}
           refreshKey={refreshKey}
@@ -196,7 +212,7 @@ function StockDetailView({ code }: { code: string }) {
           onOpenNews={openNews}
         />
       )
-    else if (tab === 'links') panel = <StockLinksTab stock={stock} />
+    else if (tab === 'links') panel = <StockLinksTab stock={stock} linked={linked} />
     else if (tab === 'finance')
       panel = <StockFinanceTab stock={stock} candles={rows} today={today} refreshKey={refreshKey} />
     else
@@ -208,13 +224,13 @@ function StockDetailView({ code }: { code: string }) {
           onRetryCandles={candles.refetch}
           themeStocks={themeStocks}
           source={eventSource}
-          issues={placed ?? []}
+          issues={issueState.status === 'ready' ? issueState.events : []}
+          issueTotal={issueTotal}
+          issueRetry={issueState.status === 'error' ? issueState.retry : null}
           linked={linked}
           tradingRatio={tradingRatio}
           today={today}
-          search={search}
           refreshKey={refreshKey}
-          onOpenIssue={openIssue}
           onOpenNews={openNews}
         />
       )
@@ -224,8 +240,8 @@ function StockDetailView({ code }: { code: string }) {
           stock={stock}
           basis={stockBasisLabel(stock, market.data)}
           amount={changeAmount(rows ?? [], stock.price, stock.change, stock.changeAmount)}
-          week52={rows ? week52Summary(rows) : null}
-          week52Loading={rows === null && !candlesFailed}
+          week52={week52}
+          week52Loading={week52 === null && rows === null && !candlesFailed}
           status={status}
           today={today}
           tab={tab}

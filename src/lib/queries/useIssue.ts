@@ -1,10 +1,15 @@
-import { useMemo } from 'react'
-import { getData } from '@/lib/api'
-import type { IssueDetailRes, RelatedCompanyRes, StockRowRes } from '@/lib/apiTypes'
+import { getData, getPageMeta, type Pagination } from '@/lib/api'
+import type {
+  IssueDetailRes,
+  IssueListMeta,
+  IssueSort,
+  IssueSummaryRes,
+  RelatedCompanyRes,
+} from '@/lib/apiTypes'
 import type { IssueQuote } from '@/lib/fg/issueSubject'
-import { useApi } from '@/lib/queries/useApi'
+import { useApi, type ApiState } from '@/lib/queries/useApi'
 import { useKeyed, type KeyedState } from '@/lib/queries/useKeyed'
-import { loadStocks } from '@/lib/queries/useStocksCached'
+import { stockIndexOf, useStocksCached } from '@/lib/queries/useStocksCached'
 
 export function isIssueApiId(id: string): boolean {
   return /^[1-9]\d{0,17}$/.test(id)
@@ -18,15 +23,44 @@ export function useIssueDetail(id: string | null): KeyedState<IssueDetailRes> {
   return useKeyed(id !== null && isIssueApiId(id) ? id : null, loadIssue)
 }
 
+export interface IssueListQuery {
+  date: string | null
+  sort: IssueSort
+  page: number
+  size: number
+}
+
+export interface IssueList {
+  items: IssueSummaryRes[]
+  pagination: Pagination
+  meta: IssueListMeta | null
+}
+
+export function loadIssueList({ date, sort, page, size }: IssueListQuery): Promise<IssueList> {
+  return getPageMeta<IssueSummaryRes, IssueListMeta>('/v1/issues', page, size, { sort, date: date ?? undefined })
+}
+
+export function useIssueList(query: IssueListQuery | null): ApiState<IssueList | null> {
+  const date = query?.date ?? null
+  const sort = query?.sort ?? 'media'
+  const page = query?.page ?? 0
+  const size = query?.size ?? 0
+  const enabled = query !== null
+  return useApi<IssueList | null>(
+    () => (enabled ? loadIssueList({ date, sort, page, size }) : Promise.resolve(null)),
+    [enabled, date, sort, page, size],
+  )
+}
+
 export interface IssueQuotes {
   quotes: ReadonlyMap<string, IssueQuote> | null
   retry: (() => void) | null
 }
 
 export function useIssueQuotes(enabled: boolean): IssueQuotes {
-  const { data, error, refetch } = useApi<StockRowRes[] | null>(() => (enabled ? loadStocks() : Promise.resolve(null)), [enabled])
-  const quotes = useMemo(() => (data ? new Map(data.map((s) => [s.ticker, s])) : null), [data])
-  return { quotes, retry: enabled && error !== null ? refetch : null }
+  const { data, error, refetch } = useStocksCached(enabled)
+  const quotes = stockIndexOf(data)
+  return { quotes: enabled ? quotes : null, retry: enabled && error !== null ? refetch : null }
 }
 
 const companyCache = new Map<string, Promise<RelatedCompanyRes[]>>()

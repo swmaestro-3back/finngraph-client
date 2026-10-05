@@ -1,8 +1,8 @@
 import type { ReactNode, Ref } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
-import { GapValue, MockBadge } from '@/components/fg/Gap'
+import { GapValue } from '@/components/fg/Gap'
 import { PriceChange } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -15,9 +15,11 @@ import type { StockRowRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
 import { marketLabel, toneClass } from '@/lib/fg/format'
 import { issuePath } from '@/lib/fg/paths'
+import type { HubIssueRef } from '@/lib/fg/hub'
 import { FLOW_DAYS, formatManShares, formatRatio, formatTimes, WEEK52_BASIS, type StockSummary } from '@/lib/fg/stockQuote'
-import type { StockIssueOf } from '@/lib/fg/stocks'
 import { monthDayLabel } from '@/lib/fg/themeCharts'
+import { fromState } from '@/lib/navigation'
+import type { HubSlot } from '@/lib/queries/useHubSlots'
 
 interface StatProps {
   label: string
@@ -110,27 +112,40 @@ function StockFlows({ summary, retry }: { summary: StockSummary; retry: PanelRet
   )
 }
 
-function StockIssue({ stock, issueOf }: { stock: StockRowRes; issueOf: StockIssueOf | null }) {
-  const issue = issueOf ? issueOf(stock) : null
+export type IssueLineSlot = HubSlot<HubIssueRef | null>
+
+function StockIssue({ line }: { line: IssueLineSlot }) {
+  const { pathname, search } = useLocation()
+  let body: ReactNode
+  if (line.status === 'not-ready') {
+    body = <GapValue gap={line.gap} label="준비 중이에요" className="fg-tdet__none" />
+  } else if (line.status === 'loading') {
+    body = <Skeleton height={44} />
+  } else if (line.status === 'error') {
+    body = (
+      <p className="fg-tdet__none">
+        이슈를 불러오지 못했어요 <RetryText subject="관련 이슈" onRetry={line.retry} />
+      </p>
+    )
+  } else if (line.data) {
+    body = (
+      <Link to={issuePath(line.data.id)} state={fromState(`${pathname}${search}`)} className="fg-tdet__issue">
+        <i className="fg-dia" aria-hidden="true" />
+        <span>
+          <b>{line.data.title}</b>
+          <small>{line.data.media}개 매체 보도 · 최근 이 종목이 나온 이슈</small>
+        </span>
+      </Link>
+    )
+  } else {
+    body = <p className="fg-tdet__none">최근 30일 동안 이 종목이 나온 이슈가 없어요</p>
+  }
   return (
     <div className="fg-tdet__sec">
       <span className="fg-sdet__label">
         <span className="fg-tdet__label">관련 이슈</span>
-        {issueOf && <MockBadge />}
       </span>
-      {!issueOf ? (
-        <GapValue gap="stock-issues" label="준비 중이에요" className="fg-tdet__none" />
-      ) : issue ? (
-        <Link to={issuePath(issue.id)} className="fg-tdet__issue">
-          <i className="fg-dia" aria-hidden="true" />
-          <span>
-            <b>{issue.title}</b>
-            <small>{issue.mediaCount}개 매체 보도</small>
-          </span>
-        </Link>
-      ) : (
-        <p className="fg-tdet__none">최근 이 종목이 나온 이슈가 없어요</p>
-      )}
+      {body}
     </div>
   )
 }
@@ -138,7 +153,7 @@ function StockIssue({ stock, issueOf }: { stock: StockRowRes; issueOf: StockIssu
 interface StockPanelProps {
   stock: StockRowRes
   summary: StockSummary
-  issueOf: StockIssueOf | null
+  issue: IssueLineSlot
   today: string
   retry: PanelRetry
   ref?: Ref<HTMLElement>
@@ -156,7 +171,7 @@ function PanelPrice({ stock, summary }: { stock: StockRowRes; summary: StockSumm
   return <PriceChange price={stock.price} change={stock.change} amount={summary.amount} display className="fg-sdet__price" />
 }
 
-export function StockPanel({ stock, summary, issueOf, today, retry, ref }: StockPanelProps) {
+export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPanelProps) {
   const week52 = summary.week52
   return (
     <section ref={ref} className="fg-section fg-sdet fg-rail__wide fg-reveal" aria-labelledby="fg-sdet-name">
@@ -178,29 +193,27 @@ export function StockPanel({ stock, summary, issueOf, today, retry, ref }: Stock
         {summary.candlesFailed ? (
           <CandlesFailed retry={retry} />
         ) : (
-          <>
-            <StockSpark spark={summary.spark} loading={summary.loading} />
-            {summary.loading ? (
-              <Skeleton height={97} />
-            ) : (
-              week52 &&
-              stock.price !== null && (
-                <Week52Range
-                  className="fg-sdet__w52"
-                  name={stock.name}
-                  price={stock.price}
-                  high={week52.range.high}
-                  low={week52.range.low}
-                  basis={WEEK52_BASIS}
-                  asOf={week52.asOf}
-                  today={today}
-                  state={week52.state}
-                  highDate={week52.range.highDate}
-                  lowDate={week52.range.lowDate}
-                />
-              )
-            )}
-          </>
+          <StockSpark spark={summary.spark} loading={summary.loading} />
+        )}
+        {summary.loading && week52 === null ? (
+          <Skeleton height={97} />
+        ) : (
+          week52 &&
+          stock.price !== null && (
+            <Week52Range
+              className="fg-sdet__w52"
+              name={stock.name}
+              price={stock.price}
+              high={week52.range.high}
+              low={week52.range.low}
+              basis={WEEK52_BASIS}
+              asOf={week52.asOf}
+              today={today}
+              state={week52.state}
+              highDate={week52.range.highDate}
+              lowDate={week52.range.lowDate}
+            />
+          )
         )}
         <dl className="fg-tdet__stats">
           <Stat label="시가총액">{formatCompactKrw(stock.marketCap)}</Stat>
@@ -212,7 +225,7 @@ export function StockPanel({ stock, summary, issueOf, today, retry, ref }: Stock
         </dl>
         <StockFlows summary={summary} retry={retry} />
         <StockThemeChips stock={stock} />
-        <StockIssue stock={stock} issueOf={issueOf} />
+        <StockIssue line={issue} />
       </div>
       <div className="fg-sdet__foot">
         <StockDetailLink stock={stock} />

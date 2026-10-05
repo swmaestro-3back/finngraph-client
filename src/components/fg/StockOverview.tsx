@@ -1,5 +1,6 @@
 import { Lock, X } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
@@ -11,21 +12,15 @@ import { EventCallout, StockEventList, type EventAction, type EventRow } from '@
 import { StockKeyStats } from '@/components/fg/StockKeyStats'
 import { StockLinkedRail } from '@/components/fg/StockLinkedRail'
 import type { CandleRes, StockDetailRes, ThemeStockRes } from '@/lib/apiTypes'
+import { issuePath } from '@/lib/fg/paths'
+import { marketCapRank, STREAK_FLOW_DAYS, streakLabels, themeCompare } from '@/lib/fg/stockDetail'
 import {
-  marketCapRank,
-  STREAK_FLOW_DAYS,
-  streakLabels,
-  themeCompare,
-  withIssue,
-  type LinkedPreview,
-} from '@/lib/fg/stockDetail'
-import {
-  issueBadge,
   issueDayLabel,
   RECENT_ISSUE_COUNT,
   stackMarkers,
+  STOCK_ISSUE_ORDER,
   tradingDayLabel,
-  type PlacedIssue,
+  type StockIssueEvent,
 } from '@/lib/fg/stockIssues'
 import { newsDays, newsPage, OVERVIEW_NEWS_PAGE, openNews, opensInModal, type NewsDay } from '@/lib/fg/stockNews'
 import { tradingValueOf } from '@/lib/fg/stockQuote'
@@ -34,8 +29,10 @@ import { guestStart, toThemeNews, type ThemeNewsItem } from '@/lib/fg/themeNews'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { josa } from '@/lib/josa'
 import { useMemberGate } from '@/lib/memberGate'
+import { fromState } from '@/lib/navigation'
 import type { ApiState } from '@/lib/queries/useApi'
 import { useInvestorFlows } from '@/lib/queries/useInvestorFlows'
+import type { LinkedCompaniesState } from '@/lib/queries/useLinkedCompanies'
 import { useStockNews } from '@/lib/queries/useStockNews'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 
@@ -48,13 +45,13 @@ interface StockOverviewProps {
   onRetryCandles: () => void
   themeStocks: ApiState<ThemeStockRes[]>
   source: EventSource | null
-  issues: readonly PlacedIssue[]
-  linked: LinkedPreview | null
+  issues: readonly StockIssueEvent[]
+  issueTotal: number
+  issueRetry: (() => void) | null
+  linked: LinkedCompaniesState
   tradingRatio: number | null
   today: string
-  search: string
   refreshKey: number
-  onOpenIssue: (key: string) => void
   onOpenNews: (id: string) => void
 }
 
@@ -68,8 +65,8 @@ interface EventView {
   list: ReactNode
 }
 
-function issueAction(issue: PlacedIssue, search: string, onOpenIssue: (key: string) => void): EventAction {
-  return { kind: 'sheet', href: withIssue(search, issue.key), open: () => onOpenIssue(issue.key) }
+function issueAction(issue: StockIssueEvent, from: string): EventAction {
+  return { kind: 'route', to: issuePath(issue.id), state: fromState(from) }
 }
 
 function newsAction(item: ThemeNewsItem, onOpenNews: (id: string) => void): EventAction {
@@ -84,14 +81,15 @@ export function StockOverview({
   themeStocks,
   source,
   issues,
+  issueTotal,
+  issueRetry,
   linked,
   tradingRatio,
   today,
-  search,
   refreshKey,
-  onOpenIssue,
   onOpenNews,
 }: StockOverviewProps) {
+  const { pathname, search } = useLocation()
   const newsMode = source === 'news'
   const flows = useInvestorFlows(stock.ticker, STREAK_FLOW_DAYS)
   const stocks = useStocksCached()
@@ -120,6 +118,7 @@ export function StockOverview({
     () => streakLabels(flows.data ?? [], candles?.map((candle) => candle.date)),
     [flows.data, candles],
   )
+  const served = stock.tradeValue !== undefined
   const themeLoading = stock.themeId !== null && themeStocks.data === null && themeStocks.error === null
   const themeFailed = stock.themeId !== null && themeStocks.data === null && themeStocks.error !== null
   const stocksFailed = stocks.data === null && stocks.error !== null
@@ -160,7 +159,7 @@ export function StockOverview({
         onMore: () => setPage((n) => n + 1),
         onLogin: promptLogin,
       })
-    : issueView({ recent, picked, today, search, onOpenIssue })
+    : issueView({ recent, picked, today, from: `${pathname}${search}`, retry: issueRetry })
 
   const selected = view.markers.find((marker) => marker.key === picked)?.key ?? view.markers[0]?.key ?? null
   const pickMarker = (key: string) => {
@@ -224,9 +223,9 @@ export function StockOverview({
         {chart}
         <StockEventList
           title={newsMode ? '이 종목이 나온 뉴스' : '이 종목이 나온 이슈'}
-          sub={`왜 움직였는지 ${view.label}로 따라가요 · 최신순`}
-          moreLabel={newsMode ? '뉴스·이슈 모두 보기' : `뉴스·이슈 ${issues.length}건 모두 보기`}
-          mock={source === 'issues'}
+          sub={`왜 움직였는지 ${view.label}로 따라가요 · ${newsMode ? '최신순' : STOCK_ISSUE_ORDER}`}
+          moreLabel={newsMode || issueTotal === 0 ? '뉴스·이슈 모두 보기' : `뉴스·이슈 ${issueTotal}건 모두 보기`}
+          mock={false}
           rows={view.rows}
           selected={showMarkers ? selected : null}
           onPick={setPicked}
@@ -254,14 +253,14 @@ export function StockOverview({
       <aside className="fg-rail" aria-label="핵심 지표와 이어진 기업">
         <StockKeyStats
           stock={stock}
-          tradingValue={tradingValueOf(themeStocks.data, stock.ticker)}
-          tradingLoading={themeLoading}
+          tradingValue={served ? (stock.tradeValue ?? null) : tradingValueOf(themeStocks.data, stock.ticker)}
+          tradingLoading={!served && themeLoading}
           tradingRatio={tradingRatio}
           capRank={capRank}
           compare={compare}
           streaks={streaks}
           failed={{
-            trading: themeFailed ? themeStocks.refetch : null,
+            trading: !served && themeFailed ? themeStocks.refetch : null,
             rank: stocksFailed ? stocks.refetch : null,
             compare:
               themeFailed || (stock.themeId !== null && stocksFailed)
@@ -273,7 +272,7 @@ export function StockOverview({
             streaks: flowsFailed ? flows.refetch : null,
           }}
         />
-        <StockLinkedRail stockName={stock.name} preview={linked} />
+        <StockLinkedRail stockName={stock.name} linked={linked} />
         <Disclaimer />
       </aside>
     </div>
@@ -281,28 +280,30 @@ export function StockOverview({
 }
 
 interface IssueViewInput {
-  recent: readonly PlacedIssue[]
+  recent: readonly StockIssueEvent[]
   picked: string | null
   today: string
-  search: string
-  onOpenIssue: (key: string) => void
+  from: string
+  retry: (() => void) | null
 }
 
-function issueView({ recent, picked, today, search, onOpenIssue }: IssueViewInput): EventView {
-  const titles = new Map(recent.map((issue) => [issue.key, issue.title]))
-  const markers = stackMarkers(recent).map((marker) => ({ ...marker, title: titles.get(marker.key) ?? '' }))
+function issueView({ recent, picked, today, from, retry }: IssueViewInput): EventView {
+  const placed = recent.flatMap((issue) => (issue.index === null ? [] : [{ key: issue.key, index: issue.index, title: issue.title }]))
+  const titles = new Map(placed.map((issue) => [issue.key, issue.title]))
+  const markers = stackMarkers(placed).map((marker) => ({ ...marker, title: titles.get(marker.key) ?? '' }))
   const rows: EventRow[] = recent.map((issue) => ({
     key: issue.key,
     marker: issue.key,
     dateLabel: issueDayLabel(issue.date, today),
     title: issue.title,
-    badge: <Badge tone={issue.total > 1 ? 'issue' : 'neutral'}>{issueBadge(issue)}</Badge>,
-    meta: `${issue.flowTitle} · ${issue.media}개 매체`,
-    dayLabel: tradingDayLabel(issue),
+    badge: null,
+    meta: `${issue.media}개 매체 · 기사 ${issue.articles}건`,
+    dayLabel: issue.index === null ? null : tradingDayLabel(issue),
     change: issue.change,
-    action: issueAction(issue, search, onOpenIssue),
+    action: issueAction(issue, from),
   }))
-  const current = recent.find((issue) => issue.key === picked) ?? recent[0] ?? null
+  const current =
+    recent.find((issue) => issue.key === picked && issue.index !== null) ?? recent.find((issue) => issue.index !== null) ?? null
   return {
     label: '이슈',
     markers,
@@ -311,14 +312,25 @@ function issueView({ recent, picked, today, search, onOpenIssue }: IssueViewInpu
       <EventCallout
         dateLabel={`${issueDayLabel(current.date, today)} · ${current.media}개 매체`}
         title={current.title}
-        dayLabel={tradingDayLabel(current)}
+        dayLabel={current.index === null ? null : tradingDayLabel(current)}
         change={current.change}
         volumeRatio={current.volumeRatio}
         actionLabel="이슈 보기"
-        action={issueAction(current, search, onOpenIssue)}
+        action={issueAction(current, from)}
       />
     ),
-    list: null,
+    list: retry && (
+      <StateBlock
+        kind="error"
+        title="이슈를 불러오지 못했어요"
+        description="잠시 후 다시 시도해 주세요"
+        action={
+          <Button size="sm" onClick={retry}>
+            다시 시도
+          </Button>
+        }
+      />
+    ),
   }
 }
 

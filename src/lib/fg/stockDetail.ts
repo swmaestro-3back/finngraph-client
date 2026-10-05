@@ -144,20 +144,6 @@ export type LinkStrength = 1 | 2 | 3
 
 export const STRENGTH_LABEL: Record<LinkStrength, string> = { 3: '높음', 2: '보통', 1: '낮음' }
 
-export interface LinkedPreviewRow {
-  name: string
-  market: string
-  change: number
-  relation: (stockName: string) => string
-  gapFromHigh: number
-  strength: LinkStrength
-}
-
-export interface LinkedPreview {
-  total: number
-  rows: readonly LinkedPreviewRow[]
-}
-
 export interface CompanySummary {
   lead: string
   rest: string[]

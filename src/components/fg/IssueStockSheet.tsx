@@ -150,8 +150,8 @@ export function IssueStockSheet({
             </div>
             <span className="fg-esheet__gap">
               <span>
-                52주 최고 대비{' '}
-                {card.gapFromHigh !== null ? <b>{formatGapPct(card.gapFromHigh)}</b> : <GapValue gap="stock-quote-ext" />}
+                {card.newHigh ? '52주 최고' : '52주 최고 대비'}{' '}
+                {card.newHigh ? <b>경신</b> : card.gapFromHigh !== null ? <b>{formatGapPct(card.gapFromHigh)}</b> : '—'}
               </span>
               {card.position !== null && <GapBar position={card.position} />}
             </span>

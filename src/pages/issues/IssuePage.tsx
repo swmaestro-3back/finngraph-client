@@ -11,13 +11,16 @@ import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { kstToday } from '@/lib/calendar'
-import { parseIssueTab } from '@/lib/fg/issuePage'
-import { findIssue, resolveIssueId, type IssueBook } from '@/lib/fg/issueRecords'
+import { hubSearch } from '@/lib/fg/hub'
+import { parseIssueTab, type IssueHead as IssueHeadModel } from '@/lib/fg/issuePage'
+import { findIssue, resolveIssueId, type IssueBook, type IssueLink } from '@/lib/fg/issueRecords'
 import { liveSubject, mockSubject, subjectHead, type IssueSubject } from '@/lib/fg/issueSubject'
 import { issuePath } from '@/lib/fg/paths'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { useBackTarget } from '@/lib/navigation'
 import { isIssueApiId, useIssueDetail, useIssueQuotes } from '@/lib/queries/useIssue'
+import { useIssueLinks } from '@/lib/queries/useLinkedCompanies'
+import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useGap, type GapState } from '@/lib/useGap'
 
 const loadBook = import.meta.env.DEV ? () => import('@/dev/fixtures/issues').then((m) => m.issueBookFixture) : null
@@ -29,6 +32,11 @@ export default function IssuePage() {
   const gap = useGap('issues', loadBook)
   const id = issueId ?? ''
   return <IssueView key={id} id={id} gap={gap} />
+}
+
+function withLinkCount(head: IssueHeadModel, links: readonly IssueLink[] | null): IssueHeadModel {
+  if (!links || links.length === 0) return head
+  return { ...head, counts: { ...head.counts, stocks: head.counts.stocks + links.length } }
 }
 
 function NotFound() {
@@ -69,7 +77,7 @@ function Loading() {
 function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
   const { search, hash, state } = useLocation()
   const tab = parseIssueTab(search)
-  const back = useBackTarget({ to: '/', label: '뜨는 이슈' })
+  const back = useBackTarget({ to: `/${hubSearch('', 'issues', isIssueApiId(id) ? id : null)}`, label: '뜨는 이슈' })
   const [tabsEl, setTabsEl] = useState<HTMLElement | null>(null)
   const shownTab = useRef(tab)
   const [today] = useState(() => kstToday(new Date()))
@@ -82,13 +90,16 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
   const live = gap.status === 'not-ready' || (book !== null && record === null && isIssueApiId(id))
   const detail = useIssueDetail(live ? id : null)
   const { quotes, retry: retryQuotes } = useIssueQuotes(live && detail.data !== null)
+  const market = useThemeMarket()
+  const basisDate = market.data?.baseDate ?? null
   const skeleton = useDelayed(gap.status === 'loading' || (live && detail.loading))
 
   const subject = useMemo<IssueSubject | null>(() => {
     if (book && record) return mockSubject(record, book)
-    if (live && detail.data) return liveSubject(detail.data, quotes, today)
+    if (live && detail.data) return liveSubject(detail.data, quotes, today, basisDate)
     return null
-  }, [book, record, live, detail.data, quotes, today])
+  }, [book, record, live, detail.data, quotes, today, basisDate])
+  const linked = useIssueLinks(subject?.kind === 'live' ? subject.stocks : null, basisDate)
 
   useLayoutEffect(() => {
     if (shownTab.current === tab) return
@@ -113,15 +124,17 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
   if (subject) {
     let panel: ReactNode
     const onRetryQuotes = subject.kind === 'live' ? retryQuotes : null
+    const issueLinks = subject.kind === 'live' ? linked : null
     if (tab === 'timeline') panel = <IssueTimelineTab issue={subject} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
     else if (tab === 'articles') panel = <IssueArticlesTab issue={subject} onOpenNews={openNews} />
-    else if (tab === 'stocks') panel = <IssueStocksTab issue={subject} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
-    else panel = <IssueSummaryTab issue={subject} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
+    else if (tab === 'stocks')
+      panel = <IssueStocksTab issue={subject} linked={issueLinks} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
+    else panel = <IssueSummaryTab issue={subject} linked={issueLinks} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
     body = (
       <>
         <IssueHead
           title={subject.title}
-          head={subjectHead(subject)}
+          head={withLinkCount(subjectHead(subject), issueLinks?.links ?? null)}
           tab={tab}
           mock={subject.kind === 'mock'}
           tabsRef={setTabsEl}

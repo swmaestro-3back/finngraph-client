@@ -147,7 +147,12 @@ export function issueFlow(record: IssueRecord, book: IssueBook, size = FLOW_WIND
 export function rankLinks(links: readonly IssueLink[]): IssueLink[] {
   return links
     .map((link, i) => ({ link, i }))
-    .sort((a, b) => b.link.company.strength - a.link.company.strength || a.i - b.i)
+    .sort(
+      (a, b) =>
+        a.link.company.hops.length - b.link.company.hops.length ||
+        b.link.company.strength - a.link.company.strength ||
+        a.i - b.i,
+    )
     .map(({ link }) => link)
 }
 

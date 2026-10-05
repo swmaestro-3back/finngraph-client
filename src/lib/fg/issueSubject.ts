@@ -2,14 +2,28 @@ import type { IssueArticleRes, IssueCompanyRes, IssueDetailRes } from '@/lib/api
 import { pressName } from '@/lib/format'
 import { issueHead, type IssueHead } from '@/lib/fg/issuePage'
 import type { IssueArticleItem, IssueBook, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
+import { week52Mark, type Week52Row } from '@/lib/fg/stockQuote'
 import { kstDayTime } from '@/lib/fg/themeNews'
+import { gapFromHigh, week52Position } from '@/lib/fg/week52'
 
 export const KEYWORD_LIMIT = 6
 
-export interface IssueQuote {
+export interface IssueQuote extends Week52Row {
   market: string | null
   price: number | null
   change: number | null
+}
+
+function quoteRange(
+  quote: IssueQuote | null,
+  basisDate: string | null,
+): Pick<IssueStock, 'gapFromHigh' | 'position' | 'newHigh'> {
+  const price = quote?.price ?? null
+  const high = quote?.high52w ?? null
+  const low = quote?.low52w ?? null
+  if (price === null || high === null || low === null) return {}
+  const range = { gapFromHigh: gapFromHigh(price, high), position: week52Position({ price, high, low }) }
+  return week52Mark(quote, basisDate) === 'high' ? { ...range, newHigh: true } : range
 }
 
 interface IssueBase {
@@ -72,6 +86,7 @@ export function issueArticleItems(articles: readonly IssueArticleRes[]): IssueAr
 export function liveStocks(
   companies: readonly IssueCompanyRes[],
   quotes: ReadonlyMap<string, IssueQuote> | null,
+  basisDate: string | null = null,
 ): IssueStock[] {
   return companies.map((company) => {
     const quote = quotes?.get(company.ticker) ?? null
@@ -82,6 +97,7 @@ export function liveStocks(
       mentions: company.mentionCount,
       market: quote?.market ?? null,
       price: quote?.price ?? null,
+      ...quoteRange(quote, basisDate),
     }
   })
 }
@@ -106,6 +122,7 @@ export function liveSubject(
   detail: IssueDetailRes,
   quotes: ReadonlyMap<string, IssueQuote> | null,
   today: string,
+  basisDate: string | null = null,
 ): LiveIssue {
   const articles = issueArticleItems(detail.articles)
   const representative = articles.find((a) => a.id === String(detail.representativeNewsId)) ?? null
@@ -118,7 +135,7 @@ export function liveSubject(
     title: detail.title?.trim() || fallback,
     media: detail.mediaCount,
     articleCount: detail.articleCount,
-    stocks: liveStocks(detail.companies, quotes),
+    stocks: liveStocks(detail.companies, quotes, basisDate),
     articles,
     keywords: [...new Set(detail.keywords.map((k) => k.trim()).filter(Boolean))].slice(0, KEYWORD_LIMIT),
     today,

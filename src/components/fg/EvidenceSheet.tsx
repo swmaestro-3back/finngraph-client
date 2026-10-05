@@ -7,12 +7,23 @@ import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { GapBar, StrengthBars } from '@/components/fg/HiddenLinkList'
 import { ChangeText } from '@/components/fg/PriceChange'
+import { RetryText } from '@/components/fg/RetryText'
 import { SideSheet } from '@/components/fg/SideSheet'
+import { Skeleton } from '@/components/fg/Skeleton'
+import { Week52GapText } from '@/components/fg/StockLinkedRail'
 import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
 import { stockPath } from '@/lib/fg/paths'
 import { STRENGTH_LABEL } from '@/lib/fg/stockDetail'
-import { evidenceCountLabel, LINK_TYPE_LABEL, type LinkedCompany } from '@/lib/fg/stockLinks'
+import { evidenceCountLabel, hasQuote, LINK_TYPE_LABEL, type LinkedCompany, type LinkEvidence } from '@/lib/fg/stockLinks'
 import { fromState } from '@/lib/navigation'
+
+export type EvidenceView =
+  | { status: 'ready'; items: readonly LinkEvidence[] }
+  | { status: 'loading' }
+  | { status: 'error'; retry: () => void }
+
+const QUOTE_LABEL = '근거 문장 · 원문 그대로 인용했어요'
+const PLAIN_LABEL = '근거 문장'
 
 export function IssuePathLead({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -29,19 +40,78 @@ export function IssuePathLead({ title, children }: { title: string; children: Re
   )
 }
 
+function EvidenceQuotes({ items }: { items: readonly LinkEvidence[] }) {
+  if (items.length === 0) return <p className="fg-esheet__empty">근거 문장을 아직 불러올 수 없어요</p>
+  return (
+    <>
+      {items.map((evidence, i) => (
+        <figure key={`${evidence.source}-${i}`} className="fg-ev">
+          <blockquote className="fg-quote">{`“${evidence.quote}”`}</blockquote>
+          <figcaption className="fg-ev__src fg-esheet__evsrc">
+            {evidence.kind === 'disclosure' && <Badge>공시</Badge>}
+            {evidence.tags?.map((tag) => (
+              <Badge key={tag}>{tag}</Badge>
+            ))}
+            <span>{`${evidence.source} · ${evidence.date}`}</span>
+            {evidence.url && (
+              <a href={evidence.url} target="_blank" rel="noopener noreferrer">
+                {evidence.kind === 'disclosure' ? '공시 원문' : '기사 원문'}
+                <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
+              </a>
+            )}
+          </figcaption>
+        </figure>
+      ))}
+    </>
+  )
+}
+
+function evidenceLabel(items: readonly LinkEvidence[]): string {
+  return items.length > 0 && items.every((item) => item.verbatim !== false) ? QUOTE_LABEL : PLAIN_LABEL
+}
+
+function EvidenceBody({ view }: { view: EvidenceView }) {
+  let body: ReactNode
+  if (view.status === 'ready') body = <EvidenceQuotes items={view.items} />
+  else if (view.status === 'loading') body = <Skeleton height={120} />
+  else
+    body = (
+      <p className="fg-esheet__note" role="status">
+        <span>근거 문장을 불러오지 못했어요</span>
+        <RetryText subject="근거 문장" onRetry={view.retry} />
+      </p>
+    )
+  return (
+    <div className="fg-esheet__quotes" aria-busy={view.status === 'loading' || undefined}>
+      <span className="fg-esheet__label">{view.status === 'ready' ? evidenceLabel(view.items) : PLAIN_LABEL}</span>
+      {body}
+    </div>
+  )
+}
+
 interface EvidenceSheetProps {
   stockName: string
   lead?: string | null
   company: LinkedCompany | null
-  watched: boolean
+  evidence?: EvidenceView | null
+  watched: boolean | null
   onToggleWatch: () => void
   returnFocusRef: RefObject<HTMLElement | null>
   onClose: () => void
 }
 
-export function EvidenceSheet({ stockName, lead = null, company, watched, onToggleWatch, returnFocusRef, onClose }: EvidenceSheetProps) {
+export function EvidenceSheet({
+  stockName,
+  lead = null,
+  company,
+  evidence = null,
+  watched,
+  onToggleWatch,
+  returnFocusRef,
+  onClose,
+}: EvidenceSheetProps) {
   const { pathname, search } = useLocation()
-  const kind = company?.confirmed ? 'direct' : 'inferred'
+  const view: EvidenceView | null = company ? (evidence ?? { status: 'ready', items: company.evidence }) : null
   return (
     <SideSheet
       open={company !== null}
@@ -60,7 +130,7 @@ export function EvidenceSheet({ stockName, lead = null, company, watched, onTogg
         )
       }
     >
-      {company && (
+      {company && view && (
         <>
           <div className="fg-rpath" role="group" aria-label="관계 경로">
             {lead ? (
@@ -72,7 +142,7 @@ export function EvidenceSheet({ stockName, lead = null, company, watched, onTogg
             )}
             {company.hops.map((hop, i) => (
               <Fragment key={`${hop.node}-${i}`}>
-                <span className="fg-rpath__edge" data-kind={kind}>
+                <span className="fg-rpath__edge" data-kind={(hop.confirmed ?? company.confirmed) ? 'direct' : 'inferred'}>
                   {LINK_TYPE_LABEL[hop.edge]}
                 </span>
                 <span className="fg-rpath__node">{hop.node}</span>
@@ -89,24 +159,7 @@ export function EvidenceSheet({ stockName, lead = null, company, watched, onTogg
               <b>{STRENGTH_LABEL[company.strength]}</b>
             </span>
           </div>
-          <div className="fg-esheet__quotes">
-            <span className="fg-esheet__label">근거 문장 · 원문 그대로 인용했어요</span>
-            {company.evidence.map((evidence, i) => (
-              <figure key={`${evidence.source}-${i}`} className="fg-ev">
-                <blockquote className="fg-quote">{`“${evidence.quote}”`}</blockquote>
-                <figcaption className="fg-ev__src">
-                  {evidence.kind === 'disclosure' && <Badge>공시</Badge>}
-                  <span>{`${evidence.source} · ${evidence.date}`}</span>
-                  {evidence.url && (
-                    <a href={evidence.url} target="_blank" rel="noopener noreferrer">
-                      {evidence.kind === 'disclosure' ? '공시 원문' : '기사 원문'}
-                      <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
-                    </a>
-                  )}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+          <EvidenceBody view={view} />
           <div className="fg-esheet__target fg-num">
             <div className="fg-esheet__trow">
               <span className="fg-esheet__who">
@@ -114,29 +167,46 @@ export function EvidenceSheet({ stockName, lead = null, company, watched, onTogg
                 <b>{company.name}</b>
                 <span>{marketLabel(company.market)}</span>
               </span>
-              <span className="fg-esheet__px">
-                <b>{formatPriceWon(company.price)}</b>
-                <ChangeText value={company.change} />
-              </span>
+              {hasQuote(company) && (
+                <span className="fg-esheet__px">
+                  <b>{company.price !== null ? formatPriceWon(company.price) : '—'}</b>
+                  {company.change !== null && <ChangeText value={company.change} />}
+                </span>
+              )}
             </div>
-            <span className="fg-esheet__gap">
-              <span>
-                52주 최고 대비 <b>{formatGapPct(company.gapFromHigh)}</b>
+            {hasQuote(company) && (
+              <span className="fg-esheet__gap">
+                {company.newHigh ? (
+                  <Week52GapText company={company} />
+                ) : (
+                  <span>
+                    52주 최고 대비 <b>{company.gapFromHigh === null ? '—' : formatGapPct(company.gapFromHigh)}</b>
+                  </span>
+                )}
+                {company.position !== null && <GapBar position={company.position} />}
               </span>
-              <GapBar position={company.position} />
-            </span>
-            <div className="fg-esheet__acts">
-              {company.code ? (
+            )}
+            {company.code !== null ? (
+              <div className="fg-esheet__acts">
                 <ButtonLink to={stockPath(company.code)} state={fromState(`${pathname}${search}`)}>
                   종목 보기
                 </ButtonLink>
-              ) : (
-                <Button disabled>종목 보기</Button>
-              )}
-              <Button aria-pressed={watched} onClick={onToggleWatch}>
-                {watched ? '관심 종목' : '관심 추가'}
-              </Button>
-            </div>
+                {watched !== null && (
+                  <Button aria-pressed={watched} onClick={onToggleWatch}>
+                    {watched ? '관심 종목' : '관심 추가'}
+                  </Button>
+                )}
+              </div>
+            ) : (
+              watched !== null && (
+                <div className="fg-esheet__acts">
+                  <Button disabled>종목 보기</Button>
+                  <Button aria-pressed={watched} onClick={onToggleWatch}>
+                    {watched ? '관심 종목' : '관심 추가'}
+                  </Button>
+                </div>
+              )
+            )}
           </div>
           <Disclaimer className="fg-snote" />
         </>

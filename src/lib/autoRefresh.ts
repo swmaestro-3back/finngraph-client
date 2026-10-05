@@ -73,6 +73,21 @@ export function startAutoRefresh({
   }
 }
 
+export function useRefreshTick(tick: number, refresh: () => void): void {
+  const seen = useRef(tick)
+  const latest = useRef(refresh)
+
+  useEffect(() => {
+    latest.current = refresh
+  })
+
+  useEffect(() => {
+    if (seen.current === tick) return
+    seen.current = tick
+    latest.current()
+  }, [tick])
+}
+
 export function useAutoRefresh(
   refresh: () => void,
   basis: PriceBasis | null | undefined,

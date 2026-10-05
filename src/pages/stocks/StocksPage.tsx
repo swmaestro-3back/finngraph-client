@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip } from '@/components/fg/FilterChip'
-import { MockBadge } from '@/components/fg/Gap'
 import { Pager } from '@/components/fg/Pager'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -41,19 +40,12 @@ import { useDelayed } from '@/lib/fg/useDelayed'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { fetchCandles } from '@/lib/queries/useCandles'
 import { fetchInvestorFlows } from '@/lib/queries/useInvestorFlows'
+import { useStockIssueLine } from '@/lib/queries/useHubSlots'
 import { useKeyed } from '@/lib/queries/useKeyed'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { fetchThemeStocks } from '@/lib/queries/useThemeStocks'
 import { LARGE_CAP_RANK, type PresetKey } from '@/lib/stockFilter'
-import { useGap } from '@/lib/useGap'
-
-const loadQuote = import.meta.env.DEV
-  ? () => import('@/dev/fixtures/stocks').then((m) => m.stockQuoteFixture)
-  : null
-const loadIssue = import.meta.env.DEV
-  ? () => import('@/dev/fixtures/stocks').then((m) => m.stockIssueFixture)
-  : null
 
 const MARKETS: readonly { value: StockMarket; label: string }[] = [
   { value: 'ALL', label: '전체' },
@@ -86,23 +78,22 @@ export default function StocksPage() {
   const narrow = useMediaQuery('(max-width: 767px)')
   const query = useMemo(() => parseStockQuery(search), [search])
   const [today] = useState(() => kstToday(new Date()))
-  const quoteGap = useGap('stock-quote-ext', loadQuote)
-  const quoteOf = quoteGap.status === 'mock' ? quoteGap.data : null
-  const issueGap = useGap('stock-issues', loadIssue)
-  const issueOf = issueGap.status === 'mock' ? issueGap.data : null
   const authed = status === 'authenticated'
   const favOnly = query.fav && authed
-  const sort = resolveStockSort(query.sort, quoteOf !== null)
 
   const stocks = useStocksCached()
   const market = useThemeMarket()
+  const basisDate = market.data?.baseDate ?? null
   const all = stocks.data
+  const highReady = useMemo(() => (all ?? []).some((row) => row.high52w != null), [all])
+  const valueReady = useMemo(() => (all ?? []).some((row) => row.tradeValue != null), [all])
+  const sort = resolveStockSort(query.sort, valueReady)
   const isFavorite = useCallback((ticker: string) => has('STOCK', ticker), [has])
   const filtered = useMemo(
     () => filterStocks(all ?? [], query, favOnly, isFavorite),
     [all, query, favOnly, isFavorite],
   )
-  const valueOf = useCallback<ValueOf>((stock) => quoteOf?.(stock)?.tradingValue ?? null, [quoteOf])
+  const valueOf = useCallback<ValueOf>((stock) => stock.tradeValue ?? null, [])
   const sorted = useMemo(() => sortStocks(filtered, sort, valueOf), [filtered, sort, valueOf])
   const pageCount = stockPageCount(sorted.length)
   const listReady = all !== null && status !== 'loading' && (!favOnly || favoritesReady)
@@ -134,6 +125,7 @@ export default function StocksPage() {
   )
   const selected = view?.selected ?? null
   const code = selected?.ticker ?? null
+  const issueLine = useStockIssueLine(code)
 
   const candles = useKeyed(code, (ticker) => fetchCandles(ticker, 'D', QUOTE_CANDLE_LIMIT))
   const flows = useKeyed(code, (ticker) => fetchInvestorFlows(ticker, FLOW_DAYS))
@@ -154,10 +146,13 @@ export default function StocksPage() {
               flows: flows.error !== null,
               themeStocks: themeStocks.error !== null,
             },
+            quote: selected,
+            basisDate,
           })
         : null,
     [
       selected,
+      basisDate,
       candles.loading,
       candles.data,
       candles.error,
@@ -272,7 +267,9 @@ export default function StocksPage() {
         label={`${title}, ${STOCK_SORT_LABEL[sort]}`}
         sort={sort}
         onSort={setSort}
-        quoteOf={quoteOf}
+        highReady={highReady}
+        valueReady={valueReady}
+        baseDate={basisDate}
         selectedCode={code}
         selectedStatus={summary?.status ?? null}
         onSelect={select}
@@ -285,7 +282,7 @@ export default function StocksPage() {
   let panel: ReactNode = null
   if (selected && summary) {
     panel = (
-      <StockPanel key={selected.ticker} stock={selected} summary={summary} issueOf={issueOf} today={today} retry={retry} />
+      <StockPanel key={selected.ticker} stock={selected} summary={summary} issue={issueLine} today={today} retry={retry} />
     )
   } else if (view?.missing) {
     panel = (
@@ -314,7 +311,6 @@ export default function StocksPage() {
               <h2 id="fg-stocks-main" className="fg-section__title">
                 {title}
               </h2>
-              {quoteOf && <MockBadge />}
             </div>
             {all && (
               <div className="fg-ttools">
@@ -345,7 +341,7 @@ export default function StocksPage() {
                       </FilterChip>
                     ))}
                   </div>
-                  <Segment label="정렬" options={sortOptions(quoteOf !== null)} value={sort} onChange={setSort} />
+                  <Segment label="정렬" options={sortOptions(valueReady)} value={sort} onChange={setSort} />
                 </div>
                 <span className="fg-ttools__cap">{caption}</span>
               </div>

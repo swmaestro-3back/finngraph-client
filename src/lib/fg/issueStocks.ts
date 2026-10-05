@@ -1,6 +1,7 @@
 import { rankLinks } from '@/lib/fg/issuePage'
 import type { IssueArticleItem, IssueLink, IssueStock } from '@/lib/fg/issueRecords'
 import {
+  compareChange,
   LINK_SORTS,
   LINK_TYPE_LABEL,
   LINK_TYPES,
@@ -20,18 +21,24 @@ export interface NewsStockCard {
   change: number | null
   gapFromHigh: number | null
   position: number | null
+  newHigh?: boolean
   role: string | null
   articles: number
   mentionIds: readonly string[] | null
   links: number | null
+  picks?: number
 }
 
 export function stockKey(stock: Pick<IssueStock, 'name' | 'ticker'>): string {
   return stock.ticker ?? stock.name
 }
 
-export function newsStockCards(stocks: readonly IssueStock[], links: readonly IssueLink[] | null): NewsStockCard[] {
-  return stocks.map((stock) => ({
+function fromCount(links: readonly IssueLink[], name: string): number {
+  return links.filter((link) => link.from === name).length
+}
+
+function newsStockCard(stock: IssueStock): Omit<NewsStockCard, 'links'> {
+  return {
     key: stockKey(stock),
     name: stock.name,
     ticker: stock.ticker,
@@ -40,11 +47,30 @@ export function newsStockCards(stocks: readonly IssueStock[], links: readonly Is
     change: stock.change,
     gapFromHigh: stock.gapFromHigh ?? null,
     position: stock.position ?? null,
+    newHigh: stock.newHigh,
     role: stock.role ?? null,
     articles: stock.mentions ?? stock.mentionIds?.length ?? 0,
     mentionIds: stock.mentionIds ?? null,
-    links: links ? links.filter((link) => link.from === stock.name).length : null,
+  }
+}
+
+export function newsStockCards(
+  stocks: readonly IssueStock[],
+  links: readonly IssueLink[] | null,
+  firstHops?: ReadonlyMap<string, number> | null,
+): NewsStockCard[] {
+  if (firstHops === undefined) {
+    return stocks.map((stock) => ({ ...newsStockCard(stock), links: links ? fromCount(links, stock.name) : null }))
+  }
+  return stocks.map((stock) => ({
+    ...newsStockCard(stock),
+    links: stock.ticker && firstHops ? (firstHops.get(stock.ticker) ?? null) : null,
+    picks: links ? fromCount(links, stock.name) : 0,
   }))
+}
+
+export function cardPicks(card: Pick<NewsStockCard, 'links' | 'picks'>): number {
+  return card.picks ?? card.links ?? 0
 }
 
 export const SCOPE_FROM = 'from'
@@ -66,7 +92,7 @@ export function scopeLinks(links: readonly IssueLink[], sourceName: string | nul
 export function readLinkScope(search: string, cards: readonly NewsStockCard[], links: readonly IssueLink[]): LinkScope {
   const params = new URLSearchParams(search)
   const from = params.get(SCOPE_FROM)
-  const source = cards.find((card) => card.key === from && (card.links ?? 0) > 0) ?? null
+  const source = cards.find((card) => card.key === from && cardPicks(card) > 0) ?? null
   const type = params.get(SCOPE_TYPE)
   const scoped = scopeLinks(links, source?.name ?? null)
   const filter = isLinkType(type) && scoped.some((link) => link.company.type === type) ? type : 'all'
@@ -85,7 +111,7 @@ export function linkScopeSearch(search: string, from: string | null, filter: Lin
 
 export function sortIssueLinks(links: readonly IssueLink[], sort: LinkSort): IssueLink[] {
   if (sort === 'strength') return rankLinks(links)
-  return [...links].sort((a, b) => b.company.change - a.company.change)
+  return [...links].sort((a, b) => compareChange(a.company, b.company))
 }
 
 export function issueLinkChips(links: readonly IssueLink[]) {
@@ -113,6 +139,7 @@ const TYPE_PHRASE: Record<LinkType, string> = {
   supply: '공급망으로',
   customer: '고객 관계로',
   invest: '지분 투자로',
+  acquire: '인수 관계로',
   theme: '같은 테마로',
 }
 

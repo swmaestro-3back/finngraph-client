@@ -25,21 +25,6 @@ export interface StockQuery {
   code: string | null
 }
 
-export interface StockQuoteRef {
-  high52: number
-  tradingValue: number | null
-}
-
-export type QuoteOf = (stock: StockRowRes) => StockQuoteRef | null
-
-export interface StockIssueRef {
-  id: number
-  title: string
-  mediaCount: number
-}
-
-export type StockIssueOf = (stock: Pick<StockRowRes, 'ticker'>) => StockIssueRef | null
-
 export type ValueOf = (stock: StockRowRes) => number | null
 
 const SORTS: readonly StockSort[] = ['cap', 'value', 'rise', 'fall']

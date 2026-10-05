@@ -1,7 +1,6 @@
 import { Fragment, type ReactNode, type Ref } from 'react'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
-import { GapValue } from '@/components/fg/Gap'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { RowExpansion } from '@/components/fg/RowExpansion'
 import { ThemeRatio } from '@/components/fg/ThemeRatio'
@@ -52,10 +51,7 @@ export function ThemeTable({
             <span role="columnheader" className="fg-trow__num">등락률</span>
             <span role="columnheader">상승 / 하락</span>
             <span role="columnheader">주도주</span>
-            <span role="columnheader">
-              대표 이슈
-              {!issueOf && <span className="fg-trow__gap">준비 중</span>}
-            </span>
+            <span role="columnheader">대표 이슈</span>
           </div>
           {themes.map((theme) => {
             const selected = theme.id === selectedId
@@ -103,9 +99,9 @@ export function ThemeTable({
                       <span className="fg-trow__none">—</span>
                     )}
                   </span>
-                  <span role="cell" className="fg-trow__issue" data-gap-cell={issueOf ? undefined : 'true'}>
+                  <span role="cell" className="fg-trow__issue">
                     {!issueOf ? (
-                      <GapValue gap="theme-issue" />
+                      <span className="fg-trow__none">—</span>
                     ) : issue ? (
                       <>
                         <i className="fg-dia" aria-hidden="true" />
@@ -115,7 +111,7 @@ export function ThemeTable({
                         </span>
                       </>
                     ) : (
-                      <span className="fg-trow__none">오늘 이슈가 없어요</span>
+                      <span className="fg-trow__none">나온 이슈가 없어요</span>
                     )}
                   </span>
                 </div>

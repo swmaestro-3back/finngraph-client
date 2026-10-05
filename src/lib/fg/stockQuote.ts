@@ -41,7 +41,7 @@ export function week52State(range: Week52Stats, last: Pick<CandleRes, 'date' | '
 export interface Week52Summary {
   range: Week52Stats
   state: Week52State
-  asOf: string
+  asOf: string | null
 }
 
 export function week52Summary(candles: readonly CandleRes[]): Week52Summary | null {
@@ -50,9 +50,44 @@ export function week52Summary(candles: readonly CandleRes[]): Week52Summary | nu
   return range && last ? { range, state: week52State(range, last), asOf: last.date } : null
 }
 
+export interface QuoteFields {
+  tradeValue?: number | null
+  high52w?: number | null
+  high52wDate?: string | null
+  low52w?: number | null
+  low52wDate?: string | null
+}
+
+export function week52Of(row: QuoteFields): Week52Stats | null {
+  const { high52w, high52wDate, low52w, low52wDate } = row
+  if (high52w == null || low52w == null || !high52wDate || !low52wDate) return null
+  return { high: high52w, highDate: high52wDate, low: low52w, lowDate: low52wDate }
+}
+
 export type StockStatus = Extract<ThemeStockChangeStatus, 'SUSPENDED' | 'DELISTING'>
 
 export type StockStatusRow = Pick<ThemeStockRes, 'changeStatus' | 'tradingSuspended' | 'delistingTrade'>
+
+export type Week52Row = QuoteFields & Partial<StockStatusRow>
+
+export function week52Mark(row: Week52Row | null | undefined, basisDate: string | null | undefined): Week52State {
+  const range = row ? week52Of(row) : null
+  if (!row || range === null || !basisDate || !(range.high > range.low)) return 'normal'
+  if (row.tradeValue === 0 || row.tradingSuspended === true || row.changeStatus === 'SUSPENDED') return 'normal'
+  if (range.highDate === basisDate) return 'high'
+  if (range.lowDate === basisDate) return 'low'
+  return 'normal'
+}
+
+export function week52Resolved(
+  row: Week52Row,
+  basisDate: string | null | undefined,
+  candles: readonly CandleRes[] | null,
+): Week52Summary | null {
+  const range = week52Of(row)
+  if (range === null) return candles ? week52Summary(candles) : null
+  return { range, state: week52Mark(row, basisDate), asOf: basisDate ?? null }
+}
 
 function hasStatus(row: StockStatusRow): boolean {
   return row.changeStatus !== undefined || row.tradingSuspended !== undefined || row.delistingTrade !== undefined
@@ -220,6 +255,8 @@ interface StockSummaryInput {
   flows: readonly InvestorFlowRes[] | null
   themeStocks: readonly ThemeStockRow[] | null
   failed?: SummaryFailures
+  quote?: QuoteFields
+  basisDate?: string | null
 }
 
 export function stockSummary({
@@ -231,21 +268,24 @@ export function stockSummary({
   flows,
   themeStocks,
   failed = {},
+  quote,
+  basisDate = null,
 }: StockSummaryInput): StockSummary {
   const candlesFailed = failed.candles === true
   const flowsFailed = failed.flows === true
-  const tradingFailed = failed.themeStocks === true
+  const served = quote?.tradeValue
+  const tradingFailed = served === undefined && failed.themeStocks === true
   return {
     loading: candles === null && !candlesFailed,
     candlesFailed,
     amount: changeAmount(candles ?? [], price, change, amount),
-    week52: candles ? week52Summary(candles) : null,
+    week52: quote ? week52Resolved(quote, basisDate, candles) : candles ? week52Summary(candles) : null,
     spark: candles ? sparkModel(candles, SPARK_MONTHS) : null,
     flows: flows ? flowTotals(flows) : null,
     flowsLoading: flows === null && !flowsFailed,
     flowsFailed,
-    tradingValue: tradingValueOf(themeStocks, ticker),
-    tradingLoading: themeStocks === null && !tradingFailed,
+    tradingValue: served !== undefined ? served : tradingValueOf(themeStocks, ticker),
+    tradingLoading: served === undefined && themeStocks === null && !tradingFailed,
     tradingFailed,
     status: statusOf(themeStocks, ticker, candles),
   }

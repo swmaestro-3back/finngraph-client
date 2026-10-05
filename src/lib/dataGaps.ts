@@ -8,8 +8,8 @@ interface GapInfo {
 
 export const GAPS = {
   'stock-quote-ext': {
-    title: '52주 범위·변동액·거래대금',
-    needs: '종목 응답에 52주 최고·최저와 날짜, 신고가·신저가 여부, 변동액, 당일 거래대금과 평소 대비 배수, 시장 안 시가총액 순위',
+    title: '거래대금 평소 대비',
+    needs: '당일 거래대금의 평소 대비 배수와 평소의 기준(기간·평균 방식)',
     owners: ['backend'],
   },
   'stock-themes': {
@@ -37,25 +37,15 @@ export const GAPS = {
     needs: '앞선 이슈와 이어진 흐름(흐름 이름, 노드별 날짜·제목·매체 수·요약)',
     owners: ['backend', 'etl'],
   },
-  'theme-issue': {
-    title: '테마 대표 이슈',
-    needs: '테마별 대표 이슈(id·제목·매체 수)와 선정 규칙',
-    owners: ['backend'],
-  },
   'stock-issues': {
-    title: '종목이 나온 이슈',
-    needs: '종목별 이슈·흐름, 이슈 날짜의 주가 매핑, 대표 이슈',
+    title: '종목 이슈 흐름',
+    needs: '종목이 나온 이슈를 이어 묶은 흐름(흐름 이름, 흐름 안 순서와 개수, 진행 여부)',
     owners: ['backend', 'kg-api'],
-  },
-  'watchlist-issues': {
-    title: '관심 종목 소식',
-    needs: '관심 종목별 날짜별 관련 이슈 수와 최근 이슈',
-    owners: ['backend'],
   },
   'linked-companies': {
     title: '이어진 기업',
-    needs: '이런 기업은 어때요?(대상·출발 종목·경로·관계 유형·근거 강도·근거 문장), 이슈 관계 그래프 미리보기, 비회원 공개 집계, 회원 전용 서버 차단',
-    owners: ['kg-api', 'backend', 'etl'],
+    needs: '이슈 관계 그래프 미리보기, 최신 이슈 카드의 이어진 기업 수 정의, 관계 이름·경로의 회원 전용 서버 차단(AI 서버 응답이 공개)',
+    owners: ['kg-api', 'backend'],
   },
   disclosures: {
     title: '공시',

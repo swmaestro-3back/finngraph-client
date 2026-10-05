@@ -1,6 +1,5 @@
 import { josa } from '@/lib/josa'
 import type { DisclosuresFixture } from '@/lib/fg/disclosures'
-import type { LinkedPreview } from '@/lib/fg/stockDetail'
 import type { IssueFlowsFixture } from '@/lib/fg/stockIssues'
 import type { LinkedCompany } from '@/lib/fg/stockLinks'
 
@@ -105,26 +104,10 @@ export const stockIssueFlowsFixture: IssueFlowsFixture = {
   ],
 }
 
-export const linkedPreviewFixture: LinkedPreview = {
-  total: 8,
-  rows: [
-    { name: '누리소재', market: 'KOSDAQ', change: 0.94, relation: (name) => `${name}의 소재 공급사`, gapFromHigh: -12.3, strength: 3 },
-    { name: '가람전자', market: 'KOSPI', change: 0.39, relation: (name) => `${name}의 고객사`, gapFromHigh: -8.9, strength: 2 },
-    {
-      name: '이음정밀',
-      market: 'KOSDAQ',
-      change: 1.27,
-      relation: (name) => `${name}${josa(name, '이/가')} 지분 18% 보유`,
-      gapFromHigh: -6.1,
-      strength: 2,
-    },
-  ],
-}
-
 export const tradingRatioFixture = 1.4
 
 const DART = 'https://dart.fss.or.kr/'
-const ARTICLE = 'https://news.example.com/finngraph-mock'
+const ARTICLE = 'https://news.test/finngraph-mock'
 
 export const stockDisclosuresFixture: DisclosuresFixture = {
   anchor: '2026-10-02',

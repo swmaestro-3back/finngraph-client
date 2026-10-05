@@ -1,9 +1,9 @@
 interface GalleryFixture {
-  gapFromHigh: string
-  issueTitle: string
+  tradingRatio: string
+  flowTitle: string
 }
 
 export const galleryFixture: GalleryFixture = {
-  gapFromHigh: '−3.3%',
-  issueTitle: '반도체 장비 수출 규제, 국내 소재 공급망 재편',
+  tradingRatio: '평소의 1.4배',
+  flowTitle: '반도체 장비 수출 규제',
 }

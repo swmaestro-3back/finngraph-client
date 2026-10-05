@@ -2,16 +2,19 @@ import { formatChange } from '@/lib/format'
 import type { LinkStrength } from '@/lib/fg/stockDetail'
 import { josa } from '@/lib/josa'
 
-export type LinkType = 'supply' | 'customer' | 'invest' | 'theme'
+export type LinkType = 'supply' | 'customer' | 'invest' | 'acquire' | 'theme'
 export type LinkFilter = 'all' | LinkType
 export type LinkSort = 'strength' | 'change'
+export type LinkDirection = 'out' | 'in'
+export type LinkRelType = 'SUPPLIES_TO' | 'INVESTS_IN' | 'ACQUIRES'
 
-export const LINK_TYPES: readonly LinkType[] = ['supply', 'customer', 'invest', 'theme']
+export const LINK_TYPES: readonly LinkType[] = ['supply', 'customer', 'invest', 'acquire', 'theme']
 
 export const LINK_TYPE_LABEL: Record<LinkType, string> = {
   supply: '공급',
   customer: '고객',
   invest: '투자',
+  acquire: '인수',
   theme: '같은 테마',
 }
 
@@ -23,7 +26,8 @@ export const LINK_SORTS: readonly { value: LinkSort; label: string }[] = [
 const VIA_NOUN: Record<LinkType, string> = {
   supply: '공급사',
   customer: '고객사',
-  invest: '투자한 회사',
+  invest: '투자 관계 기업',
+  acquire: '인수 관계 기업',
   theme: '같은 테마 기업',
 }
 
@@ -33,11 +37,21 @@ export interface LinkEvidence {
   source: string
   date: string
   url: string | null
+  verbatim?: boolean
+  tags?: readonly string[]
 }
 
 export interface LinkHop {
   edge: LinkType
   node: string
+  dir?: LinkDirection
+  confirmed?: boolean
+}
+
+export interface LinkPair {
+  a: string
+  b: string
+  type: LinkRelType
 }
 
 export interface LinkedCompany {
@@ -45,10 +59,11 @@ export interface LinkedCompany {
   code: string | null
   name: string
   market: string
-  price: number
-  change: number
-  gapFromHigh: number
-  position: number
+  price: number | null
+  change: number | null
+  gapFromHigh: number | null
+  position: number | null
+  newHigh?: boolean
   type: LinkType
   relation: string
   tag: string
@@ -57,11 +72,14 @@ export interface LinkedCompany {
   strength: LinkStrength
   confirmed: boolean
   evidence: readonly LinkEvidence[]
+  evidenceCount?: number
+  lastMentioned?: string | null
+  pair?: LinkPair
 }
 
 export interface LinkCounts {
   total: number
-  byType: Record<LinkType, number>
+  byType: Partial<Record<LinkType, number>>
   confirmed: number
   second: number
   via: string | null
@@ -71,9 +89,13 @@ function isSecond(company: LinkedCompany): boolean {
   return company.hops.length > 1
 }
 
+export function typeCount(counts: LinkCounts, type: LinkType): number {
+  return counts.byType[type] ?? 0
+}
+
 export function linkCounts(list: readonly LinkedCompany[]): LinkCounts {
-  const byType: Record<LinkType, number> = { supply: 0, customer: 0, invest: 0, theme: 0 }
-  for (const company of list) byType[company.type] += 1
+  const byType: Partial<Record<LinkType, number>> = {}
+  for (const company of list) byType[company.type] = (byType[company.type] ?? 0) + 1
   const second = list.filter(isSecond)
   const firstEdges = new Set(second.map((company) => company.hops[0].edge))
   const [edge] = [...firstEdges]
@@ -87,8 +109,8 @@ export function linkCounts(list: readonly LinkedCompany[]): LinkCounts {
 }
 
 function typeParts(counts: LinkCounts): string {
-  return LINK_TYPES.filter((type) => counts.byType[type] > 0)
-    .map((type) => `${LINK_TYPE_LABEL[type]} ${counts.byType[type]}`)
+  return LINK_TYPES.filter((type) => typeCount(counts, type) > 0)
+    .map((type) => `${LINK_TYPE_LABEL[type]} ${typeCount(counts, type)}`)
     .join(' · ')
 }
 
@@ -112,10 +134,15 @@ export interface LinkMapGroups {
   supply: LinkedCompany[]
   customer: LinkedCompany[]
   invest: LinkedCompany[]
+  acquire: LinkedCompany[]
   theme: LinkedCompany[]
   second: LinkedCompany[]
   via: string | null
 }
+
+export type MapGroupKey = 'supply' | 'customer' | 'invest' | 'acquire' | 'theme' | 'second'
+
+export const MAP_MORE_KEYS: readonly Exclude<MapGroupKey, 'supply' | 'customer'>[] = ['invest', 'acquire', 'theme', 'second']
 
 export function linkMapGroups(list: readonly LinkedCompany[]): LinkMapGroups {
   const first = list.filter((company) => !isSecond(company))
@@ -125,41 +152,86 @@ export function linkMapGroups(list: readonly LinkedCompany[]): LinkMapGroups {
     supply: first.filter((company) => company.type === 'supply'),
     customer: first.filter((company) => company.type === 'customer'),
     invest: first.filter((company) => company.type === 'invest'),
+    acquire: first.filter((company) => company.type === 'acquire'),
     theme: first.filter((company) => company.type === 'theme'),
     second,
     via: vias.size === 1 ? [...vias][0] : null,
   }
 }
 
-export function mapHeads(stockName: string, groups: LinkMapGroups): Record<'supply' | 'customer' | 'invest' | 'theme' | 'second', string> {
+function groupDir(group: readonly LinkedCompany[]): LinkDirection | null {
+  const dirs = new Set(group.map((company) => company.hops[0]?.dir ?? 'out'))
+  return dirs.size === 1 ? [...dirs][0] : null
+}
+
+function investHead(stockName: string, group: readonly LinkedCompany[]): string {
+  const dir = groupDir(group)
+  if (dir === 'in') return `${stockName}에 투자했어요 · ${group.length}곳`
+  if (dir === 'out') return `${stockName}${josa(stockName, '이/가')} 투자했어요 · ${group.length}곳`
+  return `투자로 이어져요 · ${group.length}곳`
+}
+
+function acquireHead(stockName: string, group: readonly LinkedCompany[]): string {
+  const dir = groupDir(group)
+  if (dir === 'in') return `${stockName}${josa(stockName, '을/를')} 인수했어요 · ${group.length}곳`
+  if (dir === 'out') return `${stockName}${josa(stockName, '이/가')} 인수했어요 · ${group.length}곳`
+  return `인수로 이어져요 · ${group.length}곳`
+}
+
+export type MapHeads = Record<'supply' | 'customer', string> & Partial<Record<MapGroupKey, string>>
+
+export function mapHeads(stockName: string, groups: LinkMapGroups): MapHeads {
   const via = groups.via ? `${groups.via}${josa(groups.via, '을/를')} 거쳐` : '한 번 더 거쳐'
-  return {
+  const heads: MapHeads = {
     supply: `${stockName}에 공급해요 · ${groups.supply.length}곳`,
     customer: `${stockName}에서 사 가요 · ${groups.customer.length}곳`,
-    invest: `${stockName}${josa(stockName, '이/가')} 투자했어요 · ${groups.invest.length}곳`,
-    theme: `같은 테마로 묶여요 · ${groups.theme.length}곳`,
-    second: `${via} 이어져요 · 2단계 ${groups.second.length}곳`,
   }
+  if (groups.invest.length > 0) heads.invest = investHead(stockName, groups.invest)
+  if (groups.acquire.length > 0) heads.acquire = acquireHead(stockName, groups.acquire)
+  if (groups.theme.length > 0) heads.theme = `같은 테마로 묶여요 · ${groups.theme.length}곳`
+  if (groups.second.length > 0) heads.second = `${via} 이어져요 · 2단계 ${groups.second.length}곳`
+  return heads
 }
 
 export function filterLinks(list: readonly LinkedCompany[], filter: LinkFilter): LinkedCompany[] {
   return filter === 'all' ? [...list] : list.filter((company) => company.type === filter)
 }
 
-export function sortLinks(list: readonly LinkedCompany[], sort: LinkSort): LinkedCompany[] {
-  return [...list].sort(
-    sort === 'change' ? (a, b) => b.change - a.change : (a, b) => b.strength - a.strength || b.change - a.change,
+export function hasQuote(company: Pick<LinkedCompany, 'code' | 'price'>): boolean {
+  return company.code !== null || company.price !== null
+}
+
+export function linkEvidenceCount(company: LinkedCompany): number {
+  return company.evidenceCount ?? company.evidence.length
+}
+
+export function compareChange(a: LinkedCompany, b: LinkedCompany): number {
+  if (a.change === null || b.change === null) return (a.change === null ? 1 : 0) - (b.change === null ? 1 : 0)
+  return b.change - a.change
+}
+
+export function compareLinks(a: LinkedCompany, b: LinkedCompany): number {
+  return (
+    a.hops.length - b.hops.length ||
+    b.strength - a.strength ||
+    linkEvidenceCount(b) - linkEvidenceCount(a) ||
+    (b.lastMentioned ?? '').localeCompare(a.lastMentioned ?? '') ||
+    compareChange(a, b)
   )
+}
+
+export function sortLinks(list: readonly LinkedCompany[], sort: LinkSort): LinkedCompany[] {
+  return [...list].sort(sort === 'change' ? (a, b) => compareChange(a, b) || compareLinks(a, b) : compareLinks)
 }
 
 export function linkChips(list: readonly LinkedCompany[]): { value: LinkFilter; label: string; count: number }[] {
   const counts = linkCounts(list)
   return [
     { value: 'all', label: '전체', count: counts.total },
-    ...LINK_TYPES.filter((type) => counts.byType[type] > 0).map((type) => ({
+    ...LINK_TYPES.filter((type) => typeCount(counts, type) > 0).map((type) => ({
       value: type,
       label: LINK_TYPE_LABEL[type],
-      count: counts.byType[type],
+      count: typeCount(counts, type),
     })),
   ]
 }
@@ -179,11 +251,12 @@ export function nodeTag(company: LinkedCompany): string {
 }
 
 export function nodeAria(company: LinkedCompany): string {
-  return `${company.name}, ${company.relation}, 오늘 ${formatChange(company.change)}, 근거 보기`
+  const today = company.change === null ? '' : `오늘 ${formatChange(company.change)}, `
+  return `${company.name}, ${company.relation}, ${today}근거 보기`
 }
 
 export function evidenceCountLabel(company: LinkedCompany): string {
-  return `근거 ${company.evidence.length}건${company.confirmed ? ' · 공시로 확인' : ''}`
+  return `근거 ${linkEvidenceCount(company)}건${company.confirmed ? ' · 공시로 확인' : ''}`
 }
 
 export function watchLabel(name: string, on: boolean): string {
