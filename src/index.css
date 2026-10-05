@@ -14,6 +14,7 @@
 @import "./styles/fg/stock-links.css" layer(components);
 @import "./styles/fg/stock-finance.css" layer(components);
 @import "./styles/fg/issue.css" layer(components);
+@import "./styles/fg/home.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
