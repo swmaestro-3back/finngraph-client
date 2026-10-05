@@ -129,6 +129,7 @@ export interface CandleRes {
   low: number
   close: number
   volume: number
+  changeRate?: number | null
 }
 
 export interface StockRowRes {
@@ -137,6 +138,12 @@ export interface StockRowRes {
   market: string
   price: number | null
   change: number | null
+  changeAmount?: number | null
+  tradeValue?: number | null
+  high52w?: number | null
+  high52wDate?: string | null
+  low52w?: number | null
+  low52wDate?: string | null
   w1: number | null
   m1: number | null
   m3: number | null
@@ -155,6 +162,12 @@ export interface StockDetailRes {
   market: string
   price: number | null
   change: number | null
+  changeAmount?: number | null
+  tradeValue?: number | null
+  high52w?: number | null
+  high52wDate?: string | null
+  low52w?: number | null
+  low52wDate?: string | null
   themeId: number | null
   themeName: string | null
   marketCap: number | null
@@ -269,6 +282,7 @@ export interface NewsDetail {
   title: string
   summary: string
   url: string
+  originalUrl?: string | null
   collectedAt: string
   /** 트리플 추출 결과 관계가 있는 뉴스 — 상세 모달에 관계망이 그려진다. 응답에 없으면 null */
   tripleExtracted: boolean | null
@@ -844,4 +858,66 @@ export interface DividendReactionRes {
   openGap: number
   recoveryDays: number | null
   pending: boolean
+}
+
+export interface IssueCompanyRes {
+  ticker: string
+  name: string
+  mentionCount: number
+}
+
+export interface IssueArticleRes {
+  id: number
+  title: string | null
+  url: string | null
+  press: string | null
+  publishedAt: string | null
+  summary: string | null
+  tripleExtracted: boolean
+}
+
+export interface IssueSummaryRes {
+  id: number
+  title: string | null
+  titleSource: 'cluster' | 'article'
+  articleCount: number
+  mediaCount: number
+  firstPublishedAt: string | null
+  lastPublishedAt: string | null
+  keywords: string[]
+  summary: string | null
+  representativeNewsId: number
+  companies: IssueCompanyRes[]
+}
+
+export interface IssueListMeta {
+  date: string | null
+  prevDate: string | null
+  nextDate: string | null
+}
+
+export type IssueSort = 'media' | 'recent'
+
+export interface IssueDetailRes extends IssueSummaryRes {
+  articles: IssueArticleRes[]
+}
+
+export interface StockIssueRes extends IssueSummaryRes {
+  mentionCount: number
+}
+
+export interface LatestStockIssueRes {
+  ticker: string
+  issue: StockIssueRes | null
+}
+
+export interface ThemeIssuesRes {
+  themeId: number
+  issueCount: number
+  issueIds: number[]
+  issues: IssueSummaryRes[]
+}
+
+export interface ThemeIssuesMeta {
+  date: string | null
 }

@@ -1,4 +1,4 @@
-import { ExternalLink, Lock, X } from 'lucide-react'
+import { ChevronRight, ExternalLink, Lock, X } from 'lucide-react'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { FilterChip } from '@/components/fg/FilterChip'
@@ -19,18 +19,30 @@ interface ThemeNewsListProps {
   onClearSelected: () => void
   onMore: () => void
   onLogin: () => void
+  onOpenNews: (id: string) => void
 }
 
-function NewsLine({ row }: { row: NewsRow }) {
+function NewsLine({ row, onOpen }: { row: NewsRow; onOpen: (id: string) => void }) {
+  const text = (
+    <span className="fg-tnw__body">
+      <span className="fg-tnw__title">{row.item.title}</span>
+      <span className="fg-tnw__meta fg-num">
+        {row.item.analyzed && <Badge>분석</Badge>}
+        <span>{row.meta}</span>
+      </span>
+    </span>
+  )
+  if (row.item.analyzed) {
+    return (
+      <button type="button" className="fg-tnw__row" onClick={() => onOpen(row.item.id)}>
+        {text}
+        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+      </button>
+    )
+  }
   const body = (
     <>
-      <span className="fg-tnw__body">
-        <span className="fg-tnw__title">{row.item.title}</span>
-        <span className="fg-tnw__meta fg-num">
-          {row.item.analyzed && <Badge>분석</Badge>}
-          <span>{row.meta}</span>
-        </span>
-      </span>
+      {text}
       {row.item.url && <ExternalLink size={16} strokeWidth={1.75} aria-hidden="true" />}
     </>
   )
@@ -53,6 +65,7 @@ export function ThemeNewsList({
   onClearSelected,
   onMore,
   onLogin,
+  onOpenNews,
 }: ThemeNewsListProps) {
   const none = view.empty === 'none'
   return (
@@ -97,7 +110,7 @@ export function ThemeNewsList({
               <ul className="fg-tnw__list">
                 {group.rows.map((row) => (
                   <li key={row.item.id}>
-                    <NewsLine row={row} />
+                    <NewsLine row={row} onOpen={onOpenNews} />
                   </li>
                 ))}
               </ul>

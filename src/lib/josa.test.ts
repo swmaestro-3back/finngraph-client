@@ -17,4 +17,18 @@ describe('josa 은/는', () => {
     expect(josa('종목', '이/가')).toBe('이')
     expect(josa('테마', '으로/로')).toBe('로')
   })
+
+  it('받침이 있으면 과, 없으면 와', () => {
+    expect(josa('삼성전자', '와/과')).toBe('와')
+    expect(josa('에코프로비엠', '와/과')).toBe('과')
+  })
+})
+
+describe('josa 을/를', () => {
+  it('받침이 있으면 을, 없으면 를', () => {
+    expect(josa('누리소재', '을/를')).toBe('를')
+    expect(josa('삼성전자', '을/를')).toBe('를')
+    expect(josa('에코프로비엠', '을/를')).toBe('을')
+    expect(josa('LG화학', '을/를')).toBe('을')
+  })
 })

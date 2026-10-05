@@ -1,25 +1,100 @@
-import { useMemo } from 'react'
-import { getData } from '@/lib/api'
+import { useEffect, useSyncExternalStore } from 'react'
+import { ApiError, getData } from '@/lib/api'
 import type { StockRowRes } from '@/lib/apiTypes'
 import { AUTO_REFRESH_MS } from '@/lib/autoRefresh'
-import { createTtlCache } from '@/lib/queries/ttlCache'
-import { useApi, type ApiState } from '@/lib/queries/useApi'
+import type { ApiState } from '@/lib/queries/useApi'
 
-// 전종목 목록은 여러 화면(주식 목록·그래프·상대비교·호버카드)이 공유한다 — 화면을 오갈 때마다 수백 KB를 다시 받지 않게 쥐고 있되,
-// 시세가 담겨 있으므로 자동 갱신과 같은 주기가 지나면 다음 진입 때 새로 받는다
-const cached = createTtlCache<StockRowRes[]>(AUTO_REFRESH_MS)
+interface StockList {
+  data: StockRowRes[] | null
+  error: ApiError | null
+}
 
-// NavBar 검색 등 훅 밖에서도 같은 캐시를 타야 /v1/stocks 중복 fetch가 없다 — export로 공유
+let list: StockList = { data: null, error: null }
+let loadedAt = 0
+let pending: Promise<StockRowRes[]> | null = null
+const listeners = new Set<() => void>()
+const indexes = new WeakMap<readonly StockRowRes[], ReadonlyMap<string, StockRowRes>>()
+
+function publish(next: StockList) {
+  list = next
+  for (const listener of listeners) listener()
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
+function snapshot(): StockList {
+  return list
+}
+
+function request(silent: boolean): Promise<StockRowRes[]> {
+  if (pending) return pending
+  const next = getData<StockRowRes[]>('/v1/stocks').then(
+    (rows) => {
+      pending = null
+      loadedAt = Date.now()
+      publish({ data: rows, error: null })
+      return rows
+    },
+    (e: unknown) => {
+      pending = null
+      const error = e instanceof ApiError ? e : new ApiError('INTERNAL_ERROR', 0, String(e))
+      if (!(silent && list.data)) publish({ data: list.data, error })
+      throw error
+    },
+  )
+  pending = next
+  return next
+}
+
 export function loadStocks(): Promise<StockRowRes[]> {
-  return cached('all', () => getData<StockRowRes[]>('/v1/stocks'))
+  if (list.data && Date.now() - loadedAt < AUTO_REFRESH_MS) return Promise.resolve(list.data)
+  return request(list.data !== null)
 }
 
-export function useStocksCached(): ApiState<StockRowRes[]> {
-  return useApi<StockRowRes[]>(() => loadStocks(), [])
+export function refreshStocks(): void {
+  request(true).catch(() => undefined)
 }
 
-/** ticker → 종목 행 인덱스. 로드 전에는 null */
-export function useStockIndex(): Map<string, StockRowRes> | null {
-  const { data } = useStocksCached()
-  return useMemo(() => (data ? new Map(data.map((s) => [s.ticker, s])) : null), [data])
+function retryStocks(): void {
+  if (pending) return
+  publish({ data: list.data, error: null })
+  request(false).catch(() => undefined)
+}
+
+function setStocks(rows: StockRowRes[]): void {
+  loadedAt = Date.now()
+  publish({ data: rows, error: null })
+}
+
+export function stockIndexOf(rows: readonly StockRowRes[] | null): ReadonlyMap<string, StockRowRes> | null {
+  if (rows === null) return null
+  const hit = indexes.get(rows)
+  if (hit) return hit
+  const index = new Map(rows.map((row) => [row.ticker, row]))
+  indexes.set(rows, index)
+  return index
+}
+
+export function useStocksCached(enabled = true): ApiState<StockRowRes[]> {
+  const { data, error } = useSyncExternalStore(subscribe, snapshot)
+  useEffect(() => {
+    if (enabled) loadStocks().catch(() => undefined)
+  }, [enabled])
+  return {
+    data,
+    loading: enabled && data === null && error === null,
+    error,
+    refetch: retryStocks,
+    refresh: refreshStocks,
+    mutate: setStocks,
+  }
+}
+
+export function useStockIndex(): ReadonlyMap<string, StockRowRes> | null {
+  return stockIndexOf(useStocksCached().data)
 }

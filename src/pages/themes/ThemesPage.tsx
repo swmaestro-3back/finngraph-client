@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip } from '@/components/fg/FilterChip'
-import { MockBadge } from '@/components/fg/Gap'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
@@ -17,6 +16,7 @@ import { useAuth } from '@/lib/auth'
 import { useAutoRefresh } from '@/lib/autoRefresh'
 import { useFavorites } from '@/lib/favorites'
 import { formatChange } from '@/lib/format'
+import { issueTitle } from '@/lib/fg/hub'
 import {
   parseThemeQuery,
   resolveSort,
@@ -32,6 +32,8 @@ import {
   visibleThemes,
   weightedChangeOf,
   type HeldDefault,
+  type IssueOf,
+  type ThemeIssueView,
   type ThemeQuery,
   type ThemeSort,
   type ThemeView,
@@ -39,14 +41,10 @@ import {
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { useHotThemes } from '@/lib/queries/useHotThemes'
+import { useThemeIssueBoard } from '@/lib/queries/useStockIssues'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
-import { useGap } from '@/lib/useGap'
-
-const loadIssue = import.meta.env.DEV
-  ? () => import('@/dev/fixtures/themes').then((m) => m.themeIssueFixture)
-  : null
 
 const VIEW_OPTIONS: readonly TabOption<ThemeView>[] = [
   { value: 'map', label: '지도' },
@@ -79,8 +77,6 @@ export default function ThemesPage() {
   const narrow = useMediaQuery('(max-width: 767px)')
   const inline = useMediaQuery('(max-width: 1023px)')
   const query = useMemo(() => parseThemeQuery(search), [search])
-  const issueGap = useGap('theme-issue', loadIssue)
-  const issueOf = issueGap.status === 'mock' ? issueGap.data : null
   const view = resolveView(query.view, narrow)
   const sort = resolveSort(query.sort)
   const favOn = query.fav && status === 'authenticated'
@@ -111,6 +107,25 @@ export default function ThemesPage() {
       ? null
       : (list?.find((theme) => theme.id === selectedId) ?? hot.data?.find((theme) => theme.id === selectedId) ?? null)
   const stocks = useThemeStocks(selected?.id ?? null)
+  const tableThemes = useMemo(() => visibleThemes(sorted, showAll, selectedId), [sorted, showAll, selectedId])
+  const issueIds = useMemo(() => {
+    const ids = view === 'table' ? tableThemes.map((theme) => theme.id) : []
+    return selected ? [...ids, selected.id] : ids
+  }, [view, tableThemes, selected])
+  const board = useThemeIssueBoard(issueIds, null)
+  const boardData = board.data
+  const issueOf = useMemo<IssueOf | null>(() => {
+    if (!boardData) return null
+    return (theme) => {
+      const top = boardData.themes.get(theme.id)?.issues[0]
+      return top ? { id: top.id, title: issueTitle(top), mediaCount: top.mediaCount } : null
+    }
+  }, [boardData])
+  const panelIssue: ThemeIssueView = useMemo(() => {
+    if (boardData && issueOf && selected) return { status: 'ready', issue: issueOf(selected), date: boardData.date }
+    if (board.error) return { status: 'error', retry: board.retry }
+    return { status: 'loading' }
+  }, [boardData, issueOf, selected, board.error, board.retry])
 
   const [pick, setPick] = useState<ThemePick | null>(null)
   const panelRef = useRef<HTMLElement>(null)
@@ -230,7 +245,13 @@ export default function ThemesPage() {
   } else {
     mapBody = (
       <>
-        <ThemeTreemap tiles={tiles} selectedId={selectedId} onSelect={select} label={MAP_LABEL} />
+        <ThemeTreemap
+          tiles={tiles}
+          selectedId={selectedId}
+          onSelect={select}
+          label={MAP_LABEL}
+          layoutKey={`${query.count}:${favOn ? 'fav' : 'all'}`}
+        />
         <ThemeLegend />
       </>
     )
@@ -259,7 +280,7 @@ export default function ThemesPage() {
   } else {
     body = (
       <ThemeTable
-        themes={visibleThemes(sorted, showAll, selectedId)}
+        themes={tableThemes}
         total={sorted.length}
         onShowAll={() => setShowAll(true)}
         selectedId={selectedId}
@@ -280,7 +301,7 @@ export default function ThemesPage() {
         ref={panelRef}
         theme={selected}
         changeOf={weightedChangeOf}
-        issueOf={issueOf}
+        issue={panelIssue}
         members={members}
       />
     )
@@ -314,7 +335,6 @@ export default function ThemesPage() {
               <h2 id="fg-themes-main" className="fg-section__title">
                 오늘 움직인 테마
               </h2>
-              {issueOf && <MockBadge />}
             </div>
             {lead && (
               <p className="fg-tlead">

@@ -13,11 +13,12 @@ import { cn } from '@/lib/utils'
 interface Props {
   /** 현재 표시 중인 노드 분류 */
   visibleCategories: Set<NodeCategory>
+  toggleClassName?: string
 }
 
 const PANEL = 'rounded-lg border border-border bg-background/95 px-3.5 py-2.5 shadow-soft backdrop-blur'
 
-export function Legend({ visibleCategories }: Props) {
+export function Legend({ visibleCategories, toggleClassName }: Props) {
   const isMobile = useIsMobile()
   const [expanded, setExpanded] = useState(false)
 
@@ -63,7 +64,7 @@ export function Legend({ visibleCategories }: Props) {
         onClick={() => setExpanded((v) => !v)}
         aria-label={expanded ? '범례 닫기' : '범례 보기'}
         aria-expanded={expanded}
-        className="bg-background/95 shadow-soft backdrop-blur"
+        className={cn('bg-background/95 shadow-soft backdrop-blur', toggleClassName)}
       >
         {expanded ? <X strokeWidth={2} /> : <List strokeWidth={2} />}
       </Button>

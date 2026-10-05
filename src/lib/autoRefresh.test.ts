@@ -17,21 +17,23 @@ const settled = {
 const yesterday = { baseDate: '2026-09-30', valuationDate: '2026-09-30', updatedAt: null }
 
 describe('shouldAutoRefresh', () => {
-  it('정규장 중에는 기준일과 무관하게 갱신한다', () => {
-    expect(shouldAutoRefresh(kst('2026-10-01T09:00:00'), yesterday)).toBe(true)
+  it('평일 08:00–20:00 KST 에는 기준일과 무관하게 갱신한다', () => {
+    expect(shouldAutoRefresh(kst('2026-10-01T08:00:00'), yesterday)).toBe(true)
     expect(shouldAutoRefresh(kst('2026-10-01T15:29:00'), null)).toBe(true)
+    expect(shouldAutoRefresh(kst('2026-10-01T18:30:00'), settled)).toBe(true)
+    expect(shouldAutoRefresh(kst('2026-10-01T19:59:00'), settled)).toBe(true)
   })
 
-  it('장이 끝나도 오늘 가격이 확정 전이면 계속 갱신한다', () => {
-    expect(shouldAutoRefresh(kst('2026-10-01T18:30:00'), intraday)).toBe(true)
+  it('20시가 지나도 오늘 가격이 확정 전이면 계속 갱신한다', () => {
+    expect(shouldAutoRefresh(kst('2026-10-01T20:30:00'), intraday)).toBe(true)
   })
 
-  it('오늘 가격이 확정되면 멈춘다', () => {
-    expect(shouldAutoRefresh(kst('2026-10-01T19:40:00'), settled)).toBe(false)
+  it('20시 뒤에 오늘 가격이 확정되면 멈춘다', () => {
+    expect(shouldAutoRefresh(kst('2026-10-01T20:40:00'), settled)).toBe(false)
   })
 
-  it('장 시작 전과 주말에는 갱신하지 않는다', () => {
-    expect(shouldAutoRefresh(kst('2026-10-01T08:59:00'), yesterday)).toBe(false)
+  it('08시 전과 주말에는 갱신하지 않는다', () => {
+    expect(shouldAutoRefresh(kst('2026-10-01T07:59:00'), yesterday)).toBe(false)
     expect(shouldAutoRefresh(kst('2026-10-03T11:00:00'), settled)).toBe(false)
   })
 

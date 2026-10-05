@@ -17,6 +17,7 @@ interface DataResponse<T> {
 interface PageResponse<T> {
   data: T[]
   pagination: Pagination
+  meta?: unknown
 }
 export interface Pagination {
   /** 0-기반 (서버 계약 — 1-기반 표기 변환은 UI 몫) */
@@ -248,6 +249,24 @@ export async function getPage<T>(
 ): Promise<{ items: T[]; pagination: Pagination }> {
   const envelope = await request<PageResponse<T>>(path, { params: { ...params, page, size } })
   return { items: envelope.data, pagination: envelope.pagination }
+}
+
+export async function getPageMeta<T, M>(
+  path: string,
+  page: number,
+  size: number,
+  params?: Record<string, string | number | undefined>,
+): Promise<{ items: T[]; pagination: Pagination; meta: M | null }> {
+  const envelope = await request<PageResponse<T>>(path, { params: { ...params, page, size } })
+  return { items: envelope.data, pagination: envelope.pagination, meta: (envelope.meta ?? null) as M | null }
+}
+
+export async function getDataMeta<T, M>(
+  path: string,
+  params?: Record<string, string | number | undefined>,
+): Promise<{ data: T; meta: M | null }> {
+  const envelope = await request<DataResponse<T> & { meta?: M }>(path, { params })
+  return { data: envelope.data, meta: envelope.meta ?? null }
 }
 
 export async function postData<T>(path: string, body?: unknown): Promise<T> {

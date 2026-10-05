@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatGapPct, formatPriceWon, formatSignedAmount, marketLabel, toneClass, toneOf } from '@/lib/fg/format'
+import { formatGapPct, formatPriceWon, formatSignedAmount, marketLabel, sortGlyph, toneClass, toneOf } from '@/lib/fg/format'
 
 describe('toneOf', () => {
   it('양수는 up, 음수는 down, 0과 값 없음은 flat', () => {
@@ -48,5 +48,14 @@ describe('formatGapPct', () => {
     expect(formatGapPct(0)).toBe('0.0%')
     expect(formatGapPct(-0.04)).toBe('0.0%')
     expect(formatGapPct(1.25)).toBe('+1.3%')
+  })
+})
+
+describe('sortGlyph', () => {
+  it('내림차순은 ▼, 오름차순은 ▲, 정렬하지 않은 열은 빈 문자열', () => {
+    expect(sortGlyph('descending')).toBe('▼')
+    expect(sortGlyph('ascending')).toBe('▲')
+    expect(sortGlyph('none')).toBe('')
+    expect(sortGlyph(undefined)).toBe('')
   })
 })

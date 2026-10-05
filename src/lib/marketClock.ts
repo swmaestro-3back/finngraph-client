@@ -24,18 +24,29 @@ export function formatLocalTime(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
-/** 한국 정규장(평일 09:00–15:30 KST) 개장 여부. 사용자 시간대와 무관하게 KST로 판정 */
-export function isKrxOpen(d: Date): boolean {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Seoul',
-    weekday: 'short',
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: false,
-  }).formatToParts(d)
+const KST_CLOCK = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Asia/Seoul',
+  weekday: 'short',
+  hour: 'numeric',
+  minute: 'numeric',
+  hour12: false,
+})
+
+function kstWeekdayMinutes(d: Date): number | null {
+  const parts = KST_CLOCK.formatToParts(d)
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
   const weekday = get('weekday')
-  if (weekday === 'Sat' || weekday === 'Sun') return false
-  const minutes = (Number(get('hour')) % 24) * 60 + Number(get('minute'))
-  return minutes >= 9 * 60 && minutes < 15 * 60 + 30
+  if (weekday === 'Sat' || weekday === 'Sun') return null
+  return (Number(get('hour')) % 24) * 60 + Number(get('minute'))
+}
+
+/** 한국 정규장(평일 09:00–15:30 KST) 개장 여부. 사용자 시간대와 무관하게 KST로 판정 */
+export function isKrxOpen(d: Date): boolean {
+  const minutes = kstWeekdayMinutes(d)
+  return minutes !== null && minutes >= 9 * 60 && minutes < 15 * 60 + 30
+}
+
+export function isQuoteHours(d: Date): boolean {
+  const minutes = kstWeekdayMinutes(d)
+  return minutes !== null && minutes >= 8 * 60 && minutes < 20 * 60
 }

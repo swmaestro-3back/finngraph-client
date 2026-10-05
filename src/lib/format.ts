@@ -71,12 +71,19 @@ export function toMillion(won: number | null): number | null {
   return won === null ? null : won / 1e6
 }
 
+function compactKrw(won: number): string {
+  const man = Math.round(won / 1e4)
+  if (man < 1e4) return `${man.toLocaleString('ko-KR')}만`
+  const eok = Math.round(won / 1e8)
+  if (eok < 1e4) return `${eok.toLocaleString('ko-KR')}억`
+  return `${(won / 1e12).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}조`
+}
+
 export function formatCompactKrw(won: number | null): string {
   if (won === null) return '—'
-  if (won >= 1e12) {
-    return `${(won / 1e12).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}조`
-  }
-  return `${Math.round(won / 1e8).toLocaleString('ko-KR')}억`
+  if (won === 0) return '0'
+  if (Math.abs(won) < 1e4) return '1만 미만'
+  return won < 0 ? `−${compactKrw(-won)}` : compactKrw(won)
 }
 
 export function formatChangeOrDash(value: number | null): string {
@@ -103,35 +110,71 @@ export function formatRelativeTime(iso: string): string {
 }
 
 const PRESS_BY_HOST: Record<string, string> = {
-  'www.hankyung.com': '한국경제',
-  'www.mk.co.kr': '매일경제',
-  'www.yna.co.kr': '연합뉴스',
+  'hankyung.com': '한국경제',
+  'mk.co.kr': '매일경제',
+  'yna.co.kr': '연합뉴스',
   'news.mt.co.kr': '머니투데이',
-  'www.edaily.co.kr': '이데일리',
-  'www.sedaily.com': '서울경제',
-  'www.etnews.com': '전자신문',
-  'www.newspim.com': '뉴스핌',
-  'www.newsis.com': '뉴시스',
-  'www.asiae.co.kr': '아시아경제',
-  'www.fnnews.com': '파이낸셜뉴스',
+  'edaily.co.kr': '이데일리',
+  'sedaily.com': '서울경제',
+  'etnews.com': '전자신문',
+  'newspim.com': '뉴스핌',
+  'newsis.com': '뉴시스',
+  'asiae.co.kr': '아시아경제',
+  'fnnews.com': '파이낸셜뉴스',
   'biz.heraldcorp.com': '헤럴드경제',
-  'www.thelec.kr': '디일렉',
+  'thelec.kr': '디일렉',
   'n.news.naver.com': '네이버 뉴스',
-  'www.etoday.co.kr': '이투데이',
-  'www.ajunews.com': '아주경제',
-  'www.metroseoul.co.kr': '메트로신문',
-  'www.tokenpost.kr': '토큰포스트',
-  'www.ebn.co.kr': 'EBN',
-  'www.asiatime.co.kr': '아시아타임즈',
+  'etoday.co.kr': '이투데이',
+  'ajunews.com': '아주경제',
+  'metroseoul.co.kr': '메트로신문',
+  'tokenpost.kr': '토큰포스트',
+  'ebn.co.kr': 'EBN',
+  'asiatime.co.kr': '아시아타임즈',
+  'mt.co.kr': '머니투데이',
+  'biz.chosun.com': '조선비즈',
+  'biz.sbs.co.kr': 'SBS Biz',
+  'inews24.com': '아이뉴스24',
+  'dailian.co.kr': '데일리안',
+  'view.asiae.co.kr': '아시아경제',
+  'newstnt.com': '뉴스티앤티',
+  'biztribune.co.kr': '비즈트리뷴',
+  '4th.kr': '포쓰저널',
+  'bizwork.co.kr': '비즈워크',
+  'financialpost.co.kr': '파이낸셜포스트',
+  'namdonews.com': '남도일보',
+  'incheonilbo.com': '인천일보',
+  'news.dealsitetv.com': 'DealSite경제TV',
+  'ekn.kr': '에너지경제신문',
+  'thereport.co.kr': '더리포트',
+  'kukinews.com': '쿠키뉴스',
+  'widedaily.com': '와이드경제',
+  'cstimes.com': '컨슈머타임스',
+  'newsdream.kr': '뉴스드림',
+  'bntnews.co.kr': 'bntnews',
+  'seoulwire.com': '더비즈',
+  'sidae.com': '동행미디어 시대',
+  'issuenbiz.com': '이슈앤비즈',
+  'jeonmae.co.kr': '전국매일신문',
 }
 
-export function pressOf(url: string): string {
+function pressHost(source: string): string | null {
+  const text = source.trim()
+  if (!text) return null
   try {
-    const host = new URL(url).hostname
-    return PRESS_BY_HOST[host] ?? host
+    const host = new URL(text.includes('://') ? text : `https://${text}`).hostname.toLowerCase()
+    return host.replace(/^www\./, '') || null
   } catch {
-    return '출처 미상'
+    return null
   }
+}
+
+export function pressName(
+  source: string | null | undefined,
+  names: Readonly<Record<string, string>> = PRESS_BY_HOST,
+): string {
+  const host = source ? pressHost(source) : null
+  if (!host) return '출처 미상'
+  return names[host] ?? host
 }
 
 /** 절대 시각 — 기사 입력 시각처럼 "2026. 09. 18. 09:11" (브라우저 시간대 기준). 파싱 실패면 빈 문자열 */

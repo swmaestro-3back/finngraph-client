@@ -15,7 +15,7 @@ function loadBrief(id: string): Promise<NewsBrief | null> {
     (raw) => ({
       id,
       title: raw.title ?? '(제목 없음)',
-      url: raw.url,
+      url: raw.originalUrl || raw.url,
       publishedAt: raw.publishedAt ?? raw.collectedAt,
     }),
     () => null,

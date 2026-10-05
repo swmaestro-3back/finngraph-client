@@ -9,12 +9,12 @@ export interface BackTarget {
 
 /** 경로 → 뒤로가기 버튼에 쓸 라벨 (모르는 경로면 null) */
 export function pathLabel(pathname: string): string | null {
-  if (pathname === '/') return '테마 대시보드'
+  if (pathname === '/') return '홈'
   if (pathname === '/themes') return '테마'
   if (pathname.startsWith('/themes/')) return '테마 상세'
-  if (pathname === '/stocks') return '주식 목록'
-  if (pathname.startsWith('/stocks/')) return '종목'
-  if (pathname === '/news' || pathname.startsWith('/news/')) return '뉴스'
+  if (pathname === '/stocks') return '종목'
+  if (pathname.startsWith('/stocks/')) return '이전 종목'
+  if (pathname.startsWith('/issues/')) return '이슈'
   if (pathname === '/graph' || pathname.startsWith('/graph/')) return '관계 탐색'
   if (pathname === '/calendar') return '캘린더'
   if (pathname.startsWith('/theme/')) return '테마 상세'

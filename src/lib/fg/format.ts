@@ -33,3 +33,9 @@ export function formatGapPct(value: number): string {
   if (rounded < 0) return `−${Math.abs(rounded).toFixed(1)}%`
   return '0.0%'
 }
+
+export function sortGlyph(sort: 'ascending' | 'descending' | 'none' | undefined): string {
+  if (sort === 'descending') return '▼'
+  if (sort === 'ascending') return '▲'
+  return ''
+}

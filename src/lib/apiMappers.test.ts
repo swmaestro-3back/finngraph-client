@@ -1,6 +1,49 @@
 import { describe, expect, it } from 'vitest'
-import { buildIssueTimeline } from '@/lib/apiMappers'
-import type { CandleDate, NewsDetail } from '@/lib/apiTypes'
+import { buildIssueTimeline, sourceUrl, toNewsDetail, toNewsItem } from '@/lib/apiMappers'
+import type { CandleDate, NewsDetail, NewsRes } from '@/lib/apiTypes'
+
+const PORTAL = 'https://portal.test/mnews/article/008/0005414390?sid=101'
+const ORIGINAL = 'https://www.press-a.test/stock/2026/09/16/2026091609051329625'
+
+function raw(over: Partial<NewsRes> = {}): NewsRes {
+  return {
+    id: 1,
+    title: '기사',
+    summary: '요약',
+    url: PORTAL,
+    originalUrl: ORIGINAL,
+    publishedAt: '2026-09-16T09:16:00+09:00',
+    collectedAt: '2026-09-17T16:44:15+09:00',
+    tripleExtracted: true,
+    ...over,
+  }
+}
+
+describe('기사 원문 주소 — originalUrl이 있으면 그것, 없으면 url', () => {
+  it('상세 응답의 originalUrl을 받아 둬요', () => {
+    const detail = toNewsDetail(raw())
+    expect(detail.url).toBe(PORTAL)
+    expect(detail.originalUrl).toBe(ORIGINAL)
+    expect(sourceUrl(detail)).toBe(ORIGINAL)
+  })
+
+  it('originalUrl이 없거나 비면 url을 써요', () => {
+    expect(sourceUrl(toNewsDetail(raw({ originalUrl: undefined })))).toBe(PORTAL)
+    expect(sourceUrl(toNewsDetail(raw({ originalUrl: null })))).toBe(PORTAL)
+    expect(sourceUrl(toNewsDetail(raw({ originalUrl: '' })))).toBe(PORTAL)
+    expect(sourceUrl(toNewsDetail(raw({ originalUrl: null, url: null })))).toBe('')
+  })
+
+  it('목록 한 줄의 매체와 링크도 원문 기준이에요', () => {
+    const item = toNewsItem(toNewsDetail(raw()))
+    expect(item.url).toBe(ORIGINAL)
+    expect(item.meta.startsWith('press-a.test · ')).toBe(true)
+    const portalOnly = toNewsItem(toNewsDetail(raw({ originalUrl: null })))
+    expect(portalOnly.url).toBe(PORTAL)
+    expect(portalOnly.meta.startsWith('portal.test · ')).toBe(true)
+    expect(toNewsItem(toNewsDetail(raw({ originalUrl: null, url: null }))).url).toBeNull()
+  })
+})
 
 function news(id: string, collectedAt: string): NewsDetail {
   return { id, title: id, summary: '', url: '', collectedAt, tripleExtracted: null }

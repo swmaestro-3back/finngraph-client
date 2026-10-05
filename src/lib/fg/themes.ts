@@ -1,6 +1,6 @@
 import type { ThemeLeaderRes, ThemeMarketRes, ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
-import { priceBasisSuffix } from '@/lib/referenceDate'
+import { priceBasisSuffix, QUOTE_SOURCE_LABEL } from '@/lib/referenceDate'
 import { compareNullLast, tileDetail } from '@/lib/themeMetrics'
 import { normalizeSizes, tileSize } from '@/lib/treemapColor'
 
@@ -24,6 +24,11 @@ export interface ThemeIssueRef {
 }
 
 export type IssueOf = (theme: ThemeRes) => ThemeIssueRef | null
+
+export type ThemeIssueView =
+  | { status: 'loading' }
+  | { status: 'error'; retry: () => void }
+  | { status: 'ready'; issue: ThemeIssueRef | null; date: string | null }
 
 export interface ThemeQuery {
   view: ThemeView | null
@@ -182,13 +187,198 @@ export function memberRows(stocks: readonly ThemeStockRes[], leaderTicker: strin
 }
 
 export type TileGrade = 'xs' | 's' | 'm' | 'l' | 'xl'
+export type TileTextGrade = Exclude<TileGrade, 'xs'>
+
+export interface TileFont {
+  weight: number
+  size: number
+  line: number
+  tabular?: boolean
+}
+
+export interface TileType {
+  name: TileFont
+  sub: TileFont
+  change: TileFont
+  detail: TileFont
+}
+
+export const TILE_TYPE: Record<TileTextGrade, TileType> = {
+  s: {
+    name: { weight: 700, size: 11, line: 13 },
+    sub: { weight: 500, size: 11, line: 13 },
+    change: { weight: 600, size: 11, line: 13, tabular: true },
+    detail: { weight: 500, size: 11, line: 13, tabular: true },
+  },
+  m: {
+    name: { weight: 700, size: 13, line: 17 },
+    sub: { weight: 500, size: 11, line: 14 },
+    change: { weight: 600, size: 12, line: 16, tabular: true },
+    detail: { weight: 500, size: 11, line: 14, tabular: true },
+  },
+  l: {
+    name: { weight: 700, size: 15, line: 20 },
+    sub: { weight: 500, size: 12, line: 16 },
+    change: { weight: 600, size: 12, line: 16, tabular: true },
+    detail: { weight: 500, size: 11, line: 14, tabular: true },
+  },
+  xl: {
+    name: { weight: 700, size: 17, line: 22 },
+    sub: { weight: 500, size: 14, line: 18 },
+    change: { weight: 600, size: 13, line: 17, tabular: true },
+    detail: { weight: 500, size: 12, line: 16, tabular: true },
+  },
+}
+
+const SPACE_1 = 4
+const SPACE_2 = 8
+const SPACE_3 = 12
+const TILE_BORDER = 1
+const TILE_GAP = 2
+const TILE_PAD_Y = SPACE_1
+const TILE_PAD_X: Record<TileTextGrade, number> = { s: SPACE_1, m: SPACE_2, l: SPACE_3, xl: SPACE_3 }
+const TILE_INLINE_GAP = SPACE_2
+const SMALLER: Record<TileTextGrade, TileTextGrade> = { s: 's', m: 's', l: 'm', xl: 'l' }
+
+function contentHeight(height: number): number {
+  return height - 2 * TILE_BORDER - 2 * TILE_PAD_Y
+}
+
+function contentWidth(width: number, grade: TileTextGrade): number {
+  return width - 2 * TILE_BORDER - 2 * TILE_PAD_X[grade]
+}
+
+function stackHeight(lines: readonly number[]): number {
+  return lines.reduce((sum, line) => sum + line, 0) + TILE_GAP * Math.max(0, lines.length - 1)
+}
 
 export function tileGrade(width: number, height: number): TileGrade {
   if (width < 56 || height < 36) return 'xs'
-  if (height < 56) return 's'
-  if (width < 120 || height < 88) return 'm'
-  if (width >= 220 && height >= 150) return 'xl'
-  return 'l'
+  let grade: TileTextGrade = width < 72 || height < 40 ? 's' : width < 130 ? 'm' : width < 200 ? 'l' : 'xl'
+  while (grade !== 's' && stackHeight([TILE_TYPE[grade].name.line, TILE_TYPE[grade].change.line]) > contentHeight(height)) {
+    grade = SMALLER[grade]
+  }
+  return grade
+}
+
+export type MeasureText = (text: string, font: TileFont) => number
+
+export interface TileParts {
+  name: string
+  change: string
+  detail: string | null
+}
+
+export type TileNameFit = 'full' | 'word' | 'char'
+
+export interface TileText {
+  grade: TileTextGrade
+  name: string
+  nameLines: 1 | 2
+  nameFit: TileNameFit
+  sub: string | null
+  change: boolean
+  detail: 'line' | 'inline' | null
+}
+
+function splitParen(name: string): [string, string | null] {
+  const i = name.indexOf('(')
+  if (i <= 0) return [name, null]
+  return [name.slice(0, i).trim(), name.slice(i).trim()]
+}
+
+function wrapLines(text: string, font: TileFont, width: number, measure: MeasureText): number {
+  let lines = 0
+  let line = ''
+  for (const word of text.split(' ').filter(Boolean)) {
+    if (measure(word, font) > width) return Infinity
+    const next = line ? `${line} ${word}` : word
+    if (line && measure(next, font) > width) {
+      lines += 1
+      line = word
+    } else {
+      line = next
+    }
+  }
+  return line ? lines + 1 : lines
+}
+
+function wordCut(text: string, font: TileFont, width: number, measure: MeasureText): string | null {
+  const words = text.split(' ').filter(Boolean)
+  for (let k = words.length - 1; k >= 1; k -= 1) {
+    const cut = `${words.slice(0, k).join(' ')}…`
+    if (measure(cut, font) <= width) return cut
+  }
+  return null
+}
+
+export function tileText(width: number, height: number, parts: TileParts, measure: MeasureText): TileText | null {
+  const level = tileGrade(width, height)
+  if (level === 'xs') return null
+  const first = planAt(level, width, height, parts, measure)
+  if (first.nameFit === 'full') return first
+  for (let grade = level; grade !== 's'; ) {
+    grade = SMALLER[grade]
+    const next = planAt(grade, width, height, parts, measure)
+    if (next.nameFit === 'full' && (next.change || !first.change)) return next
+  }
+  return first
+}
+
+function planAt(
+  grade: TileTextGrade,
+  width: number,
+  height: number,
+  parts: TileParts,
+  measure: MeasureText,
+): TileText {
+  const type = TILE_TYPE[grade]
+  const w = contentWidth(width, grade)
+  const h = contentHeight(height)
+  const fits = (lines: readonly number[]) => stackHeight(lines) <= h
+  const [main, sub] = splitParen(parts.name)
+  const mainLines = wrapLines(main, type.name, w, measure)
+  const nameLine = type.name.line
+  const changeLine = type.change.line
+  const changeWidth = measure(parts.change, type.change)
+  const changeFits = changeWidth <= w
+  const base = { grade, sub: null, detail: null } as const
+
+  if (mainLines <= 2) {
+    const nameLines = mainLines as 1 | 2
+    const nameHeight = nameLines * nameLine
+    const full = { ...base, name: main, nameLines, nameFit: 'full' as const }
+    if (changeFits) {
+      const shownSub = sub !== null && measure(sub, type.sub) <= w ? sub : null
+      const head = shownSub === null ? [nameHeight] : [nameHeight, type.sub.line]
+      const detail = parts.detail
+      if (detail) {
+        if (measure(detail, type.detail) <= w && fits([...head, changeLine, type.detail.line])) {
+          return { ...full, sub: shownSub, change: true, detail: 'line' }
+        }
+        if (changeWidth + TILE_INLINE_GAP + measure(detail, type.detail) <= w && fits([...head, changeLine])) {
+          return { ...full, sub: shownSub, change: true, detail: 'inline' }
+        }
+      }
+      if (fits([...head, changeLine])) return { ...full, sub: shownSub, change: true }
+      if (fits([nameHeight, changeLine])) return { ...full, change: true }
+    }
+  }
+
+  const cut = wordCut(main, type.name, w, measure)
+  const oneLine = (name: string, nameFit: TileNameFit, change: boolean): TileText => ({
+    ...base,
+    name,
+    nameLines: 1,
+    nameFit,
+    change,
+  })
+  if (changeFits && cut && fits([nameLine, changeLine])) return oneLine(cut, 'word', true)
+  if (mainLines <= 2 && fits([mainLines * nameLine])) {
+    return { ...base, name: main, nameLines: mainLines as 1 | 2, nameFit: 'full', change: false }
+  }
+  if (cut && fits([nameLine])) return oneLine(cut, 'word', false)
+  return oneLine(main, 'char', changeFits && fits([nameLine, changeLine]))
 }
 
 export function tileAria(theme: Pick<ThemeRes, 'name' | 'upCount' | 'downCount'>, change: number): string {
@@ -230,5 +420,21 @@ export function themeBasisLabel(
   const [year, month, day] = (market?.baseDate ?? '').split('-').map(Number)
   if (!year || !month || !day) return null
   const weekday = WEEKDAYS[new Date(year, month - 1, day).getDay()]
-  return `${month}월 ${day}일(${weekday}) ${priceBasisSuffix(market)}`
+  return `${month}월 ${day}일(${weekday}) ${priceBasisSuffix(market)} · ${QUOTE_SOURCE_LABEL}`
+}
+
+export const TILE_REFLOW_MS = 500
+export const TILE_ENTER_MS = 400
+export const TILE_REFLOW_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+const TILE_STAGGER_MS = 22
+const TILE_STAGGER_MAX_MS = 400
+export const TILE_REFLOW_HOLD_MS = Math.max(TILE_REFLOW_MS, TILE_STAGGER_MAX_MS + TILE_ENTER_MS) + 100
+
+export function tileEnterDelay(index: number): number {
+  return Math.min(index * TILE_STAGGER_MS, TILE_STAGGER_MAX_MS)
+}
+
+export function enteringIds(prev: readonly { id: number }[], next: readonly { id: number }[]): Set<number> {
+  const before = new Set(prev.map((tile) => tile.id))
+  return new Set(next.filter((tile) => !before.has(tile.id)).map((tile) => tile.id))
 }

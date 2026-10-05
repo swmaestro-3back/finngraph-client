@@ -12,11 +12,11 @@ interface Props {
 }
 
 const CHIP =
-  'inline-flex h-8 items-center gap-1.5 rounded-lg bg-surface-inset px-3 text-sm font-medium text-foreground'
+  'inline-flex h-10 items-center gap-1.5 rounded-lg bg-surface-inset px-3 text-sm font-medium text-foreground max-md:h-11'
 
 /** 기사 상단의 종목 알약 칩 — 종목명 + 등락률만. 본문을 읽기 전에 어떤 종목 얘기인지 알려준다 */
 export function NewsStockChips({ stocks, onNavigate, onHover }: Props) {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   if (stocks.length === 0) return null
 
   return (
@@ -39,7 +39,7 @@ export function NewsStockChips({ stocks, onNavigate, onHover }: Props) {
           <Link
             key={stock.ticker}
             to={`/stock/${stock.ticker}`}
-            state={fromState(pathname)}
+            state={fromState(`${pathname}${search}`)}
             onClick={onNavigate}
             onMouseEnter={() => onHover?.(stock.ticker)}
             onMouseLeave={() => onHover?.(null)}

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   activeMenu,
   authSlot,
+  BOTTOM_TABS,
   canvasFor,
   MAIN_MENU,
   outletKey,
@@ -9,16 +10,33 @@ import {
 } from '@/lib/fg/nav'
 
 describe('MAIN_MENU', () => {
-  it('디자인대로 다섯 메뉴를 이 순서로 둔다', () => {
-    expect(MAIN_MENU.map((item) => item.label)).toEqual(['홈', '뉴스', '테마', '종목', '관계 탐색'])
+  it('뉴스 메뉴 없이 네 메뉴를 이 순서로 둔다', () => {
+    expect(MAIN_MENU.map((item) => [item.label, item.to])).toEqual([
+      ['홈', '/'],
+      ['테마', '/themes'],
+      ['종목', '/stocks'],
+      ['관계 탐색', '/graph'],
+    ])
+  })
+})
+
+describe('BOTTOM_TABS', () => {
+  it('하단 탭 다섯 칸은 뉴스 자리에 브리핑을 둔다', () => {
+    expect(BOTTOM_TABS.map((item) => [item.key, item.label, item.to])).toEqual([
+      ['home', '홈', '/'],
+      ['briefing', '브리핑', '/briefing'],
+      ['themes', '테마', '/themes'],
+      ['stocks', '종목', '/stocks'],
+      ['graph', '관계 탐색', '/graph'],
+    ])
   })
 })
 
 describe('SIDE_LINKS', () => {
-  it('오른쪽 링크는 브리핑 옆에 캘린더를 둔다', () => {
-    expect(SIDE_LINKS.map((link) => [link.label, link.to])).toEqual([
-      ['브리핑', '/briefing'],
-      ['캘린더', '/calendar'],
+  it('오른쪽 링크는 브리핑 옆에 캘린더를 두고, 브리핑은 하단 탭이 있는 폭에서 숨긴다', () => {
+    expect(SIDE_LINKS.map((link) => [link.label, link.to, link.wideOnly ?? false])).toEqual([
+      ['브리핑', '/briefing', true],
+      ['캘린더', '/calendar', false],
     ])
   })
 })
@@ -26,8 +44,9 @@ describe('SIDE_LINKS', () => {
 describe('activeMenu', () => {
   it.each([
     ['/', 'home'],
-    ['/news', 'news'],
-    ['/news/42', 'news'],
+    ['/issues/42', 'home'],
+    ['/issues/export', 'home'],
+    ['/briefing', 'briefing'],
     ['/themes', 'themes'],
     ['/themes/7', 'themes'],
     ['/theme/7', 'themes'],
@@ -42,23 +61,30 @@ describe('activeMenu', () => {
   })
 
   it('메뉴 밖 경로는 null', () => {
-    expect(activeMenu('/briefing')).toBeNull()
+    expect(activeMenu('/news')).toBeNull()
+    expect(activeMenu('/news/42')).toBeNull()
+    expect(activeMenu('/calendar')).toBeNull()
     expect(activeMenu('/me/account')).toBeNull()
-    expect(activeMenu('/newsletter')).toBeNull()
+    expect(activeMenu('/issuesboard')).toBeNull()
   })
 })
 
 describe('canvasFor', () => {
   it('개편된 화면은 회색 바탕, 나머지는 흰 바탕', () => {
-    expect(canvasFor('/news')).toBe('page')
-    expect(canvasFor('/news/1')).toBe('page')
+    expect(canvasFor('/issues/1')).toBe('page')
+    expect(canvasFor('/issues/export')).toBe('page')
+    expect(canvasFor('/news')).toBe('surface')
+    expect(canvasFor('/news/1')).toBe('surface')
     expect(canvasFor('/dev/fg')).toBe('page')
     expect(canvasFor('/themes')).toBe('page')
     expect(canvasFor('/themes/59')).toBe('page')
     expect(canvasFor('/theme/59')).toBe('surface')
-    expect(canvasFor('/')).toBe('surface')
+    expect(canvasFor('/stocks')).toBe('page')
+    expect(canvasFor('/stocks/005930')).toBe('page')
+    expect(canvasFor('/stock/005930')).toBe('surface')
+    expect(canvasFor('/')).toBe('page')
     expect(canvasFor('/briefing')).toBe('surface')
-    expect(canvasFor('/newsletter')).toBe('surface')
+    expect(canvasFor('/issuesboard')).toBe('surface')
   })
 })
 
@@ -72,15 +98,19 @@ describe('outletKey', () => {
   })
 
   it('개편된 화면은 기준 경로를 키로 써서 그 안에서는 유지된다', () => {
-    expect(outletKey('/news')).toBe('/news')
-    expect(outletKey('/news/12')).toBe('/news')
+    expect(outletKey('/')).toBe('/')
+    expect(outletKey('/issues/12')).toBe('/issues')
+    expect(outletKey('/issues/export')).toBe('/issues')
     expect(outletKey('/dev/fg')).toBe('/dev')
     expect(outletKey('/themes')).toBe('/themes')
     expect(outletKey('/themes/59')).toBe('/themes')
+    expect(outletKey('/stocks')).toBe('/stocks')
+    expect(outletKey('/stocks/005930')).toBe('/stocks')
   })
 
   it('기준 경로로 시작하기만 하는 경로는 개편된 화면이 아니다', () => {
-    expect(outletKey('/newsletter')).toBe('/newsletter')
+    expect(outletKey('/issuesboard')).toBe('/issuesboard')
+    expect(outletKey('/news/12')).toBe('/news/12')
   })
 })
 

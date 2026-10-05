@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { ChangeText } from '@/components/fg/PriceChange'
@@ -8,6 +8,7 @@ import { StateBlock } from '@/components/fg/StateBlock'
 import { ThemeIndexChart } from '@/components/fg/ThemeIndexChart'
 import { ThemeIndexRetry } from '@/components/fg/ThemeIndexRetry'
 import { ThemeNewsList } from '@/components/fg/ThemeNewsList'
+import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import type { ThemeIndexRes, ThemeRes } from '@/lib/apiTypes'
 import { kstToday } from '@/lib/calendar'
 import { formatChange } from '@/lib/format'
@@ -93,6 +94,8 @@ export function ThemeIndexNews({ theme, index, indexFailed, onRetryIndex, refres
   const [rangePick, setRangePick] = useState<NewsRange | null>(null)
   const [onlyAnalyzed, setOnlyAnalyzed] = useState(false)
   const [page, setPage] = useState(1)
+  const [openNewsId, setOpenNewsId] = useState<string | null>(null)
+  const newsTrigger = useRef<HTMLElement | null>(null)
   const [areaWidth, setAreaWidth] = useState(0)
 
   const { refresh: refreshCandles } = candles
@@ -263,6 +266,10 @@ export function ThemeIndexNews({ theme, index, indexFailed, onRetryIndex, refres
         onClearSelected={clearSelected}
         onMore={() => setPage((p) => p + 1)}
         onLogin={promptLogin}
+        onOpenNews={(id) => {
+          newsTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+          setOpenNewsId(id)
+        }}
       />
     )
   }
@@ -285,6 +292,11 @@ export function ThemeIndexNews({ theme, index, indexFailed, onRetryIndex, refres
       )}
       {chart}
       {list}
+      <NewsDetailModal
+        newsId={openNewsId}
+        onOpenChange={(open) => !open && setOpenNewsId(null)}
+        returnFocusRef={newsTrigger}
+      />
     </section>
   )
 }

@@ -1,6 +1,7 @@
 import { Lock } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { HOP_VALUES, type Hop } from '@/lib/graphRoute'
+import { cn } from '@/lib/utils'
 
 // 컴포넌트 파일에서 값(HOP_VALUES)을 내보내면 Fast Refresh가 깨져 상수는 graphRoute에 두고 타입만 다시 내보낸다
 export type { Hop }
@@ -12,13 +13,14 @@ interface Props {
   labels?: Record<Hop, string>
   lockedFrom?: Hop
   onLockedSelect?: () => void
+  itemClassName?: string
 }
 
 /**
  * 몇 홉까지 볼지 고르는 세그먼트 컨트롤.
  * 위치는 부모가 잡는다 — 범위 선택기 등 다른 컨트롤과 한 줄에 놓이기 때문이다.
  */
-export function HopSelector({ value, onChange, labels, lockedFrom, onLockedSelect }: Props) {
+export function HopSelector({ value, onChange, labels, lockedFrom, onLockedSelect, itemClassName }: Props) {
   const isLocked = (hop: Hop) => lockedFrom !== undefined && hop >= lockedFrom
 
   return (
@@ -54,7 +56,10 @@ export function HopSelector({ value, onChange, labels, lockedFrom, onLockedSelec
               aria-label={locked ? `${label}홉 — 회원 전용` : `${label}홉`}
               title={locked ? '로그인하면 열려요' : undefined}
               // 켜짐 = 채운 배경 (그래프 관계 필터 칩과 같은 규칙)
-              className="rounded-md px-2.5 font-mono text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              className={cn(
+                'rounded-md px-2.5 font-mono text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
+                itemClassName,
+              )}
             >
               <span className="flex items-center gap-1">
                 {label}

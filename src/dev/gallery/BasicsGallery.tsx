@@ -1,3 +1,4 @@
+import { Search, Share2, Star, X } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
@@ -5,6 +6,7 @@ import { Button, ButtonLink } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip, FilterChipGroup } from '@/components/fg/FilterChip'
+import { IconButton } from '@/components/fg/IconButton'
 import { ChangeBadge, PriceChange } from '@/components/fg/PriceChange'
 import { HeadingTabs, Segment, UnderlineTabs } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -47,6 +49,7 @@ export function BasicsGallery() {
   const [relation, setRelation] = useState<Relation>('supply')
   const [tab, setTab] = useState<StockTab>('overview')
   const [sort, setSort] = useState<FeedSort>('time')
+  const [starred, setStarred] = useState(false)
   return (
     <>
       <GallerySection title="Button">
@@ -69,6 +72,26 @@ export function BasicsGallery() {
           <ButtonLink to="/dev/fg" size="lg">
             링크 버튼
           </ButtonLink>
+        </div>
+      </GallerySection>
+      <GallerySection title="IconButton">
+        <div className="fg-gal__row">
+          <IconButton label="검색">
+            <Search size={20} strokeWidth={1.75} aria-hidden="true" />
+          </IconButton>
+          <IconButton label="공유">
+            <Share2 size={20} strokeWidth={1.75} aria-hidden="true" />
+          </IconButton>
+          <IconButton
+            label={starred ? '관심 해제' : '관심 등록'}
+            aria-pressed={starred}
+            onClick={() => setStarred((on) => !on)}
+          >
+            <Star size={20} strokeWidth={1.75} fill={starred ? 'currentColor' : 'none'} aria-hidden="true" />
+          </IconButton>
+          <IconButton label="닫기" disabled>
+            <X size={20} strokeWidth={1.75} aria-hidden="true" />
+          </IconButton>
         </div>
       </GallerySection>
       <GallerySection title="Badge">
@@ -154,7 +177,7 @@ export function BasicsGallery() {
           description="잠시 후 다시 시도해 주세요"
           action={<Button size="sm">다시 시도</Button>}
         />
-        <StateBlock kind="not-ready" title="오늘 브리핑을 준비하고 있어요" description="평일 19시 이후에 갱신돼요" />
+        <StateBlock kind="not-ready" title="오늘 브리핑을 준비하고 있어요" description="평일 21시 30분 이후에 갱신돼요" />
       </GallerySection>
       <GallerySection title="Disclaimer">
         <Disclaimer />

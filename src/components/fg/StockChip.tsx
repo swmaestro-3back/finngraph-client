@@ -11,11 +11,12 @@ interface StockChipProps {
   kind?: 'direct' | 'inferred'
   withLogo?: boolean
   className?: string
+  state?: unknown
 }
 
-export function StockChip({ ticker, name, change = null, kind = 'direct', withLogo = false, className }: StockChipProps) {
+export function StockChip({ ticker, name, change = null, kind = 'direct', withLogo = false, className, state }: StockChipProps) {
   return (
-    <Link to={stockPath(ticker)} className={cn('fg-chip', kind === 'inferred' && 'fg-chip--inferred', className)}>
+    <Link to={stockPath(ticker)} state={state} className={cn('fg-chip', kind === 'inferred' && 'fg-chip--inferred', className)}>
       {withLogo && <CompanyLogo name={name} size={24} />}
       {name}
       {change !== null && <ChangeText value={change} className="fg-chg" />}

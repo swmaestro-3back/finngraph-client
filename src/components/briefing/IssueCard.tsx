@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { CitationBadges } from '@/components/briefing/CitationBadges'
 import { LockedBlock } from '@/components/briefing/LockedBlock'
 import type { BriefingIssueRes } from '@/lib/apiTypes'
-import { changeColorClass, formatChangeOrDash, formatDateTime, formatRelativeTime, pressOf } from '@/lib/format'
+import { changeColorClass, formatChangeOrDash, formatDateTime, formatRelativeTime, pressName } from '@/lib/format'
 import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
@@ -90,7 +90,7 @@ export function IssueCard({ issue, locked }: IssueCardProps) {
                 className="inline-flex min-w-0 items-baseline gap-1 text-foreground-secondary hover:text-foreground"
               >
                 <span className="truncate">{a.title}</span>
-                <span className="shrink-0 text-foreground-tertiary">{pressOf(a.url)}</span>
+                <span className="shrink-0 text-foreground-tertiary">{pressName(a.url)}</span>
                 <ArrowUpRight className="size-3 shrink-0 self-center" />
               </a>
             ) : (
