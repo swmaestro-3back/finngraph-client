@@ -177,7 +177,7 @@ export function BasicsGallery() {
           description="잠시 후 다시 시도해 주세요"
           action={<Button size="sm">다시 시도</Button>}
         />
-        <StateBlock kind="not-ready" title="오늘 브리핑을 준비하고 있어요" description="평일 19시 이후에 갱신돼요" />
+        <StateBlock kind="not-ready" title="오늘 브리핑을 준비하고 있어요" description="평일 21시 30분 이후에 갱신돼요" />
       </GallerySection>
       <GallerySection title="Disclaimer">
         <Disclaimer />

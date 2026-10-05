@@ -80,7 +80,7 @@ export default function BriefingPage() {
             {requestedDate ? `${requestedDate} 브리핑이 없습니다.` : '브리핑이 아직 생성되지 않았습니다.'}
           </p>
           <p className="text-caption text-muted-foreground [text-wrap:pretty]">
-            평일 시세·재무 적재가 끝난 뒤 생성됩니다. 보통 19시 이후 갱신됩니다.
+            평일 시세·재무 적재가 끝난 뒤 생성됩니다. 보통 21시 30분 이후 갱신됩니다.
           </p>
           {requestedDate && (
             <Button variant="outline" size="sm" className="mt-2" onClick={() => navigate(null)}>
