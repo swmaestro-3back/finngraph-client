@@ -11,7 +11,7 @@ import LegalPage from '@/pages/LegalPage'
 import AccountSettingsPage from '@/pages/AccountSettingsPage'
 import MyFavoritesPage from '@/pages/MyFavoritesPage'
 import WithdrawPage from '@/pages/WithdrawPage'
-import ThemeDashboardPage from '@/pages/ThemeDashboardPage'
+import HomePage from '@/pages/home/HomePage'
 import CorpGraphPage from '@/pages/CorpGraphPage'
 import ThemesPage from '@/pages/themes/ThemesPage'
 import ThemeDetailPage from '@/pages/themes/ThemeDetailPage'
@@ -64,7 +64,7 @@ function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/" element={<ThemeDashboardPage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/issues/:issueId" element={<IssuePage />} />
         <Route path="/news" element={<Navigate to="/" replace />} />
         <Route path="/news/:issueId" element={<LegacyIssueRedirect />} />
