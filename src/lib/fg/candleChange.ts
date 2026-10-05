@@ -1,8 +1,6 @@
 import type { CandleRes } from '@/lib/apiTypes'
 
-export type RatedCandle = CandleRes & { changeRate?: number | null }
-
-export function candleChangeAt(candles: readonly RatedCandle[], index: number): number | null {
+export function candleChangeAt(candles: readonly CandleRes[], index: number): number | null {
   const candle = candles[index]
   if (!candle) return null
   if (typeof candle.changeRate === 'number') return candle.changeRate

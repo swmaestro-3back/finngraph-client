@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { candleChangeAt, type RatedCandle } from '@/lib/fg/candleChange'
+import type { CandleRes } from '@/lib/apiTypes'
+import { candleChangeAt } from '@/lib/fg/candleChange'
 
-function bar(date: string, close: number, changeRate?: number | null): RatedCandle {
-  const candle: RatedCandle = { date, open: close, high: close, low: close, close, volume: 1000 }
+function bar(date: string, close: number, changeRate?: number | null): CandleRes {
+  const candle: CandleRes = { date, open: close, high: close, low: close, close, volume: 1000 }
   return changeRate === undefined ? candle : { ...candle, changeRate }
 }
 

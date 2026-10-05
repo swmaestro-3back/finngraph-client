@@ -1,7 +1,7 @@
-import type { InvestorFlowRes } from '@/lib/apiTypes'
+import type { CandleRes, InvestorFlowRes } from '@/lib/apiTypes'
 import { WEEKDAY_LABELS } from '@/lib/calendar'
 import { formatChange } from '@/lib/format'
-import { candleChangeAt, type RatedCandle } from '@/lib/fg/candleChange'
+import { candleChangeAt } from '@/lib/fg/candleChange'
 import { toneOf, type Tone } from '@/lib/fg/format'
 import { formatManShares, formatRatio } from '@/lib/fg/stockQuote'
 import { dayLabel } from '@/lib/fg/themeCharts'
@@ -59,7 +59,7 @@ export function formatAxisShares(man: number): string {
   return man < 0 && /[1-9]/.test(text) ? `${MINUS}${text}` : text
 }
 
-export function flowDays(flows: readonly InvestorFlowRes[], candles: readonly RatedCandle[] | null): FlowDay[] {
+export function flowDays(flows: readonly InvestorFlowRes[], candles: readonly CandleRes[] | null): FlowDay[] {
   const index = new Map((candles ?? []).map((c, i) => [c.date, i]))
   return [...flows]
     .sort((a, b) => a.date.localeCompare(b.date))
