@@ -7,8 +7,8 @@ function bar(date: string, close: number, volume = 100): CandleRes {
   return { date, open: close, high: close, low: close, close, volume }
 }
 
-function news(id: string, day: string, time: string, tradeDay: string, analyzed = false, url = `https://news.example.com/${id}`): ThemeNewsItem {
-  return { id, title: `기사 ${id}`, url, press: 'news.example.com', day, time, tradeDay, analyzed }
+function news(id: string, day: string, time: string, tradeDay: string, analyzed = false, url = `https://news.test/${id}`): ThemeNewsItem {
+  return { id, title: `기사 ${id}`, url, press: 'news.test', day, time, tradeDay, analyzed }
 }
 
 const candles = [bar('2026-09-25', 1000), bar('2026-09-28', 1100, 300), bar('2026-09-29', 1045), bar('2026-09-30', 1045)]

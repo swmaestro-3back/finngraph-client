@@ -6,7 +6,7 @@ function item(id: string, press: string, day: string | null, time: string | null
   return {
     id,
     title: `기사 ${id}`,
-    url: `https://news.example/${id}`,
+    url: `https://news.test/${id}`,
     press,
     pressKey: press,
     day,

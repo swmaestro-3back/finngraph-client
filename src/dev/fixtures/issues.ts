@@ -209,7 +209,7 @@ const EXTRAS: Readonly<Record<string, IssueExtra>> = {
   engine: { flowTitle: '선박 엔진 수출' },
 }
 
-const ARTICLE = 'https://news.example.com/finngraph-mock'
+const ARTICLE = 'https://news.test/finngraph-mock'
 
 const SEJIN: LinkedCompany = {
   id: 'sejin',
