@@ -14,7 +14,7 @@ export function pathLabel(pathname: string): string | null {
   if (pathname.startsWith('/themes/')) return '테마 상세'
   if (pathname === '/stocks') return '종목'
   if (pathname.startsWith('/stocks/')) return '이전 종목'
-  if (pathname === '/news' || pathname.startsWith('/news/')) return '뉴스'
+  if (pathname.startsWith('/issues/')) return '이슈'
   if (pathname === '/graph' || pathname.startsWith('/graph/')) return '관계 탐색'
   if (pathname === '/calendar') return '캘린더'
   if (pathname.startsWith('/theme/')) return '테마 상세'

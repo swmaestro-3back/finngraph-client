@@ -1,10 +1,10 @@
 import { ChartLine, House, LayoutGrid, Newspaper, Share2, type LucideIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { activeMenu, MAIN_MENU, type MenuKey } from '@/lib/fg/nav'
+import { activeMenu, BOTTOM_TABS, type MenuKey } from '@/lib/fg/nav'
 
 const ICONS: Record<MenuKey, LucideIcon> = {
   home: House,
-  news: Newspaper,
+  briefing: Newspaper,
   themes: LayoutGrid,
   stocks: ChartLine,
   graph: Share2,
@@ -15,7 +15,7 @@ export function BottomTabBar() {
   const active = activeMenu(pathname)
   return (
     <nav className="fg-btabs" aria-label="주 메뉴(하단)">
-      {MAIN_MENU.map((item) => {
+      {BOTTOM_TABS.map((item) => {
         const Icon = ICONS[item.key]
         return (
           <Link key={item.key} to={item.to} aria-current={active === item.key ? 'page' : undefined}>

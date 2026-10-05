@@ -1,5 +1,6 @@
 import type { CandleRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
+import { candleChangeAt, type RatedCandle } from '@/lib/fg/candleChange'
 import { dayLabel, minusMonths } from '@/lib/fg/themeCharts'
 
 export type PricePeriod = '1m' | '3m' | '6m' | '1y'
@@ -90,10 +91,9 @@ export interface Legend {
   volume: string
 }
 
-export function legendAt(candles: readonly CandleRes[], index: number): Legend | null {
+export function legendAt(candles: readonly RatedCandle[], index: number): Legend | null {
   const candle = candles[index]
   if (!candle) return null
-  const prev = candles[index - 1]
   const year = Number(candles[candles.length - 1].date.slice(0, 4))
   return {
     date: dayLabel(candle.date, year),
@@ -101,13 +101,13 @@ export function legendAt(candles: readonly CandleRes[], index: number): Legend |
     high: formatChartPrice(candle.high),
     low: formatChartPrice(candle.low),
     close: formatChartPrice(candle.close),
-    change: prev && prev.close > 0 ? (candle.close / prev.close - 1) * 100 : null,
+    change: candleChangeAt(candles, index),
     volume: formatChartVolume(candle.volume),
   }
 }
 
 export function chartValueText(
-  candles: readonly CandleRes[],
+  candles: readonly RatedCandle[],
   index: number,
   markerTitle: string | null,
   markerLabel = '이슈',

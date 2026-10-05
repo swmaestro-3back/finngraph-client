@@ -104,6 +104,17 @@ describe('값 줄', () => {
     expect(legendAt(candles, 5)).toBeNull()
   })
 
+  it('봉별 등락률은 API changeRate를 쓰고 값이 없을 때만 직전 봉 종가로 계산한다', () => {
+    const rated = [
+      { ...candles[0], changeRate: 0.4 },
+      { ...candles[1], changeRate: -0.2353 },
+    ]
+    expect(legendAt(rated, 0)?.change).toBe(0.4)
+    expect(legendAt(rated, 1)?.change).toBe(-0.2353)
+    expect(chartValueText(rated, 1, null)).toMatch(/, −0\.24%, 거래량/)
+    expect(legendAt([candles[0], { ...candles[1], changeRate: null }], 1)?.change).toBe((72400 / 71200 - 1) * 100)
+  })
+
   it('해가 다른 날은 연도를 붙인다', () => {
     expect(legendAt([bar('2025-12-03', 1, 1), ...candles], 0)?.date).toBe('2025년 12월 3일(수)')
   })

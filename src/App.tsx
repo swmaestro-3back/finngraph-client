@@ -4,7 +4,7 @@ import { AppShell } from '@/components/fg/AppShell'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { MyPageLayout } from '@/components/layout/MyPageLayout'
 import { useAuth } from '@/lib/auth'
-import { stockPath, themePath } from '@/lib/fg/paths'
+import { issuePath, stockPath, themePath } from '@/lib/fg/paths'
 import LoginPage from '@/pages/LoginPage'
 import KakaoCallbackPage from '@/pages/KakaoCallbackPage'
 import LegalPage from '@/pages/LegalPage'
@@ -19,8 +19,7 @@ import StocksPage from '@/pages/stocks/StocksPage'
 import StockDetailPage from '@/pages/stocks/StockDetailPage'
 import BriefingPage from '@/pages/BriefingPage'
 import CalendarPage from '@/pages/CalendarPage'
-import NewsPage from '@/pages/news/NewsPage'
-import IssuePage from '@/pages/news/IssuePage'
+import IssuePage from '@/pages/issues/IssuePage'
 
 const FgGallery = import.meta.env.DEV ? lazy(() => import('@/dev/FgGallery')) : null
 
@@ -48,6 +47,12 @@ function LegacyStockRedirect() {
   )
 }
 
+function LegacyIssueRedirect() {
+  const { issueId } = useParams()
+  const { search, hash, state } = useLocation()
+  return <Navigate to={{ pathname: issueId ? issuePath(issueId) : '/', search, hash }} state={state} replace />
+}
+
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
   if (status === 'loading') return null
@@ -60,8 +65,9 @@ function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<ThemeDashboardPage />} />
-        <Route path="/news" element={<NewsPage />} />
-        <Route path="/news/:issueId" element={<IssuePage />} />
+        <Route path="/issues/:issueId" element={<IssuePage />} />
+        <Route path="/news" element={<Navigate to="/" replace />} />
+        <Route path="/news/:issueId" element={<LegacyIssueRedirect />} />
         <Route path="/themes" element={<ThemesPage />} />
         <Route path="/themes/:themeId" element={<ThemeDetailPage />} />
         <Route path="/theme/:themeId" element={<LegacyThemeRedirect />} />

@@ -8,11 +8,11 @@ describe('pathLabel', () => {
     expect(pathLabel('/theme/59')).toBe('테마 상세')
   })
 
-  it('종목 목록·상세·뉴스·관계 탐색 화면도 이름을 안다', () => {
+  it('종목 목록·상세·이슈·관계 탐색 화면도 이름을 안다', () => {
     expect(pathLabel('/stocks')).toBe('종목')
     expect(pathLabel('/stocks/096770')).toBe('이전 종목')
-    expect(pathLabel('/news')).toBe('뉴스')
-    expect(pathLabel('/news/1234')).toBe('뉴스')
+    expect(pathLabel('/issues/1234')).toBe('이슈')
+    expect(pathLabel('/issues/export')).toBe('이슈')
     expect(pathLabel('/graph')).toBe('관계 탐색')
     expect(pathLabel('/graph/096770')).toBe('관계 탐색')
     expect(pathLabel(`/graph/theme/${encodeURIComponent('정유')}`)).toBe('관계 탐색')
@@ -24,6 +24,8 @@ describe('pathLabel', () => {
     expect(pathLabel('/stock/005930')).toBe('주식 상세')
     expect(pathLabel('/briefing')).toBeNull()
     expect(pathLabel('/newsroom')).toBeNull()
+    expect(pathLabel('/news')).toBeNull()
+    expect(pathLabel('/news/1234')).toBeNull()
     expect(pathLabel('/graphs')).toBeNull()
   })
 })
@@ -33,7 +35,10 @@ describe('resolveBackTarget', () => {
 
   it('state.from이 아는 화면이면 그 화면으로 돌아가고 라벨도 그 화면 이름이다', () => {
     expect(resolveBackTarget({ from: '/stocks/096770' }, fallback)).toEqual({ to: '/stocks/096770', label: '이전 종목' })
-    expect(resolveBackTarget({ from: '/news?tab=all' }, fallback)).toEqual({ to: '/news?tab=all', label: '뉴스' })
+    expect(resolveBackTarget({ from: '/issues/export?tab=stocks' }, fallback)).toEqual({
+      to: '/issues/export?tab=stocks',
+      label: '이슈',
+    })
     expect(resolveBackTarget({ from: '/graph/theme/%EC%A0%95%EC%9C%A0' }, fallback)).toEqual({
       to: '/graph/theme/%EC%A0%95%EC%9C%A0',
       label: '관계 탐색',
