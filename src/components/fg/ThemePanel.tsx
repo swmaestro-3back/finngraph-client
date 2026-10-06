@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
+import { ThemeAverageLine } from '@/components/fg/ThemeAverageLine'
 import { ThemeDetailLink, ThemeGraphLink, ThemeStar } from '@/components/fg/ThemeActions'
 import { ThemeRatio } from '@/components/fg/ThemeRatio'
 import type { ThemeRes } from '@/lib/apiTypes'
@@ -73,6 +74,7 @@ export function ThemePanel({ theme, changeOf, issue, members, ref }: ThemePanelP
         <span className="fg-num">
           {up}개 오르고 {down}개 내렸어요
         </span>
+        <ThemeAverageLine theme={theme} className="fg-tdet__avg" />
       </div>
       <ThemeRatio up={up} down={down} large caption={false} />
       <dl className="fg-tdet__stats">

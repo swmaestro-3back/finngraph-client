@@ -8,6 +8,7 @@ import { ChangeText } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
+import { ThemeAverageLine } from '@/components/fg/ThemeAverageLine'
 import type { ThemeRes } from '@/lib/apiTypes'
 import { HUB_THEME_LIMIT, pickHubThemes, type HubIssueRef, type HubThemeIssues } from '@/lib/fg/hub'
 import { issueTabPath } from '@/lib/fg/issuePage'
@@ -72,7 +73,12 @@ function TableRow({ theme, issues, state }: RowProps) {
       <th scope="row">
         <ThemeName theme={theme} state={state} />
       </th>
-      <td className="fg-htt__num">{change === null ? '—' : <ChangeText value={change} />}</td>
+      <td className="fg-htt__num">
+        <span className="fg-htt__numstack">
+          {change === null ? '—' : <ChangeText value={change} />}
+          <ThemeAverageLine theme={theme} className="fg-htt__avg" />
+        </span>
+      </td>
       <td className="fg-htt__num fg-htt__ratio">
         <span className="fg-up">{theme.upCount ?? 0}</span>
         {' / '}
@@ -121,7 +127,10 @@ function ListRow({ theme, issues, state }: RowProps) {
             {`상승 ${theme.upCount ?? 0} · 하락 ${theme.downCount ?? 0}`}
           </span>
         </span>
-        <span className="fg-htt__chg fg-num">{change === null ? '—' : <ChangeText value={change} />}</span>
+        <span className="fg-htt__chgwrap">
+          <span className="fg-htt__chg fg-num">{change === null ? '—' : <ChangeText value={change} />}</span>
+          <ThemeAverageLine theme={theme} className="fg-htt__avg" />
+        </span>
       </span>
       {showIssue && <IssueLink issues={issues} themeId={theme.id} state={state} />}
     </li>

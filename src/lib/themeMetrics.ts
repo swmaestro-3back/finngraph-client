@@ -7,7 +7,7 @@ import { formatChange } from '@/lib/format'
 import { hasTurnoverRatio } from '@/lib/treemapColor'
 
 export const DATA_SOURCE_NOTICE =
-  '시세는 한국투자증권 API 장마감 일봉 기준입니다. 참고용이며 투자 결과에 대한 책임은 지지 않습니다.'
+  '참고용이며 투자 결과에 대한 책임은 지지 않습니다.'
 
 export const METRIC_HELP_LINES = {
   method: '테마 지수 기준 · 시가총액 가중(종목당 최대 25%, 4종목 이하는 동일 가중)',
@@ -50,6 +50,22 @@ export function metricCaption(theme: ThemeRes): string[] | null {
   if (theme.pricedCount === undefined) return null
   if (theme.meanChange === null || theme.meanChange === undefined) return null
   return [`단순평균 ${formatChange(theme.meanChange)}`]
+}
+
+export const AVERAGE_BREADTH_HELP =
+  '테마 등락률은 시가총액 가중 지수(종목당 25% 상한)예요 · 종목 평균은 위아래 10%를 뺀 평균이에요'
+
+export interface ThemeAverageFact {
+  change: number
+  up?: number
+  down?: number
+}
+
+export function themeAverage(
+  theme: Pick<ThemeRes, 'change' | 'upCount' | 'downCount'>,
+): ThemeAverageFact | null {
+  if (theme.change === null) return null
+  return { change: theme.change, up: theme.upCount, down: theme.downCount }
 }
 
 export function hasBreadth(
