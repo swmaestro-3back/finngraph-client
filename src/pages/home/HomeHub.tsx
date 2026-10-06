@@ -9,7 +9,7 @@ import { HUB_TABS, hubSearch, parseHubQuery, type HubQuery } from '@/lib/fg/hub'
 import { themeBasisLabel } from '@/lib/fg/themes'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import type { ApiState } from '@/lib/queries/useApi'
-import { priceBasisSuffix, QUOTE_SOURCE_LABEL } from '@/lib/referenceDate'
+import { priceBasisSuffix } from '@/lib/referenceDate'
 
 const WIDE = '(min-width: 1024px)'
 const NARROW = '(max-width: 767px)'
@@ -47,7 +47,7 @@ export function HomeHub({ market, hot, today, refreshKey }: HomeHubProps) {
     () => HUB_TABS.map((option) => ({ key: option.value, label: option.label, to: `${pathname}${hubSearch(search, option.value, null)}` })),
     [pathname, search],
   )
-  const basisShort = market?.baseDate ? `${priceBasisSuffix(market)} · ${QUOTE_SOURCE_LABEL}` : null
+  const basisShort = market?.baseDate ? priceBasisSuffix(market) : null
   const props: HubTabProps = {
     layout,
     tabs,

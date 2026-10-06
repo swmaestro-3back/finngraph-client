@@ -265,6 +265,12 @@
   box-shadow: none;
   color: var(--relation-event);
 }
+.fg-pc__toggle:disabled {
+  background: none;
+  box-shadow: none;
+  color: var(--text-tertiary);
+  cursor: default;
+}
 .fg-pc__legend {
   min-height: 17px;
   margin-bottom: calc(-1 * var(--space-2));
@@ -283,6 +289,11 @@
 .fg-pc__host {
   position: absolute;
   inset: 0;
+}
+.fg-pc__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
 }
 .fg-pc__now {
   position: absolute;

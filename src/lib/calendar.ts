@@ -16,7 +16,7 @@ import { formatMonthDay } from '@/lib/themeMetrics'
 export const CALENDAR_MAX_RANGE_DAYS = 62
 
 export const CALENDAR_NOTICE =
-  '일정은 한국투자증권 API로 받은 예탁원(KSD) 정보 기준이며 발행사 사정으로 바뀔 수 있습니다. 참고용이며 투자 결과에 대한 책임은 지지 않습니다.'
+  '일정은 예탁원(KSD) 정보 기준이며 발행사 사정으로 바뀔 수 있습니다. 참고용이며 투자 결과에 대한 책임은 지지 않습니다.'
 
 export const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as const
 

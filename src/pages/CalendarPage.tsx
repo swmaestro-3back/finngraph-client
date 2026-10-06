@@ -130,7 +130,7 @@ export default function CalendarPage() {
       <header className="mb-5 flex flex-wrap items-baseline gap-x-[9px] gap-y-1">
         <h1 className="text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">증시 캘린더</h1>
         <span className="text-body text-muted-foreground break-keep">
-          {member ? '휴장일과 KRX300·관심종목의 배당·증자·주총 일정' : '휴장일과 KRX300 종목의 배당·증자·주총 일정'}
+          {member ? '휴장일과 주요 종목·관심종목의 배당·증자·주총 일정' : '휴장일과 주요 종목의 배당·증자·주총 일정'}
         </span>
       </header>
 
@@ -161,7 +161,7 @@ export default function CalendarPage() {
 
           {rangeEmpty && (
             <p className="border-t border-border bg-muted px-5 py-2.5 text-caption text-muted-foreground break-keep [text-wrap:pretty]">
-              이 기간에 일정이 없습니다 — 시장 캘린더는 KRX300 종목만 담아 비수기에는 빈 달이 생길 수 있습니다.
+              이 기간에 일정이 없습니다 — 시장 캘린더는 주요 종목만 담아 비수기에는 빈 달이 생길 수 있습니다.
             </p>
           )}
 
