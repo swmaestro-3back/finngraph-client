@@ -205,6 +205,7 @@ export function StockOverview({
     chart = (
       <PriceChart
         name={stock.name}
+        ticker={stock.ticker}
         candles={candles}
         markers={view.markers.length > 0 ? view.markers : null}
         markerLabel={view.label}

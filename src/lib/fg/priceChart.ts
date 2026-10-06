@@ -1,7 +1,7 @@
-import type { CandleRes } from '@/lib/apiTypes'
+import type { CandlePeriod, CandleRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
 import { candleChangeAt } from '@/lib/fg/candleChange'
-import { dayLabel, minusMonths } from '@/lib/fg/themeCharts'
+import { dayLabel, minusMonths, monthDayLabel } from '@/lib/fg/themeCharts'
 
 export type PricePeriod = '1m' | '3m' | '6m' | '1y'
 
@@ -21,15 +21,97 @@ export interface LogicalSpan {
   to: number
 }
 
-export function periodSpan(dates: readonly string[], period: PricePeriod): LogicalSpan {
+interface RangeOption {
+  value: string
+  label: string
+  months: number
+}
+
+export const WEEKLY_RANGES: readonly RangeOption[] = [
+  { value: '1y', label: '1년', months: 12 },
+  { value: '3y', label: '3년', months: 36 },
+]
+
+export const MONTHLY_RANGES: readonly RangeOption[] = [
+  { value: '3y', label: '3년', months: 36 },
+  { value: '5y', label: '5년', months: 60 },
+]
+
+export const RANGE_OPTIONS: Record<CandlePeriod, readonly RangeOption[]> = {
+  D: PRICE_PERIODS,
+  W: WEEKLY_RANGES,
+  M: MONTHLY_RANGES,
+}
+
+export const DEFAULT_RANGE: Record<CandlePeriod, string> = {
+  D: DEFAULT_PRICE_PERIOD,
+  W: WEEKLY_RANGES[0].value,
+  M: MONTHLY_RANGES[0].value,
+}
+
+export const CANDLE_KIND_OPTIONS: readonly { value: CandlePeriod; label: string }[] = [
+  { value: 'D', label: '일' },
+  { value: 'W', label: '주' },
+  { value: 'M', label: '월' },
+]
+
+export function kindLabel(kind: CandlePeriod): string {
+  if (kind === 'W') return '주봉'
+  if (kind === 'M') return '월봉'
+  return '일봉'
+}
+
+function spanFromMonths(dates: readonly string[], months: number): LogicalSpan {
   const last = dates.length - 1
-  const months = PRICE_PERIODS.find((p) => p.value === period)?.months ?? 3
   const boundary = last >= 0 ? minusMonths(dates[last], months) : ''
   const start = Math.max(
     0,
     dates.findIndex((date) => date > boundary),
   )
   return { from: start - 0.5, to: last + 0.5 + RIGHT_OFFSET }
+}
+
+export function periodSpan(dates: readonly string[], period: PricePeriod): LogicalSpan {
+  const months = PRICE_PERIODS.find((p) => p.value === period)?.months ?? 3
+  return spanFromMonths(dates, months)
+}
+
+export function rangeSpan(dates: readonly string[], kind: CandlePeriod, range: string): LogicalSpan {
+  const months = RANGE_OPTIONS[kind].find((option) => option.value === range)?.months ?? 3
+  return spanFromMonths(dates, months)
+}
+
+function parseKind(value: string | null): CandlePeriod {
+  if (value === 'w') return 'W'
+  if (value === 'm') return 'M'
+  return 'D'
+}
+
+function kindParam(kind: CandlePeriod): string {
+  return kind.toLowerCase()
+}
+
+export function parseChartKind(search: string): CandlePeriod {
+  return parseKind(new URLSearchParams(search).get('chart'))
+}
+
+export function parseChartRange(search: string, kind: CandlePeriod): string {
+  const value = new URLSearchParams(search).get('range')
+  const valid = value !== null && RANGE_OPTIONS[kind].some((option) => option.value === value)
+  return valid ? value : DEFAULT_RANGE[kind]
+}
+
+export function chartSearch(search: string, kind: CandlePeriod, range: string): string {
+  const params = new URLSearchParams(search)
+  if (kind === 'D' && range === DEFAULT_RANGE.D) {
+    params.delete('chart')
+    params.delete('range')
+  } else {
+    params.set('chart', kindParam(kind))
+    params.set('range', range)
+  }
+  const text = params.toString()
+  return text ? `?${text}` : ''
 }
 
 export function spanMoved(expected: LogicalSpan, actual: LogicalSpan): boolean {
@@ -91,12 +173,18 @@ export interface Legend {
   volume: string
 }
 
-export function legendAt(candles: readonly CandleRes[], index: number): Legend | null {
+export function periodLabel(date: string, kind: CandlePeriod, refYear: number): string {
+  if (kind === 'W') return `${monthDayLabel(date, refYear)} 주`
+  if (kind === 'M') return `${date.slice(0, 4)}년 ${Number(date.slice(5, 7))}월`
+  return dayLabel(date, refYear)
+}
+
+export function legendAt(candles: readonly CandleRes[], index: number, kind: CandlePeriod = 'D'): Legend | null {
   const candle = candles[index]
   if (!candle) return null
   const year = Number(candles[candles.length - 1].date.slice(0, 4))
   return {
-    date: dayLabel(candle.date, year),
+    date: periodLabel(candle.date, kind, year),
     open: formatChartPrice(candle.open),
     high: formatChartPrice(candle.high),
     low: formatChartPrice(candle.low),
@@ -111,8 +199,9 @@ export function chartValueText(
   index: number,
   markerTitle: string | null,
   markerLabel = '이슈',
+  kind: CandlePeriod = 'D',
 ): string {
-  const legend = legendAt(candles, index)
+  const legend = legendAt(candles, index, kind)
   if (!legend) return ''
   const parts = [
     legend.date,

@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { EvidenceSheet } from '@/components/fg/EvidenceSheet'
@@ -100,7 +99,6 @@ export function StockLinksTab({ stock, linked }: StockLinksTabProps) {
               <h2 id="fg-slt-title" className="fg-section__title">
                 이런 기업은 어때요?
               </h2>
-              <Badge tone="inferred">AI 추론</Badge>
             </span>
             <p className="fg-section__sub">뉴스엔 안 나왔지만 관계로 이어진 기업이에요</p>
           </div>

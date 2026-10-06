@@ -14,33 +14,38 @@ import {
   type Time,
 } from 'lightweight-charts'
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { IssueMarkerLayer, type MarkerSpot } from '@/components/fg/IssueMarkerLayer'
 import { Segment } from '@/components/fg/SegmentedTabs'
-import type { CandleRes } from '@/lib/apiTypes'
+import { Skeleton } from '@/components/fg/Skeleton'
+import type { CandlePeriod, CandleRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
 import { toneClass } from '@/lib/fg/format'
 import {
+  CANDLE_KIND_OPTIONS,
+  chartSearch,
   chartValueText,
-  DEFAULT_PRICE_PERIOD,
   followSpan,
   formatChartPrice,
   isAway,
   isoOfTime,
   keyboardIndex,
+  kindLabel,
   legendAt,
-  periodSpan,
-  PRICE_PERIODS,
-  revealSpan,
+  parseChartKind,
+  parseChartRange,
+  RANGE_OPTIONS,
+  rangeSpan,
   RIGHT_OFFSET,
   spanMoved,
   tickLabel,
   withAlpha,
   zoomSpan,
   type LogicalSpan,
-  type PricePeriod,
 } from '@/lib/fg/priceChart'
 import { dayLabel } from '@/lib/fg/themeCharts'
+import { useCandles } from '@/lib/queries/useCandles'
 import { cn } from '@/lib/utils'
 
 export interface ChartMarker {
@@ -52,6 +57,7 @@ export interface ChartMarker {
 
 interface PriceChartProps {
   name: string
+  ticker: string
   candles: readonly CandleRes[]
   markers: readonly ChartMarker[] | null
   markerLabel: string
@@ -70,10 +76,12 @@ interface Mounted {
   colors: { up: string; down: string }
 }
 
-const NO_PERIOD = 'none'
-type PeriodChoice = PricePeriod | typeof NO_PERIOD
+const NO_RANGE = 'none'
+type RangeChoice = string
 
-const PERIOD_OPTIONS = PRICE_PERIODS.map(({ value, label }) => ({ value, label }))
+const WEEKLY_CANDLE_LIMIT = 160
+const MONTHLY_CANDLE_LIMIT = 60
+const MARKER_HINT = '이슈 표시는 일봉에서 볼 수 있어요'
 
 function tokens() {
   const style = getComputedStyle(document.documentElement)
@@ -133,26 +141,28 @@ function hideTooltip(el: HTMLDivElement | null): void {
   if (el) el.style.opacity = '0'
 }
 
-function showPeriod(
+function showRange(
   view: Mounted | null,
   candles: readonly CandleRes[],
-  period: PricePeriod,
+  kind: CandlePeriod,
+  range: string,
   expected: RefObject<LogicalSpan | null>,
 ): void {
   if (!view) return
   const timeScale = view.chart.timeScale()
   expected.current = null
-  timeScale.setVisibleLogicalRange(periodSpan(candles.map((c) => c.date), period))
+  timeScale.setVisibleLogicalRange(rangeSpan(candles.map((c) => c.date), kind, range))
   requestAnimationFrame(() =>
     requestAnimationFrame(() => {
-      const range = timeScale.getVisibleLogicalRange()
-      expected.current = range ? toSpan(range) : null
+      const visible = timeScale.getVisibleLogicalRange()
+      expected.current = visible ? toSpan(visible) : null
     }),
   )
 }
 
 export function PriceChart({
   name,
+  ticker,
   candles,
   markers,
   markerLabel,
@@ -167,17 +177,44 @@ export function PriceChart({
   const tooltipRef = useRef<HTMLDivElement>(null)
   const mounted = useRef<Mounted | null>(null)
   const expected = useRef<LogicalSpan | null>(null)
-  const latest = useRef({ candles, markers, onSelect, refYear: 0 })
-  const [period, setPeriod] = useState<PricePeriod | null>(DEFAULT_PRICE_PERIOD)
+  const { pathname, search, state } = useLocation()
+  const navigate = useNavigate()
+  const kind = parseChartKind(search)
+  const weekly = useCandles(kind === 'W' ? ticker : null, 'W', WEEKLY_CANDLE_LIMIT)
+  const monthly = useCandles(kind === 'M' ? ticker : null, 'M', MONTHLY_CANDLE_LIMIT)
+  const displayCandles = kind === 'D' ? candles : kind === 'W' ? weekly.data : monthly.data
+  const kindRef = useRef(kind)
+  useEffect(() => {
+    kindRef.current = kind
+  }, [kind])
+  const loading =
+    kind !== 'D' &&
+    (kindRef.current !== kind ||
+      (kind === 'W' ? weekly.data === null || weekly.loading : monthly.data === null || monthly.loading))
+  const shown = displayCandles ?? []
+  const [active, setActive] = useState<{ kind: CandlePeriod; range: string } | null>(() => ({
+    kind,
+    range: parseChartRange(search, kind),
+  }))
+  const activeRef = useRef(active)
+  useEffect(() => {
+    activeRef.current = active
+  })
+  const latest = useRef({ candles: shown, markers, onSelect, refYear: 0, kind })
   const [hover, setHover] = useState<number | null>(null)
   const [kb, setKb] = useState<number | null>(null)
   const [away, setAway] = useState(false)
-  const count = candles.length
-  const refYear = count > 0 ? Number(candles[count - 1].date.slice(0, 4)) : 0
+  const count = shown.length
+  const refYear = count > 0 ? Number(shown[count - 1].date.slice(0, 4)) : 0
 
   useEffect(() => {
-    latest.current = { candles, markers, onSelect, refYear }
+    latest.current = { candles: shown, markers, onSelect, refYear, kind }
   })
+
+  useEffect(() => {
+    setKb(null)
+    setHover(null)
+  }, [kind])
 
   useEffect(() => {
     const host = hostRef.current
@@ -241,7 +278,7 @@ export function PriceChart({
           ? Math.max(0, Math.min(total - 1, Math.round(param.logical)))
           : null
       setHover(index)
-      const hovered = param.point ? layer.find(param.point.x, param.point.y) : null
+      const hovered = latest.current.kind === 'D' && param.point ? layer.find(param.point.x, param.point.y) : null
       if (hovered !== layer.hovered) layer.set({ hovered })
       if (param.sourceEvent !== undefined && index !== null && param.point) {
         showTooltip(tooltipRef.current, host, param.point)
@@ -250,6 +287,7 @@ export function PriceChart({
       }
     }
     const onClick = (param: MouseEventParams<Time>) => {
+      if (latest.current.kind !== 'D') return
       const id = param.hoveredInfo?.objectId
       const known = typeof id === 'string' && latest.current.markers?.some((marker) => marker.key === id) ? id : null
       const picked = known ?? (param.point ? layer.find(param.point.x, param.point.y) : null)
@@ -262,7 +300,7 @@ export function PriceChart({
       const want = expected.current
       if (want && spanMoved(want, span)) {
         expected.current = null
-        setPeriod(null)
+        setActive(null)
       }
     }
     chart.subscribeCrosshairMove(onMove)
@@ -282,31 +320,36 @@ export function PriceChart({
     }
   }, [])
 
-  const periodRef = useRef(period)
-  useEffect(() => {
-    periodRef.current = period
-  })
-
   useEffect(() => {
     const view = mounted.current
-    if (!view) return
+    if (!view || displayCandles === null) return
     const { up, down } = view.colors
-    view.candle.setData(candles.map((c) => ({ time: c.date, open: c.open, high: c.high, low: c.low, close: c.close })))
-    view.volume.setData(
-      candles.map((c) => ({ time: c.date, value: c.volume, color: withAlpha(c.close >= c.open ? up : down, 0.32) })),
+    view.candle.setData(
+      displayCandles.map((c) => ({ time: c.date, open: c.open, high: c.high, low: c.low, close: c.close })),
     )
-    if (periodRef.current) showPeriod(view, candles, periodRef.current, expected)
-  }, [candles])
+    view.volume.setData(
+      displayCandles.map((c) => ({ time: c.date, value: c.volume, color: withAlpha(c.close >= c.open ? up : down, 0.32) })),
+    )
+    const want = activeRef.current
+    if (want && want.kind === kind) showRange(view, displayCandles, kind, want.range, expected)
+  }, [displayCandles, kind])
 
   useEffect(() => {
     const view = mounted.current
     if (!view) return
-    const spots: MarkerSpot[] = (markers ?? []).flatMap((marker) => {
-      const candle = candles[marker.index]
-      return candle ? [{ key: marker.key, time: candle.date, high: candle.high, stack: marker.stack }] : []
+    const spots: MarkerSpot[] =
+      kind === 'D'
+        ? (markers ?? []).flatMap((marker) => {
+            const candle = candles[marker.index]
+            return candle ? [{ key: marker.key, time: candle.date, high: candle.high, stack: marker.stack }] : []
+          })
+        : []
+    view.layer.set({
+      spots,
+      visible: kind === 'D' && showMarkers && markers !== null,
+      selected: kind === 'D' && showMarkers ? selected : null,
     })
-    view.layer.set({ spots, visible: showMarkers && markers !== null, selected: showMarkers ? selected : null })
-  }, [markers, candles, showMarkers, selected])
+  }, [markers, candles, showMarkers, selected, kind])
 
   const revealed = useRef(selected)
   useEffect(() => {
@@ -314,20 +357,31 @@ export function PriceChart({
     revealed.current = selected
     const view = mounted.current
     const target = markers?.find((marker) => marker.key === selected)
-    if (!view || !target || !showMarkers) return
+    if (!view || !target || !showMarkers || kind !== 'D') return
     const timeScale = view.chart.timeScale()
     const range = timeScale.getVisibleLogicalRange()
-    const next = range ? revealSpan(toSpan(range), target.index) : null
+    const next = range ? followSpan(toSpan(range), target.index) : null
     if (next) timeScale.setVisibleLogicalRange(next)
-  }, [selected, markers, showMarkers])
+  }, [selected, markers, showMarkers, kind])
 
-  const pickPeriod = (next: PeriodChoice) => {
-    if (next === NO_PERIOD) return
-    setPeriod(next)
-    showPeriod(mounted.current, candles, next, expected)
+  const pickKind = (next: CandlePeriod) => {
+    if (next === kind) return
+    const nextRange = parseChartRange(search, next)
+    setActive({ kind: next, range: nextRange })
+    expected.current = null
+    navigate({ pathname, search: chartSearch(search, next, nextRange) }, { replace: true, state })
+    const source = next === 'D' ? candles : next === 'W' ? weekly.data : monthly.data
+    if (source) showRange(mounted.current, source, next, nextRange, expected)
   }
 
-  const markerAt = (index: number) => markers?.find((marker) => marker.index === index) ?? null
+  const pickRange = (next: RangeChoice) => {
+    if (next === NO_RANGE) return
+    setActive({ kind, range: next })
+    navigate({ pathname, search: chartSearch(search, kind, next) }, { replace: true, state })
+    if (displayCandles) showRange(mounted.current, displayCandles, kind, next, expected)
+  }
+
+  const markerAt = (index: number) => (kind === 'D' ? markers?.find((marker) => marker.index === index) ?? null : null)
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const view = mounted.current
@@ -361,15 +415,17 @@ export function PriceChart({
     event.preventDefault()
     const next = range ? followSpan(toSpan(range), index) : null
     if (next) timeScale.setVisibleLogicalRange(next)
-    view.chart.setCrosshairPosition(candles[index].close, candles[index].date, view.candle)
+    view.chart.setCrosshairPosition(shown[index].close, shown[index].date, view.candle)
     setKb(index)
     setHover(index)
   }
 
-  const shown = hover ?? kb ?? count - 1
-  const legend = legendAt(candles, shown)
+  const shownIndex = hover ?? kb ?? count - 1
+  const legend = legendAt(shown, shownIndex, kind)
   const kbIndex = kb ?? count - 1
   const kbMarker = showMarkers ? markerAt(kbIndex) : null
+  const rangeOptions = RANGE_OPTIONS[kind].map(({ value, label }) => ({ value, label }))
+  const rangeValue = active && active.kind === kind ? active.range : NO_RANGE
 
   return (
     <section className="fg-section fg-pc" aria-labelledby="fg-pc-title">
@@ -379,17 +435,19 @@ export function PriceChart({
         </h2>
         <div className="fg-pc__tools">
           {markers !== null && (
-            <button type="button" className="fg-pc__toggle" aria-pressed={showMarkers} onClick={onToggleMarkers}>
+            <button
+              type="button"
+              className="fg-pc__toggle"
+              aria-pressed={kind === 'D' && showMarkers}
+              disabled={kind !== 'D'}
+              onClick={kind === 'D' ? onToggleMarkers : undefined}
+            >
               <i className="fg-dia" aria-hidden="true" />
-              {markerLabel} 표시
+              {kind === 'D' ? `${markerLabel} 표시` : MARKER_HINT}
             </button>
           )}
-          <Segment<PeriodChoice>
-            label="기간"
-            options={PERIOD_OPTIONS}
-            value={period ?? NO_PERIOD}
-            onChange={pickPeriod}
-          />
+          <Segment<CandlePeriod> label="캔들 종류" options={CANDLE_KIND_OPTIONS} value={kind} onChange={pickKind} />
+          <Segment<RangeChoice> label="기간" options={rangeOptions} value={rangeValue} onChange={pickRange} />
         </div>
       </div>
       <div className="fg-pc__legend" aria-hidden="true">
@@ -421,15 +479,20 @@ export function PriceChart({
         className="fg-pc__lw"
         role="slider"
         tabIndex={0}
-        aria-label={`${name} 일봉 차트`}
+        aria-label={`${name} ${kindLabel(kind)} 차트`}
         aria-valuemin={0}
         aria-valuemax={Math.max(0, count - 1)}
         aria-valuenow={Math.max(0, kbIndex)}
-        aria-valuetext={chartValueText(candles, kbIndex, kbMarker?.title ?? null, markerLabel)}
+        aria-valuetext={chartValueText(shown, kbIndex, kbMarker?.title ?? null, markerLabel, kind)}
         aria-describedby={hintId}
         onKeyDown={onKeyDown}
       >
         <div ref={hostRef} className="fg-pc__host" />
+        {loading && (
+          <div className="fg-pc__loading">
+            <Skeleton height="100%" />
+          </div>
+        )}
         <div ref={tooltipRef} className="fg-pc__tip" aria-hidden="true">
           {legend && (
             <>
@@ -466,9 +529,9 @@ export function PriceChart({
           </Button>
         )}
       </div>
-      {showMarkers && callout}
+      {showMarkers && kind === 'D' && callout}
       <p id={hintId} className="fg-pc__hint">
-        {markers !== null && (
+        {markers !== null && kind === 'D' && (
           <span>
             <i className="fg-dia" aria-hidden="true" />
             {markerLabel === '이슈' ? '이슈가 처음 보도된 날' : '뉴스가 나온 날'}

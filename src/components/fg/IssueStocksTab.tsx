@@ -1,7 +1,6 @@
 import { ChevronDown, ChevronRight, Lock, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Badge } from '@/components/fg/Badge'
 import { Button, ButtonLink } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
@@ -400,7 +399,6 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
                 이런 기업은 어때요?
                 {links && links.length > 0 && <span className="fg-ist__count fg-num">{` ${links.length}`}</span>}
               </h2>
-              <Badge tone="inferred">AI 추론</Badge>
             </span>
             <p className="fg-section__sub">뉴스엔 안 나왔지만 관계로 이어진 기업이에요</p>
             {summary.length > 0 && (

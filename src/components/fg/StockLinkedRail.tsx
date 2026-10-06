@@ -1,6 +1,5 @@
 import { ChevronRight } from 'lucide-react'
 import { Link, useLocation, type To } from 'react-router-dom'
-import { Badge } from '@/components/fg/Badge'
 import { ButtonLink } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { MemberGate } from '@/components/fg/MemberGate'
@@ -117,7 +116,6 @@ export function StockLinkedRail({ stockName, linked }: StockLinkedRailProps) {
           <h2 id="fg-slr-title" className="fg-section__title">
             이런 기업은 어때요?
           </h2>
-          <Badge tone="inferred">AI 추론</Badge>
         </span>
         <span className="fg-slr__cap">{`${stockName}${josa(stockName, '와/과')} 관계로 이어진 기업이에요`}</span>
       </div>

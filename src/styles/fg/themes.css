@@ -157,13 +157,13 @@
 .fg-ttable {
   display: flex;
   flex-direction: column;
-  min-width: 778px;
+  min-width: 888px;
   font-variant-numeric: tabular-nums;
 }
 .fg-trow {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) 80px 120px minmax(150px, 1fr) minmax(200px, 1.6fr);
+  grid-template-columns: minmax(140px, 1fr) 190px 120px minmax(150px, 1fr) minmax(200px, 1.6fr);
   align-items: center;
   gap: var(--space-4);
   min-height: 64px;
@@ -236,6 +236,17 @@
 .fg-trow__num {
   text-align: right;
   font-weight: 600;
+}
+.fg-trow__numstack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+.fg-trow__avg {
+  max-width: 180px;
 }
 .fg-trow__gap {
   margin-left: var(--space-1);
@@ -400,6 +411,9 @@
 .fg-tdet__chg > span {
   font: 500 12px/17px var(--font-sans);
   color: var(--text-secondary);
+}
+.fg-tdet__avg {
+  flex-basis: 100%;
 }
 .fg-tdet__stats {
   display: grid;

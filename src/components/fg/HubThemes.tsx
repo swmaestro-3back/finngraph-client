@@ -6,6 +6,7 @@ import { ChangeText } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
+import { ThemeAverageLine } from '@/components/fg/ThemeAverageLine'
 import { ThemeIndexRetry } from '@/components/fg/ThemeIndexRetry'
 import { ThemeRatio } from '@/components/fg/ThemeRatio'
 import {
@@ -81,6 +82,7 @@ function ThemeHead({ theme, open }: { theme: ThemeRes; open: boolean }) {
       </span>
       <span className="fg-hh__px fg-num">
         {change === null ? <span className="fg-hh__chg">—</span> : <ChangeText value={change} className="fg-hh__chg" />}
+        <ThemeAverageLine theme={theme} className="fg-hh__avg" />
       </span>
     </>
   )

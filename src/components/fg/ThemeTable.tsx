@@ -3,6 +3,7 @@ import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { RowExpansion } from '@/components/fg/RowExpansion'
+import { ThemeAverageLine } from '@/components/fg/ThemeAverageLine'
 import { ThemeRatio } from '@/components/fg/ThemeRatio'
 import type { ThemeRes } from '@/lib/apiTypes'
 import { formatChange, formatCompactKrw } from '@/lib/format'
@@ -81,7 +82,10 @@ export function ThemeTable({
                     </button>
                   </span>
                   <span role="cell" className="fg-trow__num">
-                    {change === null ? '—' : <ChangeText value={change} />}
+                    <span className="fg-trow__numstack">
+                      {change === null ? '—' : <ChangeText value={change} />}
+                      <ThemeAverageLine theme={theme} className="fg-trow__avg" />
+                    </span>
                   </span>
                   <span role="cell">
                     <ThemeRatio up={theme.upCount ?? 0} down={theme.downCount ?? 0} />

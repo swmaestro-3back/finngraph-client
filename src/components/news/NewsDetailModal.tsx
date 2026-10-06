@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { ArrowUpRight, CircleAlert, RotateCw } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import {
   Dialog,
   DialogContent,
@@ -66,8 +65,6 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
     [companies],
   )
   const similarItems = useMemo(() => similar.map(toNewsItem), [similar])
-  /** "기업 그래프에서 보기"의 원점 — 관련 종목 중 ticker가 있는 첫 기업 */
-  const graphTicker = relatedTickers[0] ?? null
 
   const open = newsId !== null
   const original = news ? sourceUrl(news) : ''
@@ -176,17 +173,7 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
 
             {graphData && graphData.graph.metadata.stats.total_nodes > 0 && (
               <section className="mt-8 border-t border-border pt-6">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-foreground">관계 그래프</h3>
-                  {/* 첫 관련 종목을 중심으로 기업 그래프를 연다 */}
-                  {graphTicker && (
-                    <Button variant="outline" size="sm" className={TARGET_HEIGHT} asChild>
-                      <Link to={`/graph/${graphTicker}`} onClick={() => onOpenChange(false)}>
-                        기업 그래프에서 보기
-                      </Link>
-                    </Button>
-                  )}
-                </div>
+                <h3 className="mb-4 text-sm font-semibold text-foreground">관계 그래프</h3>
                 <NewsGraphSection
                   graph={graphData.graph}
                   relations={graphData.relations}
