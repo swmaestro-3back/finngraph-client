@@ -211,7 +211,6 @@ function InferredBlock({ linked, to }: { linked: IssueLinksState; to: string }) 
     <div className="fg-hubp__inf">
       <span className="fg-hubp__titles">
         <span className="fg-hubp__title">이런 기업은 어때요?</span>
-        <Badge tone="inferred">AI 추론</Badge>
       </span>
       <span className="fg-hubp__cap">뉴스엔 안 나왔지만 관계로 이어진 기업이에요</span>
       {body}
@@ -380,7 +379,6 @@ function IssuesMobile({ items, index, stocks, total, linked, extraOf, quotes, lo
             !pending &&
             (locked ? (
               <div className="fg-hubm__gcard">
-                <Badge tone="inferred">AI 추론</Badge>
                 <span className="fg-hubm__gtitle">{`이런 기업 ${links.length}곳은 로그인하면 볼 수 있어요`}</span>
                 <span className="fg-hubm__gsub">관계 경로와 원문 근거까지 볼 수 있어요</span>
                 <Button variant="primary" onClick={promptLogin}>
@@ -390,7 +388,7 @@ function IssuesMobile({ items, index, stocks, total, linked, extraOf, quotes, lo
             ) : (
               topLinks(links).map((company) => (
                 <Link key={company.id} to={all} className="fg-hubm__scard fg-num">
-                  <Badge tone="inferred">{`AI 추론 · 근거 강도 ${STRENGTH_LABEL[company.strength]}`}</Badge>
+                  <Badge tone="inferred">{`근거 강도 ${STRENGTH_LABEL[company.strength]}`}</Badge>
                   <span className="fg-hubm__id">
                     <span className="fg-lg">
                       <CompanyLogo name={company.name} size={24} />

@@ -311,7 +311,6 @@ function InferredRail({ stocks, links, error, onRetry }: InferredRailProps) {
     <div className="fg-irail__inf">
       <span className="fg-slr__title">
         <span className="fg-irail__h">이런 기업은 어때요?</span>
-        <Badge tone="inferred">AI 추론</Badge>
       </span>
       <span className="fg-slr__cap">뉴스엔 안 나왔지만 관계로 이어진 기업이에요</span>
       {inferred ?? (
