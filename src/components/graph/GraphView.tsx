@@ -16,6 +16,7 @@ import type { CenterShortcuts } from '@/components/graph/NodeDetail'
 import { ScopeSelector } from '@/components/graph/ScopeSelector'
 import { Toolbar } from '@/components/graph/Toolbar'
 import { HopSelector } from '@/components/graph/HopSelector'
+import { EventPeriodSelector } from '@/components/graph/EventPeriodSelector'
 import { LensSelector } from '@/components/graph/LensSelector'
 import { MemberVeil } from '@/components/gate/MemberVeil'
 import { Button } from '@/components/ui/button'
@@ -37,8 +38,11 @@ import {
   graphPath,
   lensControls,
   lensDefaultCategories,
+  lensHasEvents,
   useGraphQuery,
 } from '@/lib/graphRoute'
+import { kstToday } from '@/lib/calendar'
+import { eventInPeriod, eventPeriodCutoff } from '@/lib/eventPeriod'
 import { indexCompanies } from '@/lib/graphEvent'
 import { useMemberGate } from '@/lib/memberGate'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
@@ -68,9 +72,15 @@ export function GraphView({ focus }: Props) {
   const noun = isTheme ? '테마' : '종목'
   // hop·범위는 URL 쿼리가 원본이다 — 새로고침·공유가 유지되고 재중심 이력이 뒤로가기로 이어진다
   const [query, updateQuery] = useGraphQuery()
-  const { hop, scope, lens } = query
+  const { hop, scope, lens, period } = query
   // 테마 원점은 렌즈가 없다 — 컨트롤을 전부 숨기고 필터도 전체 켜짐으로 둔다
   const controls = isTheme ? { hop: false, scope: false } : lensControls(lens)
+  // 이벤트 기간 칩 — 이벤트가 오는 렌즈에서만. URL에 남긴 period도 그 렌즈에서만 효력이 있다
+  const showPeriod = !isTheme && lensHasEvents(lens)
+  const eventCutoff = useMemo(
+    () => (showPeriod ? eventPeriodCutoff(period, kstToday(new Date())) : null),
+    [showPeriod, period],
+  )
   const { locked, pending, promptLogin } = useMemberGate()
   const gatedHop = locked && hop > 1 ? 1 : hop
   const gatedQuery = gatedHop === hop ? query : { ...query, hop: gatedHop }
@@ -262,6 +272,11 @@ export function GraphView({ focus }: Props) {
   )
 
   const eventCount = useMemo(() => data?.nodes.filter((n) => n.type === 'event').length ?? 0, [data])
+  /** 기간 안에 남는 이벤트 수 — 0이면 칩 옆에 알려 준다(캔버스가 비어 보이는 까닭) */
+  const eventsInPeriod = useMemo(
+    () => data?.nodes.filter((n) => n.type === 'event' && eventInPeriod(n, eventCutoff)).length ?? 0,
+    [data, eventCutoff],
+  )
 
   // 개요 렌즈의 중심 기업 패널에서만 — 다른 렌즈는 이미 그 축 안이다
   const centerShortcuts = useMemo<CenterShortcuts | undefined>(
@@ -443,6 +458,7 @@ export function GraphView({ focus }: Props) {
               centerId={centerId}
               selectedCategories={selectedCategories}
               selectedPredicates={selectedPredicates}
+              eventCutoff={eventCutoff}
             />
           </div>
           {(locked || pending) && (
@@ -524,7 +540,7 @@ export function GraphView({ focus }: Props) {
               Hop·범위는 렌즈가 서버에 보내는 파라미터만큼만 보인다 — 개요는 둘 다 없음, 이벤트는 Hop만.
               한 묶음으로 둔다: 폭이 모자라면 Hop만 혼자 내려가지 않고 "얼마나"가 함께 둘째 줄로 간다.
             */}
-            {(controls.scope || controls.hop) && (
+            {(controls.scope || controls.hop || showPeriod) && (
               <div className="flex flex-wrap items-center gap-2">
                 {controls.scope && (
                   <>
@@ -545,11 +561,19 @@ export function GraphView({ focus }: Props) {
                     onLockedSelect={promptLogin}
                   />
                 )}
+                {/* 기간은 서버 파라미터가 아니다 — Hop 옆에 두지만 받아 온 그래프에서 숨길 뿐이다 */}
+                {showPeriod && (
+                  <EventPeriodSelector value={period} onChange={(next) => updateQuery({ period: next })} />
+                )}
                 {/* 모바일은 폭이 없어 힌트를 숨긴다 — Hop 라벨은 남는다 */}
                 {lens === 'events' && !isMobile && (
                   <p className="m-0 text-micro text-muted-foreground">
                     1 이벤트 · 2 공유 기업 · 3 그 기업들의 이벤트
                   </p>
+                )}
+                {/* 기간을 골랐는데 남는 이벤트가 없으면 캔버스가 비어 보인다 — 왜 비었는지 알려 준다 */}
+                {showPeriod && period !== 'all' && eventCount > 0 && eventsInPeriod === 0 && (
+                  <p className="m-0 text-micro text-muted-foreground">이 기간에 보도된 이벤트가 없어요</p>
                 )}
               </div>
             )}

@@ -5,13 +5,29 @@ import {
   graphSearch,
   lensControls,
   lensDefaultCategories,
+  lensHasEvents,
   parseGraphQuery,
 } from '@/lib/graphRoute'
 
 describe('graphRoute', () => {
-  it('빈 쿼리는 기본값(hop 1, 전체, 개요)', () => {
+  it('빈 쿼리는 기본값(hop 1, 전체, 개요, 전체 기간)', () => {
     expect(parseGraphQuery(new URLSearchParams(''))).toEqual(DEFAULT_GRAPH_QUERY)
-    expect(DEFAULT_GRAPH_QUERY).toEqual({ hop: 1, scope: 'all', lens: 'overview' })
+    expect(DEFAULT_GRAPH_QUERY).toEqual({ hop: 1, scope: 'all', lens: 'overview', period: 'all' })
+  })
+
+  it('이벤트 기간은 전체가 아닐 때만 적고 왕복한다 — 모르는 값은 전체로', () => {
+    const q = { ...DEFAULT_GRAPH_QUERY, period: '1w' as const }
+    expect(graphSearch(q)).toBe('?period=1w')
+    expect(parseGraphQuery(new URLSearchParams('period=1w'))).toEqual(q)
+    expect(parseGraphQuery(new URLSearchParams('period=2w')).period).toBe('all')
+    expect(graphSearch({ ...q, lens: 'events', hop: 2 })).toBe('?lens=events&hop=2&period=1w')
+  })
+
+  it('이벤트 기간 칩은 이벤트가 오는 렌즈에서만', () => {
+    expect(lensHasEvents('overview')).toBe(true)
+    expect(lensHasEvents('events')).toBe(true)
+    expect(lensHasEvents('supply')).toBe(false)
+    expect(lensHasEvents('themes')).toBe(false)
   })
 
   it('기본값은 직렬화에서 생략된다', () => {
@@ -19,7 +35,7 @@ describe('graphRoute', () => {
   })
 
   it('렌즈는 개요가 아닐 때만 적고 왕복한다', () => {
-    const q = { hop: 2 as const, scope: 'KOSPI' as const, lens: 'supply' as const }
+    const q = { hop: 2 as const, scope: 'KOSPI' as const, lens: 'supply' as const, period: 'all' as const }
     const s = graphSearch(q)
     expect(s).toBe('?lens=supply&hop=2&market=KOSPI')
     expect(parseGraphQuery(new URLSearchParams(s))).toEqual(q)

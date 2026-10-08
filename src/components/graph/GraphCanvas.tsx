@@ -87,6 +87,8 @@ interface Props {
   linkTag?: (link: GraphLink) => string | null
   selectedCategories: Set<NodeCategory>
   selectedPredicates: Set<Predicate>
+  /** 이벤트 기간 시작일('YYYY-MM-DD') — 그 전에 끝난 이벤트는 숨긴다. 없으면 전체 */
+  eventCutoff?: string | null
 }
 
 /** 하이라이트 한 번을 그리는 데 필요한 모든 것 — 노드/간선 강조가 이 한 형태로 수렴한다 */
@@ -125,6 +127,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     linkTag,
     selectedCategories,
     selectedPredicates,
+    eventCutoff = null,
   },
   ref,
 ) {
@@ -198,8 +201,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
   // 중심은 연결이 없어도 남긴다 — 관계가 0개인 기업도 캔버스에 자기 노드는 보여야 한다
   const getFilteredData = useCallback(
-    () => filterVisibleGraph(data, selectedCategories, selectedPredicates, centerId),
-    [data, selectedCategories, selectedPredicates, centerId],
+    () => filterVisibleGraph(data, selectedCategories, selectedPredicates, centerId, eventCutoff),
+    [data, selectedCategories, selectedPredicates, centerId, eventCutoff],
   )
 
   // ========== MAIN EFFECT ==========

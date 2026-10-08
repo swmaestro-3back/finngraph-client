@@ -9,6 +9,7 @@ import {
   type NodeCategory,
   type Predicate,
 } from '@/data/graphTypes'
+import { eventInPeriod } from '@/lib/eventPeriod'
 
 /**
  * 일반 노드 반지름 범위. 라벨을 원 밖에 두므로 점은 작게 — 차수 차이는 면적으로만 읽힌다.
@@ -89,8 +90,12 @@ export function filterVisibleGraph(
   selectedCategories: Set<NodeCategory>,
   selectedPredicates: Set<Predicate>,
   centerId: string | null,
+  /** 이벤트 기간 시작일('YYYY-MM-DD') — 그 전에 끝난 이벤트는 간선째 숨긴다. null이면 전체 */
+  eventCutoff: string | null = null,
 ): { nodes: GraphNode[]; links: GraphLink[] } {
-  const categoryOf = new Map(data.nodes.map((n) => [n.id, nodeCategory(n)]))
+  // 기간 밖 이벤트는 처음부터 없는 셈 친다 — 그 이벤트로만 이어지던 기업도 아래 '연결 없음' 규칙으로 함께 빠진다
+  const inPeriod = data.nodes.filter((n) => eventInPeriod(n, eventCutoff))
+  const categoryOf = new Map(inPeriod.map((n) => [n.id, nodeCategory(n)]))
   const links = data.links.filter((l) => {
     if (!selectedPredicates.has(l.type)) return false
     const s = categoryOf.get(endId(l.source))
@@ -102,7 +107,7 @@ export function filterVisibleGraph(
     connected.add(endId(l.source))
     connected.add(endId(l.target))
   })
-  const nodes = data.nodes.filter(
+  const nodes = inPeriod.filter(
     (n) => selectedCategories.has(nodeCategory(n)) && (connected.has(n.id) || n.id === centerId),
   )
   return { nodes, links }

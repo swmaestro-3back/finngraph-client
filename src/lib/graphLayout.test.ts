@@ -52,6 +52,30 @@ describe('filterVisibleGraph', () => {
     expect(nodes.map((n) => n.id)).toEqual(['me', 'sup'])
   })
 
+  it('기간 밖 이벤트는 간선째 사라지고, 그 이벤트로만 이어지던 노드도 함께 빠진다', () => {
+    const withDates: GraphData = {
+      ...data,
+      nodes: [
+        company('me'),
+        { id: 'old', label: 'old', type: 'event', data: { lastPublishedAt: '2026-06-17T15:51:00.000000000+09:00' } },
+        { id: 'new', label: 'new', type: 'event', data: { lastPublishedAt: '2026-10-08T19:55:00.000000000+09:00' } },
+        { id: 'undated', label: 'undated', type: 'event', data: {} },
+        company('peer'),
+      ],
+      links: [
+        link('a', 'HAS_EVENT', 'me', 'old'),
+        link('b', 'HAS_EVENT', 'me', 'new'),
+        link('c', 'HAS_EVENT', 'me', 'undated'),
+        link('d', 'HAS_EVENT', 'peer', 'old'),
+      ],
+    }
+    const { nodes, links } = filterVisibleGraph(withDates, all, allPredicates, 'me', '2026-10-02')
+    expect(links.map((l) => l.id)).toEqual(['b'])
+    expect(nodes.map((n) => n.id)).toEqual(['me', 'new'])
+    // 기간을 안 고르면(기본값) 전과 같다
+    expect(filterVisibleGraph(withDates, all, allPredicates, 'me').nodes.map((n) => n.id)).toEqual(['me', 'old', 'new', 'undated', 'peer'])
+  })
+
   it('중심이 없으면(테마 원점 등) 기존 규칙 그대로', () => {
     const { nodes } = filterVisibleGraph({ ...data, links: [] }, all, allPredicates, null)
     expect(nodes).toEqual([])

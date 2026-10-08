@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { kgGraphKey, kgGraphRequest } from '@/lib/queries/useKgGraph'
 import type { GraphQuery } from '@/lib/graphRoute'
 
-const q = (patch: Partial<GraphQuery>): GraphQuery => ({ hop: 1, scope: 'all', lens: 'overview', ...patch })
+const q = (patch: Partial<GraphQuery>): GraphQuery => ({ hop: 1, scope: 'all', lens: 'overview', period: 'all', ...patch })
 const company = { kind: 'company' as const, ticker: '005930' }
 
 describe('kgGraphRequest', () => {

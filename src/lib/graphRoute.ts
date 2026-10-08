@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ALL_CATEGORIES, type GraphFocus, type NodeCategory } from '@/data/graphTypes'
+import { isEventPeriod, type EventPeriod } from '@/lib/eventPeriod'
 import type { KgMarket, KgMarketIndex } from '@/lib/kgApiTypes'
 
 /** 원점에서 몇 홉까지 볼지 — 1은 원점의 바로 이웃까지다 (서버 허용 범위 1~3) */
@@ -57,6 +58,11 @@ export function lensControls(lens: Lens): { hop: boolean; scope: boolean } {
   }
 }
 
+/** 이벤트 노드가 오는 렌즈 — 이벤트 기간 칩은 여기서만 뜬다 (테마 원점은 이벤트가 없다) */
+export function lensHasEvents(lens: Lens): boolean {
+  return lens === 'overview' || lens === 'events'
+}
+
 /** 렌즈별 노드 종류 필터 기본값 — 모든 렌즈에서 전체 종류를 켜고 시작한다(개요는 1홉 이웃을 빠짐없이 보여야 한다) */
 export function lensDefaultCategories(_lens: Lens): Set<NodeCategory> {
   return new Set(ALL_CATEGORIES)
@@ -70,14 +76,15 @@ function isIndex(v: string | null | undefined): v is KgMarketIndex {
   return (INDEX_SCOPES as string[]).includes(v ?? '')
 }
 
-/** 그래프 페이지의 URL 쿼리 상태 */
+/** 그래프 페이지의 URL 쿼리 상태. period만 서버에 가지 않고 화면에서 거른다 — 그래도 새로고침·공유에 남긴다 */
 export interface GraphQuery {
   hop: Hop
   scope: Scope
   lens: Lens
+  period: EventPeriod
 }
 
-export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: 'all', lens: 'overview' }
+export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: 'all', lens: 'overview', period: 'all' }
 
 export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   const hopRaw = Number(params.get('hop'))
@@ -88,16 +95,19 @@ export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   const scope: Scope = isMarket(market) ? market : isIndex(index) ? index : 'all'
   const lensRaw = params.get('lens')
   const lens: Lens = isLens(lensRaw) ? lensRaw : 'overview'
-  return { hop, scope, lens }
+  const periodRaw = params.get('period')
+  const period: EventPeriod = isEventPeriod(periodRaw) ? periodRaw : 'all'
+  return { hop, scope, lens, period }
 }
 
-/** 기본값(개요·hop 1·전체)은 쿼리에서 생략해 URL을 짧게 유지한다 */
+/** 기본값(개요·hop 1·전체 범위·전체 기간)은 쿼리에서 생략해 URL을 짧게 유지한다 */
 export function graphSearch(query: GraphQuery): string {
   const params = new URLSearchParams()
   if (query.lens !== 'overview') params.set('lens', query.lens)
   if (query.hop !== 1) params.set('hop', String(query.hop))
   if (isMarket(query.scope)) params.set('market', query.scope)
   else if (isIndex(query.scope)) params.set('index', query.scope)
+  if (query.period !== 'all') params.set('period', query.period)
   const s = params.toString()
   return s ? `?${s}` : ''
 }
