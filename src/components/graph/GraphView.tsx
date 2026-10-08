@@ -39,6 +39,7 @@ import {
   lensDefaultCategories,
   useGraphQuery,
 } from '@/lib/graphRoute'
+import { indexCompanies } from '@/lib/graphEvent'
 import { useMemberGate } from '@/lib/memberGate'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -148,14 +149,8 @@ export function GraphView({ focus }: Props) {
     else if (link !== selection.link) setSelection({ kind: 'edge', link, source, target })
   }, [data, nodeById, selection])
 
-  // 이벤트의 언급 기업은 이름 문자열이라 이름으로 노드를 찾는다. 동명이면 먼저 온 것(중심에 가까운 쪽)이 남는다
-  const nodesByLabel = useMemo(() => {
-    const map = new Map<string, GraphNode>()
-    data?.nodes.forEach((n) => {
-      if (n.type === 'company' && !map.has(n.label)) map.set(n.label, n)
-    })
-    return map
-  }, [data])
+  // 이벤트 상세의 언급 기업을 그래프 노드로 잇는다 — 티커로, 티커가 없으면 이름으로
+  const companyIndex = useMemo(() => indexCompanies(data?.nodes ?? []), [data])
 
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
@@ -414,7 +409,7 @@ export function GraphView({ focus }: Props) {
       onRecenter={recenter}
       onThemeOpen={openTheme}
       centerShortcuts={centerShortcuts}
-      nodesByLabel={nodesByLabel}
+      companies={companyIndex}
       onShowSharing={showSharing}
       onOpenNews={setOpenNewsId}
     />

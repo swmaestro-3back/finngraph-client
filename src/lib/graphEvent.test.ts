@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { GraphNode } from '@/data/graphTypes'
-import { eventArticles, eventArticlesNote, eventInfo, eventPeriod, eventSubtitle } from '@/lib/graphEvent'
+import {
+  eventArticles,
+  eventArticlesNote,
+  eventInfo,
+  eventPeriod,
+  eventSubtitle,
+  findCompanyNode,
+  indexCompanies,
+} from '@/lib/graphEvent'
 
 const full: GraphNode = {
   id: 'e1',
@@ -65,5 +73,31 @@ describe('이벤트 상세', () => {
     expect(eventArticlesNote(3, 3)).toBeNull()
     expect(eventArticlesNote(2, 5)).toBe('분석된 기사 2건만 보여줍니다. 전체 5건.')
     expect(eventArticlesNote(0, 4)).toBe('기사 4건이 아직 분석되지 않아 제목을 불러오지 못했습니다.')
+  })
+})
+
+describe('언급 기업 ↔ 그래프 노드', () => {
+  const company = (id: string, label: string, ticker?: string): GraphNode => ({
+    id, label, type: 'company', data: { ticker },
+  })
+  const lg = company('c1', 'LG전자', '066570')
+  const tickerLabelled = company('c2', '000001', '000001') // 이름이 없어 라벨이 티커다
+  const sameName = company('c3', 'LG전자', '066575') // 우선주 — 이름이 같다
+  const index = indexCompanies([lg, tickerLabelled, sameName, { id: 'e1', label: 'LG전자', type: 'event', data: {} }])
+
+  it('티커가 있으면 티커로 찾는다 — 동명 기업도 제 노드로 간다', () => {
+    expect(findCompanyNode(index, { name: 'LG전자', ticker: '066575' })).toBe(sameName)
+    expect(findCompanyNode(index, { name: 'LG전자', ticker: '066570' })).toBe(lg)
+    expect(findCompanyNode(index, { name: '협력사', ticker: '000001' })).toBe(tickerLabelled)
+  })
+
+  it('티커가 없거나 그래프에 그 티커가 없으면 이름으로 — 동명이면 먼저 온 노드', () => {
+    expect(findCompanyNode(index, { name: 'LG전자', ticker: null })).toBe(lg)
+    expect(findCompanyNode(index, { name: 'LG전자', ticker: '999999' })).toBe(lg)
+    expect(findCompanyNode(index, { name: '없는 회사', ticker: null })).toBeUndefined()
+  })
+
+  it('이벤트 노드는 색인에 들어가지 않는다', () => {
+    expect(findCompanyNode(indexCompanies([{ id: 'e1', label: 'LG전자', type: 'event', data: {} }]), { name: 'LG전자', ticker: null })).toBeUndefined()
   })
 })

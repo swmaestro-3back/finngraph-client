@@ -29,6 +29,7 @@ import {
 } from '@/lib/edgeEvidence'
 import { formatShortDate } from '@/lib/format'
 import { formatPeriod } from '@/lib/linkCard'
+import { awaiting } from '@/lib/queries/useApi'
 import { useEdgeEvidence } from '@/lib/queries/useEdgeEvidence'
 import { cn } from '@/lib/utils'
 
@@ -86,7 +87,7 @@ export function EdgeDetail({
   const evidence = useEdgeEvidence(link.id, hasEvidence(link))
   const news = evidence.data ? evidenceNews(evidence.data) : []
   const newsTotal = evidence.data?.news_total ?? 0
-  const titlesPending = evidence.loading && !evidence.data
+  const titlesPending = awaiting(evidence, hasEvidence(link))
   const days = groupNewsByDay(news)
 
   // 월별 막대는 서버가 전체 근거 기사로 센다 — 목록에 보이는 기사 수와 무관하게 그릴 수 있다

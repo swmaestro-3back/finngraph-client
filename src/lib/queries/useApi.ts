@@ -10,6 +10,18 @@ export interface ApiState<T> {
   mutate: (next: T) => void
 }
 
+/**
+ * 아직 답을 기다리는 중인가 — 스켈레톤을 그릴지 가른다.
+ * useApi는 첫 렌더에서 loading=false, data=null 이라 `loading && !data`로는 빈 목록이 한 프레임 비친다.
+ * 답(data)도 실패(error)도 없으면 기다리는 것이다. enabled=false 면 부르지 않으니 기다릴 것도 없다.
+ */
+export function awaiting(
+  state: { data: unknown; loading: boolean; error: unknown },
+  enabled = true,
+): boolean {
+  return enabled && state.data === null && state.error === null
+}
+
 export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]): ApiState<T> {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(false)

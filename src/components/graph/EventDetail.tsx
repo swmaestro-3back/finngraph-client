@@ -1,9 +1,17 @@
 import { Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { type GraphNode } from '@/data/graphTypes'
-import { eventArticles, eventArticlesNote, eventInfo, eventPeriod } from '@/lib/graphEvent'
+import {
+  eventArticles,
+  eventArticlesNote,
+  eventInfo,
+  eventPeriod,
+  findCompanyNode,
+  type CompanyIndex,
+} from '@/lib/graphEvent'
 import { formatShortDateTime } from '@/lib/format'
 import { toNodeQuote } from '@/lib/kgMappers'
+import { awaiting } from '@/lib/queries/useApi'
 import { useEventDetail } from '@/lib/queries/useEventDetail'
 import {
   ChangeText,
@@ -23,8 +31,8 @@ const MAX_COMPANIES = 8
 
 interface Props {
   node: GraphNode
-  /** 그래프에 있는 기업을 이름으로 찾는다 — 이벤트의 companies는 문자열이라 이름으로만 맞춘다 */
-  nodesByLabel: Map<string, GraphNode>
+  /** 언급 기업을 그래프 노드로 잇는다 — 티커로, 티커가 없으면 이름으로 */
+  companies: CompanyIndex
   onNodeSelect?: (node: GraphNode) => void
   /** 이벤트 렌즈 hop 2로 — 이 이벤트를 공유하는 다른 기업을 본다. 이미 그 안이면 넘어오지 않는다 */
   onShowSharing?: () => void
@@ -39,7 +47,7 @@ interface Props {
  */
 export function EventDetail({
   node,
-  nodesByLabel,
+  companies: companyIndex,
   onNodeSelect,
   onShowSharing,
   onOpenNews,
@@ -51,7 +59,7 @@ export function EventDetail({
   const newsCount = detail.data?.news_total ?? info.newsCount
 
   const articles = detail.data ? eventArticles(detail.data) : []
-  const articlesPending = detail.loading && !detail.data
+  const articlesPending = awaiting(detail, node.data.clusterId != null)
   // 서버는 관계 분석을 거친 기사만 준다 — 빠진 건수는 섹션을 지우지 않고 말로 알린다
   const articlesNote = detail.data ? eventArticlesNote(articles.length, detail.data.news_total) : null
   const representativeId =
@@ -62,7 +70,7 @@ export function EventDetail({
     .map((c) => ({
       name: c.name,
       ticker: c.ticker,
-      hit: nodesByLabel.get(c.name),
+      hit: findCompanyNode(companyIndex, c),
       quote: toNodeQuote(c.quote),
     }))
     .sort((a, b) => Number(Boolean(b.hit)) - Number(Boolean(a.hit)))

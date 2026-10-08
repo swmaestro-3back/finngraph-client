@@ -8,6 +8,7 @@ import {
   type GraphNode,
   type GraphSelection,
 } from '@/data/graphTypes'
+import type { CompanyIndex } from '@/lib/graphEvent'
 import type { NodeNeighbors } from '@/lib/graphNeighbors'
 import { NodeDetail, type CenterShortcuts } from '@/components/graph/NodeDetail'
 import { EdgeDetail } from '@/components/graph/EdgeDetail'
@@ -35,8 +36,8 @@ interface Props {
   onRecenter?: (node: GraphNode) => void
   onThemeOpen?: (node: GraphNode) => void
   centerShortcuts?: CenterShortcuts
-  /** 이벤트 상세의 언급 기업이 그래프 노드를 이름으로 찾을 때 */
-  nodesByLabel: Map<string, GraphNode>
+  /** 이벤트 상세의 언급 기업을 그래프 노드로 잇는 색인(티커·이름) */
+  companies: CompanyIndex
   onShowSharing?: () => void
   onOpenNews?: (newsId: string) => void
 }
@@ -57,7 +58,7 @@ export function DetailPanel({
   onRecenter,
   onThemeOpen,
   centerShortcuts,
-  nodesByLabel,
+  companies,
   onShowSharing,
   onOpenNews,
 }: Props) {
@@ -85,7 +86,7 @@ export function DetailPanel({
       <EventDetail
         key={selection.node.id}
         node={selection.node}
-        nodesByLabel={nodesByLabel}
+        companies={companies}
         onNodeSelect={onNodeSelect}
         onShowSharing={onShowSharing}
         onOpenNews={onOpenNews}

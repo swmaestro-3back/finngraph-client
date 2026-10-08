@@ -71,3 +71,29 @@ export function eventArticlesNote(shown: number, total: number): string | null {
   if (shown === 0) return `기사 ${total}건이 아직 분석되지 않아 제목을 불러오지 못했습니다.`
   return `분석된 기사 ${shown}건만 보여줍니다. 전체 ${total}건.`
 }
+
+/** 그래프의 기업 노드 색인 — 이벤트 상세의 언급 기업을 노드로 잇는다 */
+export interface CompanyIndex {
+  byTicker: Map<string, GraphNode>
+  /** 동명이면 먼저 온 노드(중심에 가까운 쪽) */
+  byName: Map<string, GraphNode>
+}
+
+export function indexCompanies(nodes: readonly GraphNode[]): CompanyIndex {
+  const byTicker = new Map<string, GraphNode>()
+  const byName = new Map<string, GraphNode>()
+  nodes.forEach((n) => {
+    if (n.type !== 'company') return
+    if (n.data.ticker && !byTicker.has(n.data.ticker)) byTicker.set(n.data.ticker, n)
+    if (!byName.has(n.label)) byName.set(n.label, n)
+  })
+  return { byTicker, byName }
+}
+
+/** 티커가 있으면 티커로(동명 기업·이름 없는 노드도 정확히), 없으면 이름으로 */
+export function findCompanyNode(
+  index: CompanyIndex,
+  company: { name: string; ticker: string | null },
+): GraphNode | undefined {
+  return (company.ticker ? index.byTicker.get(company.ticker) : undefined) ?? index.byName.get(company.name)
+}
