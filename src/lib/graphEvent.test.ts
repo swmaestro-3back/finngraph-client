@@ -8,7 +8,6 @@ const full: GraphNode = {
   type: 'event',
   data: {
     keywords: ['로봇'],
-    companies: ['LG전자'],
     memberCount: 3,
     firstPublishedAt: '2026-09-01T09:12:00+09:00',
     lastPublishedAt: '2026-09-07T15:39:00+09:00',
@@ -21,19 +20,12 @@ describe('graphEvent', () => {
   it('eventInfo는 없는 필드를 null·빈 배열로 채운다', () => {
     expect(eventInfo(bare)).toEqual({
       keywords: [],
-      companies: [],
       memberCount: null,
-      newsIds: [],
       firstPublishedAt: null,
       lastPublishedAt: null,
       representativeNewsId: null,
     })
     expect(eventInfo(full).representativeNewsId).toBe(4)
-  })
-
-  it('뉴스 목록이 없으면 대표 뉴스 하나로 대신한다', () => {
-    expect(eventInfo(full).newsIds).toEqual([4])
-    expect(eventInfo({ ...full, data: { ...full.data, newsIds: [4, 5, 6] } }).newsIds).toEqual([4, 5, 6])
   })
 
   it('기간은 날짜만, 같은 날이면 하루만', () => {

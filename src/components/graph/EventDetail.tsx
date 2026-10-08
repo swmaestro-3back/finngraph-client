@@ -19,8 +19,6 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const MAX_KEYWORDS = 8
-/** 제목을 불러올 기사 상한 — 일괄 조회가 없어 기사마다 한 번씩 부른다 */
-const MAX_ARTICLES = 12
 const MAX_COMPANIES = 8
 
 interface Props {
@@ -55,7 +53,7 @@ export function EventDetail({
   const period = eventPeriod(info.firstPublishedAt, info.lastPublishedAt)
   const keywords = info.keywords.slice(0, MAX_KEYWORDS)
 
-  const newsIds = info.newsIds.slice(0, MAX_ARTICLES).map(String)
+  const newsIds = info.representativeNewsId != null ? [String(info.representativeNewsId)] : []
   const { briefs, loading } = useNewsBriefs(newsIds)
   // 불러오지 못한 기사(미분석 뉴스는 상세가 404다)는 빠진다 — 남은 것은 전부 모달로 열 수 있다
   const articles = newsIds
@@ -67,7 +65,7 @@ export function EventDetail({
     info.representativeNewsId != null ? String(info.representativeNewsId) : null
 
   // 그래프에 있는 기업이 먼저 — 눌러서 이어 갈 수 있는 쪽이 위다
-  const companies = info.companies
+  const companies = ([] as string[])
     .map((name) => {
       const hit = nodesByLabel.get(name)
       const stock = hit?.data.ticker ? stockByTicker.get(hit.data.ticker) : stockByName.get(name)
@@ -143,11 +141,6 @@ export function EventDetail({
               {articles.length > 0
                 ? `나머지 ${missing}건은 아직 분석되지 않아 제목을 불러오지 못했습니다.`
                 : `기사 ${missing}건이 아직 분석되지 않아 제목을 불러오지 못했습니다.`}
-            </p>
-          )}
-          {info.newsIds.length > newsIds.length && (
-            <p className="mt-2 mb-0 text-caption text-muted-foreground">
-              처음 {newsIds.length}건만 보여줍니다. 전체 {info.newsIds.length}건.
             </p>
           )}
         </Section>

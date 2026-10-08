@@ -24,16 +24,14 @@ function company(
 ): KgCompanyNode {
   return {
     id, ticker, name, market, country, is_listed: true, company_id: 1, corp_code: null,
-    krx100: false, krx300: false, kosdaq150: false,
+    krx100: false, krx300: false, kosdaq150: false, quote: null,
   }
 }
 
 const EVENT: KgEventNode = {
   id: 'e1', cluster_id: 2, title: '로봇 액추에이터 수주 협의',
-  keywords: ['lg전자', '액추에이터', '로봇'], companies: ['LG전자'], news_ids: [4, 5, 6],
-  representative_news_id: 4, member_count: 3, original_size: 58,
+  keywords: ['lg전자', '액추에이터', '로봇'], representative_news_id: 4, member_count: 3,
   first_published_at: '2026-09-07T09:12:00+09:00', last_published_at: '2026-09-07T15:39:00+09:00',
-  titled_at: null, synced_at: null,
 }
 
 const SUPPLY_REL = {
@@ -93,9 +91,7 @@ describe('toCompanyOverviewGraph', () => {
     expect(event.data).toEqual({
       clusterId: 2,
       keywords: ['lg전자', '액추에이터', '로봇'],
-      companies: ['LG전자'],
       memberCount: 3,
-      newsIds: [4, 5, 6],
       firstPublishedAt: '2026-09-07T09:12:00+09:00',
       lastPublishedAt: '2026-09-07T15:39:00+09:00',
       representativeNewsId: 4,
@@ -126,7 +122,7 @@ describe('알 수 없는 관계 타입', () => {
 describe('toThemeGraph', () => {
   it('테마 노드가 먼저, 기업들이 뒤따르며 BELONGS_TO 간선에 reason이 보존된다', () => {
     const res: KgThemeRes = {
-      theme: { id: 't1', name: '밸류업', description: '설명', source_theme_id: 648 },
+      theme: { id: 't1', name: '밸류업', description: '설명', theme_id: 648 },
       companies: [company('c1', '066570', 'LG전자'), company('c2', '000001', '협력사', 'KOSDAQ')],
       relationships: [
         { id: 'r1', type: 'BELONGS_TO', start: 'c1', end: 't1', reason: '공시' },
@@ -197,8 +193,8 @@ describe('toCompanyThemesGraph', () => {
     const res: KgCompanyThemesRes = {
       company: company('c1', '066570', 'LG전자'),
       themes: [
-        { id: 't1', name: '밸류업', description: '설명', source_theme_id: 648 },
-        { id: 't2', name: '로봇', description: null, source_theme_id: 12 },
+        { id: 't1', name: '밸류업', description: '설명', theme_id: 648 },
+        { id: 't2', name: '로봇', description: null, theme_id: 12 },
       ],
       relationships: [
         { id: 'r1', type: 'BELONGS_TO', start: 'c1', end: 't1', reason: '공시' },
@@ -250,5 +246,34 @@ describe('toNewsGraph', () => {
     expect(data.truncated).toBe(true)
     expect(data.graph.metadata.centerId).toBeUndefined()
     expect(data.graph.metadata.stats).toEqual({ total_nodes: 3, total_edges: 2 })
+  })
+})
+
+describe('시세·테마 id', () => {
+  const quote = { price: 263500, change: -1.86, market_cap: 1540494253000000, r_1w: -4.01, r_1m: null, r_3m: 2.5, price_date: '2026-10-08' }
+
+  it('기업 quote를 camelCase NodeQuote로 옮긴다', () => {
+    const graph = toSupplyChainGraph(
+      { companies: [{ ...company('c1', '005930', '삼성전자'), quote }], relationships: [] },
+      '005930',
+    )
+    expect(graph.nodes[0].data.quote).toEqual({
+      price: 263500, change: -1.86, marketCap: 1540494253000000, w1: -4.01, m1: null, m3: 2.5,
+    })
+  })
+
+  it('quote가 null이면 data.quote는 undefined', () => {
+    const graph = toSupplyChainGraph({ companies: [company('c1', 'AAPL', '애플', 'NASDAQ', null)], relationships: [] }, 'AAPL')
+    expect(graph.nodes[0].data.quote).toBeUndefined()
+  })
+
+  it('테마 노드는 themeId와 지수 시세를 싣는다 — 테마에는 가격이 없다', () => {
+    const graph = toThemeGraph({
+      theme: { id: 't1', name: '2차전지', description: null, theme_id: 1,
+        quote: { change: 1.77, market_cap: 2, r_1w: 7.73, r_1m: 8.51, r_3m: null, price_date: '2026-10-08' } },
+      companies: [], relationships: [],
+    })
+    expect(graph.nodes[0].data.themeId).toBe(1)
+    expect(graph.nodes[0].data.quote).toEqual({ price: null, change: 1.77, marketCap: 2, w1: 7.73, m1: 8.51, m3: null })
   })
 })
