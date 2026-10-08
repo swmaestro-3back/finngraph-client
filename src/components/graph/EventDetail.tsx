@@ -1,7 +1,6 @@
 import { Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { type GraphNode } from '@/data/graphTypes'
-import type { StockRowRes } from '@/lib/apiTypes'
+import { type GraphNode, type NodeQuote } from '@/data/graphTypes'
 import { eventInfo, eventPeriod } from '@/lib/graphEvent'
 import { formatShortDateTime } from '@/lib/format'
 import { useNewsBriefs } from '@/lib/queries/useNewsBriefs'
@@ -25,9 +24,6 @@ interface Props {
   node: GraphNode
   /** 그래프에 있는 기업을 이름으로 찾는다 — 이벤트의 companies는 문자열이라 이름으로만 맞춘다 */
   nodesByLabel: Map<string, GraphNode>
-  stockByTicker: Map<string, StockRowRes>
-  /** 그래프에 없는 언급 기업의 시세를 이름으로 찾는다 */
-  stockByName: Map<string, StockRowRes>
   onNodeSelect?: (node: GraphNode) => void
   /** 이벤트 렌즈 hop 2로 — 이 이벤트를 공유하는 다른 기업을 본다. 이미 그 안이면 넘어오지 않는다 */
   onShowSharing?: () => void
@@ -43,8 +39,6 @@ interface Props {
 export function EventDetail({
   node,
   nodesByLabel,
-  stockByTicker,
-  stockByName,
   onNodeSelect,
   onShowSharing,
   onOpenNews,
@@ -65,12 +59,8 @@ export function EventDetail({
     info.representativeNewsId != null ? String(info.representativeNewsId) : null
 
   // 그래프에 있는 기업이 먼저 — 눌러서 이어 갈 수 있는 쪽이 위다
-  const companies = ([] as string[])
-    .map((name) => {
-      const hit = nodesByLabel.get(name)
-      const stock = hit?.data.ticker ? stockByTicker.get(hit.data.ticker) : stockByName.get(name)
-      return { name, hit, stock }
-    })
+  const companies = ([] as { name: string; ticker: string | null; quote?: NodeQuote }[])
+    .map((c) => ({ ...c, hit: nodesByLabel.get(c.name) }))
     .sort((a, b) => Number(Boolean(b.hit)) - Number(Boolean(a.hit)))
 
   return (
@@ -149,9 +139,9 @@ export function EventDetail({
       {companies.length > 0 && (
         <Section title={`언급 기업 ${companies.length}`} meta="오늘 등락">
           <Ledger items={companies} keyOf={(c) => c.name} max={MAX_COMPANIES}>
-            {({ name, hit, stock }) => (
-              <li className={cn(LEDGER_ROW, 'flex items-center gap-2.5', !hit && !stock && 'hover:bg-transparent')}>
-                {hit ? <NodeMark node={hit} /> : <NameMark name={name} ticker={stock?.ticker} />}
+            {({ name, ticker, hit, quote }) => (
+              <li className={cn(LEDGER_ROW, 'flex items-center gap-2.5', !hit && !ticker && 'hover:bg-transparent')}>
+                {hit ? <NodeMark node={hit} /> : <NameMark name={name} ticker={ticker ?? undefined} />}
                 <span
                   className={cn(
                     'min-w-0 flex-1 truncate text-body',
@@ -160,13 +150,13 @@ export function EventDetail({
                 >
                   {name}
                 </span>
-                <ChangeText value={stock?.change} className="shrink-0 text-caption" />
+                <ChangeText value={quote?.change} className="shrink-0 text-caption" />
                 {hit && onNodeSelect ? (
                   <RowAction label={`${name} 선택`} onClick={() => onNodeSelect(hit)} />
                 ) : (
-                  stock && (
+                  ticker && (
                     <Link
-                      to={`/stock/${stock.ticker}`}
+                      to={`/stock/${ticker}`}
                       aria-label={`${name} 종목 상세`}
                       className="absolute inset-0 rounded-md"
                     />

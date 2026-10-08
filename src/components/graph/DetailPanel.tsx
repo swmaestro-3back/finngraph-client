@@ -8,7 +8,6 @@ import {
   type GraphNode,
   type GraphSelection,
 } from '@/data/graphTypes'
-import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import type { NodeNeighbors } from '@/lib/graphNeighbors'
 import { NodeDetail, type CenterShortcuts } from '@/components/graph/NodeDetail'
 import { EdgeDetail } from '@/components/graph/EdgeDetail'
@@ -28,10 +27,6 @@ interface Props {
   neighbors: NodeNeighbors
   /** 지금 조회의 중심 노드 id */
   centerId: string | null
-  /** 종목 목록의 시세 행 — 티커로, 그리고 이벤트의 언급 기업처럼 이름만 있을 때는 이름으로 찾는다 */
-  stockByTicker: Map<string, StockRowRes>
-  stockByName: Map<string, StockRowRes>
-  themeByName: Map<string, ThemeRes>
   /** 선택 간선과 같은 두 노드를 잇는 다른 간선 (간선 선택일 때) */
   siblings: GraphLink[]
   onNodeSelect?: (node: GraphNode) => void
@@ -55,9 +50,6 @@ export function DetailPanel({
   onBack,
   neighbors,
   centerId,
-  stockByTicker,
-  stockByName,
-  themeByName,
   siblings,
   onNodeSelect,
   onLinkSelect,
@@ -76,9 +68,6 @@ export function DetailPanel({
     scrollRef.current?.scrollTo({ top: 0 })
   }, [selectionKey])
 
-  const stockOf = (node: GraphNode) =>
-    node.data.ticker ? stockByTicker.get(node.data.ticker) : undefined
-
   // key — 선택이 바뀌면 [더 보기]로 펼친 상태가 다음 대상까지 따라가지 않게 새로 그린다
   const detail =
     selection.kind === 'edge' ? (
@@ -87,8 +76,6 @@ export function DetailPanel({
         link={selection.link}
         source={selection.source}
         target={selection.target}
-        sourceStock={stockOf(selection.source)}
-        targetStock={stockOf(selection.target)}
         siblings={siblings}
         onNodeSelect={onNodeSelect}
         onLinkSelect={onLinkSelect}
@@ -99,8 +86,6 @@ export function DetailPanel({
         key={selection.node.id}
         node={selection.node}
         nodesByLabel={nodesByLabel}
-        stockByTicker={stockByTicker}
-        stockByName={stockByName}
         onNodeSelect={onNodeSelect}
         onShowSharing={onShowSharing}
         onOpenNews={onOpenNews}
@@ -111,8 +96,6 @@ export function DetailPanel({
         node={selection.node}
         neighbors={neighbors}
         centerId={centerId}
-        stockByTicker={stockByTicker}
-        themeByName={themeByName}
         onNodeSelect={onNodeSelect}
         onLinkSelect={onLinkSelect}
         onLinkHover={onLinkHover}

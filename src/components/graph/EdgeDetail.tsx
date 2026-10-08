@@ -9,7 +9,6 @@ import {
   type GraphLink,
   type GraphNode,
 } from '@/data/graphTypes'
-import type { StockRowRes } from '@/lib/apiTypes'
 import {
   ChangeText,
   LEDGER_ROW,
@@ -37,8 +36,6 @@ interface Props {
   link: GraphLink
   source: GraphNode
   target: GraphNode
-  sourceStock?: StockRowRes
-  targetStock?: StockRowRes
   /** 같은 두 기업 사이의 다른 관계 — 반대 방향 공급, 인수와 공급이 함께 있는 경우 */
   siblings: GraphLink[]
   /** 양 끝 기업을 누르면 그 노드로 선택을 옮긴다 — 거기서 재중심으로 이어진다 */
@@ -67,8 +64,6 @@ export function EdgeDetail({
   link,
   source,
   target,
-  sourceStock,
-  targetStock,
   siblings,
   onNodeSelect,
   onLinkSelect,
@@ -120,7 +115,7 @@ export function EdgeDetail({
     <>
       {/* 캔버스의 간선을 세워 놓은 레일 — 선 색도 켜진 간선과 같은 출발 기업 색이다 */}
       <div className="mb-5">
-        <Party node={source} stock={sourceStock} onSelect={onNodeSelect} />
+        <Party node={source} onSelect={onNodeSelect} />
         <div className="flex items-center gap-2.5">
           <span className="flex w-6 shrink-0 justify-center">
             <span className="h-7 w-0.5 rounded-full" style={{ background: color }} />
@@ -131,7 +126,7 @@ export function EdgeDetail({
             {countMeta && <span>{countMeta}</span>}
           </span>
         </div>
-        <Party node={target} stock={targetStock} onSelect={onNodeSelect} />
+        <Party node={target} onSelect={onNodeSelect} />
       </div>
 
       {link.reason && (
@@ -279,11 +274,9 @@ export function EdgeDetail({
 /** 레일의 한쪽 끝 — 기업(또는 테마) 한 줄. 누르면 그 노드로 선택이 옮겨간다 */
 function Party({
   node,
-  stock,
   onSelect,
 }: {
   node: GraphNode
-  stock?: StockRowRes
   onSelect?: (node: GraphNode) => void
 }) {
   const body = (
@@ -295,7 +288,7 @@ function Party({
       <span className="shrink-0 text-caption text-muted-foreground">
         {CATEGORY_LABELS[nodeCategory(node)]}
       </span>
-      <ChangeText value={stock?.change} className="shrink-0 text-caption" />
+      <ChangeText value={node.data.quote?.change} className="shrink-0 text-caption" />
     </>
   )
   if (!onSelect) return <div className="flex items-center gap-2.5 py-1.5">{body}</div>

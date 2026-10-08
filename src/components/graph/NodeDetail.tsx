@@ -6,7 +6,6 @@ import {
   type GraphLink,
   type GraphNode,
 } from '@/data/graphTypes'
-import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import type { Neighbor, NodeNeighbors } from '@/lib/graphNeighbors'
 import { formatCompactKrw, formatPriceOrDash, formatShortDate } from '@/lib/format'
 import { itemsLine } from '@/lib/edgeEvidence'
@@ -24,8 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { fromState } from '@/lib/navigation'
-import { useThemeIdIndex } from '@/lib/queries/useThemesCached'
-import { themeDetailPath } from '@/lib/themeRoute'
+import { themePath } from '@/lib/fg/paths'
 import { cn } from '@/lib/utils'
 
 /** 테마의 소속 기업은 수십 곳일 수 있다 — 처음에는 이만큼만 편다 */
@@ -54,10 +52,6 @@ interface Props {
   neighbors: NodeNeighbors
   /** 지금 조회의 중심 노드 id — 선택 노드가 중심인지, 이웃 가운데 누가 중심인지 가린다 */
   centerId: string | null
-  /** 종목 목록의 시세 행 — 선택 기업과 이웃 기업의 등락을 여기서 찾는다(없으면 생략) */
-  stockByTicker: Map<string, StockRowRes>
-  /** 테마 목록 — 테마의 오늘 등락을 이름으로 찾는다 */
-  themeByName: Map<string, ThemeRes>
   onNodeSelect?: (node: GraphNode) => void
   /** 이웃 행의 면을 누르면 그 관계(간선)의 출처로 간다 */
   onLinkSelect?: (link: GraphLink) => void
@@ -92,8 +86,6 @@ export function NodeDetail({
   node,
   neighbors,
   centerId,
-  stockByTicker,
-  themeByName,
   onNodeSelect,
   onLinkSelect,
   onLinkHover,
@@ -106,20 +98,23 @@ export function NodeDetail({
   const isTheme = node.type === 'theme'
   const isCenter = node.id === centerId
   const ticker = node.data.ticker
-  const stock = ticker ? stockByTicker.get(ticker) : undefined
-  const theme = isTheme ? themeByName.get(node.label) : undefined
+  // 기업은 종목 시세, 테마는 테마 지수 시세 — kg-api가 노드에 실어 보낸다
+  const quote = node.data.quote
   const indexFlags = INDEX_FLAGS.filter((f) => node.data[f.key])
   // 기업은 1주·1개월·3개월을 종목 목록에서, 테마는 테마 목록에서 읽는다 — 둘 다 같은 필드 이름이다
   const returns = [
-    { label: '1주', value: (stock ?? theme)?.w1 },
-    { label: '1개월', value: (stock ?? theme)?.m1 },
-    { label: '3개월', value: (stock ?? theme)?.m3 },
+    { label: '1주', value: quote?.w1 },
+    { label: '1개월', value: quote?.m1 },
+    { label: '3개월', value: quote?.m3 },
   ].filter((r) => r.value != null)
 
-  const themeIndex = useThemeIdIndex()
-  const themePath = isTheme ? themeDetailPath(node.label, themeIndex) : null
-
-  const detailPath = isTheme ? themePath : ticker ? `/stock/${ticker}` : null
+  const detailPath = isTheme
+    ? node.data.themeId != null
+      ? themePath(node.data.themeId)
+      : null
+    : ticker
+      ? `/stock/${ticker}`
+      : null
   const detailAvailable = isTheme || node.data.country === 'KR'
   // 모바일은 hover가 없어 툴팁 대신 버튼 줄 아래에 같은 문구를 상시로 보인다
   const showDetailNotice = detailPath !== null && !detailAvailable && isMobile
@@ -142,7 +137,6 @@ export function NodeDetail({
 
   /** 기업 이웃 한 행 — 이름은 그 기업으로, 나머지 면은 관계 근거로 */
   const relationRow = (n: Neighbor, detail: string | undefined) => {
-    const neighborStock = n.node.data.ticker ? stockByTicker.get(n.node.data.ticker) : undefined
     return (
       <li
         className={cn(LEDGER_ROW, 'flex items-start gap-2.5')}
@@ -168,7 +162,7 @@ export function NodeDetail({
             {n.node.id === centerId && (
               <span className="shrink-0 text-micro font-semibold text-primary">중심</span>
             )}
-            <ChangeText value={neighborStock?.change} className="shrink-0 text-caption" />
+            <ChangeText value={n.node.data.quote?.change} className="shrink-0 text-caption" />
             <span className="ml-auto shrink-0 font-mono text-caption text-muted-foreground">
               <span className="text-foreground">{n.link.mentioned_count}</span>
               {n.link.last_mentioned_at && ` ${formatShortDate(n.link.last_mentioned_at)}`}
@@ -213,17 +207,17 @@ export function NodeDetail({
         </div>
       </div>
 
-      {(stock || theme) && (
+      {quote && (
         <div className="mb-4">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-body">
-            {stock && (
+            {!isTheme && (
               <span className="font-mono font-semibold text-foreground">
-                {formatPriceOrDash(stock.price)}원
+                {formatPriceOrDash(quote.price)}원
               </span>
             )}
-            <ChangeText value={(stock ?? theme)?.change} />
+            <ChangeText value={quote.change} />
             <span className="text-caption text-muted-foreground">
-              시총 {formatCompactKrw((stock ?? theme)?.marketCap ?? null)}
+              시총 {formatCompactKrw(quote.marketCap)}
             </span>
           </div>
           {returns.length > 0 && (
@@ -330,7 +324,7 @@ export function NodeDetail({
                         {n.node.label}
                       </span>
                       <ChangeText
-                        value={n.node.data.ticker ? stockByTicker.get(n.node.data.ticker)?.change : undefined}
+                        value={n.node.data.quote?.change}
                         className="ml-auto shrink-0 text-caption"
                       />
                     </div>
@@ -404,7 +398,7 @@ export function NodeDetail({
                         {n.node.label}
                       </span>
                       <ChangeText
-                        value={themeByName.get(n.node.label)?.change}
+                        value={n.node.data.quote?.change}
                         className="ml-auto shrink-0 text-caption"
                       />
                     </div>
