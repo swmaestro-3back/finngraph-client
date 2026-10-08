@@ -48,9 +48,35 @@ export const DAILY_HISTORY_LIMIT = 2500
 export const DAILY_LOADED_MONTHS = 12
 export const DEEP_LOAD_EDGE = 5
 
-export function needsDailyHistory(range: string): boolean {
+export interface MovingAverageLine {
+  days: number
+  color: string
+}
+
+export const MOVING_AVERAGES: readonly MovingAverageLine[] = [
+  { days: 20, color: '--feedback-success' },
+  { days: 60, color: '--relation-inferred' },
+  { days: 120, color: '--text-tertiary' },
+]
+
+export const LONGEST_AVERAGE = Math.max(...MOVING_AVERAGES.map((line) => line.days))
+
+export function movingAverage(candles: readonly CandleRes[], days: number): (number | null)[] {
+  let sum = 0
+  return candles.map((candle, index) => {
+    sum += candle.close
+    if (index >= days) sum -= candles[index - days].close
+    return index >= days - 1 ? sum / days : null
+  })
+}
+
+export function needsDailyHistory(range: string, averaging = false): boolean {
   const months = DAILY_RANGES.find((option) => option.value === range)?.months ?? 0
-  return months > DAILY_LOADED_MONTHS
+  return months > DAILY_LOADED_MONTHS || (averaging && months >= DAILY_LOADED_MONTHS)
+}
+
+export function deepLoadEdge(averaging: boolean): number {
+  return averaging ? LONGEST_AVERAGE : DEEP_LOAD_EDGE
 }
 
 export function shiftSpan(span: LogicalSpan, by: number): LogicalSpan {
@@ -228,6 +254,11 @@ export function legendAt(
   }
 }
 
+export interface AverageValue {
+  days: number
+  value: number | null
+}
+
 export function chartValueText(
   candles: readonly CandleRes[],
   index: number,
@@ -235,6 +266,7 @@ export function chartValueText(
   markerLabel = '이슈',
   kind: CandlePeriod = 'D',
   format: PriceFormat = WON_FORMAT,
+  averages: readonly AverageValue[] = [],
 ): string {
   const legend = legendAt(candles, index, kind, format.decimals)
   if (!legend) return ''
@@ -246,6 +278,9 @@ export function chartValueText(
     `종가 ${legend.close}${format.unit}`,
     ...(legend.change === null ? [] : [formatChange(legend.change)]),
     `거래량 ${legend.volume}주`,
+    ...averages.flatMap(({ days, value }) =>
+      value === null ? [] : [`${days}일선 ${formatChartPrice(value, format.decimals)}${format.unit}`],
+    ),
     ...(markerTitle ? [`${markerLabel}: ${markerTitle}`] : []),
   ]
   return parts.join(', ')
