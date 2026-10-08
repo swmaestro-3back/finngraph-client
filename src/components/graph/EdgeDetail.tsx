@@ -19,17 +19,16 @@ import {
   Section,
 } from '@/components/graph/DetailParts'
 import {
+  evidenceNews,
   groupNewsByDay,
   itemsLine,
-  latestMentions,
   monthlyCounts,
   rankItems,
   type EvidenceDay,
-  type EvidenceNews,
 } from '@/lib/edgeEvidence'
 import { formatShortDate } from '@/lib/format'
 import { formatPeriod } from '@/lib/linkCard'
-import { useNewsBriefs } from '@/lib/queries/useNewsBriefs'
+import { useEdgeEvidence } from '@/lib/queries/useEdgeEvidence'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -47,8 +46,6 @@ interface Props {
 
 const DART_VIEWER = 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo='
 
-/** 제목을 불러올 기사 상한 — 일괄 조회가 없어 기사마다 한 번씩 부른다 */
-const MAX_NEWS = 12
 const MAX_ITEMS = 5
 /** 처음에 펼쳐 두는 날짜 묶음 수 */
 const MAX_DAYS = 3
@@ -83,33 +80,29 @@ export function EdgeDetail({
   const items = useMemo(() => rankItems(link), [link])
   const maxItemCount = Math.max(1, ...items.map((i) => i.count))
 
-  const mentions = useMemo(() => latestMentions(link, MAX_NEWS), [link])
-  const { briefs, loading } = useNewsBriefs(mentions.map((m) => m.id))
-  const news: EvidenceNews[] = mentions.map((m) => {
-    const brief = briefs.get(m.id)
-    return { id: m.id, title: brief?.title ?? null, publishedAt: brief?.publishedAt ?? null, item: m.item }
-  })
-  // 선택을 옮긴 직후에는 이전 간선의 결과가 남아 있다 — 이 간선의 제목이 하나라도 비어 있으면 아직 오는 중이다
-  const titlesPending = loading && news.some((n) => n.title === null)
+  // 기사 제목·월별 건수·공시 접수일은 kg-api 근거 조회 한 번으로 — 품목·건수·기간은 간선에 실려 온 것을 그대로 쓴다
+  const evidence = useEdgeEvidence(link.id)
+  const news = evidence.data ? evidenceNews(evidence.data) : []
+  const newsTotal = evidence.data?.news_total ?? 0
+  const titlesPending = evidence.loading && !evidence.data
   const days = groupNewsByDay(news)
 
-  // 월별 막대는 모든 근거 기사의 날짜를 알 때만 — 일부만 불러왔으면 빈 달이 거짓말이 된다
-  const months = monthlyCounts(news.map((n) => n.publishedAt))
-  const showMonths =
-    !titlesPending &&
-    newsCount <= mentions.length &&
-    months.length >= 2 &&
-    months.length <= MAX_MONTHS
+  // 월별 막대는 서버가 전체 근거 기사로 센다 — 목록에 보이는 기사 수와 무관하게 그릴 수 있다
+  const months = monthlyCounts(evidence.data?.monthly ?? [])
+  const showMonths = months.length >= 2 && months.length <= MAX_MONTHS
   const maxMonthCount = Math.max(1, ...months.map((m) => m.count))
   const period = formatPeriod(link.first_mentioned_at, link.last_mentioned_at)
 
   const disclosures = useMemo(() => {
-    const byId = new Map<string, string | null>()
+    const byId = new Map<string, { item: string | null; reportName: string | null; date: string | null }>()
+    const fetched = new Map(evidence.data?.disclosures.map((d) => [d.rcept_no, d]) ?? [])
     link.disclosures?.forEach((d) => {
-      if (!byId.has(d.rcept_no)) byId.set(d.rcept_no, d.item)
+      if (byId.has(d.rcept_no)) return
+      const row = fetched.get(d.rcept_no)
+      byId.set(d.rcept_no, { item: d.item, reportName: row?.report_nm ?? null, date: row?.rcept_dt ?? null })
     })
-    return [...byId].map(([rceptNo, item]) => ({ rceptNo, item }))
-  }, [link])
+    return [...byId].map(([rceptNo, d]) => ({ rceptNo, ...d }))
+  }, [link, evidence.data])
 
   return (
     <>
@@ -198,16 +191,18 @@ export function EdgeDetail({
         </Section>
       )}
 
-      {mentions.length > 0 && (
+      {newsCount > 0 && (
         <Section title="출처 기사" meta={showMonths ? '최신순' : (period ?? '최신순')}>
           {titlesPending ? (
-            <RowSkeleton rows={Math.min(3, mentions.length)} />
+            <RowSkeleton rows={Math.min(3, newsCount)} />
+          ) : evidence.error ? (
+            <p className="m-0 text-caption text-muted-foreground">근거 기사를 불러오지 못했습니다.</p>
           ) : (
             <EvidenceDays key={link.id} days={days} onOpenNews={onOpenNews} />
           )}
-          {newsCount > mentions.length && (
+          {newsTotal > news.length && (
             <p className="mt-2 mb-0 text-caption text-muted-foreground">
-              최근 {mentions.length}건만 보여줍니다. 전체 {newsCount}건.
+              최근 {news.length}건만 보여줍니다. 전체 {newsTotal}건.
             </p>
           )}
         </Section>
@@ -224,10 +219,10 @@ export function EdgeDetail({
                   rel="noopener noreferrer"
                   className="block text-body leading-snug text-foreground hover:underline"
                 >
-                  {d.item ?? '공시 항목 정보 없음'}
+                  {d.item ?? d.reportName ?? '공시 항목 정보 없음'}
                 </a>
                 <div className="mt-0.5 font-mono text-caption text-muted-foreground">
-                  접수번호 {d.rceptNo}
+                  {d.date && `${d.date} · `}접수번호 {d.rceptNo}
                 </div>
               </li>
             ))}
