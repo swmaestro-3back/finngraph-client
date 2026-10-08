@@ -454,6 +454,45 @@
   font: 500 12px/17px var(--font-sans);
   color: var(--text-secondary);
 }
+.fg-sks__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.fg-sks__pick {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.fg-sks__pick select {
+  appearance: none;
+  min-width: 0;
+  max-width: 220px;
+  min-height: 36px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: 500 13px/18px var(--font-sans);
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.fg-sks__pick svg {
+  position: absolute;
+  right: 10px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  .fg-sks__pick select {
+    min-height: 44px;
+  }
+}
 .fg-sks__badges {
   display: flex;
   flex-wrap: wrap;
