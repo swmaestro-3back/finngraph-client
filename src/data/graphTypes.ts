@@ -6,6 +6,16 @@ export type GraphFocus =
   | { kind: "company"; ticker: string }
   | { kind: "theme"; name: string };
 
+/** 노드 시세 — kg-api가 그래프 응답에 실어 보낸다. 등락·수익률은 %. 테마는 가격이 없다 */
+export interface NodeQuote {
+  price: number | null;
+  change: number | null;
+  marketCap: number | null;
+  w1: number | null;
+  m1: number | null;
+  m3: number | null;
+}
+
 export interface GraphNode {
   id: string;
   label: string;
@@ -20,14 +30,15 @@ export interface GraphNode {
     krx100?: boolean;
     krx300?: boolean;
     kosdaq150?: boolean;
+    /** 시세 — 시세가 없는 종목(해외·미적재)과 테마는 없다 */
+    quote?: NodeQuote;
+    /** 테마 전용 — Postgres themes.id. 테마 상세 링크를 만든다 */
+    themeId?: number;
     /** 이벤트(뉴스 클러스터) 전용 — 제목은 label에 있다 */
     clusterId?: number;
     keywords?: string[];
-    /** 이벤트에 언급된 기업명 — 그래프 노드와는 이름으로만 맞춰 볼 수 있다 */
-    companies?: string[];
-    memberCount?: number;
-    /** 클러스터를 이루는 뉴스 id — 상세 패널이 기사 제목을 불러올 때 쓴다 */
-    newsIds?: number[];
+    /** 클러스터 전체 기사 수 */
+    newsCount?: number;
     firstPublishedAt?: string;
     lastPublishedAt?: string;
     representativeNewsId?: number;

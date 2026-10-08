@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   groupNewsByDay,
   itemsLine,
-  latestMentions,
+  evidenceNews,
+  evidencePath,
+  hasEvidence,
   monthlyCounts,
   rankItems,
   type EvidenceNews,
@@ -54,27 +56,6 @@ describe('itemsLine', () => {
   })
 })
 
-describe('latestMentions', () => {
-  const news = [
-    { news_id: '1', item: 'A' },
-    { news_id: '2', item: 'B' },
-    { news_id: '2', item: 'C' },
-    { news_id: '3', item: null },
-  ]
-
-  it('같은 기사는 한 행으로 합치고 품목을 잇는다', () => {
-    expect(latestMentions({ news }, 10)).toEqual([
-      { id: '1', item: 'A' },
-      { id: '2', item: 'B, C' },
-      { id: '3', item: null },
-    ])
-  })
-
-  it('상한을 넘으면 뒤쪽(최신)만 남긴다', () => {
-    expect(latestMentions({ news }, 2).map((m) => m.id)).toEqual(['2', '3'])
-  })
-})
-
 const article = (id: string, publishedAt: string | null): EvidenceNews => ({
   id,
   title: id,
@@ -103,8 +84,8 @@ describe('groupNewsByDay', () => {
 })
 
 describe('monthlyCounts', () => {
-  it('첫 달부터 마지막 달까지 빈 달을 0으로 채운다', () => {
-    const months = monthlyCounts(['2026-04-09', '2026-04-14', '2026-06-08', null])
+  it('서버 월별 건수를 첫 달부터 마지막 달까지 빈 달 0으로 채운다', () => {
+    const months = monthlyCounts([{ month: '2026-04', count: 2 }, { month: '2026-06', count: 1 }])
     expect(months.map((m) => [m.key, m.count])).toEqual([
       ['2026-04', 2],
       ['2026-05', 0],
@@ -113,10 +94,41 @@ describe('monthlyCounts', () => {
   })
 
   it('해를 넘겨도 이어진다', () => {
-    expect(monthlyCounts(['2025-12-30', '2026-02-01']).map((m) => m.month)).toEqual([12, 1, 2])
+    expect(monthlyCounts([{ month: '2025-12', count: 1 }, { month: '2026-02', count: 1 }]).map((m) => m.month)).toEqual([12, 1, 2])
   })
 
-  it('날짜가 하나도 없으면 빈 배열', () => {
-    expect(monthlyCounts([null])).toEqual([])
+  it('비어 있으면 빈 배열', () => {
+    expect(monthlyCounts([])).toEqual([])
+  })
+})
+
+describe('evidence 응답', () => {
+  it('evidencePath는 elementId를 인코딩한다', () => {
+    expect(evidencePath('5:abc:12')).toBe('/v1/relationships/5%3Aabc%3A12/evidence')
+  })
+
+  it('evidenceNews는 기사 한 건을 EvidenceNews로 — 품목은 쉼표로 잇고 없으면 null', () => {
+    const news = evidenceNews({
+      news: [
+        { news_id: '11', title: 'B', url: 'u', original_url: null, published_at: '2026-09-02T09:00:00+09:00', items: ['HBM', '패키징'] },
+        { news_id: '10', title: null, url: null, original_url: null, published_at: null, items: [] },
+      ],
+      news_total: 2, monthly: [], disclosures: [],
+    })
+    expect(news).toEqual([
+      { id: '11', title: 'B', publishedAt: '2026-09-02T09:00:00+09:00', item: 'HBM, 패키징' },
+      { id: '10', title: '(제목 없음)', publishedAt: null, item: null },
+    ])
+  })
+})
+
+describe('hasEvidence', () => {
+  const base = { news_mention_count: 0, disclosure_count: 0 }
+  it('근거 기사·공시가 있는 기업 간 관계만 근거를 조회한다', () => {
+    expect(hasEvidence({ ...base, type: 'SUPPLIES_TO', news_mention_count: 2 })).toBe(true)
+    expect(hasEvidence({ ...base, type: 'INVESTS_IN', disclosure_count: 1 })).toBe(true)
+    expect(hasEvidence({ ...base, type: 'ACQUIRES' })).toBe(false)
+    expect(hasEvidence({ ...base, type: 'BELONGS_TO' })).toBe(false)
+    expect(hasEvidence({ type: 'HAS_EVENT' })).toBe(false)
   })
 })

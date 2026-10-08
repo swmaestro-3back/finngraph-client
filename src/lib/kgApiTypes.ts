@@ -8,6 +8,28 @@ export type KgMarket = 'KOSPI' | 'KOSDAQ'
 /** 지수 구성종목 — `index` 쿼리 파라미터 값. market과 함께 보내면 서버가 400을 준다 */
 export type KgMarketIndex = 'krx100' | 'krx300' | 'kosdaq150'
 
+/** 종목 시세 — 최신 일봉·밸류에이션. 등락·수익률 단위는 % */
+export interface KgStockQuote {
+  price: number | null
+  change: number | null
+  market_cap: number | null
+  r_1w: number | null
+  r_1m: number | null
+  r_3m: number | null
+  /** 기준 거래일 YYYY-MM-DD */
+  price_date: string | null
+}
+
+/** 테마 지수 시세 — 가격 대신 지수 등락. 시가총액은 소속 종목 합 */
+export interface KgThemeQuote {
+  change: number | null
+  market_cap: number | null
+  r_1w: number | null
+  r_1m: number | null
+  r_3m: number | null
+  price_date: string | null
+}
+
 export interface KgCompanyNode {
   /** Neo4j element_id — 렌더링 키 */
   id: string
@@ -22,13 +44,17 @@ export interface KgCompanyNode {
   krx100: boolean
   krx300: boolean
   kosdaq150: boolean
+  /** 그래프 응답만 채운다 — 뉴스 그래프 등은 null */
+  quote?: KgStockQuote | null
 }
 
 export interface KgThemeNode {
   id: string
   name: string | null
   description: string | null
-  source_theme_id: number | null
+  /** Postgres themes.id — 테마 상세 링크 */
+  theme_id: number | null
+  quote?: KgThemeQuote | null
 }
 
 interface KgNewsMention {
@@ -71,24 +97,18 @@ export interface KgBelongsToRelRes {
   reason: string | null
 }
 
-/** 이벤트(뉴스 클러스터) 노드 */
+/** 이벤트(뉴스 클러스터) 노드 — 기사 목록·관련 기업은 GET /v1/events/{cluster_id} */
 export interface KgEventNode {
   id: string
   /** 뉴스 클러스터 id */
   cluster_id: number | null
   title: string | null
   keywords: string[]
-  /** 이벤트에 언급된 기업명 */
-  companies: string[]
-  news_ids: number[]
   representative_news_id: number | null
-  /** 정제 후 남은 뉴스 건수 */
-  member_count: number | null
-  original_size: number | null
+  /** 클러스터 전체 기사 수 */
+  news_count: number | null
   first_published_at: string | null
   last_published_at: string | null
-  titled_at: string | null
-  synced_at: string | null
 }
 
 /** 기업이 이벤트에 언급됨 — start(기업) → end(이벤트). 근거 필드가 없다 */
@@ -151,4 +171,49 @@ export interface KgThemeRes {
   theme: KgThemeNode
   companies: KgCompanyNode[]
   relationships: KgBelongsToRelRes[]
+}
+
+/** 목록 한 줄에 필요한 기사 정보 */
+export interface KgNewsBrief {
+  news_id: string
+  title: string | null
+  url: string | null
+  original_url: string | null
+  published_at: string | null
+}
+
+export interface KgEvidenceNews extends KgNewsBrief {
+  /** 이 기사에서 뽑힌 품목 문구 */
+  items: string[]
+}
+
+/** GET /v1/relationships/{element_id}/evidence?limit= — 간선 근거 */
+export interface KgRelationshipEvidenceRes {
+  /** 최신순 limit건 */
+  news: KgEvidenceNews[]
+  /** 근거 기사 전체 수 */
+  news_total: number
+  /** 오래된 달부터. 기사 없는 달은 빠져 있다 */
+  monthly: { month: string; count: number }[]
+  disclosures: { rcept_no: string; report_nm: string | null; rcept_dt: string | null; item: string | null }[]
+}
+
+export interface KgEventCompany {
+  name: string
+  ticker: string | null
+  quote: KgStockQuote | null
+}
+
+/** GET /v1/events/{cluster_id}?limit= — 이벤트 상세. news는 분석된 기사만 최신순 */
+export interface KgEventDetailRes {
+  cluster_id: number
+  title: string | null
+  keywords: string[]
+  representative_news_id: number | null
+  first_published_at: string | null
+  last_published_at: string | null
+  news: KgNewsBrief[]
+  /** 분석 여부와 무관한 클러스터 전체 기사 수 */
+  news_total: number
+  companies: KgEventCompany[]
 }

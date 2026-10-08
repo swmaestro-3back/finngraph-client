@@ -41,8 +41,6 @@ import {
 } from '@/lib/graphRoute'
 import { useMemberGate } from '@/lib/memberGate'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
-import { useStocksCached } from '@/lib/queries/useStocksCached'
-import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
@@ -77,10 +75,7 @@ export function GraphView({ focus }: Props) {
   const gatedQuery = gatedHop === hop ? query : { ...query, hop: gatedHop }
   // 개요는 서버가 1홉 고정이라 URL에 hop이 남아 있어도 강조 범위는 1홉이다
   const effectiveHop = controls.hop ? gatedHop : 1
-  const { data, loading, error, refetch } = useKgGraph(focus, gatedQuery)
-  // 전종목·테마 목록은 수백 KB다 — 재중심으로 이 화면이 다시 마운트될 때마다 받지 않도록 탭 공용 캐시를 탄다
-  const { data: stocks } = useStocksCached()
-  const { data: themes } = useThemesCached()
+  const { data, loading, error, refetch } = useKgGraph(focus, gatedQuery, !pending)
   const navigate = useNavigate()
   const location = useLocation()
   const navState = location.state as GraphNavState | null
@@ -347,13 +342,6 @@ export function GraphView({ focus }: Props) {
     )
   }, [data, selection])
 
-  // 검색용으로 이미 받아 둔 종목·테마 목록에서 패널이 시세를 찾는다 — 추가 호출 없음
-  const stockByTicker = useMemo(
-    () => new Map((stocks ?? []).map((s) => [s.ticker, s])),
-    [stocks],
-  )
-  const stockByName = useMemo(() => new Map((stocks ?? []).map((s) => [s.name, s])), [stocks])
-  const themeByName = useMemo(() => new Map((themes ?? []).map((t) => [t.name, t])), [themes])
 
   const handleReset = () => {
     graphRef.current?.resetZoom()
@@ -363,7 +351,7 @@ export function GraphView({ focus }: Props) {
     updateQuery({ hop: 1, scope: 'all', lens: 'overview' })
   }
 
-  if (loading && !data) {
+  if ((loading || pending) && !data) {
     return (
       <div className="flex h-full items-center justify-center bg-background">
         <div className="w-72 space-y-3">
@@ -419,9 +407,6 @@ export function GraphView({ focus }: Props) {
       onBack={stepBack}
       neighbors={neighbors}
       centerId={centerId}
-      stockByTicker={stockByTicker}
-      stockByName={stockByName}
-      themeByName={themeByName}
       siblings={siblings}
       onNodeSelect={stepToNode}
       onLinkSelect={stepToLink}
@@ -537,8 +522,6 @@ export function GraphView({ focus }: Props) {
           >
             <OriginBar
               center={centerId ? nodeById.get(centerId) : undefined}
-              stocks={stocks ?? []}
-              themes={themes ?? []}
               onSelect={(next) => navigate(graphPath(next, query))}
             />
             {!isTheme && <LensSelector value={lens} onChange={(next) => updateQuery({ lens: next })} />}

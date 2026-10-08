@@ -2,6 +2,7 @@
 // d3나 DOM에 의존하지 않는 순수 계산.
 
 import type { GraphLink } from '@/data/graphTypes'
+import type { KgRelationshipEvidenceRes } from '@/lib/kgApiTypes'
 
 /** 품목 한 줄 — 같은 문구는 하나로 합치고 언급 횟수를 센다 */
 export interface RankedItem {
@@ -48,29 +49,6 @@ export function itemsLine(link: Pick<GraphLink, 'news'>, max = 2): string | unde
   return rest > 0 ? `${shown} 외 ${rest}` : shown
 }
 
-export interface NewsMentionRow {
-  id: string
-  /** 이 기사에서 뽑힌 품목 문구 — 한 기사에서 여러 개가 나오면 쉼표로 잇는다 */
-  item: string | null
-}
-
-/**
- * 제목을 불러올 기사를 고른다. 서버는 언급을 오래된 순으로 쌓아 보내므로 뒤에서부터 max건이 최신이다.
- * 같은 기사가 품목만 달리 여러 번 실려 오면 한 행으로 합친다.
- */
-export function latestMentions(link: Pick<GraphLink, 'news'>, max: number): NewsMentionRow[] {
-  const rows = new Map<string, { id: string; items: string[] }>()
-  link.news?.forEach((n) => {
-    const row = rows.get(n.news_id) ?? { id: n.news_id, items: [] }
-    const item = n.item?.trim()
-    if (item && !row.items.includes(item)) row.items.push(item)
-    rows.set(n.news_id, row)
-  })
-  return [...rows.values()]
-    .slice(-max)
-    .map((r) => ({ id: r.id, item: r.items.length > 0 ? r.items.join(', ') : null }))
-}
-
 /** 근거 기사 한 건 — 간선의 뉴스 언급에 기사 제목·발행 시각을 붙인 것 */
 export interface EvidenceNews {
   id: string
@@ -113,13 +91,9 @@ export interface MonthCount {
   count: number
 }
 
-/** 첫 언급 달부터 마지막 언급 달까지 빈 달도 0으로 채워 돌려준다 — 막대가 끊긴 구간을 그대로 보여준다 */
-export function monthlyCounts(dates: (string | null)[]): MonthCount[] {
-  const counts = new Map<string, number>()
-  dates.forEach((iso) => {
-    const key = iso?.match(/^\d{4}-\d{2}/)?.[0]
-    if (key) counts.set(key, (counts.get(key) ?? 0) + 1)
-  })
+/** 서버 월별 건수를 첫 달부터 마지막 달까지 빈 달도 0으로 채워 돌려준다 — 막대가 끊긴 구간을 그대로 보여준다 */
+export function monthlyCounts(rows: { month: string; count: number }[]): MonthCount[] {
+  const counts = new Map(rows.map((r) => [r.month, r.count]))
   const keys = [...counts.keys()].sort()
   if (keys.length === 0) return []
 
@@ -137,4 +111,27 @@ export function monthlyCounts(dates: (string | null)[]): MonthCount[] {
     }
   }
   return months
+}
+
+/** 간선 근거 경로 — elementId에는 콜론이 들어 있다 */
+export function evidencePath(linkId: string): string {
+  return `/v1/relationships/${encodeURIComponent(linkId)}/evidence`
+}
+
+/** evidence 응답의 기사 → 목록 행. 한 기사에서 품목이 여러 개 나오면 쉼표로 잇는다 */
+export function evidenceNews(res: KgRelationshipEvidenceRes): EvidenceNews[] {
+  return res.news.map((n) => ({
+    id: n.news_id,
+    title: n.title ?? '(제목 없음)',
+    publishedAt: n.published_at,
+    item: n.items.length > 0 ? n.items.join(', ') : null,
+  }))
+}
+
+/** 근거를 조회할 간선인가 — 기업 간 관계이고 근거 기사·공시가 하나라도 있을 때만. 테마 소속·이벤트 언급은 근거가 없다 */
+export function hasEvidence(
+  link: Pick<GraphLink, 'type'> & Partial<Pick<GraphLink, 'news_mention_count' | 'disclosure_count'>>,
+): boolean {
+  const corporate = link.type === 'SUPPLIES_TO' || link.type === 'ACQUIRES' || link.type === 'INVESTS_IN'
+  return corporate && (link.news_mention_count ?? 0) + (link.disclosure_count ?? 0) > 0
 }

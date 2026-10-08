@@ -1,10 +1,10 @@
 import { Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { type GraphNode } from '@/data/graphTypes'
-import type { StockRowRes } from '@/lib/apiTypes'
-import { eventInfo, eventPeriod } from '@/lib/graphEvent'
+import { eventArticles, eventArticlesNote, eventInfo, eventPeriod } from '@/lib/graphEvent'
 import { formatShortDateTime } from '@/lib/format'
-import { useNewsBriefs } from '@/lib/queries/useNewsBriefs'
+import { toNodeQuote } from '@/lib/kgMappers'
+import { useEventDetail } from '@/lib/queries/useEventDetail'
 import {
   ChangeText,
   LEDGER_ROW,
@@ -19,17 +19,12 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const MAX_KEYWORDS = 8
-/** 제목을 불러올 기사 상한 — 일괄 조회가 없어 기사마다 한 번씩 부른다 */
-const MAX_ARTICLES = 12
 const MAX_COMPANIES = 8
 
 interface Props {
   node: GraphNode
   /** 그래프에 있는 기업을 이름으로 찾는다 — 이벤트의 companies는 문자열이라 이름으로만 맞춘다 */
   nodesByLabel: Map<string, GraphNode>
-  stockByTicker: Map<string, StockRowRes>
-  /** 그래프에 없는 언급 기업의 시세를 이름으로 찾는다 */
-  stockByName: Map<string, StockRowRes>
   onNodeSelect?: (node: GraphNode) => void
   /** 이벤트 렌즈 hop 2로 — 이 이벤트를 공유하는 다른 기업을 본다. 이미 그 안이면 넘어오지 않는다 */
   onShowSharing?: () => void
@@ -45,41 +40,38 @@ interface Props {
 export function EventDetail({
   node,
   nodesByLabel,
-  stockByTicker,
-  stockByName,
   onNodeSelect,
   onShowSharing,
   onOpenNews,
 }: Props) {
   const info = eventInfo(node)
+  const detail = useEventDetail(node.data.clusterId)
   const period = eventPeriod(info.firstPublishedAt, info.lastPublishedAt)
-  const keywords = info.keywords.slice(0, MAX_KEYWORDS)
+  const keywords = (detail.data?.keywords ?? info.keywords).slice(0, MAX_KEYWORDS)
+  const newsCount = detail.data?.news_total ?? info.newsCount
 
-  const newsIds = info.newsIds.slice(0, MAX_ARTICLES).map(String)
-  const { briefs, loading } = useNewsBriefs(newsIds)
-  // 불러오지 못한 기사(미분석 뉴스는 상세가 404다)는 빠진다 — 남은 것은 전부 모달로 열 수 있다
-  const articles = newsIds
-    .flatMap((id) => briefs.get(id) ?? [])
-    .sort((a, b) => (a.publishedAt ?? '').localeCompare(b.publishedAt ?? ''))
-  const articlesPending = loading && articles.length < newsIds.length
-  const missing = newsIds.length - articles.length
+  const articles = detail.data ? eventArticles(detail.data) : []
+  const articlesPending = detail.loading && !detail.data
+  // 서버는 관계 분석을 거친 기사만 준다 — 빠진 건수는 섹션을 지우지 않고 말로 알린다
+  const articlesNote = detail.data ? eventArticlesNote(articles.length, detail.data.news_total) : null
   const representativeId =
     info.representativeNewsId != null ? String(info.representativeNewsId) : null
 
   // 그래프에 있는 기업이 먼저 — 눌러서 이어 갈 수 있는 쪽이 위다
-  const companies = info.companies
-    .map((name) => {
-      const hit = nodesByLabel.get(name)
-      const stock = hit?.data.ticker ? stockByTicker.get(hit.data.ticker) : stockByName.get(name)
-      return { name, hit, stock }
-    })
+  const companies = (detail.data?.companies ?? [])
+    .map((c) => ({
+      name: c.name,
+      ticker: c.ticker,
+      hit: nodesByLabel.get(c.name),
+      quote: toNodeQuote(c.quote),
+    }))
     .sort((a, b) => Number(Boolean(b.hit)) - Number(Boolean(a.hit)))
 
   return (
     <>
-      {(info.memberCount != null || period) && (
+      {(newsCount != null || period) && (
         <div className="mb-1.5 flex flex-wrap items-center gap-x-2 font-mono text-caption text-muted-foreground">
-          {info.memberCount != null && <span>뉴스 {info.memberCount}건</span>}
+          {newsCount != null && <span>뉴스 {newsCount}건</span>}
           {period && <span>{period}</span>}
         </div>
       )}
@@ -96,10 +88,10 @@ export function EventDetail({
         </div>
       )}
 
-      {newsIds.length > 0 && (
+      {(articlesPending || articles.length > 0 || articlesNote || detail.error) && (
         <Section title="이벤트 타임라인">
           {articlesPending ? (
-            <RowSkeleton rows={Math.min(3, newsIds.length)} />
+            <RowSkeleton rows={3} />
           ) : (
             articles.length > 0 && (
               // 왼쪽 세로선이 시간축이다 — 위에서 아래로 보도가 이어진다
@@ -137,17 +129,12 @@ export function EventDetail({
               </ol>
             )
           )}
-          {/* 관계 분석을 거치지 않은 기사는 상세 조회가 404다 — 섹션을 말없이 지우지 않고 빠진 건수를 알린다 */}
-          {!articlesPending && missing > 0 && (
-            <p className={cn('mb-0 text-caption text-muted-foreground', articles.length > 0 ? 'mt-2' : 'mt-0')}>
-              {articles.length > 0
-                ? `나머지 ${missing}건은 아직 분석되지 않아 제목을 불러오지 못했습니다.`
-                : `기사 ${missing}건이 아직 분석되지 않아 제목을 불러오지 못했습니다.`}
-            </p>
+          {!articlesPending && detail.error && (
+            <p className="m-0 text-caption text-muted-foreground">기사를 불러오지 못했습니다.</p>
           )}
-          {info.newsIds.length > newsIds.length && (
-            <p className="mt-2 mb-0 text-caption text-muted-foreground">
-              처음 {newsIds.length}건만 보여줍니다. 전체 {info.newsIds.length}건.
+          {articlesNote && (
+            <p className={cn('mb-0 text-caption text-muted-foreground', articles.length > 0 ? 'mt-2' : 'mt-0')}>
+              {articlesNote}
             </p>
           )}
         </Section>
@@ -156,9 +143,9 @@ export function EventDetail({
       {companies.length > 0 && (
         <Section title={`언급 기업 ${companies.length}`} meta="오늘 등락">
           <Ledger items={companies} keyOf={(c) => c.name} max={MAX_COMPANIES}>
-            {({ name, hit, stock }) => (
-              <li className={cn(LEDGER_ROW, 'flex items-center gap-2.5', !hit && !stock && 'hover:bg-transparent')}>
-                {hit ? <NodeMark node={hit} /> : <NameMark name={name} ticker={stock?.ticker} />}
+            {({ name, ticker, hit, quote }) => (
+              <li className={cn(LEDGER_ROW, 'flex items-center gap-2.5', !hit && !ticker && 'hover:bg-transparent')}>
+                {hit ? <NodeMark node={hit} /> : <NameMark name={name} ticker={ticker ?? undefined} />}
                 <span
                   className={cn(
                     'min-w-0 flex-1 truncate text-body',
@@ -167,13 +154,13 @@ export function EventDetail({
                 >
                   {name}
                 </span>
-                <ChangeText value={stock?.change} className="shrink-0 text-caption" />
+                <ChangeText value={quote?.change} className="shrink-0 text-caption" />
                 {hit && onNodeSelect ? (
                   <RowAction label={`${name} 선택`} onClick={() => onNodeSelect(hit)} />
                 ) : (
-                  stock && (
+                  ticker && (
                     <Link
-                      to={`/stock/${stock.ticker}`}
+                      to={`/stock/${ticker}`}
                       aria-label={`${name} 종목 상세`}
                       className="absolute inset-0 rounded-md"
                     />

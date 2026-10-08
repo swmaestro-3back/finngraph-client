@@ -6,6 +6,7 @@ import {
   type GraphData,
   type GraphLink,
   type GraphNode,
+  type NodeQuote,
 } from '@/data/graphTypes'
 import type {
   KgBelongsToRelRes,
@@ -18,8 +19,10 @@ import type {
   KgHasEventRelRes,
   KgNewsGraphRes,
   KgSupplyChainRes,
+  KgStockQuote,
   KgSupplyRelRes,
   KgThemeNode,
+  KgThemeQuote,
   KgThemeRes,
 } from '@/lib/kgApiTypes'
 
@@ -39,6 +42,19 @@ export interface NewsGraphData {
   truncated: boolean
 }
 
+/** 서버 시세 → 노드 시세. 테마 시세에는 가격이 없다 */
+export function toNodeQuote(q: KgStockQuote | KgThemeQuote | null | undefined): NodeQuote | undefined {
+  if (!q) return undefined
+  return {
+    price: 'price' in q ? q.price : null,
+    change: q.change,
+    marketCap: q.market_cap,
+    w1: q.r_1w,
+    m1: q.r_1m,
+    m3: q.r_3m,
+  }
+}
+
 /** 기업 노드 — 라벨은 이름, 없으면 티커, 그것도 없으면 element_id */
 function toCompanyNode(c: KgCompanyNode): GraphNode {
   return {
@@ -52,6 +68,7 @@ function toCompanyNode(c: KgCompanyNode): GraphNode {
       krx100: c.krx100,
       krx300: c.krx300,
       kosdaq150: c.kosdaq150,
+      quote: toNodeQuote(c.quote),
     },
   }
 }
@@ -61,7 +78,11 @@ function toThemeNode(t: KgThemeNode): GraphNode {
     id: t.id,
     label: t.name ?? t.id,
     type: 'theme',
-    data: { description: t.description ?? undefined },
+    data: {
+      description: t.description ?? undefined,
+      themeId: t.theme_id ?? undefined,
+      quote: toNodeQuote(t.quote),
+    },
   }
 }
 
@@ -74,9 +95,7 @@ function toEventNode(e: KgEventNode): GraphNode {
     data: {
       clusterId: e.cluster_id ?? undefined,
       keywords: e.keywords,
-      companies: e.companies,
-      memberCount: e.member_count ?? undefined,
-      newsIds: e.news_ids,
+      newsCount: e.news_count ?? undefined,
       firstPublishedAt: e.first_published_at ?? undefined,
       lastPublishedAt: e.last_published_at ?? undefined,
       representativeNewsId: e.representative_news_id ?? undefined,
