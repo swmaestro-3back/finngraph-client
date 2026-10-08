@@ -34,9 +34,12 @@ import {
   stockQueryString,
   stockSelection,
   STOCK_SORT_LABEL,
+  themeChipLabel,
+  themeTickerSet,
   type StockMarket,
   type StockQuery,
   type StockSort,
+  type ThemeFilter,
   type ValueOf,
 } from '@/lib/fg/stocks'
 import { themeBasisLabel } from '@/lib/fg/themes'
@@ -48,7 +51,7 @@ import { useStockIssueLine } from '@/lib/queries/useHubSlots'
 import { useKeyed } from '@/lib/queries/useKeyed'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
-import { fetchThemeStocks } from '@/lib/queries/useThemeStocks'
+import { fetchThemeStocks, fetchThemeTickers } from '@/lib/queries/useThemeStocks'
 import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { LARGE_CAP_RANK, panelFilterCount, VALUE_TOP_RANK, type PresetKey, type RangeKey } from '@/lib/stockFilter'
 import { useOverflowFade } from '@/lib/useOverflowFade'
@@ -170,9 +173,10 @@ export default function StocksPage() {
     [query.themeId, themes.data],
   )
   const filterThemeStocks = useKeyed(query.themeId, fetchThemeStocks)
+  const filterThemeMatch = useKeyed(query.themeId === null ? query.themeQ : null, fetchThemeTickers)
   const themeTickers = useMemo(
-    () => (filterThemeStocks.data ? new Set(filterThemeStocks.data.map((stock) => stock.ticker)) : null),
-    [filterThemeStocks.data],
+    () => themeTickerSet(query.themeId, filterThemeStocks.data, filterThemeMatch.data),
+    [query.themeId, filterThemeStocks.data, filterThemeMatch.data],
   )
   const filterContext = useMemo(() => ({ basisDate, themeTickers }), [basisDate, themeTickers])
   const filtered = useMemo(
@@ -303,7 +307,7 @@ export default function StocksPage() {
     }
     const rows = filterStocks(
       all ?? [],
-      { market: nextMarket, presets: query.presets, ranges: query.ranges, themeId: query.themeId },
+      { market: nextMarket, presets: query.presets, ranges: query.ranges, themeId: query.themeId, themeQ: query.themeQ, nameQ: query.nameQ },
       fav,
       isFavorite,
       filterContext,
@@ -316,32 +320,37 @@ export default function StocksPage() {
       : [...query.presets, preset]
     const rows = filterStocks(
       all ?? [],
-      { market: query.market, presets, ranges: query.ranges, themeId: query.themeId },
+      { market: query.market, presets, ranges: query.ranges, themeId: query.themeId, themeQ: query.themeQ, nameQ: query.nameQ },
       favOnly,
       isFavorite,
       filterContext,
     )
     go({ presets, page: null, code: keepCode(query.code, rows) })
   }
-  const applyFilters = (ranges: StockQuery['ranges'], themeId: number | null, rows: readonly StockRowRes[]) => {
-    go({ ranges, themeId, page: null, code: keepCode(query.code, rows) })
+  const applyFilters = (
+    ranges: StockQuery['ranges'],
+    theme: ThemeFilter,
+    nameQ: string | null,
+    rows: readonly StockRowRes[],
+  ) => {
+    go({ ranges, themeId: theme.themeId, themeQ: theme.themeQ, nameQ, page: null, code: keepCode(query.code, rows) })
   }
   const resetFilters = () => {
     const rows = filterStocks(
       all ?? [],
-      { market: query.market, presets: [], ranges: {}, themeId: null },
+      { market: query.market, presets: [], ranges: {}, themeId: null, themeQ: null, nameQ: null },
       favOnly,
       isFavorite,
       filterContext,
     )
-    go({ presets: [], ranges: {}, themeId: null, page: null, code: keepCode(query.code, rows) })
+    go({ presets: [], ranges: {}, themeId: null, themeQ: null, nameQ: null, page: null, code: keepCode(query.code, rows) })
   }
   const clearRange = (key: RangeKey) => {
     const ranges = { ...query.ranges }
     delete ranges[key]
     const rows = filterStocks(
       all ?? [],
-      { market: query.market, presets: query.presets, ranges, themeId: query.themeId },
+      { market: query.market, presets: query.presets, ranges, themeId: query.themeId, themeQ: query.themeQ, nameQ: query.nameQ },
       favOnly,
       isFavorite,
       filterContext,
@@ -351,22 +360,39 @@ export default function StocksPage() {
   const clearTheme = () => {
     const rows = filterStocks(
       all ?? [],
-      { market: query.market, presets: query.presets, ranges: query.ranges, themeId: null },
+      { market: query.market, presets: query.presets, ranges: query.ranges, themeId: null, themeQ: null, nameQ: query.nameQ },
       favOnly,
       isFavorite,
       filterContext,
     )
-    go({ themeId: null, page: null, code: keepCode(query.code, rows) })
+    go({ themeId: null, themeQ: null, page: null, code: keepCode(query.code, rows) })
+  }
+  const clearName = () => {
+    const rows = filterStocks(
+      all ?? [],
+      {
+        market: query.market,
+        presets: query.presets,
+        ranges: query.ranges,
+        themeId: query.themeId,
+        themeQ: query.themeQ,
+        nameQ: null,
+      },
+      favOnly,
+      isFavorite,
+      filterContext,
+    )
+    go({ nameQ: null, page: null, code: keepCode(query.code, rows) })
   }
   const clearPanelFilters = () => {
     const rows = filterStocks(
       all ?? [],
-      { market: query.market, presets: query.presets, ranges: {}, themeId: null },
+      { market: query.market, presets: query.presets, ranges: {}, themeId: null, themeQ: null, nameQ: null },
       favOnly,
       isFavorite,
       filterContext,
     )
-    go({ ranges: {}, themeId: null, page: null, code: keepCode(query.code, rows) })
+    go({ ranges: {}, themeId: null, themeQ: null, nameQ: null, page: null, code: keepCode(query.code, rows) })
   }
   const [filterOpen, setFilterOpen] = useState(false)
   const filterTrigger = useRef<HTMLElement | null>(null)
@@ -528,14 +554,25 @@ export default function StocksPage() {
                           <X size={14} strokeWidth={2} aria-hidden="true" />
                         </FilterChip>
                       ))}
-                      {query.themeId !== null && (
+                      {(query.themeId !== null || query.themeQ !== null) && (
                         <FilterChip
                           pressed
                           className="fg-cflt__rm"
-                          aria-label={`테마 ${activeThemeName ?? ''} 필터 해제`}
+                          aria-label={`${themeChipLabel(query.themeQ, activeThemeName)} 필터 해제`}
                           onClick={clearTheme}
                         >
-                          테마 {activeThemeName ?? ''}
+                          {themeChipLabel(query.themeQ, activeThemeName)}
+                          <X size={14} strokeWidth={2} aria-hidden="true" />
+                        </FilterChip>
+                      )}
+                      {query.nameQ !== null && (
+                        <FilterChip
+                          pressed
+                          className="fg-cflt__rm"
+                          aria-label={`이름 ‘${query.nameQ}’ 포함 필터 해제`}
+                          onClick={clearName}
+                        >
+                          {`이름 ‘${query.nameQ}’ 포함`}
                           <X size={14} strokeWidth={2} aria-hidden="true" />
                         </FilterChip>
                       )}
@@ -582,6 +619,8 @@ export default function StocksPage() {
         basisDate={basisDate}
         ranges={query.ranges}
         themeId={query.themeId}
+        themeQ={query.themeQ}
+        nameQ={query.nameQ}
         onApply={applyFilters}
       />
     </div>

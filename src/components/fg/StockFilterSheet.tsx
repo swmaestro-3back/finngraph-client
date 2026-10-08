@@ -3,11 +3,12 @@ import { useEffect, useMemo, useState, type RefObject } from 'react'
 import { Button } from '@/components/fg/Button'
 import { SideSheet } from '@/components/fg/SideSheet'
 import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
-import { filterStocks, type StockMarket } from '@/lib/fg/stocks'
+import { filterStocks, themeTickerSet, type StockMarket, type ThemeFilter } from '@/lib/fg/stocks'
+import { josa } from '@/lib/josa'
 import { useKeyed } from '@/lib/queries/useKeyed'
-import { fetchThemeStocks } from '@/lib/queries/useThemeStocks'
+import { fetchThemeStocks, fetchThemeTickers } from '@/lib/queries/useThemeStocks'
 import { useThemesCached } from '@/lib/queries/useThemesCached'
-import type { FilterState, PresetKey, RangeKey } from '@/lib/stockFilter'
+import { NAME_QUERY_MAX, THEME_QUERY_MAX, type FilterState, type PresetKey, type RangeKey } from '@/lib/stockFilter'
 
 type Range = { min?: number; max?: number }
 
@@ -71,30 +72,36 @@ function RangeField({ field, value, onChange }: { field: RangeFieldSpec; value: 
   )
 }
 
+function includesLabel(query: string): string {
+  return `‘${query}’${josa(query, '이/가')} 들어간 테마 전체`
+}
+
 function ThemePicker({
   themes,
-  pickedId,
-  pickedName,
+  pickedLabel,
   onPick,
+  onPickQuery,
   onClear,
 }: {
   themes: readonly ThemeRes[] | null
-  pickedId: number | null
-  pickedName: string | null
+  pickedLabel: string | null
   onPick: (theme: ThemeRes) => void
+  onPickQuery: (query: string) => void
   onClear: () => void
 }) {
   const [query, setQuery] = useState('')
-  const options = useMemo(() => {
+  const matched = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (q === '' || themes === null) return []
-    return themes.filter((theme) => theme.name.toLowerCase().includes(q)).slice(0, 8)
+    return themes.filter((theme) => theme.name.toLowerCase().includes(q))
   }, [query, themes])
+  const options = matched.slice(0, 8)
+  const typed = query.trim()
 
-  if (pickedId !== null) {
+  if (pickedLabel !== null) {
     return (
       <div className="fg-sfilter__picked">
-        <span>{pickedName ?? '선택한 테마'}</span>
+        <span>{pickedLabel}</span>
         <button type="button" className="fg-iconbtn" aria-label="테마 선택 지우기" onClick={onClear}>
           <X size={16} strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -110,15 +117,31 @@ function ThemePicker({
           type="text"
           placeholder="테마 이름으로 찾아요"
           value={query}
+          maxLength={THEME_QUERY_MAX}
           onChange={(e) => setQuery(e.target.value)}
         />
       </label>
-      {query.trim() !== '' && (
+      {typed !== '' && (
         <>
           {options.length === 0 ? (
-            <p className="fg-sfilter__empty">'{query.trim()}'에 맞는 테마가 없어요</p>
+            <p className="fg-sfilter__empty">'{typed}'에 맞는 테마가 없어요</p>
           ) : (
             <ul className="fg-sfilter__opts" role="listbox" aria-label="테마 검색 결과">
+              {matched.length > 1 && (
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    className="fg-sfilter__all"
+                    onClick={() => {
+                      onPickQuery(typed)
+                      setQuery('')
+                    }}
+                  >
+                    {`${includesLabel(typed)} · ${matched.length}개`}
+                  </button>
+                </li>
+              )}
               {options.map((theme) => (
                 <li key={theme.id}>
                   <button
@@ -153,7 +176,9 @@ interface StockFilterSheetProps {
   basisDate: string | null
   ranges: FilterState['ranges']
   themeId: number | null
-  onApply: (ranges: FilterState['ranges'], themeId: number | null, rows: readonly StockRowRes[]) => void
+  themeQ: string | null
+  nameQ: string | null
+  onApply: (ranges: FilterState['ranges'], theme: ThemeFilter, nameQ: string | null, rows: readonly StockRowRes[]) => void
 }
 
 export function StockFilterSheet({
@@ -168,37 +193,51 @@ export function StockFilterSheet({
   basisDate,
   ranges,
   themeId,
+  themeQ,
+  nameQ,
   onApply,
 }: StockFilterSheetProps) {
   const [draftRanges, setDraftRanges] = useState<FilterState['ranges']>(ranges)
   const [draftThemeId, setDraftThemeId] = useState<number | null>(themeId)
+  const [draftThemeQ, setDraftThemeQ] = useState<string | null>(themeQ)
   const [draftThemeName, setDraftThemeName] = useState<string | null>(null)
+  const [draftNameQ, setDraftNameQ] = useState(nameQ ?? '')
 
   useEffect(() => {
     if (!open) return
     setDraftRanges(ranges)
     setDraftThemeId(themeId)
-  }, [open, ranges, themeId])
+    setDraftThemeQ(themeQ)
+    setDraftNameQ(nameQ ?? '')
+  }, [open, ranges, themeId, themeQ, nameQ])
+  const nameQuery = draftNameQ.trim() === '' ? null : draftNameQ.trim()
 
   const themes = useThemesCached()
   const themeStocks = useKeyed(draftThemeId, fetchThemeStocks)
+  const themeMatch = useKeyed(draftThemeId === null ? draftThemeQ : null, fetchThemeTickers)
   const themeTickers = useMemo(
-    () => (themeStocks.data ? new Set(themeStocks.data.map((stock) => stock.ticker)) : null),
-    [themeStocks.data],
+    () => themeTickerSet(draftThemeId, themeStocks.data, themeMatch.data),
+    [draftThemeId, themeStocks.data, themeMatch.data],
   )
-  const themeLoading = draftThemeId !== null && themeStocks.loading
-  const pickedThemeName = draftThemeId === null ? null : (themes.data?.find((t) => t.id === draftThemeId)?.name ?? draftThemeName)
+  const themeLoading =
+    draftThemeId !== null ? themeStocks.loading : draftThemeQ !== null && themeMatch.loading
+  const pickedLabel =
+    draftThemeId !== null
+      ? (themes.data?.find((t) => t.id === draftThemeId)?.name ?? draftThemeName ?? '선택한 테마')
+      : draftThemeQ !== null
+        ? `${includesLabel(draftThemeQ)}${themeMatch.data ? ` · ${themeMatch.data.themes.length}개` : ''}`
+        : null
 
   const previewRows = useMemo(
     () =>
       filterStocks(
         allRows,
-        { market, presets, ranges: draftRanges, themeId: draftThemeId },
+        { market, presets, ranges: draftRanges, themeId: draftThemeId, themeQ: draftThemeQ, nameQ: nameQuery },
         favOnly,
         isFavorite,
         { basisDate, themeTickers },
       ),
-    [allRows, market, presets, draftRanges, draftThemeId, favOnly, isFavorite, basisDate, themeTickers],
+    [allRows, market, presets, draftRanges, draftThemeId, draftThemeQ, nameQuery, favOnly, isFavorite, basisDate, themeTickers],
   )
   const previewCount = previewRows.length
 
@@ -214,17 +253,33 @@ export function StockFilterSheet({
   const resetDraft = () => {
     setDraftRanges({})
     setDraftThemeId(null)
+    setDraftThemeQ(null)
     setDraftThemeName(null)
+    setDraftNameQ('')
   }
 
   const apply = () => {
-    onApply(draftRanges, draftThemeId, previewRows)
+    onApply(draftRanges, { themeId: draftThemeId, themeQ: draftThemeQ }, nameQuery, previewRows)
     onOpenChange(false)
   }
 
   return (
     <SideSheet open={open} onOpenChange={onOpenChange} closeLabel="필터 닫기" returnFocusRef={returnFocusRef} title="필터">
       <div className="fg-sfilter">
+        <div className="fg-sfilter__name">
+          <span className="fg-sfilter__label">종목 이름</span>
+          <label className="fg-sfilter__search">
+            <Search size={16} strokeWidth={1.75} aria-hidden="true" />
+            <span className="fg-sr">종목 이름이나 종목코드</span>
+            <input
+              type="text"
+              placeholder="이름이나 종목코드가 들어간 종목"
+              value={draftNameQ}
+              maxLength={NAME_QUERY_MAX}
+              onChange={(e) => setDraftNameQ(e.target.value)}
+            />
+          </label>
+        </div>
         <div className="fg-sfilter__groups">
           {RANGE_FIELDS.map((field) => (
             <RangeField
@@ -239,14 +294,20 @@ export function StockFilterSheet({
           <span className="fg-sfilter__label">테마</span>
           <ThemePicker
             themes={themes.data}
-            pickedId={draftThemeId}
-            pickedName={pickedThemeName}
+            pickedLabel={pickedLabel}
             onPick={(theme) => {
               setDraftThemeId(theme.id)
               setDraftThemeName(theme.name)
+              setDraftThemeQ(null)
+            }}
+            onPickQuery={(query) => {
+              setDraftThemeQ(query)
+              setDraftThemeId(null)
+              setDraftThemeName(null)
             }}
             onClear={() => {
               setDraftThemeId(null)
+              setDraftThemeQ(null)
               setDraftThemeName(null)
             }}
           />

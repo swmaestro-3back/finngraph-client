@@ -91,13 +91,28 @@ export interface MarkerItem {
   stack: number
 }
 
-export function stackMarkers(issues: readonly Pick<PlacedIssue, 'key' | 'index'>[]): MarkerItem[] {
-  const seen = new Map<number, number>()
-  return issues.map((issue) => {
-    const stack = seen.get(issue.index) ?? 0
-    seen.set(issue.index, stack + 1)
-    return { key: issue.key, index: issue.index, stack }
-  })
+export interface DayMarker extends MarkerItem {
+  count: number
+}
+
+export interface DayMarkers {
+  markers: DayMarker[]
+  markerOf: ReadonlyMap<string, string>
+}
+
+export function dayMarkers(issues: readonly Pick<PlacedIssue, 'key' | 'index'>[]): DayMarkers {
+  const byIndex = new Map<number, DayMarker>()
+  const markerOf = new Map<string, string>()
+  for (const issue of issues) {
+    let marker = byIndex.get(issue.index)
+    if (marker) marker.count += 1
+    else {
+      marker = { key: issue.key, index: issue.index, stack: 0, count: 1 }
+      byIndex.set(issue.index, marker)
+    }
+    markerOf.set(issue.key, marker.key)
+  }
+  return { markers: [...byIndex.values()], markerOf }
 }
 
 export const STOCK_ISSUE_ORDER = '처음 보도된 날 최신순'
