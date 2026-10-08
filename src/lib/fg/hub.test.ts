@@ -56,31 +56,31 @@ function theme(id: number, weightedChange: number | null): ThemeRes {
 }
 
 describe('parseHubQuery', () => {
-  it('허브 탭은 기본이 움직인 종목이고 모르는 값도 기본으로 읽어요', () => {
-    expect(parseHubQuery('').hub).toBe('stocks')
-    expect(parseHubQuery('?hub=issues').hub).toBe('issues')
+  it('허브 탭은 기본이 뜨는 이슈이고 모르는 값도 기본으로 읽어요', () => {
+    expect(parseHubQuery('').hub).toBe('issues')
+    expect(parseHubQuery('?hub=stocks').hub).toBe('stocks')
     expect(parseHubQuery('?hub=themes').hub).toBe('themes')
-    expect(parseHubQuery('?hub=news').hub).toBe('stocks')
+    expect(parseHubQuery('?hub=news').hub).toBe('issues')
   })
 
   it('펼친 항목은 탭마다 따로 읽고 형식이 틀리면 버려요', () => {
     expect(parseHubQuery('?hub=issues&issue=454')).toEqual({ hub: 'issues', issue: '454', stock: null, theme: null })
-    expect(parseHubQuery('?stock=005930&theme=35')).toEqual({ hub: 'stocks', issue: null, stock: '005930', theme: 35 })
-    expect(parseHubQuery('?issue=abc&stock=59&theme=0')).toEqual({ hub: 'stocks', issue: null, stock: null, theme: null })
+    expect(parseHubQuery('?hub=stocks&stock=005930&theme=35')).toEqual({ hub: 'stocks', issue: null, stock: '005930', theme: 35 })
+    expect(parseHubQuery('?issue=abc&stock=59&theme=0')).toEqual({ hub: 'issues', issue: null, stock: null, theme: null })
   })
 })
 
 describe('hubSearch', () => {
   it('기본 탭은 쿼리에서 빼고 펼친 항목은 그 탭의 키로만 둬요', () => {
-    expect(hubSearch('', 'stocks', null)).toBe('')
-    expect(hubSearch('', 'stocks', '005930')).toBe('?stock=005930')
-    expect(hubSearch('?hub=themes&theme=35', 'issues', 454)).toBe('?hub=issues&issue=454')
-    expect(hubSearch('?hub=issues&issue=454', 'issues', null)).toBe('?hub=issues')
+    expect(hubSearch('', 'issues', null)).toBe('')
+    expect(hubSearch('', 'issues', 454)).toBe('?issue=454')
+    expect(hubSearch('?hub=themes&theme=35', 'stocks', '005930')).toBe('?hub=stocks&stock=005930')
+    expect(hubSearch('?hub=stocks&stock=005930', 'stocks', null)).toBe('?hub=stocks')
   })
 
   it('허브 밖 쿼리(피드 정렬 등)는 순서 그대로 남겨요', () => {
     expect(hubSearch('?sort=recent&stock=005930', 'themes', 35)).toBe('?hub=themes&theme=35&sort=recent')
-    expect(hubSearch('?gaps=off&hub=issues&issue=3', 'stocks', null)).toBe('?gaps=off')
+    expect(hubSearch('?gaps=off&hub=stocks&stock=005930', 'issues', null)).toBe('?gaps=off')
   })
 })
 
