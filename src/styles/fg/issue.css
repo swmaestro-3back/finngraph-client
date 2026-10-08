@@ -743,7 +743,7 @@ a.fg-iar__main {
 }
 @media (prefers-reduced-motion: no-preference) {
   .fg-iflow__pulse {
-    animation: fg-tl-pulse 2200ms var(--fg-ease) 400ms 2;
+    animation: fg-tl-pulse 2200ms var(--fg-ease) 400ms infinite;
   }
   .fg-itl__toggle,
   .fg-iar__ext {
