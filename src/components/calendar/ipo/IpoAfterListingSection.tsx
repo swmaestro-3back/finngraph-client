@@ -1,4 +1,11 @@
-import { DetailSection, Metric, SectionNotice, SignedPercent } from '@/components/calendar/detail/DetailParts'
+import {
+  DetailNote,
+  DetailSection,
+  Metric,
+  Metrics,
+  SectionNotice,
+  SignedPercent,
+} from '@/components/calendar/detail/DetailParts'
 import type { IpoDetailRes } from '@/lib/apiTypes'
 import { formatFullDate } from '@/lib/calendar'
 import { formatWon } from '@/lib/format'
@@ -14,11 +21,10 @@ export function IpoAfterListingSection({ detail }: { detail: Pick<IpoDetailRes, 
         <SectionNotice>상장 후 시세가 아직 반영되지 않았습니다.</SectionNotice>
       ) : (
         <>
-          <p className="-mt-1 mb-3 text-caption text-muted-foreground break-keep">
-            공모가 <span className="font-mono tabular-nums">{ipoPriceText(detail.offering.price)}</span> 대비 ·{' '}
-            <span className="font-mono tabular-nums">{formatFullDate(after.listingDate)}</span> 상장
-          </p>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
+          <DetailNote className="fg-cal-dsec__lead fg-num">
+            공모가 {ipoPriceText(detail.offering.price)} 대비 · {formatFullDate(after.listingDate)} 상장
+          </DetailNote>
+          <Metrics columns={3}>
             <Metric term="시초가">
               {formatWon(after.open)}
               <SignedPercent value={after.openReturn} fallback="—" />
@@ -31,7 +37,7 @@ export function IpoAfterListingSection({ detail }: { detail: Pick<IpoDetailRes, 
               {after.price === null ? '—' : formatWon(after.price)}
               <SignedPercent value={after.currentReturn} fallback="—" />
             </Metric>
-          </dl>
+          </Metrics>
         </>
       )}
     </DetailSection>

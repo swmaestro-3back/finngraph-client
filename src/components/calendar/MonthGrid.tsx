@@ -40,24 +40,21 @@ export function MonthGrid({ label, cells, eventsByDate, holidays, today, selecte
   const rows = Array.from({ length: cells.length / 7 }, (_, row) => cells.slice(row * 7, row * 7 + 7))
 
   return (
-    <div role="grid" aria-label={label} aria-busy={loading || undefined} className="flex flex-col">
-      <div role="row" className="grid grid-cols-7 border-b border-border">
+    <div role="grid" aria-label={label} aria-busy={loading || undefined} className="fg-cal-grid">
+      <div role="row" className="fg-cal-grid__week fg-cal-grid__weekdays">
         {WEEKDAY_LABELS.map((weekday, index) => (
           <span
             key={weekday}
             role="columnheader"
-            className={cn(
-              'py-2 text-center text-caption font-medium',
-              index === 0 || index === 6 ? 'text-muted-foreground' : 'text-foreground-secondary',
-            )}
+            className={cn('fg-cal-grid__weekday', (index === 0 || index === 6) && 'fg-cal-grid__weekday--off')}
           >
             {weekday}
           </span>
         ))}
       </div>
-      <div className="grid gap-px bg-border">
+      <div className="fg-cal-grid__body">
         {rows.map((week) => (
-          <div key={week[0].date} role="row" className="grid grid-cols-7 gap-px">
+          <div key={week[0].date} role="row" className="fg-cal-grid__week">
             {week.map((cell) => (
               <DayCell
                 key={cell.date}

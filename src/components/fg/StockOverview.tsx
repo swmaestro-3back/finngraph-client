@@ -32,6 +32,7 @@ import { josa } from '@/lib/josa'
 import { useMemberGate } from '@/lib/memberGate'
 import { fromState } from '@/lib/navigation'
 import type { ApiState } from '@/lib/queries/useApi'
+import { stockCandleSource } from '@/lib/queries/useCandles'
 import { useInvestorFlows } from '@/lib/queries/useInvestorFlows'
 import type { LinkedCompaniesState } from '@/lib/queries/useLinkedCompanies'
 import { useStockNews } from '@/lib/queries/useStockNews'
@@ -111,6 +112,7 @@ export function StockOverview({
     stock.themeId,
   )
   const compare = useThemeCompare(stock.ticker, compareTheme)
+  const candleSource = useMemo(() => stockCandleSource(stock.ticker), [stock.ticker])
 
   const { refresh: refreshFlows } = flows
   const { refresh: refreshNews } = news
@@ -214,7 +216,7 @@ export function StockOverview({
     chart = (
       <PriceChart
         name={stock.name}
-        ticker={stock.ticker}
+        source={candleSource}
         candles={candles}
         markers={view.markers.length > 0 ? view.markers : null}
         markerLabel={view.label}

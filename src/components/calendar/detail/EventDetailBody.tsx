@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { ActionTimeline } from '@/components/calendar/detail/ActionTimeline'
-import { SectionNotice } from '@/components/calendar/detail/DetailParts'
-import { EventDetailHeader } from '@/components/calendar/detail/EventDetailHeader'
+import { DetailLoading, SectionNotice } from '@/components/calendar/detail/DetailParts'
+import { EventDetailHeader, EventDetailMeta } from '@/components/calendar/detail/EventDetailHeader'
 import { EventPriceChart } from '@/components/calendar/detail/EventPriceChart'
 import { EventSummary } from '@/components/calendar/detail/EventSummary'
 import { FamilyPanel } from '@/components/calendar/detail/FamilyPanel'
 import { OtherActions } from '@/components/calendar/detail/OtherActions'
-import { Button } from '@/components/ui/button'
-import { DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/fg/Button'
+import { Disclaimer } from '@/components/fg/Disclaimer'
+import { SideSheet } from '@/components/fg/SideSheet'
+import { StateBlock } from '@/components/fg/StateBlock'
 import type { CalendarEventRes, CorporateActionRes } from '@/lib/apiTypes'
 import {
   CALENDAR_NOTICE,
@@ -24,19 +25,26 @@ import {
   type EventDetailTarget,
 } from '@/lib/calendar'
 import { useStockCalendar } from '@/lib/queries/useStockCalendar'
-import { cn } from '@/lib/utils'
-
-const PULSE = 'animate-pulse rounded-lg bg-muted motion-reduce:animate-none'
 
 interface EventDetailBodyProps {
   target: EventDetailTarget
   fallback: CalendarEventRes | null
+  open: boolean
   from: string
   today: string
-  onClose: () => void
+  returnFocusRef: RefObject<HTMLElement | null>
+  onOpenChange: (open: boolean) => void
 }
 
-export function EventDetailBody({ target, fallback, from, today, onClose }: EventDetailBodyProps) {
+export function EventDetailBody({
+  target,
+  fallback,
+  open,
+  from,
+  today,
+  returnFocusRef,
+  onOpenChange,
+}: EventDetailBodyProps) {
   const range = useMemo(() => stockCalendarWindow(target.date), [target.date])
   const { data, loading, error, refetch } = useStockCalendar(target.ticker, range.from, range.to)
   const [focus, setFocus] = useState<ActionFocus>({ key: null, kind: target.kind, date: target.date })
@@ -46,7 +54,7 @@ export function EventDetailBody({ target, fallback, from, today, onClose }: Even
 
   useEffect(() => {
     if (!switched.current) return
-    bodyRef.current?.scrollTo({ top: 0 })
+    bodyRef.current?.closest('[role="dialog"]')?.scrollTo({ top: 0 })
     headingRef.current?.focus({ preventScroll: true })
   }, [focus])
 
@@ -59,97 +67,84 @@ export function EventDetailBody({ target, fallback, from, today, onClose }: Even
     },
     [today],
   )
+  const onClose = () => onOpenChange(false)
   const name = fallback?.stockName ?? target.ticker
+
+  let title: string
+  let meta: ReactNode = null
+  let body: ReactNode
 
   if (error && !loading) {
     const notFound = error.isNotFound
-    return (
-      <div className="px-6 pt-7 pb-10 sm:px-8">
-        <DialogTitle className="pr-8 text-title font-medium tracking-[-0.5px] text-foreground">
-          {notFound ? '종목을 찾을 수 없습니다' : name}
-        </DialogTitle>
-        <DialogDescription className="sr-only">일정 조회 실패</DialogDescription>
-        <div className="flex flex-col items-center justify-center gap-4 py-14 text-center">
-          <CircleAlert className="size-8 text-muted-foreground" />
-          <p className="text-body text-muted-foreground break-keep">
-            {notFound
-              ? '상장폐지됐거나 더 이상 조회되지 않는 종목입니다.'
-              : error.isRetryable
-                ? '일시적으로 일정을 불러올 수 없습니다.'
-                : '일정을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.'}
-          </p>
-          {!notFound && error.isRetryable ? (
-            <Button variant="outline" size="sm" onClick={refetch}>
-              <RotateCw data-icon="inline-start" />
+    title = notFound ? '종목을 찾을 수 없습니다' : name
+    body = (
+      <StateBlock
+        kind="error"
+        className="fg-cal-dstate"
+        title={
+          notFound
+            ? '상장폐지됐거나 더 이상 조회되지 않는 종목입니다.'
+            : error.isRetryable
+              ? '일시적으로 일정을 불러올 수 없습니다.'
+              : '일정을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.'
+        }
+        action={
+          !notFound && error.isRetryable ? (
+            <Button size="sm" onClick={refetch}>
               다시 시도
             </Button>
           ) : (
-            <Button variant="outline" size="sm" onClick={onClose}>
+            <Button size="sm" onClick={onClose}>
               닫기
             </Button>
-          )}
-        </div>
+          )
+        }
+      />
+    )
+  } else if (!data || loading) {
+    title = name
+    meta = <span className="fg-cal-dkick">{KIND_LABELS[target.kind]} 일정을 불러오는 중</span>
+    body = <DetailLoading />
+  } else {
+    const action = selectAction(data.actions, focus, target.label)
+    const summary = action ? summaryFromAction(action, focus.kind, focus.date) : summaryFromRow(target, fallback)
+    const asOf = formatAsOf(data.asOf)
+    title = data.stockName
+    meta = <EventDetailMeta stock={data} description={`${KIND_LABELS[summary.kind]} 일정`} />
+    body = (
+      <div ref={bodyRef} className="fg-cal-detail">
+        <EventDetailHeader stock={data} from={from} onNavigate={onClose} />
+        <EventSummary summary={summary} today={today} headingRef={headingRef} />
+        {!action && (
+          <SectionNotice>
+            일정이 갱신됐습니다. 이 일정은 최신 자료에서 바뀌었거나 빠졌습니다. 달력을 새로 고치면 바뀐 일정을 볼 수 있습니다.
+          </SectionNotice>
+        )}
+        {action && <ActionTimeline action={action} focus={focus} today={today} />}
+        {action && <FamilyPanel ticker={data.ticker} action={action} price={data.price} today={today} />}
+        <EventPriceChart ticker={data.ticker} kind={focus.kind} date={focus.date} today={today} />
+        {action && (
+          <OtherActions actions={data.actions} currentKey={actionKey(action)} today={today} onSelect={selectOther} />
+        )}
+        <Disclaimer
+          text={asOf ? `${asOf} 기준 · ${CALENDAR_NOTICE}` : CALENDAR_NOTICE}
+          className="fg-snote fg-num"
+        />
       </div>
     )
   }
-
-  if (!data || loading) {
-    return (
-      <div aria-busy="true" className="px-6 pt-7 pb-10 sm:px-8">
-        <DialogTitle className="pr-8 text-title font-medium tracking-[-0.5px] text-foreground">{name}</DialogTitle>
-        <DialogDescription className="mt-1 text-caption text-muted-foreground">
-          {KIND_LABELS[target.kind]} 일정을 불러오는 중
-        </DialogDescription>
-        <div className={cn('mt-4 h-6 w-40', PULSE)} />
-        <div className="my-6 border-t border-border" />
-        <div className={cn('h-28', PULSE)} />
-        <div className={cn('mt-4 h-40', PULSE)} />
-      </div>
-    )
-  }
-
-  const action = selectAction(data.actions, focus, target.label)
-  const summary = action ? summaryFromAction(action, focus.kind, focus.date) : summaryFromRow(target, fallback)
-  const asOf = formatAsOf(data.asOf)
 
   return (
-    <div ref={bodyRef} className="min-h-0 overflow-y-auto">
-      <EventDetailHeader
-        stock={data}
-        description={`${KIND_LABELS[summary.kind]} 일정`}
-        from={from}
-        onNavigate={onClose}
-      />
-      <div className="border-t border-border lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="min-w-0">
-          <EventSummary summary={summary} today={today} headingRef={headingRef} />
-          {!action && (
-            <div className="px-6 pb-5 sm:px-8">
-              <SectionNotice>
-                일정이 갱신됐습니다. 이 일정은 최신 자료에서 바뀌었거나 빠졌습니다. 달력을 새로 고치면 바뀐 일정을 볼 수 있습니다.
-              </SectionNotice>
-            </div>
-          )}
-          {action && <ActionTimeline action={action} focus={focus} today={today} />}
-          {action && <FamilyPanel ticker={data.ticker} action={action} price={data.price} today={today} />}
-        </div>
-        <div className="min-w-0 lg:border-l lg:border-border lg:[&>section:first-child]:border-t-0">
-          <EventPriceChart ticker={data.ticker} kind={focus.kind} date={focus.date} today={today} />
-          {action && (
-            <OtherActions actions={data.actions} currentKey={actionKey(action)} today={today} onSelect={selectOther} />
-          )}
-        </div>
-      </div>
-      <footer className="border-t border-border px-6 py-4 sm:px-8">
-        <p className="text-caption leading-relaxed text-muted-foreground break-keep [text-wrap:pretty]">
-          {asOf && (
-            <>
-              <span className="font-mono tabular-nums">{asOf}</span> 기준 ·{' '}
-            </>
-          )}
-          {CALENDAR_NOTICE}
-        </p>
-      </footer>
-    </div>
+    <SideSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      meta={meta}
+      closeLabel="일정 상세 닫기"
+      returnFocusRef={returnFocusRef}
+      variant="modal"
+    >
+      {body}
+    </SideSheet>
   )
 }

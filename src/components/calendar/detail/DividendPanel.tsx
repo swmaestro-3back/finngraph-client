@@ -1,10 +1,13 @@
 import {
+  DetailNote,
   DetailSection,
   InlineSkeleton,
   Metric,
+  Metrics,
   NoteBadge,
   SectionNotice,
   SkeletonRows,
+  SubSection,
 } from '@/components/calendar/detail/DetailParts'
 import type { CorporateActionRes } from '@/lib/apiTypes'
 import {
@@ -15,7 +18,8 @@ import {
   recoveryLabel,
   summarizeRecovery,
 } from '@/lib/calendar'
-import { changeColorClass, formatChange, formatPercent, formatWon } from '@/lib/format'
+import { formatChange, formatPercent, formatWon } from '@/lib/format'
+import { toneClass } from '@/lib/fg/format'
 import { useDividendHistory } from '@/lib/queries/useDividendHistory'
 import { useFinancials } from '@/lib/queries/useFinancials'
 import { cn } from '@/lib/utils'
@@ -39,7 +43,7 @@ export function DividendPanel({ ticker, action, price }: DividendPanelProps) {
 
   return (
     <DetailSection id="dividend-panel-title" title="배당">
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+      <Metrics columns={3}>
         <Metric
           term="이번 주당배당금"
           hint={previous ? '이번 금액이 아직 없어 지난번 같은 종류 배당으로 계산했습니다' : undefined}
@@ -67,15 +71,16 @@ export function DividendPanel({ ticker, action, price }: DividendPanelProps) {
         >
           {financialsPending ? <InlineSkeleton /> : payout ? formatPercent(payout.value) : '—'}
         </Metric>
-      </dl>
+      </Metrics>
 
-      <div className="mt-6">
-        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <h4 className="text-caption font-semibold text-foreground">배당락 반응 기록</h4>
-          {!historyPending && !history.error && recovery && (
-            <p className="font-mono text-caption tabular-nums text-foreground-secondary">{recovery}</p>
-          )}
-        </div>
+      <SubSection
+        title="배당락 반응 기록"
+        aside={
+          !historyPending &&
+          !history.error &&
+          recovery && <span className="fg-cal-dsub__aside fg-num">{recovery}</span>
+        }
+      >
         {historyPending ? (
           <SkeletonRows count={3} />
         ) : history.error ? (
@@ -83,37 +88,33 @@ export function DividendPanel({ ticker, action, price }: DividendPanelProps) {
         ) : rows.length === 0 ? (
           <SectionNotice>계산할 지난 배당 기록이 없습니다.</SectionNotice>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-caption sm:min-w-[520px]">
-              <caption className="sr-only">회차별 배당락 반응</caption>
+          <div className="fg-cal-table-wrap">
+            <table className="fg-cal-table">
+              <caption className="fg-sr">회차별 배당락 반응</caption>
               <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th scope="col" className="py-1.5 pr-2 font-medium sm:pr-3">기준일</th>
-                  <th scope="col" className="hidden py-1.5 pr-3 font-medium sm:table-cell">구분</th>
-                  <th scope="col" className="py-1.5 pr-2 text-right font-medium sm:pr-3">주당배당금</th>
-                  <th scope="col" className="py-1.5 pr-2 text-right font-medium sm:pr-3">이론 낙폭</th>
-                  <th scope="col" className="py-1.5 pr-2 text-right font-medium sm:pr-3">시초 갭</th>
-                  <th scope="col" className="py-1.5 text-right font-medium">회복</th>
+                <tr>
+                  <th scope="col">기준일</th>
+                  <th scope="col" className="fg-cal-table__left fg-cal-table__wide">
+                    구분
+                  </th>
+                  <th scope="col">주당배당금</th>
+                  <th scope="col">이론 낙폭</th>
+                  <th scope="col">시초 갭</th>
+                  <th scope="col">회복</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={`${row.recordDate}|${row.kind}`} className="border-t border-surface-inset">
-                    <td className="py-1.5 pr-2 font-mono tabular-nums text-foreground sm:pr-3">
+                  <tr key={`${row.recordDate}|${row.kind}`}>
+                    <td>
                       {formatFullDate(row.recordDate)}
-                      <span className="block font-sans text-micro text-muted-foreground sm:hidden">{row.kind}</span>
+                      <span className="fg-cal-table__sub">{row.kind}</span>
                     </td>
-                    <td className="hidden py-1.5 pr-3 text-foreground-secondary sm:table-cell">{row.kind}</td>
-                    <td className="py-1.5 pr-2 text-right font-mono tabular-nums text-foreground sm:pr-3">{formatWon(row.dps)}</td>
-                    <td className="py-1.5 pr-2 text-right font-mono tabular-nums text-foreground sm:pr-3">
-                      {formatPercent(row.theoreticalDrop)}
-                    </td>
-                    <td className={cn('py-1.5 pr-2 text-right font-mono tabular-nums sm:pr-3', changeColorClass(row.openGap))}>
-                      {formatChange(row.openGap)}
-                    </td>
-                    <td className={cn('py-1.5 text-right', row.pending ? 'text-muted-foreground' : 'text-foreground')}>
-                      {recoveryLabel(row)}
-                    </td>
+                    <td className="fg-cal-table__left fg-cal-table__wide fg-cal-table__muted">{row.kind}</td>
+                    <td>{formatWon(row.dps)}</td>
+                    <td>{formatPercent(row.theoreticalDrop)}</td>
+                    <td className={toneClass(row.openGap)}>{formatChange(row.openGap)}</td>
+                    <td className={cn('fg-cal-table__wrap', row.pending && 'fg-cal-table__muted')}>{recoveryLabel(row)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -121,11 +122,11 @@ export function DividendPanel({ ticker, action, price }: DividendPanelProps) {
           </div>
         )}
         {!historyPending && !history.error && rows.length > 0 && (
-          <p className="mt-2 text-caption leading-relaxed text-muted-foreground break-keep [text-wrap:pretty]">
+          <DetailNote>
             이론 낙폭은 주당배당금 ÷ 배당락 전날 종가, 시초 갭은 배당락일 시가가 전날 종가와 벌어진 정도입니다. 회복은 배당락일을 1일째로 세어 종가가 전날 종가를 되찾은 날입니다.
-          </p>
+          </DetailNote>
         )}
-      </div>
+      </SubSection>
     </DetailSection>
   )
 }

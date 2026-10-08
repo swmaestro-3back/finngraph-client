@@ -5,7 +5,6 @@ import {
   streakLabel,
   week52Dates,
   week52Label,
-  windowMove,
 } from '@/lib/fg/themeIndex'
 
 const closes = (rows: readonly [string, number][]) => rows.map(([date, close]) => ({ date, close }))
@@ -22,12 +21,6 @@ describe('indexWindow', () => {
   it('기간 시작 기준 종가부터 마지막 날까지 자른다', () => {
     expect(indexWindow(candles, 3).map((c) => c.date)).toEqual(['2026-06-30', '2026-07-31', '2026-09-29', '2026-09-30'])
     expect(indexWindow(candles, 1).map((c) => c.date)).toEqual(['2026-07-31', '2026-09-29', '2026-09-30'])
-  })
-
-  it('기간 등락률은 첫 종가 대비 마지막 종가다', () => {
-    expect(windowMove(indexWindow(candles, 3))).toBeCloseTo(25)
-    expect(windowMove([])).toBeNull()
-    expect(windowMove(closes([['2026-09-30', 0], ['2026-10-01', 1]]))).toBeNull()
   })
 })
 

@@ -173,8 +173,17 @@ export function keyboardIndex(key: string, shift: boolean, current: number | nul
   return Math.max(0, Math.min(last, next))
 }
 
-export function formatChartPrice(value: number): string {
-  return Math.round(value).toLocaleString('ko-KR')
+export interface PriceFormat {
+  decimals: number
+  unit: string
+}
+
+export const WON_FORMAT: PriceFormat = { decimals: 0, unit: '원' }
+export const INDEX_FORMAT: PriceFormat = { decimals: 2, unit: '' }
+
+export function formatChartPrice(value: number, decimals = 0): string {
+  if (decimals === 0) return Math.round(value).toLocaleString('ko-KR')
+  return value.toLocaleString('ko-KR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
 
 export function formatChartVolume(volume: number): string {
@@ -199,16 +208,21 @@ export function periodLabel(date: string, kind: CandlePeriod, refYear: number): 
   return dayLabel(date, refYear)
 }
 
-export function legendAt(candles: readonly CandleRes[], index: number, kind: CandlePeriod = 'D'): Legend | null {
+export function legendAt(
+  candles: readonly CandleRes[],
+  index: number,
+  kind: CandlePeriod = 'D',
+  decimals = 0,
+): Legend | null {
   const candle = candles[index]
   if (!candle) return null
   const year = Number(candles[candles.length - 1].date.slice(0, 4))
   return {
     date: periodLabel(candle.date, kind, year),
-    open: formatChartPrice(candle.open),
-    high: formatChartPrice(candle.high),
-    low: formatChartPrice(candle.low),
-    close: formatChartPrice(candle.close),
+    open: formatChartPrice(candle.open, decimals),
+    high: formatChartPrice(candle.high, decimals),
+    low: formatChartPrice(candle.low, decimals),
+    close: formatChartPrice(candle.close, decimals),
     change: candleChangeAt(candles, index),
     volume: formatChartVolume(candle.volume),
   }
@@ -220,15 +234,16 @@ export function chartValueText(
   markerTitle: string | null,
   markerLabel = '이슈',
   kind: CandlePeriod = 'D',
+  format: PriceFormat = WON_FORMAT,
 ): string {
-  const legend = legendAt(candles, index, kind)
+  const legend = legendAt(candles, index, kind, format.decimals)
   if (!legend) return ''
   const parts = [
     legend.date,
-    `시가 ${legend.open}원`,
-    `고가 ${legend.high}원`,
-    `저가 ${legend.low}원`,
-    `종가 ${legend.close}원`,
+    `시가 ${legend.open}${format.unit}`,
+    `고가 ${legend.high}${format.unit}`,
+    `저가 ${legend.low}${format.unit}`,
+    `종가 ${legend.close}${format.unit}`,
     ...(legend.change === null ? [] : [formatChange(legend.change)]),
     `거래량 ${legend.volume}주`,
     ...(markerTitle ? [`${markerLabel}: ${markerTitle}`] : []),

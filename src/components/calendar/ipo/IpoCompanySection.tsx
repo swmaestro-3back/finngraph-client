@@ -6,13 +6,13 @@ import { formatFullDate } from '@/lib/calendar'
 import { dartFilingUrl, splitSentences } from '@/lib/companyOverview'
 import { homepageUrl, ipoIntroSource } from '@/lib/ipoDetail'
 
-const MISSING = <span className="text-muted-foreground">정보 없음</span>
+const MISSING = <span className="fg-cal-facts__missing">정보 없음</span>
 
 function ProfileRow({ term, children }: { term: string; children: ReactNode }) {
   return (
-    <div className="contents">
-      <dt className="text-muted-foreground">{term}</dt>
-      <dd className="min-w-0 break-keep text-foreground">{children}</dd>
+    <div>
+      <dt>{term}</dt>
+      <dd>{children}</dd>
     </div>
   )
 }
@@ -22,31 +22,29 @@ function Intro({ company, description }: { company: IpoCompanyRes; description: 
   const sentences = splitSentences(description)
 
   return (
-    <div className="mb-5">
-      <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground">
+    <div className="fg-cal-intro">
+      <p className="fg-cal-intro__src">
         {source.label && <span>{source.label}</span>}
         {company.descriptionRceptNo && (
           <a
             href={dartFilingUrl(company.descriptionRceptNo)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-0.5 hover:text-primary hover:underline"
+            className="fg-cal-ext"
           >
             {source.linkLabel}
-            <ExternalLink className="size-3" strokeWidth={2} />
+            <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
           </a>
         )}
       </p>
       {sentences.length > 1 ? (
-        <ul className="list-disc space-y-1 pl-5 text-body leading-relaxed text-foreground break-keep [text-wrap:pretty] marker:text-foreground-tertiary">
+        <ul className="fg-cal-intro__list">
           {sentences.map((sentence, index) => (
             <li key={`${index}-${sentence.length}`}>{sentence}</li>
           ))}
         </ul>
       ) : (
-        <p className="text-body leading-relaxed text-foreground break-keep [text-wrap:pretty]">
-          {sentences[0] ?? description}
-        </p>
+        <p className="fg-cal-intro__text">{sentences[0] ?? description}</p>
       )}
     </div>
   )
@@ -66,26 +64,17 @@ export function IpoCompanySection({ company }: { company: IpoCompanyRes | null }
   return (
     <DetailSection id="ipo-company-title" title="기업 개요">
       {company.description && <Intro company={company} description={company.description} />}
-      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-caption">
+      <dl className="fg-cal-facts">
         <ProfileRow term="대표">{company.ceo ?? MISSING}</ProfileRow>
         <ProfileRow term="설립일">
-          {company.establishedOn ? (
-            <span className="font-mono tabular-nums">{formatFullDate(company.establishedOn)}</span>
-          ) : (
-            MISSING
-          )}
+          {company.establishedOn ? <span className="fg-num">{formatFullDate(company.establishedOn)}</span> : MISSING}
         </ProfileRow>
         <ProfileRow term="주소">{company.address ?? MISSING}</ProfileRow>
         <ProfileRow term="홈페이지">
           {homepage ? (
-            <a
-              href={homepage}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex max-w-full items-center gap-0.5 break-all hover:text-primary hover:underline"
-            >
+            <a href={homepage} target="_blank" rel="noopener noreferrer" className="fg-cal-ext fg-cal-ext--url">
               {company.homepage?.trim()}
-              <ExternalLink className="size-3 shrink-0" strokeWidth={2} />
+              <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
             </a>
           ) : (
             MISSING

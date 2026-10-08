@@ -45,11 +45,13 @@ import {
   spanMoved,
   tickLabel,
   withAlpha,
+  WON_FORMAT,
   zoomSpan,
   type LogicalSpan,
+  type PriceFormat,
 } from '@/lib/fg/priceChart'
 import { dayLabel } from '@/lib/fg/themeCharts'
-import { useCandles } from '@/lib/queries/useCandles'
+import { useSourceCandles, type CandleSource } from '@/lib/queries/useCandles'
 import { cn } from '@/lib/utils'
 
 export interface ChartMarker {
@@ -61,7 +63,9 @@ export interface ChartMarker {
 
 interface PriceChartProps {
   name: string
-  ticker: string
+  source: CandleSource
+  title?: string | null
+  format?: PriceFormat
   candles: readonly CandleRes[]
   markers: readonly ChartMarker[] | null
   markerLabel: string
@@ -85,7 +89,6 @@ type RangeChoice = string
 
 const WEEKLY_CANDLE_LIMIT = 160
 const MONTHLY_CANDLE_LIMIT = 60
-const MARKER_HINT = '이슈 표시는 일봉에서 볼 수 있어요'
 
 function tokens() {
   const style = getComputedStyle(document.documentElement)
@@ -166,7 +169,9 @@ function showRange(
 
 export function PriceChart({
   name,
-  ticker,
+  source,
+  title = '주가',
+  format = WON_FORMAT,
   candles,
   markers,
   markerLabel,
@@ -185,9 +190,10 @@ export function PriceChart({
   const navigate = useNavigate()
   const kind = parseChartKind(search)
   const [deep, setDeep] = useState(() => kind === 'D' && needsDailyHistory(parseChartRange(search, 'D')))
-  const history = useCandles(kind === 'D' && deep ? ticker : null, 'D', DAILY_HISTORY_LIMIT)
-  const weekly = useCandles(kind === 'W' ? ticker : null, 'W', WEEKLY_CANDLE_LIMIT)
-  const monthly = useCandles(kind === 'M' ? ticker : null, 'M', MONTHLY_CANDLE_LIMIT)
+  const history = useSourceCandles(kind === 'D' && deep ? source : null, 'D', DAILY_HISTORY_LIMIT)
+  const weekly = useSourceCandles(kind === 'W' ? source : null, 'W', WEEKLY_CANDLE_LIMIT)
+  const monthly = useSourceCandles(kind === 'M' ? source : null, 'M', MONTHLY_CANDLE_LIMIT)
+  const formatRef = useRef(format)
   const daily = deep && history.data && history.data.length > candles.length ? history.data : candles
   const displayCandles = kind === 'D' ? daily : kind === 'W' ? weekly.data : monthly.data
   const dailyIndex = useMemo(() => new Map(daily.map((candle, index) => [candle.date, index])), [daily])
@@ -259,7 +265,7 @@ export function PriceChart({
       },
       localization: {
         locale: 'ko-KR',
-        priceFormatter: (price: number) => formatChartPrice(price),
+        priceFormatter: (price: number) => formatChartPrice(price, formatRef.current.decimals),
         timeFormatter: (time: Time) => dayLabel(isoOfTime(time), latest.current.refYear),
       },
     })
@@ -269,7 +275,11 @@ export function PriceChart({
       borderVisible: false,
       wickUpColor: t.up,
       wickDownColor: t.down,
-      priceFormat: { type: 'price', precision: 0, minMove: 1 },
+      priceFormat: {
+        type: 'price',
+        precision: formatRef.current.decimals,
+        minMove: 10 ** -formatRef.current.decimals,
+      },
     })
     const volume = chart.addSeries(HistogramSeries, {
       priceScaleId: 'vol',
@@ -445,18 +455,24 @@ export function PriceChart({
   }
 
   const shownIndex = hover ?? kb ?? count - 1
-  const legend = legendAt(shown, shownIndex, kind)
+  const legend = legendAt(shown, shownIndex, kind, format.decimals)
   const kbIndex = kb ?? count - 1
   const kbMarker = showMarkers ? markerAt(kbIndex) : null
   const rangeOptions = RANGE_OPTIONS[kind].map(({ value, label }) => ({ value, label }))
   const rangeValue = active && active.kind === kind ? active.range : NO_RANGE
 
   return (
-    <section className="fg-section fg-pc" aria-labelledby="fg-pc-title">
+    <section
+      className={cn('fg-pc', title === null ? 'fg-pc--bare' : 'fg-section')}
+      aria-labelledby={title === null ? undefined : 'fg-pc-title'}
+      aria-label={title === null ? `${name} 차트` : undefined}
+    >
       <div className="fg-pc__bar">
-        <h2 id="fg-pc-title" className="fg-section__title">
-          주가
-        </h2>
+        {title !== null && (
+          <h2 id="fg-pc-title" className="fg-section__title">
+            {title}
+          </h2>
+        )}
         <div className="fg-pc__tools">
           {markers !== null && (
             <button
@@ -467,7 +483,7 @@ export function PriceChart({
               onClick={kind === 'D' ? onToggleMarkers : undefined}
             >
               <i className="fg-dia" aria-hidden="true" />
-              {kind === 'D' ? `${markerLabel} 표시` : MARKER_HINT}
+              {kind === 'D' ? `${markerLabel} 표시` : `${markerLabel} 표시는 일봉에서 볼 수 있어요`}
             </button>
           )}
           <Segment<CandlePeriod> label="캔들 종류" options={CANDLE_KIND_OPTIONS} value={kind} onChange={pickKind} />
@@ -507,7 +523,7 @@ export function PriceChart({
         aria-valuemin={0}
         aria-valuemax={Math.max(0, count - 1)}
         aria-valuenow={Math.max(0, kbIndex)}
-        aria-valuetext={chartValueText(shown, kbIndex, kbMarker?.title ?? null, markerLabel, kind)}
+        aria-valuetext={chartValueText(shown, kbIndex, kbMarker?.title ?? null, markerLabel, kind, format)}
         aria-describedby={hintId}
         onKeyDown={onKeyDown}
       >

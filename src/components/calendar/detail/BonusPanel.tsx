@@ -1,4 +1,4 @@
-import { DetailSection, Metric, SectionNotice, SignedPercent } from '@/components/calendar/detail/DetailParts'
+import { DetailNote, DetailSection, Metric, Metrics, SectionNotice, SignedPercent } from '@/components/calendar/detail/DetailParts'
 import { ExPriceMetric } from '@/components/calendar/detail/ExPriceMetric'
 import type { CorporateActionRes } from '@/lib/apiTypes'
 import { formatSharesPerShare, stepState } from '@/lib/calendar'
@@ -10,7 +10,7 @@ export function BonusPanel({ action, today }: { action: CorporateActionRes; toda
 
   return (
     <DetailSection id="bonus-panel-title" title="무상증자">
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+      <Metrics columns={bonus ? 4 : 2}>
         <Metric term="배정 비율">{action.ratio === null ? '미정' : formatSharesPerShare(action.ratio)}</Metric>
         {bonus && (
           <>
@@ -23,15 +23,11 @@ export function BonusPanel({ action, today }: { action: CorporateActionRes; toda
             </Metric>
           </>
         )}
-      </dl>
+      </Metrics>
       {bonus ? (
-        <p className="mt-3 text-caption leading-relaxed text-muted-foreground break-keep">
-          수익률은 권리락일을 1일째로 세어 5·20번째 거래일 종가를 권리락 이론가와 비교한 값입니다.
-        </p>
+        <DetailNote>수익률은 권리락일을 1일째로 세어 5·20번째 거래일 종가를 권리락 이론가와 비교한 값입니다.</DetailNote>
       ) : (
-        <div className="mt-4">
-          <SectionNotice>권리락 일정이 없어 이론가와 권리락 후 수익률을 계산하지 않았습니다.</SectionNotice>
-        </div>
+        <SectionNotice>권리락 일정이 없어 이론가와 권리락 후 수익률을 계산하지 않았습니다.</SectionNotice>
       )}
     </DetailSection>
   )

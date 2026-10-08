@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { NewsDetail } from '@/lib/apiTypes'
 import {
-  clusterSlots,
   defaultRange,
   guestStart,
   kstDayTime,
-  nearestSlot,
   newsListView,
-  newsMarkers,
   rangeStart,
   toThemeNews,
   tradeDayOf,
@@ -110,93 +107,6 @@ describe('범위', () => {
   })
 })
 
-describe('clusterSlots', () => {
-  const xOf = (i: number) => i * 10
-
-  it('12px 안에 붙은 날만 최신 날 자리로 합친다', () => {
-    const slots = clusterSlots([0, 1, 5, 9, 10], xOf)
-    expect(slots.map((s) => ({ at: s.at, members: s.members }))).toEqual([
-      { at: 10, members: [10, 9] },
-      { at: 5, members: [5] },
-      { at: 1, members: [1, 0] },
-    ])
-  })
-
-  it('누르는 영역은 양옆 이웃까지 거리의 절반씩, 한쪽 20px(합 40px)까지다', () => {
-    const slots = clusterSlots([0, 3, 30], xOf)
-    expect(slots.map((s) => [s.left, s.right])).toEqual([
-      [20, 20],
-      [15, 20],
-      [20, 15],
-    ])
-    expect(clusterSlots([0, 2], (i) => i * 7).map((s) => [s.left, s.right])).toEqual([
-      [7, 20],
-      [20, 7],
-    ])
-    expect(clusterSlots([0, 1, 2], (i) => i * 12).map((s) => s.left + s.right)).toEqual([26, 12, 26])
-  })
-
-  it('겹치지 않으면 하나도 합치지 않는다', () => {
-    expect(clusterSlots([0, 2, 4], xOf)).toHaveLength(3)
-  })
-})
-
-describe('nearestSlot', () => {
-  const xOf = (i: number) => i * 10
-  const slots = [{ at: 10 }, { at: 5 }, { at: 0 }]
-
-  it('24px 안에서 가장 가까운 자리를 고른다', () => {
-    expect(nearestSlot(slots, 62, xOf)).toEqual({ at: 5 })
-    expect(nearestSlot(slots, 81, xOf)).toEqual({ at: 10 })
-    expect(nearestSlot(slots, 124, xOf)).toEqual({ at: 10 })
-    expect(nearestSlot(slots, 125, xOf)).toBeNull()
-  })
-})
-
-describe('newsMarkers', () => {
-  const items = [
-    item(1, '2026-09-30'),
-    item(2, '2026-09-27', '2026-09-28'),
-    item(3, '2026-09-28'),
-    item(4, '2026-09-24'),
-    item(5, '2026-08-01', '2026-08-03'),
-  ]
-
-  it('기간 안 거래일마다 마커를 두고 그날 뉴스를 담는다', () => {
-    const markers = newsMarkers(items, TRADING, (i) => i * 100, null, 2026)
-    expect(markers.map((m) => [m.id, m.label, m.items.map((n) => n.id), m.locked])).toEqual([
-      ['2026-09-30', '9월 30일', ['1'], false],
-      ['2026-09-28', '9월 28일', ['2', '3'], false],
-      ['2026-09-24', '9월 24일', ['4'], false],
-    ])
-    expect(markers[1].aria).toBe('9월 28일 뉴스 2건')
-  })
-
-  it('합친 마커는 날짜 범위로 쓴다', () => {
-    const markers = newsMarkers(items, TRADING, (i) => i * 5, null, 2026)
-    expect(markers.map((m) => [m.id, m.label, m.items.length])).toEqual([
-      ['2026-09-28~2026-09-30', '9월 28일 ~ 9월 30일', 3],
-      ['2026-09-24', '9월 24일', 1],
-    ])
-  })
-
-  it('비회원에게 열린 기사가 하나도 없는 마커는 잠긴다', () => {
-    const markers = newsMarkers(items, TRADING, (i) => i * 100, '2026-09-26', 2026)
-    expect(markers.map((m) => m.locked)).toEqual([false, false, true])
-    expect(markers[2].aria).toBe('9월 24일 뉴스, 로그인하면 볼 수 있어요')
-  })
-
-  it('비회원 라벨은 볼 수 있는 기사만 센다', () => {
-    const markers = newsMarkers(items, TRADING, (i) => i * 100, '2026-09-28', 2026)
-    expect(markers.map((m) => m.aria)).toEqual([
-      '9월 30일 뉴스 1건',
-      '9월 28일 뉴스 1건',
-      '9월 24일 뉴스, 로그인하면 볼 수 있어요',
-    ])
-    expect(markers[1].items.map((n) => n.id)).toEqual(['2', '3'])
-  })
-})
-
 describe('newsListView', () => {
   const items = [
     item(1, '2026-09-30', '2026-09-30', true, '11:00'),
@@ -241,7 +151,7 @@ describe('newsListView', () => {
   })
 
   it('마커를 고르면 범위 대신 그 마커 뉴스만 보인다', () => {
-    const selected = newsMarkers(items, TRADING, (i) => i * 100, null, 2026).find((m) => m.id === '2026-09-28') ?? null
+    const selected = { id: '2026-09-28', label: '9월 28일', items: items.filter((n) => n.tradeDay === '2026-09-28') }
     const view = newsListView({ ...base, selected })
     expect(view.countText).toBe('9월 28일 1건 · 분석 1건 · 최신순')
     expect(view.open.map((n) => n.id)).toEqual(['3'])

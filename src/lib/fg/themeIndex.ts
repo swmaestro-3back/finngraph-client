@@ -3,17 +3,6 @@ import { minusMonths, monthDayLabel, periodStartIndex } from '@/lib/fg/themeChar
 
 export const INDEX_CANDLE_LIMIT = 260
 
-export type IndexPeriod = '1m' | '3m' | '6m' | '1y'
-
-export const INDEX_PERIODS: readonly { value: IndexPeriod; label: string; months: number }[] = [
-  { value: '1m', label: '1달', months: 1 },
-  { value: '3m', label: '3달', months: 3 },
-  { value: '6m', label: '6달', months: 6 },
-  { value: '1y', label: '1년', months: 12 },
-]
-
-export const DEFAULT_INDEX_PERIOD: IndexPeriod = '3m'
-
 interface DatedClose {
   date: string
   close: number
@@ -21,13 +10,6 @@ interface DatedClose {
 
 export function indexWindow<T extends DatedClose>(candles: readonly T[], months: number): T[] {
   return candles.slice(periodStartIndex(candles.map((c) => c.date), months))
-}
-
-export function windowMove(window: readonly { close: number }[]): number | null {
-  if (window.length < 2) return null
-  const first = window[0].close
-  if (first === 0) return null
-  return (window[window.length - 1].close / first - 1) * 100
 }
 
 export interface Week52Dates {

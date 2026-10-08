@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
-import { DetailSection, SectionNotice } from '@/components/calendar/detail/DetailParts'
+import { DetailNote, DetailSection, SectionNotice } from '@/components/calendar/detail/DetailParts'
 import { CandleChart } from '@/components/chart/CandleChart'
+import { Skeleton } from '@/components/fg/Skeleton'
 import { toCandleView } from '@/lib/apiMappers'
 import { CANDLE_COUNTS, type CalendarEventKind } from '@/lib/apiTypes'
 import { KIND_LABELS, candleIndexOn, formatDayTitle } from '@/lib/calendar'
@@ -28,7 +29,7 @@ export function EventPriceChart({ ticker, kind, date, today }: EventPriceChartPr
   return (
     <DetailSection id="event-chart-title" title="주가">
       {pending ? (
-        <div className="h-[260px] animate-pulse rounded-lg bg-muted motion-reduce:animate-none" />
+        <Skeleton height={340} />
       ) : error ? (
         <SectionNotice>주가를 불러오지 못했습니다. 다른 정보는 그대로 볼 수 있습니다.</SectionNotice>
       ) : candles.length === 0 ? (
@@ -36,7 +37,7 @@ export function EventPriceChart({ ticker, kind, date, today }: EventPriceChartPr
       ) : (
         <>
           <CandleChart candles={candles} selectedIndex={selectedIndex} />
-          <p className="mt-2 text-caption text-muted-foreground break-keep">{caption}</p>
+          <DetailNote>{caption}</DetailNote>
         </>
       )}
     </DetailSection>

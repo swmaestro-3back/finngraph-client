@@ -15,6 +15,7 @@
 @import "./styles/fg/stock-finance.css" layer(components);
 @import "./styles/fg/issue.css" layer(components);
 @import "./styles/fg/home.css" layer(components);
+@import "./styles/fg/calendar.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
@@ -80,7 +81,6 @@
   /* JS 리터럴로만 색을 받는 곳(d3 그래프·recharts 커서)이 var()로 참조하는 값 — 색의 정본을 CSS 한 곳에 둔다 */
   --graph-canvas: #f3f1f1;
   --graph-edge: #a6a2a2;
-  --chart-rule: #aaa6a6;
   --chart-cursor: rgba(32, 29, 29, 0.04);
 }
 

@@ -6,6 +6,7 @@ import { SearchBox } from '@/components/fg/SearchBox'
 import { UserMenu } from '@/components/fg/UserMenu'
 import { activeMenu, MAIN_MENU, SIDE_LINKS } from '@/lib/fg/nav'
 import { isSearchShortcut } from '@/lib/fg/search'
+import { cn } from '@/lib/utils'
 
 const WIDE_SEARCH = '(min-width: 1024px)'
 
@@ -65,7 +66,7 @@ export function AppHeader() {
             <Link
               key={link.to}
               to={link.to}
-              className={link.wideOnly ? 'fg-gh__link fg-gh__link--wide' : 'fg-gh__link'}
+              className={cn('fg-gh__link', link.wideOnly && 'fg-gh__link--wide', link.narrowOnly && 'fg-gh__link--narrow')}
               aria-current={pathname === link.to ? 'page' : undefined}
             >
               {link.label}

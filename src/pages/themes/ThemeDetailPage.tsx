@@ -2,6 +2,7 @@ import { ChevronLeft } from 'lucide-react'
 import { useCallback, useState, type ReactNode } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { Button, ButtonLink } from '@/components/fg/Button'
+import { ChartNotice } from '@/components/fg/ChartNotice'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
@@ -139,6 +140,7 @@ function ThemeDetailView({ id }: { id: number | null }) {
             </div>
           </aside>
         </div>
+        <ChartNotice />
       </>
     )
   }

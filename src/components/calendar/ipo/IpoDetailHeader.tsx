@@ -1,13 +1,27 @@
-import { ArrowUpRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { NoteBadge, Tag } from '@/components/calendar/detail/DetailParts'
-import { Button } from '@/components/ui/button'
-import { DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { ButtonLink } from '@/components/fg/Button'
 import type { IpoDetailRes } from '@/lib/apiTypes'
 import { IPO_STATUS_LABELS } from '@/lib/calendar'
+import { stockPath } from '@/lib/fg/paths'
 import { PLANNED_PRICE_HINT, ipoHeaderCountdown, ipoPriceBadge, ipoPriceText, listedTicker } from '@/lib/ipoDetail'
 import { fromState } from '@/lib/navigation'
-import { cn } from '@/lib/utils'
+
+export function IpoDetailMeta({ detail }: { detail: Pick<IpoDetailRes, 'ticker' | 'spac' | 'status'> }) {
+  return (
+    <span className="fg-cal-dkick">
+      {detail.spac && <Tag>스팩</Tag>}
+      {detail.ticker && (
+        <>
+          <span className="fg-num">{detail.ticker}</span>
+          <span aria-hidden="true">·</span>
+        </>
+      )}
+      <span>공모주</span>
+      <span aria-hidden="true">·</span>
+      <b>{IPO_STATUS_LABELS[detail.status]}</b>
+    </span>
+  )
+}
 
 interface IpoDetailHeaderProps {
   detail: IpoDetailRes
@@ -23,60 +37,29 @@ export function IpoDetailHeader({ detail, from, today, onNavigate }: IpoDetailHe
   const countdown = ipoHeaderCountdown(detail, today)
 
   return (
-    <header className="flex flex-col gap-3 px-6 pt-7 pb-5 sm:px-8">
-      <div className="flex flex-col gap-1 pr-8">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <DialogTitle className="min-w-0 break-keep text-title font-medium leading-tight tracking-[-0.5px] text-foreground">
-            {detail.name}
-          </DialogTitle>
-          {detail.spac && <Tag>스팩</Tag>}
-        </div>
-        <DialogDescription className="flex flex-wrap items-center gap-x-2 text-caption text-muted-foreground">
-          {detail.ticker && (
+    <div className="fg-cal-quote">
+      <div className="fg-cal-quote__main">
+        <p className="fg-cal-quote__px fg-num">
+          <span className="fg-cal-quote__term">공모가</span>
+          <span className="fg-cal-quote__now">{ipoPriceText(price)}</span>
+          {badge === '예정' && <NoteBadge>예정</NoteBadge>}
+          {badge === '확정' && <Tag>확정</Tag>}
+          {countdown && (
             <>
-              <span className="font-mono tabular-nums">{detail.ticker}</span>
-              <span aria-hidden className="h-3 w-px bg-border" />
+              <span aria-hidden="true" className="fg-cal-quote__sep" />
+              <span className="fg-cal-quote__dday">{countdown}</span>
             </>
           )}
-          <span>공모주</span>
-          <span aria-hidden className="h-3 w-px bg-border" />
-          <span className="font-medium text-foreground-secondary">{IPO_STATUS_LABELS[detail.status]}</span>
-        </DialogDescription>
+        </p>
+        {badge === '예정' && <p className="fg-cal-quote__hint">{PLANNED_PRICE_HINT}</p>}
       </div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-caption text-muted-foreground">공모가</span>
-            <span
-              className={cn(
-                'text-lg font-medium text-foreground',
-                price === null ? 'font-sans' : 'font-mono tabular-nums',
-              )}
-            >
-              {ipoPriceText(price)}
-            </span>
-            {badge === '예정' && <NoteBadge>예정</NoteBadge>}
-            {badge === '확정' && <Tag>확정</Tag>}
-            {countdown && (
-              <>
-                <span aria-hidden className="h-3 w-px bg-border" />
-                <span className="font-mono text-sm font-medium tabular-nums text-foreground">{countdown}</span>
-              </>
-            )}
-          </p>
-          {badge === '예정' && (
-            <p className="text-caption text-muted-foreground break-keep">{PLANNED_PRICE_HINT}</p>
-          )}
+      {stockTicker && (
+        <div className="fg-cal-quote__acts">
+          <ButtonLink to={stockPath(stockTicker)} state={fromState(from)} onClick={onNavigate}>
+            종목 상세 보기
+          </ButtonLink>
         </div>
-        {stockTicker && (
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/stock/${encodeURIComponent(stockTicker)}`} state={fromState(from)} onClick={onNavigate}>
-              종목 상세 보기
-              <ArrowUpRight data-icon="inline-end" />
-            </Link>
-          </Button>
-        )}
-      </div>
-    </header>
+      )}
+    </div>
   )
 }

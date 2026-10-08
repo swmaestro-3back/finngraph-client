@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { Star } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import { Button, ButtonLink } from '@/components/fg/Button'
 import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
 import { useMemberGate } from '@/lib/memberGate'
@@ -9,17 +8,14 @@ import { cn } from '@/lib/utils'
 
 function Strip({ children, action, className }: { children: string; action: ReactNode; className?: string }) {
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-3 rounded-xl border border-border bg-muted px-4 py-3 sm:flex-row sm:items-center sm:justify-between',
-        className,
-      )}
-    >
-      <p className="flex items-center gap-2 text-body text-foreground break-keep">
-        <Star aria-hidden className="size-4 shrink-0 text-foreground-secondary" strokeWidth={2} />
+    <div className={cn('fg-section fg-cal-banner', className)}>
+      <p className="fg-cal-banner__text">
+        <span className="fg-cal-banner__icon" aria-hidden="true">
+          <Star size={16} strokeWidth={1.75} />
+        </span>
         {children}
       </p>
-      <div className="shrink-0">{action}</div>
+      {action}
     </div>
   )
 }
@@ -34,7 +30,7 @@ export function CalendarMemberBanner({ className }: { className?: string }) {
       <Strip
         className={className}
         action={
-          <Button size="sm" onClick={promptLogin}>
+          <Button variant="primary" size="sm" onClick={promptLogin}>
             로그인
           </Button>
         }
@@ -50,9 +46,9 @@ export function CalendarMemberBanner({ className }: { className?: string }) {
       <Strip
         className={className}
         action={
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/stocks">주식 목록에서 고르기</Link>
-          </Button>
+          <ButtonLink size="sm" to="/stocks">
+            주식 목록에서 고르기
+          </ButtonLink>
         }
       >
         관심종목을 등록하면 그 종목 일정이 별표와 함께 먼저 보입니다

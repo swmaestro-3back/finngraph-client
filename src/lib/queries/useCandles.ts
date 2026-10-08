@@ -1,5 +1,5 @@
 import { getData } from '@/lib/api'
-import { CANDLE_COUNTS, type CandlePeriod, type CandleRes } from '@/lib/apiTypes'
+import { CANDLE_COUNTS, type CandlePeriod, type CandleRes, type ThemeIndexCandleRes } from '@/lib/apiTypes'
 import { REFRESH_CACHE_TTL_MS } from '@/lib/autoRefresh'
 import { createTtlCache } from '@/lib/queries/ttlCache'
 import { useApi, type ApiState } from '@/lib/queries/useApi'
@@ -38,5 +38,28 @@ export function useCandlesCached(
         ? Promise.resolve([])
         : cached(`${ticker}|${period}|${limit}`, () => fetchCandles(ticker, period, limit)),
     [ticker, period, limit],
+  )
+}
+
+export interface CandleSource {
+  key: string
+  load: (period: CandlePeriod, limit: number) => Promise<CandleRes[]>
+}
+
+export function stockCandleSource(ticker: string): CandleSource {
+  return { key: `stock:${ticker}`, load: (period, limit) => fetchCandles(ticker, period, limit) }
+}
+
+export function themeCandleSource(id: number): CandleSource {
+  return {
+    key: `theme:${id}`,
+    load: (period, limit) => getData<ThemeIndexCandleRes[]>(`/v1/themes/${id}/candles`, { period, limit }),
+  }
+}
+
+export function useSourceCandles(source: CandleSource | null, period: CandlePeriod, limit: number): ApiState<CandleRes[]> {
+  return useApi<CandleRes[]>(
+    () => (source === null ? Promise.resolve([]) : source.load(period, limit)),
+    [source?.key ?? null, period, limit],
   )
 }

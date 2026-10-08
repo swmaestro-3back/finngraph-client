@@ -306,6 +306,7 @@
 
 .fg-pc { display: flex; flex-direction: column; gap: var(--space-4); }
 .fg-pc__bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.fg-pc--bare .fg-pc__bar { justify-content: flex-end; }
 .fg-pc__tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .fg-toggle { display: inline-flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-chip); background: var(--relation-event-subtle); color: var(--relation-event); font: 600 14px/20px var(--font-sans); }
 .fg-dia { display: inline-block; width: 8px; height: 8px; flex-shrink: 0; background: var(--relation-event); transform: rotate(45deg); }
