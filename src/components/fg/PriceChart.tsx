@@ -13,7 +13,7 @@ import {
   type MouseEventParams,
   type Time,
 } from 'lightweight-charts'
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { IssueMarkerLayer, type MarkerSpot } from '@/components/fg/IssueMarkerLayer'
@@ -26,6 +26,8 @@ import {
   CANDLE_KIND_OPTIONS,
   chartSearch,
   chartValueText,
+  DAILY_HISTORY_LIMIT,
+  DEEP_LOAD_EDGE,
   followSpan,
   formatChartPrice,
   isAway,
@@ -33,11 +35,13 @@ import {
   keyboardIndex,
   kindLabel,
   legendAt,
+  needsDailyHistory,
   parseChartKind,
   parseChartRange,
   RANGE_OPTIONS,
   rangeSpan,
   RIGHT_OFFSET,
+  shiftSpan,
   spanMoved,
   tickLabel,
   withAlpha,
@@ -180,17 +184,17 @@ export function PriceChart({
   const { pathname, search, state } = useLocation()
   const navigate = useNavigate()
   const kind = parseChartKind(search)
+  const [deep, setDeep] = useState(() => kind === 'D' && needsDailyHistory(parseChartRange(search, 'D')))
+  const history = useCandles(kind === 'D' && deep ? ticker : null, 'D', DAILY_HISTORY_LIMIT)
   const weekly = useCandles(kind === 'W' ? ticker : null, 'W', WEEKLY_CANDLE_LIMIT)
   const monthly = useCandles(kind === 'M' ? ticker : null, 'M', MONTHLY_CANDLE_LIMIT)
-  const displayCandles = kind === 'D' ? candles : kind === 'W' ? weekly.data : monthly.data
+  const daily = deep && history.data && history.data.length > candles.length ? history.data : candles
+  const displayCandles = kind === 'D' ? daily : kind === 'W' ? weekly.data : monthly.data
+  const dailyIndex = useMemo(() => new Map(daily.map((candle, index) => [candle.date, index])), [daily])
   const kindRef = useRef(kind)
   useEffect(() => {
     kindRef.current = kind
   }, [kind])
-  const loading =
-    kind !== 'D' &&
-    (kindRef.current !== kind ||
-      (kind === 'W' ? weekly.data === null || weekly.loading : monthly.data === null || monthly.loading))
   const shown = displayCandles ?? []
   const [active, setActive] = useState<{ kind: CandlePeriod; range: string } | null>(() => ({
     kind,
@@ -200,7 +204,14 @@ export function PriceChart({
   useEffect(() => {
     activeRef.current = active
   })
-  const latest = useRef({ candles: shown, markers, onSelect, refYear: 0, kind })
+  const historyWanted = kind === 'D' && active?.kind === 'D' && needsDailyHistory(active.range)
+  const loading =
+    (kind !== 'D' &&
+      (kindRef.current !== kind ||
+        (kind === 'W' ? weekly.data === null || weekly.loading : monthly.data === null || monthly.loading))) ||
+    (historyWanted && history.data === null && history.error === null)
+  const deepen = () => setDeep(true)
+  const latest = useRef({ candles: shown, markers, onSelect, refYear: 0, kind, deepen })
   const [hover, setHover] = useState<number | null>(null)
   const [kb, setKb] = useState<number | null>(null)
   const [away, setAway] = useState(false)
@@ -208,7 +219,7 @@ export function PriceChart({
   const refYear = count > 0 ? Number(shown[count - 1].date.slice(0, 4)) : 0
 
   useEffect(() => {
-    latest.current = { candles: shown, markers, onSelect, refYear, kind }
+    latest.current = { candles: shown, markers, onSelect, refYear, kind, deepen }
   })
 
   useEffect(() => {
@@ -302,6 +313,9 @@ export function PriceChart({
         expected.current = null
         setActive(null)
       }
+      if (latest.current.kind === 'D' && activeRef.current === null && span.from < DEEP_LOAD_EDGE) {
+        latest.current.deepen()
+      }
     }
     chart.subscribeCrosshairMove(onMove)
     chart.subscribeClick(onClick)
@@ -320,9 +334,14 @@ export function PriceChart({
     }
   }, [])
 
+  const drawn = useRef<{ kind: CandlePeriod; count: number } | null>(null)
   useEffect(() => {
     const view = mounted.current
     if (!view || displayCandles === null) return
+    const before = view.chart.timeScale().getVisibleLogicalRange()
+    const previous = drawn.current
+    const grown = previous && previous.kind === kind ? displayCandles.length - previous.count : 0
+    drawn.current = { kind, count: displayCandles.length }
     const { up, down } = view.colors
     view.candle.setData(
       displayCandles.map((c) => ({ time: c.date, open: c.open, high: c.high, low: c.low, close: c.close })),
@@ -332,6 +351,7 @@ export function PriceChart({
     )
     const want = activeRef.current
     if (want && want.kind === kind) showRange(view, displayCandles, kind, want.range, expected)
+    else if (grown > 0 && before) view.chart.timeScale().setVisibleLogicalRange(shiftSpan(toSpan(before), grown))
   }, [displayCandles, kind])
 
   useEffect(() => {
@@ -360,28 +380,32 @@ export function PriceChart({
     if (!view || !target || !showMarkers || kind !== 'D') return
     const timeScale = view.chart.timeScale()
     const range = timeScale.getVisibleLogicalRange()
-    const next = range ? followSpan(toSpan(range), target.index) : null
+    const index = dailyIndex.get(candles[target.index]?.date ?? '') ?? target.index
+    const next = range ? followSpan(toSpan(range), index) : null
     if (next) timeScale.setVisibleLogicalRange(next)
-  }, [selected, markers, showMarkers, kind])
+  }, [selected, markers, showMarkers, kind, dailyIndex, candles])
 
   const pickKind = (next: CandlePeriod) => {
     if (next === kind) return
     const nextRange = parseChartRange(search, next)
     setActive({ kind: next, range: nextRange })
+    if (next === 'D' && needsDailyHistory(nextRange)) setDeep(true)
     expected.current = null
     navigate({ pathname, search: chartSearch(search, next, nextRange) }, { replace: true, state })
-    const source = next === 'D' ? candles : next === 'W' ? weekly.data : monthly.data
+    const source = next === 'D' ? daily : next === 'W' ? weekly.data : monthly.data
     if (source) showRange(mounted.current, source, next, nextRange, expected)
   }
 
   const pickRange = (next: RangeChoice) => {
     if (next === NO_RANGE) return
     setActive({ kind, range: next })
+    if (kind === 'D' && needsDailyHistory(next)) setDeep(true)
     navigate({ pathname, search: chartSearch(search, kind, next) }, { replace: true, state })
     if (displayCandles) showRange(mounted.current, displayCandles, kind, next, expected)
   }
 
-  const markerAt = (index: number) => (kind === 'D' ? markers?.find((marker) => marker.index === index) ?? null : null)
+  const markerAt = (index: number) =>
+    kind === 'D' ? (markers?.find((marker) => dailyIndex.get(candles[marker.index]?.date ?? '') === index) ?? null) : null
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const view = mounted.current
