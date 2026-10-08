@@ -127,3 +127,11 @@ export function evidenceNews(res: KgRelationshipEvidenceRes): EvidenceNews[] {
     item: n.items.length > 0 ? n.items.join(', ') : null,
   }))
 }
+
+/** 근거를 조회할 간선인가 — 기업 간 관계이고 근거 기사·공시가 하나라도 있을 때만. 테마 소속·이벤트 언급은 근거가 없다 */
+export function hasEvidence(
+  link: Pick<GraphLink, 'type'> & Partial<Pick<GraphLink, 'news_mention_count' | 'disclosure_count'>>,
+): boolean {
+  const corporate = link.type === 'SUPPLIES_TO' || link.type === 'ACQUIRES' || link.type === 'INVESTS_IN'
+  return corporate && (link.news_mention_count ?? 0) + (link.disclosure_count ?? 0) > 0
+}

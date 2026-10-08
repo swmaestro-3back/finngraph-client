@@ -21,6 +21,7 @@ import {
 import {
   evidenceNews,
   groupNewsByDay,
+  hasEvidence,
   itemsLine,
   monthlyCounts,
   rankItems,
@@ -81,7 +82,8 @@ export function EdgeDetail({
   const maxItemCount = Math.max(1, ...items.map((i) => i.count))
 
   // 기사 제목·월별 건수·공시 접수일은 kg-api 근거 조회 한 번으로 — 품목·건수·기간은 간선에 실려 온 것을 그대로 쓴다
-  const evidence = useEdgeEvidence(link.id)
+  // 테마 소속·이벤트 언급, 근거 0건인 관계는 조회할 것이 없다
+  const evidence = useEdgeEvidence(link.id, hasEvidence(link))
   const news = evidence.data ? evidenceNews(evidence.data) : []
   const newsTotal = evidence.data?.news_total ?? 0
   const titlesPending = evidence.loading && !evidence.data

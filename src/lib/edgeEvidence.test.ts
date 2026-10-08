@@ -4,6 +4,7 @@ import {
   itemsLine,
   evidenceNews,
   evidencePath,
+  hasEvidence,
   monthlyCounts,
   rankItems,
   type EvidenceNews,
@@ -118,5 +119,16 @@ describe('evidence 응답', () => {
       { id: '11', title: 'B', publishedAt: '2026-09-02T09:00:00+09:00', item: 'HBM, 패키징' },
       { id: '10', title: '(제목 없음)', publishedAt: null, item: null },
     ])
+  })
+})
+
+describe('hasEvidence', () => {
+  const base = { news_mention_count: 0, disclosure_count: 0 }
+  it('근거 기사·공시가 있는 기업 간 관계만 근거를 조회한다', () => {
+    expect(hasEvidence({ ...base, type: 'SUPPLIES_TO', news_mention_count: 2 })).toBe(true)
+    expect(hasEvidence({ ...base, type: 'INVESTS_IN', disclosure_count: 1 })).toBe(true)
+    expect(hasEvidence({ ...base, type: 'ACQUIRES' })).toBe(false)
+    expect(hasEvidence({ ...base, type: 'BELONGS_TO' })).toBe(false)
+    expect(hasEvidence({ type: 'HAS_EVENT' })).toBe(false)
   })
 })
