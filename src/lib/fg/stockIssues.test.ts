@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { CandleRes } from '@/lib/apiTypes'
 import {
+  dayMarkers,
   flowSteps,
   issueBadge,
   issueDayLabel,
   placeIssues,
   reportedLabel,
-  stackMarkers,
   tradingDayLabel,
   type IssueFlowsFixture,
 } from '@/lib/fg/stockIssues'
@@ -81,13 +81,18 @@ describe('placeIssues', () => {
 describe('표시', () => {
   const placed = placeIssues(fixture, candles)
 
-  it('같은 봉에 여러 이슈가 있으면 마커를 위로 쌓는다', () => {
+  it('같은 봉에 여러 이슈가 있으면 마커는 하나만 두고 그날 이슈를 그 마커에 묶는다', () => {
     const doubled = [placed[0], { ...placed[1], index: 4 }, placed[2]]
-    expect(stackMarkers(doubled)).toEqual([
-      { key: 'export-1', index: 4, stack: 0 },
-      { key: 'hbm-0', index: 4, stack: 1 },
-      { key: 'export-0', index: 2, stack: 0 },
+    const days = dayMarkers(doubled)
+    expect(days.markers).toEqual([
+      { key: 'export-1', index: 4, stack: 0, count: 2 },
+      { key: 'export-0', index: 2, stack: 0, count: 1 },
     ])
+    expect(Object.fromEntries(days.markerOf)).toEqual({
+      'export-1': 'export-1',
+      'hbm-0': 'export-1',
+      'export-0': 'export-0',
+    })
   })
 
   it('목록 날짜는 오늘이면 "오늘", 아니면 MM.DD', () => {

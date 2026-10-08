@@ -84,6 +84,8 @@ describe('주식 필터 쿼리', () => {
       presets: new Set(['highRoe', 'lowPer']),
       ranges: { per: { max: 10 }, marketCap: { min: 1000, max: 5000 }, roe: { min: -2.5 } },
       themeId: null,
+      themeQ: null,
+      nameQ: null,
     }
     const params = new URLSearchParams()
     filterToParams(state, params)

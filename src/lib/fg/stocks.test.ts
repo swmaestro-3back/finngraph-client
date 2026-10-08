@@ -53,6 +53,8 @@ const BASE: StockQuery = {
   code: null,
   ranges: {},
   themeId: null,
+  themeQ: null,
+  nameQ: null,
 }
 
 describe('parseStockQuery / stockQueryString', () => {
@@ -93,6 +95,8 @@ describe('parseStockQuery / stockQueryString', () => {
       code: '000660',
       ranges: {},
       themeId: null,
+      themeQ: null,
+      nameQ: null,
     }
     const text = stockQueryString(query)
     expect(text).toBe('?market=KOSPI&preset=largeCap%2ChighDividend&fav=1&sort=rise&page=2&code=000660')
