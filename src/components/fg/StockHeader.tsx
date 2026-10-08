@@ -1,5 +1,5 @@
-import { ExternalLink } from 'lucide-react'
-import { useId, useState, type Ref } from 'react'
+import { ChevronRight, ExternalLink } from 'lucide-react'
+import { useId, useRef, useState, type Ref } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
@@ -8,14 +8,16 @@ import { Skeleton } from '@/components/fg/Skeleton'
 import { PriceStatus } from '@/components/fg/StatusTag'
 import { StockGraphLink, StockWatchButton } from '@/components/fg/StockActions'
 import { StockTabs, type TabCounts } from '@/components/fg/StockTabs'
+import { StockThemesSheet } from '@/components/fg/StockThemesSheet'
 import { Week52Range } from '@/components/fg/Week52Range'
-import type { StockDetailRes } from '@/lib/apiTypes'
+import type { StockDetailRes, StockThemeRes } from '@/lib/apiTypes'
 import { dartFilingUrl, describeSource, profileRows } from '@/lib/companyOverview'
 import { marketLabel } from '@/lib/fg/format'
 import { themePath } from '@/lib/fg/paths'
-import { companySummary, isAiSummary, type StockTab } from '@/lib/fg/stockDetail'
+import { companySummary, type StockTab } from '@/lib/fg/stockDetail'
 import { WEEK52_BASIS, type StockStatus, type Week52Summary } from '@/lib/fg/stockQuote'
 import { fromState } from '@/lib/navigation'
+import type { ApiState } from '@/lib/queries/useApi'
 import { cn } from '@/lib/utils'
 
 interface StockHeaderProps {
@@ -26,9 +28,47 @@ interface StockHeaderProps {
   week52Loading: boolean
   status: StockStatus | null
   today: string
+  themes: ApiState<StockThemeRes[]>
   tab: StockTab
   counts: TabCounts
   tabsRef: Ref<HTMLElement>
+}
+
+function ThemeEntry({ stock, themes }: { stock: StockDetailRes; themes: ApiState<StockThemeRes[]> }) {
+  const { pathname, search } = useLocation()
+  const [open, setOpen] = useState(false)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const list = themes.data
+  if (list && list.length > 1) {
+    return (
+      <>
+        <button
+          ref={trigger}
+          type="button"
+          className="fg-badge fg-sdh__theme"
+          aria-haspopup="dialog"
+          onClick={() => setOpen(true)}
+        >
+          {`테마 ${list.length}개`}
+          <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />
+        </button>
+        <StockThemesSheet
+          stockName={stock.name}
+          themes={list}
+          open={open}
+          onOpenChange={setOpen}
+          returnFocusRef={trigger}
+        />
+      </>
+    )
+  }
+  const single = list?.[0] ?? (themes.error && stock.themeId !== null ? { id: stock.themeId, name: stock.themeName } : null)
+  if (!single?.name) return null
+  return (
+    <Link to={themePath(single.id)} state={fromState(`${pathname}${search}`)} className="fg-badge fg-sdh__theme">
+      {single.name}
+    </Link>
+  )
 }
 
 function CompanyAbout({ stock }: { stock: StockDetailRes }) {
@@ -42,7 +82,6 @@ function CompanyAbout({ stock }: { stock: StockDetailRes }) {
   return (
     <>
       <p className="fg-sdh__sum">
-        {summary && isAiSummary(stock.descriptionSource) && <Badge>AI 요약</Badge>}
         {summary && <span className="fg-sdh__lead">{summary.lead}</span>}
         {expandable && (
           <button
@@ -111,11 +150,11 @@ export function StockHeader({
   week52Loading,
   status,
   today,
+  themes,
   tab,
   counts,
   tabsRef,
 }: StockHeaderProps) {
-  const { pathname, search } = useLocation()
   const priced = stock.price !== null && (stock.change !== null || status !== null)
   return (
     <section className="fg-section fg-sdh fg-reveal" aria-labelledby="fg-sdh-name">
@@ -131,15 +170,7 @@ export function StockHeader({
             <span className="fg-sdh__code fg-num">
               {stock.ticker} · {marketLabel(stock.market)}
             </span>
-            {stock.themeId !== null && stock.themeName && (
-              <Link
-                to={themePath(stock.themeId)}
-                state={fromState(`${pathname}${search}`)}
-                className="fg-badge fg-sdh__theme"
-              >
-                {stock.themeName}
-              </Link>
-            )}
+            <ThemeEntry stock={stock} themes={themes} />
           </div>
           <div className="fg-sdh__price">
             <HeaderPrice stock={stock} amount={amount} status={status} />

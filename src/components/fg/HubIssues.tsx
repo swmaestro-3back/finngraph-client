@@ -550,7 +550,7 @@ export function HubIssues({ layout, tabs, basis, basisShort, market, pick, onPic
 
   const dayText = listDay ? dayWord(listDay, today) : null
   const caption = mobile
-    ? ['여러 매체가 다룬 기사를 이슈로 묶고 타임라인으로 이었어요', basis, '요약은 AI가 만들었어요'].filter(Boolean).join(' · ')
+    ? ['여러 매체가 다룬 기사를 이슈로 묶고 타임라인으로 이었어요', basis].filter(Boolean).join(' · ')
     : hubCaption('issues', { day: dayText, autoSec: enabled ? HUB_INTERVAL_SEC : null })
   const listLabel = `뜨는 이슈, ${dayText ?? '오늘'} ${LIST_LABEL_TAIL}`
 

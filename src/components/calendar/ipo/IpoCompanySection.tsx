@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ExternalLink } from 'lucide-react'
-import { DetailSection, SectionNotice, Tag } from '@/components/calendar/detail/DetailParts'
+import { DetailSection, SectionNotice } from '@/components/calendar/detail/DetailParts'
 import type { IpoCompanyRes } from '@/lib/apiTypes'
 import { formatFullDate } from '@/lib/calendar'
 import { dartFilingUrl, splitSentences } from '@/lib/companyOverview'
@@ -24,7 +24,6 @@ function Intro({ company, description }: { company: IpoCompanyRes; description: 
   return (
     <div className="mb-5">
       <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground">
-        {source.ai && <Tag>AI 요약</Tag>}
         {source.label && <span>{source.label}</span>}
         {company.descriptionRceptNo && (
           <a

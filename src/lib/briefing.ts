@@ -19,8 +19,8 @@ import type {
   WatchKind,
 } from '@/lib/apiTypes'
 
-export const AI_NOTICE =
-  '요약·해설 문장은 AI가 인용된 기사·공시에서 생성했으며 투자 판단의 근거가 아닙니다.'
+export const SOURCE_NOTICE =
+  '요약·해설 문장은 인용된 기사·공시를 바탕으로 했으며 투자 판단의 근거가 아닙니다.'
 
 const RISK_LABELS: Record<RiskKind, string> = {
   ADMINISTRATION_NEW: '관리종목 신규 지정',

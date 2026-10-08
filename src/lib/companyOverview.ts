@@ -1,7 +1,7 @@
 import type { CompanyProfileRes } from '@/lib/apiTypes'
 
 const SOURCE_LABELS: Record<string, string> = {
-  DART_LLM: 'DART 사업보고서 「사업의 개요」 AI 요약',
+  DART_LLM: 'DART 사업보고서 「사업의 개요」 요약',
   NAVER: '네이버 금융 기업개요',
 }
 

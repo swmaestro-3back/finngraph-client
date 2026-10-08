@@ -156,6 +156,38 @@ export interface StockRowRes {
   themeName: string | null
 }
 
+export interface StockThemeRes {
+  id: number
+  name: string
+  stockCount: number
+  change: number | null
+  primary: boolean
+}
+
+export interface PeerMetricRes {
+  value: number | null
+  rank: number | null
+  count: number
+  median: number | null
+}
+
+export interface StockThemeCompareRes {
+  themeId: number
+  themeName: string
+  memberCount: number
+  baseDate: string | null
+  valuationDate: string | null
+  metrics: {
+    change: PeerMetricRes
+    marketCap: PeerMetricRes
+    tradeValue: PeerMetricRes
+    per: PeerMetricRes
+    pbr: PeerMetricRes
+    roe: PeerMetricRes
+    dividendYield: PeerMetricRes
+  }
+}
+
 export interface StockDetailRes {
   ticker: string
   name: string

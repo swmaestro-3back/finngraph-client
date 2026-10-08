@@ -56,31 +56,31 @@ function theme(id: number, weightedChange: number | null): ThemeRes {
 }
 
 describe('parseHubQuery', () => {
-  it('허브 탭은 기본이 움직인 종목이고 모르는 값도 기본으로 읽어요', () => {
-    expect(parseHubQuery('').hub).toBe('stocks')
-    expect(parseHubQuery('?hub=issues').hub).toBe('issues')
+  it('허브 탭은 기본이 뜨는 이슈이고 모르는 값도 기본으로 읽어요', () => {
+    expect(parseHubQuery('').hub).toBe('issues')
+    expect(parseHubQuery('?hub=stocks').hub).toBe('stocks')
     expect(parseHubQuery('?hub=themes').hub).toBe('themes')
-    expect(parseHubQuery('?hub=news').hub).toBe('stocks')
+    expect(parseHubQuery('?hub=news').hub).toBe('issues')
   })
 
   it('펼친 항목은 탭마다 따로 읽고 형식이 틀리면 버려요', () => {
     expect(parseHubQuery('?hub=issues&issue=454')).toEqual({ hub: 'issues', issue: '454', stock: null, theme: null })
-    expect(parseHubQuery('?stock=005930&theme=35')).toEqual({ hub: 'stocks', issue: null, stock: '005930', theme: 35 })
-    expect(parseHubQuery('?issue=abc&stock=59&theme=0')).toEqual({ hub: 'stocks', issue: null, stock: null, theme: null })
+    expect(parseHubQuery('?hub=stocks&stock=005930&theme=35')).toEqual({ hub: 'stocks', issue: null, stock: '005930', theme: 35 })
+    expect(parseHubQuery('?issue=abc&stock=59&theme=0')).toEqual({ hub: 'issues', issue: null, stock: null, theme: null })
   })
 })
 
 describe('hubSearch', () => {
   it('기본 탭은 쿼리에서 빼고 펼친 항목은 그 탭의 키로만 둬요', () => {
-    expect(hubSearch('', 'stocks', null)).toBe('')
-    expect(hubSearch('', 'stocks', '005930')).toBe('?stock=005930')
-    expect(hubSearch('?hub=themes&theme=35', 'issues', 454)).toBe('?hub=issues&issue=454')
-    expect(hubSearch('?hub=issues&issue=454', 'issues', null)).toBe('?hub=issues')
+    expect(hubSearch('', 'issues', null)).toBe('')
+    expect(hubSearch('', 'issues', 454)).toBe('?issue=454')
+    expect(hubSearch('?hub=themes&theme=35', 'stocks', '005930')).toBe('?hub=stocks&stock=005930')
+    expect(hubSearch('?hub=stocks&stock=005930', 'stocks', null)).toBe('?hub=stocks')
   })
 
   it('허브 밖 쿼리(피드 정렬 등)는 순서 그대로 남겨요', () => {
     expect(hubSearch('?sort=recent&stock=005930', 'themes', 35)).toBe('?hub=themes&theme=35&sort=recent')
-    expect(hubSearch('?gaps=off&hub=issues&issue=3', 'stocks', null)).toBe('?gaps=off')
+    expect(hubSearch('?gaps=off&hub=stocks&stock=005930', 'issues', null)).toBe('?gaps=off')
   })
 })
 
@@ -212,17 +212,17 @@ describe('splitTimeline', () => {
 describe('hubCaption', () => {
   it('뜨는 이슈는 날짜와 자동 넘김 여부에 맞춰 문구를 바꿔요', () => {
     expect(hubCaption('issues', { day: '오늘', autoSec: 8 })).toBe(
-      '여러 매체가 다룬 기사를 이슈로 묶고, 이어지는 이슈를 타임라인으로 보여 줘요 · 오늘 보도한 매체가 많은 순 · 8초마다 다음 이슈로 넘어가고, 마우스를 올리면 멈춰요 · 요약은 AI가 만들었어요',
+      '여러 매체가 다룬 기사를 이슈로 묶고, 이어지는 이슈를 타임라인으로 보여 줘요 · 오늘 보도한 매체가 많은 순 · 8초마다 다음 이슈로 넘어가고, 마우스를 올리면 멈춰요',
     )
     expect(hubCaption('issues', { day: '9월 30일', autoSec: null })).toBe(
-      '여러 매체가 다룬 기사를 이슈로 묶고, 이어지는 이슈를 타임라인으로 보여 줘요 · 9월 30일 보도한 매체가 많은 순 · 요약은 AI가 만들었어요',
+      '여러 매체가 다룬 기사를 이슈로 묶고, 이어지는 이슈를 타임라인으로 보여 줘요 · 9월 30일 보도한 매체가 많은 순',
     )
   })
 
   it('움직인 종목과 테마는 고정 문구예요', () => {
     expect(hubCaption('stocks', { day: null, autoSec: null })).toContain('시가총액 상위 300종목')
     expect(hubCaption('themes', { day: null, autoSec: null })).toBe(
-      '오늘 많이 움직인 테마를 펼치면, 테마 종목이 나온 이슈를 타임라인으로 이어 보여 줘요 · 요약은 AI가 만들었어요',
+      '오늘 많이 움직인 테마를 펼치면, 테마 종목이 나온 이슈를 타임라인으로 이어 보여 줘요',
     )
   })
 })

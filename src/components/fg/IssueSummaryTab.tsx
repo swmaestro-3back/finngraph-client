@@ -40,7 +40,7 @@ function SummaryCard({ record }: { record: IssueRecord }) {
   return (
     <section className="fg-section fg-isum" aria-labelledby="fg-isum-title">
       <div className="fg-isum__meta fg-num">
-        <Badge strong>AI 요약</Badge>
+        <Badge strong>요약</Badge>
         <span>{summaryCaption(record)}</span>
       </div>
       <h2 id="fg-isum-title" className="fg-sr">

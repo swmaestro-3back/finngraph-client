@@ -11,9 +11,10 @@ import { StateBlock } from '@/components/fg/StateBlock'
 import { EventCallout, StockEventList, type EventAction, type EventRow } from '@/components/fg/StockEvents'
 import { StockKeyStats } from '@/components/fg/StockKeyStats'
 import { StockLinkedRail } from '@/components/fg/StockLinkedRail'
-import type { CandleRes, StockDetailRes, ThemeStockRes } from '@/lib/apiTypes'
+import { StockThemePosition } from '@/components/fg/StockThemePosition'
+import type { CandleRes, StockDetailRes, StockThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import { issuePath } from '@/lib/fg/paths'
-import { marketCapRank, STREAK_FLOW_DAYS, streakLabels, themeCompare } from '@/lib/fg/stockDetail'
+import { compareThemeId, marketCapRank, STREAK_FLOW_DAYS, streakLabels } from '@/lib/fg/stockDetail'
 import {
   issueDayLabel,
   RECENT_ISSUE_COUNT,
@@ -34,6 +35,7 @@ import type { ApiState } from '@/lib/queries/useApi'
 import { useInvestorFlows } from '@/lib/queries/useInvestorFlows'
 import type { LinkedCompaniesState } from '@/lib/queries/useLinkedCompanies'
 import { useStockNews } from '@/lib/queries/useStockNews'
+import { useThemeCompare } from '@/lib/queries/useStockThemes'
 import { useStocksCached } from '@/lib/queries/useStocksCached'
 
 const NEWS_GATE_SUBJECT = '지난 뉴스'
@@ -44,6 +46,7 @@ interface StockOverviewProps {
   candlesFailed: boolean
   onRetryCandles: () => void
   themeStocks: ApiState<ThemeStockRes[]>
+  themes: ApiState<StockThemeRes[]>
   source: EventSource | null
   issues: readonly StockIssueEvent[]
   issueTotal: number
@@ -79,6 +82,7 @@ export function StockOverview({
   candlesFailed,
   onRetryCandles,
   themeStocks,
+  themes: stockThemes,
   source,
   issues,
   issueTotal,
@@ -100,20 +104,25 @@ export function StockOverview({
   const [dayFilter, setDayFilter] = useState<string | null>(null)
   const [page, setPage] = useState(1)
 
+  const [pickedTheme, setPickedTheme] = useState<{ ticker: string; id: number } | null>(null)
+  const compareTheme = compareThemeId(
+    pickedTheme?.ticker === stock.ticker ? pickedTheme.id : null,
+    stockThemes.data,
+    stock.themeId,
+  )
+  const compare = useThemeCompare(stock.ticker, compareTheme)
+
   const { refresh: refreshFlows } = flows
   const { refresh: refreshNews } = news
+  const { refresh: refreshCompare } = compare
   useEffect(() => {
     if (refreshKey === 0) return
     refreshFlows()
     refreshNews()
-  }, [refreshKey, refreshFlows, refreshNews])
+    refreshCompare()
+  }, [refreshKey, refreshFlows, refreshNews, refreshCompare])
 
-  const index = useMemo(() => new Map((stocks.data ?? []).map((row) => [row.ticker, row])), [stocks.data])
   const capRank = useMemo(() => (stocks.data ? marketCapRank(stocks.data, stock.ticker) : null), [stocks.data, stock.ticker])
-  const compare = useMemo(
-    () => (themeStocks.data && stocks.data ? themeCompare(themeStocks.data, index) : null),
-    [themeStocks.data, stocks.data, index],
-  )
   const streaks = useMemo(
     () => streakLabels(flows.data ?? [], candles?.map((candle) => candle.date)),
     [flows.data, candles],
@@ -258,21 +267,24 @@ export function StockOverview({
           tradingLoading={!served && themeLoading}
           tradingRatio={tradingRatio}
           capRank={capRank}
-          compare={compare}
+          compare={compare.data}
           streaks={streaks}
           failed={{
             trading: !served && themeFailed ? themeStocks.refetch : null,
             rank: stocksFailed ? stocks.refetch : null,
-            compare:
-              themeFailed || (stock.themeId !== null && stocksFailed)
-                ? () => {
-                    if (themeFailed) themeStocks.refetch()
-                    if (stocksFailed) stocks.refetch()
-                  }
-                : null,
+            compare: compare.error ? compare.refetch : null,
             streaks: flowsFailed ? flows.refetch : null,
           }}
         />
+        {compareTheme !== null && (
+          <StockThemePosition
+            themes={stockThemes.data}
+            themeId={compareTheme}
+            onPickTheme={(id) => setPickedTheme({ ticker: stock.ticker, id })}
+            compare={compare.data}
+            onRetry={compare.error ? compare.refetch : null}
+          />
+        )}
         <StockLinkedRail stockName={stock.name} linked={linked} />
         <Disclaimer />
       </aside>

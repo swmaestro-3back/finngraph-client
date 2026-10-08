@@ -1,4 +1,12 @@
-import type { InvestorFlowRes, StockDetailRes, StockRowRes, ThemeMarketRes, ThemeStockRes } from '@/lib/apiTypes'
+import type {
+  InvestorFlowRes,
+  PeerMetricRes,
+  StockDetailRes,
+  StockRowRes,
+  StockThemeCompareRes,
+  StockThemeRes,
+  ThemeMarketRes,
+} from '@/lib/apiTypes'
 import { splitSentences } from '@/lib/companyOverview'
 import { marketLabel } from '@/lib/fg/format'
 import { themeBasisLabel } from '@/lib/fg/themes'
@@ -14,7 +22,6 @@ export const STOCK_TABS: readonly { value: StockTab; label: string }[] = [
 ]
 
 export const STREAK_FLOW_DAYS = 20
-export const MIN_COMPARE_MEMBERS = 3
 
 function isStockTab(value: string | null): value is StockTab {
   return STOCK_TABS.some((tab) => tab.value === value)
@@ -78,39 +85,61 @@ export function capRankLabel(rank: CapRank): string {
   return `${marketLabel(rank.market)} ${rank.rank}위`
 }
 
-export function median(values: readonly (number | null)[]): number | null {
-  const sorted = values.filter((value): value is number => value !== null).sort((a, b) => a - b)
-  if (sorted.length === 0) return null
-  const mid = Math.floor(sorted.length / 2)
-  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
-}
+type PeerMetricKey = keyof StockThemeCompareRes['metrics']
 
-export interface ThemeCompare {
+const POSITION_METRICS: readonly { key: PeerMetricKey; label: string; lowFirst: boolean }[] = [
+  { key: 'change', label: '오늘 등락률', lowFirst: false },
+  { key: 'marketCap', label: '시가총액', lowFirst: false },
+  { key: 'tradeValue', label: '거래대금', lowFirst: false },
+  { key: 'per', label: 'PER', lowFirst: true },
+  { key: 'pbr', label: 'PBR', lowFirst: true },
+  { key: 'roe', label: 'ROE', lowFirst: false },
+  { key: 'dividendYield', label: '배당수익률', lowFirst: false },
+]
+
+export interface PositionRow {
+  key: PeerMetricKey
+  label: string
+  lowFirst: boolean
+  rank: number | null
   count: number
-  per: number | null
-  pbr: number | null
-  roe: number | null
-  dividendYield: number | null
+  position: number | null
+  note: string | null
 }
 
-type CompareRow = Pick<StockRowRes, 'per' | 'pbr' | 'roe' | 'dividendYield'>
+function positionOf(metric: Pick<PeerMetricRes, 'rank' | 'count'>): number | null {
+  if (metric.rank === null) return null
+  return metric.count <= 1 ? 0 : (metric.rank - 1) / (metric.count - 1)
+}
 
-export function themeCompare(
-  members: readonly Pick<ThemeStockRes, 'ticker'>[],
-  index: ReadonlyMap<string, CompareRow>,
-): ThemeCompare | null {
-  if (members.length < MIN_COMPARE_MEMBERS) return null
-  const rows = members.flatMap((member) => {
-    const found = index.get(member.ticker)
-    return found ? [found] : []
+export function positionRows(metrics: StockThemeCompareRes['metrics']): PositionRow[] {
+  return POSITION_METRICS.map(({ key, label, lowFirst }) => {
+    const metric = metrics[key]
+    return {
+      key,
+      label,
+      lowFirst,
+      rank: metric.rank,
+      count: metric.count,
+      position: positionOf(metric),
+      note: metric.rank !== null ? null : metric.value === null ? '값이 없어요' : '견줄 종목이 적어요',
+    }
   })
-  return {
-    count: members.length,
-    per: median(rows.map((r) => r.per)),
-    pbr: median(rows.map((r) => r.pbr)),
-    roe: median(rows.map((r) => r.roe)),
-    dividendYield: median(rows.map((r) => r.dividendYield)),
-  }
+}
+
+export function themesByChange<T extends Pick<StockThemeRes, 'change' | 'name'>>(themes: readonly T[]): T[] {
+  return [...themes].sort(
+    (a, b) => (b.change ?? -Infinity) - (a.change ?? -Infinity) || a.name.localeCompare(b.name, 'ko'),
+  )
+}
+
+export function compareThemeId(
+  picked: number | null,
+  themes: readonly Pick<StockThemeRes, 'id'>[] | null,
+  fallback: number | null,
+): number | null {
+  if (picked !== null && (themes === null || themes.some((theme) => theme.id === picked))) return picked
+  return themes?.[0]?.id ?? fallback
 }
 
 function streakLabel(who: string, streak: SupplyStreak): string | null {
@@ -134,10 +163,6 @@ export function stockBasisLabel(
     valuationDate: stock.valuationDate ?? null,
     updatedAt: market?.updatedAt ?? null,
   })
-}
-
-export function isAiSummary(source: string | null): boolean {
-  return source === 'DART_LLM'
 }
 
 export type LinkStrength = 1 | 2 | 3

@@ -265,10 +265,8 @@ describe('issueLinkSummary', () => {
 
 describe('newsStocksCaption', () => {
   it('실데이터에는 AI 역할 문구를 빼요', () => {
-    expect(newsStocksCaption('mock', false)).toBe('기사에 이름이 나온 종목이에요 · 많이 나온 순 · 뉴스 속 역할은 AI가 요약했어요')
-    expect(newsStocksCaption('mock', true)).toBe('많이 나온 순 · 뉴스 속 역할은 AI가 요약했어요')
-    expect(newsStocksCaption('live', false)).toBe('기사에 이름이 나온 종목이에요 · 많이 나온 순')
-    expect(newsStocksCaption('live', true)).toBe('많이 나온 순')
+    expect(newsStocksCaption(false)).toBe('기사에 이름이 나온 종목이에요 · 많이 나온 순')
+    expect(newsStocksCaption(true)).toBe('많이 나온 순')
   })
 })
 

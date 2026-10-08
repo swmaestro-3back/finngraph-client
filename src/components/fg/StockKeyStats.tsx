@@ -6,9 +6,9 @@ import { GapValue } from '@/components/fg/Gap'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { ThemeIndexRetry } from '@/components/fg/ThemeIndexRetry'
-import type { StockDetailRes } from '@/lib/apiTypes'
+import type { PeerMetricRes, StockDetailRes, StockThemeCompareRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
-import { capRankLabel, navState, stockTabSearch, type CapRank, type ThemeCompare } from '@/lib/fg/stockDetail'
+import { capRankLabel, navState, stockTabSearch, type CapRank } from '@/lib/fg/stockDetail'
 import { formatRatio, formatTimes } from '@/lib/fg/stockQuote'
 import { monthDayLabel } from '@/lib/fg/themeCharts'
 
@@ -44,7 +44,7 @@ interface StockKeyStatsProps {
   tradingLoading: boolean
   tradingRatio: number | null
   capRank: CapRank | null
-  compare: ThemeCompare | null
+  compare: StockThemeCompareRes | null
   streaks: readonly string[]
   failed: KeyStatsFailed
 }
@@ -60,10 +60,10 @@ export function StockKeyStats({
   failed,
 }: StockKeyStatsProps) {
   const { pathname, search, state } = useLocation()
-  const basisDate = stock.valuationDate ?? stock.baseDate ?? null
-  const versus = (value: string | null) => (compare && value !== null ? `테마 ${value}` : null)
-  const timesOf = (value: number | null) => (value === null ? null : formatTimes(value))
-  const ratioOf = (value: number | null) => (value === null ? null : formatRatio(value))
+  const metrics = failed.compare ? null : (compare?.metrics ?? null)
+  const basisDate = compare?.valuationDate ?? compare?.baseDate ?? stock.valuationDate ?? stock.baseDate ?? null
+  const versus = (metric: PeerMetricRes | null, format: (value: number) => string) =>
+    metric && metric.median !== null ? `테마 ${format(metric.median)}` : null
   return (
     <section className="fg-section fg-sks" aria-labelledby="fg-sks-title">
       <h2 id="fg-sks-title" className="fg-section__title">
@@ -85,13 +85,25 @@ export function StockKeyStats({
             tradingRatio === null ? null : <GapValue gap="stock-quote-ext" mock={`평소의 ${tradingRatio.toFixed(1)}배`} />
           }
         />
-        <Stat label="PER" value={formatTimes(stock.per)} note={versus(timesOf(compare?.per ?? null))} />
-        <Stat label="PBR" value={formatTimes(stock.pbr)} note={versus(timesOf(compare?.pbr ?? null))} />
-        <Stat label="ROE" value={formatRatio(stock.roe)} note={versus(ratioOf(compare?.roe ?? null))} />
+        <Stat
+          label="PER"
+          value={formatTimes(stock.per)}
+          note={versus(metrics?.per ?? null, formatTimes)}
+        />
+        <Stat
+          label="PBR"
+          value={formatTimes(stock.pbr)}
+          note={versus(metrics?.pbr ?? null, formatTimes)}
+        />
+        <Stat
+          label="ROE"
+          value={formatRatio(stock.roe)}
+          note={versus(metrics?.roe ?? null, formatRatio)}
+        />
         <Stat
           label="배당수익률"
           value={formatRatio(stock.dividendYield)}
-          note={versus(ratioOf(compare?.dividendYield ?? null))}
+          note={versus(metrics?.dividendYield ?? null, formatRatio)}
         />
       </dl>
       {failed.streaks ? (
@@ -106,11 +118,13 @@ export function StockKeyStats({
         )
       )}
       {failed.compare && (
-        <ThemeIndexRetry message="테마 중앙값을 불러오지 못했어요" onRetry={failed.compare} />
+        <ThemeIndexRetry message="테마 비교를 불러오지 못했어요" onRetry={failed.compare} />
       )}
-      {!failed.compare && compare && stock.themeName && (
+      {!failed.compare && compare && (
         <span className="fg-sks__cap">
-          {`‘테마’는 ${stock.themeName} ${compare.count}종목의 중앙값이에요`}
+          {metrics && Object.values(metrics).some((metric) => metric.median !== null)
+            ? `‘테마’는 ${compare.themeName} ${compare.memberCount}종목의 중앙값이에요 · 값이 없는 종목은 빼고 셌어요`
+            : `${compare.themeName} ${compare.memberCount}종목은 견줄 종목이 적어 중앙값을 보이지 않아요`}
           {basisDate && ` · ${monthDayLabel(basisDate, Number(basisDate.slice(0, 4)))} 기준`}
         </span>
       )}

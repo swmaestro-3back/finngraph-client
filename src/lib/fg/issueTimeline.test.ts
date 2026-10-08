@@ -81,7 +81,7 @@ describe('mockTimeline', () => {
     const b = book()
     const model = mockTimeline(byId(b, 'e4'), b, 'new')
     expect(model.heading).toBe('이슈 타임라인')
-    expect(model.summaryLabel).toBe('AI 요약')
+    expect(model.summaryLabel).toBe('요약')
     expect(model.listLabel).toBe('이슈 타임라인, 최신순')
     expect(model.nodes.map((n) => [n.key, n.date, n.badge, n.meta, n.now, n.cov?.pct])).toEqual([
       ['e4', '오늘 · 10.02', '지금 보는 이슈', '23개 매체 · 기사 31건', true, 100],
