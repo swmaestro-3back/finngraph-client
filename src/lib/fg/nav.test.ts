@@ -10,12 +10,13 @@ import {
 } from '@/lib/fg/nav'
 
 describe('MAIN_MENU', () => {
-  it('뉴스 메뉴 없이 네 메뉴를 이 순서로 둔다', () => {
+  it('뉴스 메뉴 없이 다섯 메뉴를 이 순서로 두고 캘린더는 관계 탐색 옆에 둔다', () => {
     expect(MAIN_MENU.map((item) => [item.label, item.to])).toEqual([
       ['홈', '/'],
       ['테마', '/themes'],
       ['종목', '/stocks'],
       ['관계 탐색', '/graph'],
+      ['캘린더', '/calendar'],
     ])
   })
 })
@@ -33,10 +34,12 @@ describe('BOTTOM_TABS', () => {
 })
 
 describe('SIDE_LINKS', () => {
-  it('오른쪽 링크는 브리핑 옆에 캘린더를 두고, 브리핑은 하단 탭이 있는 폭에서 숨긴다', () => {
-    expect(SIDE_LINKS.map((link) => [link.label, link.to, link.wideOnly ?? false])).toEqual([
-      ['브리핑', '/briefing', true],
-      ['캘린더', '/calendar', false],
+  it('오른쪽 링크는 브리핑과 캘린더이고, 브리핑은 하단 탭이 있는 폭에서, 캘린더는 상단 메뉴가 있는 폭에서 숨긴다', () => {
+    expect(
+      SIDE_LINKS.map((link) => [link.label, link.to, link.wideOnly ?? false, link.narrowOnly ?? false]),
+    ).toEqual([
+      ['브리핑', '/briefing', true, false],
+      ['캘린더', '/calendar', false, true],
     ])
   })
 })
@@ -56,6 +59,7 @@ describe('activeMenu', () => {
     ['/graph', 'graph'],
     ['/graph/005930', 'graph'],
     ['/graph/theme/반도체', 'graph'],
+    ['/calendar', 'calendar'],
   ])('%s → %s', (path, key) => {
     expect(activeMenu(path)).toBe(key)
   })
@@ -63,7 +67,6 @@ describe('activeMenu', () => {
   it('메뉴 밖 경로는 null', () => {
     expect(activeMenu('/news')).toBeNull()
     expect(activeMenu('/news/42')).toBeNull()
-    expect(activeMenu('/calendar')).toBeNull()
     expect(activeMenu('/me/account')).toBeNull()
     expect(activeMenu('/issuesboard')).toBeNull()
   })
