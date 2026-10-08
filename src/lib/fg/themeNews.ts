@@ -2,7 +2,7 @@ import { sourceUrl } from '@/lib/apiMappers'
 import type { NewsDetail } from '@/lib/apiTypes'
 import { addDays, isWeekend } from '@/lib/calendar'
 import { pressName } from '@/lib/format'
-import { dayLabel, minusMonths, monthDayLabel } from '@/lib/fg/themeCharts'
+import { dayLabel, minusMonths } from '@/lib/fg/themeCharts'
 
 export interface ThemeNewsItem {
   id: string
@@ -109,96 +109,10 @@ export function defaultRange(items: readonly ThemeNewsItem[], today: string): Ne
   )
 }
 
-export interface MarkerSlot {
-  at: number
-  members: number[]
-  left: number
-  right: number
-}
-
-export function clusterSlots(
-  indices: readonly number[],
-  xOf: (index: number) => number,
-  mergeBelow = 12,
-  maxHit = 40,
-): MarkerSlot[] {
-  const half = maxHit / 2
-  const sorted = [...new Set(indices)].sort((a, b) => b - a)
-  const slots: MarkerSlot[] = []
-  for (const index of sorted) {
-    const current = slots[slots.length - 1]
-    if (current && xOf(current.at) - xOf(index) < mergeBelow) current.members.push(index)
-    else slots.push({ at: index, members: [index], left: half, right: half })
-  }
-  slots.forEach((slot, k) => {
-    const newer = k > 0 ? xOf(slots[k - 1].at) - xOf(slot.at) : Infinity
-    const older = k < slots.length - 1 ? xOf(slot.at) - xOf(slots[k + 1].at) : Infinity
-    slot.left = Math.min(half, older / 2)
-    slot.right = Math.min(half, newer / 2)
-  })
-  return slots
-}
-
-export function nearestSlot<T extends { at: number }>(
-  slots: readonly T[],
-  x: number,
-  xOf: (index: number) => number,
-  maxDistance = 24,
-): T | null {
-  let best: T | null = null
-  let bestDistance = Infinity
-  for (const slot of slots) {
-    const distance = Math.abs(xOf(slot.at) - x)
-    if (distance <= maxDistance && distance < bestDistance) {
-      best = slot
-      bestDistance = distance
-    }
-  }
-  return best
-}
-
 export interface NewsMarker {
   id: string
-  at: number
-  left: number
-  right: number
   label: string
   items: ThemeNewsItem[]
-  locked: boolean
-  aria: string
-}
-
-export function newsMarkers(
-  items: readonly ThemeNewsItem[],
-  windowDates: readonly string[],
-  xOf: (index: number) => number,
-  openFrom: string | null,
-  refYear: number,
-): NewsMarker[] {
-  const indexOf = new Map(windowDates.map((date, i) => [date, i]))
-  const indices = items.flatMap((n) => {
-    const index = indexOf.get(n.tradeDay)
-    return index === undefined ? [] : [index]
-  })
-  return clusterSlots(indices, xOf).map((slot) => {
-    const days = new Set(slot.members.map((i) => windowDates[i]))
-    const lo = windowDates[Math.min(...slot.members)]
-    const hi = windowDates[Math.max(...slot.members)]
-    const label = lo === hi ? monthDayLabel(hi, refYear) : `${monthDayLabel(lo, refYear)} ~ ${monthDayLabel(hi, refYear)}`
-    const markerItems = items.filter((n) => days.has(n.tradeDay))
-    const open = openFrom === null ? markerItems.length : markerItems.filter((n) => n.day >= openFrom).length
-    const locked = open === 0
-    return {
-      id: lo === hi ? hi : `${lo}~${hi}`,
-      at: slot.at,
-      left: slot.left,
-      right: slot.right,
-      label,
-      items: markerItems,
-      locked,
-      aria: locked ? `${label} 뉴스, 로그인하면 볼 수 있어요` : `${label} 뉴스 ${open}건`,
-    }
-  })
 }
 
 export interface NewsRow {
