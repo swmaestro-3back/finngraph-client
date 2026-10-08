@@ -37,8 +37,28 @@ export const MONTHLY_RANGES: readonly RangeOption[] = [
   { value: '5y', label: '5년', months: 60 },
 ]
 
+export const DAILY_RANGES: readonly RangeOption[] = [
+  ...PRICE_PERIODS,
+  { value: '3y', label: '3년', months: 36 },
+  { value: '5y', label: '5년', months: 60 },
+  { value: 'all', label: '전체', months: 1200 },
+]
+
+export const DAILY_HISTORY_LIMIT = 2500
+export const DAILY_LOADED_MONTHS = 12
+export const DEEP_LOAD_EDGE = 5
+
+export function needsDailyHistory(range: string): boolean {
+  const months = DAILY_RANGES.find((option) => option.value === range)?.months ?? 0
+  return months > DAILY_LOADED_MONTHS
+}
+
+export function shiftSpan(span: LogicalSpan, by: number): LogicalSpan {
+  return { from: span.from + by, to: span.to + by }
+}
+
 export const RANGE_OPTIONS: Record<CandlePeriod, readonly RangeOption[]> = {
-  D: PRICE_PERIODS,
+  D: DAILY_RANGES,
   W: WEEKLY_RANGES,
   M: MONTHLY_RANGES,
 }
