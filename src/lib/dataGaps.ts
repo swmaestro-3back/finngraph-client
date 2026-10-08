@@ -29,7 +29,7 @@ export const GAPS = {
   },
   issues: {
     title: '이슈 해설',
-    needs: '이슈 핵심 포인트(라벨·한 줄 답 3개), 뉴스에 나온 종목별 뉴스 속 역할(AI 한 줄), 근거 시트의 관계 문장',
+    needs: '뉴스에 나온 종목별 뉴스 속 역할(AI 한 줄), 근거 시트의 관계 문장',
     owners: ['backend', 'etl'],
   },
   'issue-timeline': {
