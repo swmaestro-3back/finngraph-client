@@ -1,10 +1,11 @@
-import { ChevronRight } from 'lucide-react'
+import { ChartSpline, ChevronRight } from 'lucide-react'
 import {
   CandlestickSeries,
   ColorType,
   createChart,
   CrosshairMode,
   HistogramSeries,
+  LineSeries,
   LineStyle,
   TickMarkType,
   type IChartApi,
@@ -13,7 +14,17 @@ import {
   type MouseEventParams,
   type Time,
 } from 'lightweight-charts'
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { IssueMarkerLayer, type MarkerSpot } from '@/components/fg/IssueMarkerLayer'
@@ -27,7 +38,7 @@ import {
   chartSearch,
   chartValueText,
   DAILY_HISTORY_LIMIT,
-  DEEP_LOAD_EDGE,
+  deepLoadEdge,
   followSpan,
   formatChartPrice,
   isAway,
@@ -35,6 +46,8 @@ import {
   keyboardIndex,
   kindLabel,
   legendAt,
+  MOVING_AVERAGES,
+  movingAverage,
   needsDailyHistory,
   parseChartKind,
   parseChartRange,
@@ -47,6 +60,7 @@ import {
   withAlpha,
   WON_FORMAT,
   zoomSpan,
+  type AverageValue,
   type LogicalSpan,
   type PriceFormat,
 } from '@/lib/fg/priceChart'
@@ -80,6 +94,7 @@ interface Mounted {
   chart: IChartApi
   candle: ISeriesApi<'Candlestick'>
   volume: ISeriesApi<'Histogram'>
+  averages: ISeriesApi<'Line'>[]
   layer: IssueMarkerLayer
   colors: { up: string; down: string }
 }
@@ -94,6 +109,7 @@ function tokens() {
   const style = getComputedStyle(document.documentElement)
   const read = (name: string) => style.getPropertyValue(name).trim()
   return {
+    averages: MOVING_AVERAGES.map((line) => read(line.color)),
     up: read('--market-up'),
     down: read('--market-down'),
     event: read('--relation-event'),
@@ -189,7 +205,10 @@ export function PriceChart({
   const { pathname, search, state } = useLocation()
   const navigate = useNavigate()
   const kind = parseChartKind(search)
-  const [deep, setDeep] = useState(() => kind === 'D' && needsDailyHistory(parseChartRange(search, 'D')))
+  const [showAverages, setShowAverages] = useState(true)
+  const [averageOn, setAverageOn] = useState<readonly number[]>(() => MOVING_AVERAGES.map((line) => line.days))
+  const averaging = showAverages && averageOn.length > 0
+  const [deep, setDeep] = useState(() => kind === 'D' && needsDailyHistory(parseChartRange(search, 'D'), averaging))
   const history = useSourceCandles(kind === 'D' && deep ? source : null, 'D', DAILY_HISTORY_LIMIT)
   const weekly = useSourceCandles(kind === 'W' ? source : null, 'W', WEEKLY_CANDLE_LIMIT)
   const monthly = useSourceCandles(kind === 'M' ? source : null, 'M', MONTHLY_CANDLE_LIMIT)
@@ -197,6 +216,7 @@ export function PriceChart({
   const daily = deep && history.data && history.data.length > candles.length ? history.data : candles
   const displayCandles = kind === 'D' ? daily : kind === 'W' ? weekly.data : monthly.data
   const dailyIndex = useMemo(() => new Map(daily.map((candle, index) => [candle.date, index])), [daily])
+  const averageValues = useMemo(() => MOVING_AVERAGES.map((line) => movingAverage(daily, line.days)), [daily])
   const kindRef = useRef(kind)
   useEffect(() => {
     kindRef.current = kind
@@ -217,7 +237,7 @@ export function PriceChart({
         (kind === 'W' ? weekly.data === null || weekly.loading : monthly.data === null || monthly.loading))) ||
     (historyWanted && history.data === null && history.error === null)
   const deepen = () => setDeep(true)
-  const latest = useRef({ candles: shown, markers, onSelect, refYear: 0, kind, deepen })
+  const latest = useRef({ candles: shown, markers, onSelect, refYear: 0, kind, deepen, averaging })
   const [hover, setHover] = useState<number | null>(null)
   const [kb, setKb] = useState<number | null>(null)
   const [away, setAway] = useState(false)
@@ -225,7 +245,7 @@ export function PriceChart({
   const refYear = count > 0 ? Number(shown[count - 1].date.slice(0, 4)) : 0
 
   useEffect(() => {
-    latest.current = { candles: shown, markers, onSelect, refYear, kind, deepen }
+    latest.current = { candles: shown, markers, onSelect, refYear, kind, deepen, averaging }
   })
 
   useEffect(() => {
@@ -288,9 +308,23 @@ export function PriceChart({
       priceLineVisible: false,
     })
     chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } })
+    const averages = t.averages.map((color) =>
+      chart.addSeries(LineSeries, {
+        color,
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+        priceFormat: {
+          type: 'price',
+          precision: formatRef.current.decimals,
+          minMove: 10 ** -formatRef.current.decimals,
+        },
+      }),
+    )
     const layer = new IssueMarkerLayer({ event: t.event, surface: t.surface })
     candle.attachPrimitive(layer)
-    mounted.current = { chart, candle, volume, layer, colors: { up: t.up, down: t.down } }
+    mounted.current = { chart, candle, volume, averages, layer, colors: { up: t.up, down: t.down } }
 
     const onMove = (param: MouseEventParams<Time>) => {
       const total = latest.current.candles.length
@@ -323,7 +357,11 @@ export function PriceChart({
         expected.current = null
         setActive(null)
       }
-      if (latest.current.kind === 'D' && activeRef.current === null && span.from < DEEP_LOAD_EDGE) {
+      if (
+        latest.current.kind === 'D' &&
+        activeRef.current === null &&
+        span.from < deepLoadEdge(latest.current.averaging)
+      ) {
         latest.current.deepen()
       }
     }
@@ -353,6 +391,19 @@ export function PriceChart({
     const grown = previous && previous.kind === kind ? displayCandles.length - previous.count : 0
     drawn.current = { kind, count: displayCandles.length }
     const { up, down } = view.colors
+    view.averages.forEach((series, i) => {
+      if (kind !== 'D') {
+        series.setData([])
+        return
+      }
+      const values = movingAverage(displayCandles, MOVING_AVERAGES[i].days)
+      series.setData(
+        displayCandles.flatMap((c, j) => {
+          const value = values[j]
+          return value === null ? [] : [{ time: c.date, value }]
+        }),
+      )
+    })
     view.candle.setData(
       displayCandles.map((c) => ({ time: c.date, open: c.open, high: c.high, low: c.low, close: c.close })),
     )
@@ -363,6 +414,14 @@ export function PriceChart({
     if (want && want.kind === kind) showRange(view, displayCandles, kind, want.range, expected)
     else if (grown > 0 && before) view.chart.timeScale().setVisibleLogicalRange(shiftSpan(toSpan(before), grown))
   }, [displayCandles, kind])
+
+  useEffect(() => {
+    const view = mounted.current
+    if (!view) return
+    view.averages.forEach((series, i) =>
+      series.applyOptions({ visible: showAverages && averageOn.includes(MOVING_AVERAGES[i].days) }),
+    )
+  }, [showAverages, averageOn])
 
   useEffect(() => {
     const view = mounted.current
@@ -399,7 +458,7 @@ export function PriceChart({
     if (next === kind) return
     const nextRange = parseChartRange(search, next)
     setActive({ kind: next, range: nextRange })
-    if (next === 'D' && needsDailyHistory(nextRange)) setDeep(true)
+    if (next === 'D' && needsDailyHistory(nextRange, averaging)) setDeep(true)
     expected.current = null
     navigate({ pathname, search: chartSearch(search, next, nextRange) }, { replace: true, state })
     const source = next === 'D' ? daily : next === 'W' ? weekly.data : monthly.data
@@ -409,9 +468,25 @@ export function PriceChart({
   const pickRange = (next: RangeChoice) => {
     if (next === NO_RANGE) return
     setActive({ kind, range: next })
-    if (kind === 'D' && needsDailyHistory(next)) setDeep(true)
+    if (kind === 'D' && needsDailyHistory(next, averaging)) setDeep(true)
     navigate({ pathname, search: chartSearch(search, kind, next) }, { replace: true, state })
     if (displayCandles) showRange(mounted.current, displayCandles, kind, next, expected)
+  }
+
+  const deepenForAverages = () => {
+    if (kind === 'D' && active?.kind === 'D' && needsDailyHistory(active.range, true)) setDeep(true)
+  }
+
+  const toggleAverages = () => {
+    const next = !showAverages
+    setShowAverages(next)
+    if (next && averageOn.length > 0) deepenForAverages()
+  }
+
+  const toggleAverage = (days: number) => {
+    const next = averageOn.includes(days) ? averageOn.filter((on) => on !== days) : [...averageOn, days]
+    setAverageOn(next)
+    if (next.length > 0) deepenForAverages()
   }
 
   const markerAt = (index: number) =>
@@ -460,6 +535,12 @@ export function PriceChart({
   const kbMarker = showMarkers ? markerAt(kbIndex) : null
   const rangeOptions = RANGE_OPTIONS[kind].map(({ value, label }) => ({ value, label }))
   const rangeValue = active && active.kind === kind ? active.range : NO_RANGE
+  const averagesAt = (index: number): AverageValue[] =>
+    kind === 'D' && showAverages
+      ? MOVING_AVERAGES.flatMap((line, i) =>
+          averageOn.includes(line.days) ? [{ days: line.days, value: averageValues[i][index] ?? null }] : [],
+        )
+      : []
 
   return (
     <section
@@ -474,17 +555,32 @@ export function PriceChart({
           </h2>
         )}
         <div className="fg-pc__tools">
-          {markers !== null && (
-            <button
-              type="button"
-              className="fg-pc__toggle"
-              aria-pressed={kind === 'D' && showMarkers}
-              disabled={kind !== 'D'}
-              onClick={kind === 'D' ? onToggleMarkers : undefined}
-            >
-              <i className="fg-dia" aria-hidden="true" />
-              {kind === 'D' ? `${markerLabel} 표시` : `${markerLabel} 표시는 일봉에서 볼 수 있어요`}
-            </button>
+          {(markers !== null || kind === 'D') && (
+            <div className="fg-pc__toggles">
+              {markers !== null && (
+                <button
+                  type="button"
+                  className="fg-pc__toggle"
+                  aria-pressed={kind === 'D' && showMarkers}
+                  disabled={kind !== 'D'}
+                  onClick={kind === 'D' ? onToggleMarkers : undefined}
+                >
+                  <i className="fg-dia" aria-hidden="true" />
+                  {kind === 'D' ? `${markerLabel} 표시` : `${markerLabel} 표시는 일봉에서 볼 수 있어요`}
+                </button>
+              )}
+              {kind === 'D' && (
+                <button
+                  type="button"
+                  className="fg-pc__toggle fg-pc__toggle--avg"
+                  aria-pressed={showAverages}
+                  onClick={toggleAverages}
+                >
+                  <ChartSpline size={16} strokeWidth={1.75} aria-hidden="true" />
+                  이동평균선 표시
+                </button>
+              )}
+            </div>
           )}
           <Segment<CandlePeriod> label="캔들 종류" options={CANDLE_KIND_OPTIONS} value={kind} onChange={pickKind} />
           <Segment<RangeChoice> label="기간" options={rangeOptions} value={rangeValue} onChange={pickRange} />
@@ -515,6 +611,29 @@ export function PriceChart({
           </>
         )}
       </div>
+      {kind === 'D' && showAverages && (
+        <div className="fg-pc__avgs" role="group" aria-label="이동평균선">
+          {MOVING_AVERAGES.map((line, i) => {
+            const on = averageOn.includes(line.days)
+            const value = on ? (averageValues[i][shownIndex] ?? null) : null
+            return (
+              <button
+                key={line.days}
+                type="button"
+                className="fg-pc__avg"
+                aria-pressed={on}
+                aria-label={`${line.days}일 이동평균선`}
+                style={{ '--fg-pc-avg': `var(${line.color})` } as CSSProperties}
+                onClick={() => toggleAverage(line.days)}
+              >
+                <i className="fg-pc__avg-line" aria-hidden="true" />
+                <span aria-hidden="true">{line.days}일</span>
+                {value !== null && <b aria-hidden="true">{formatChartPrice(value, format.decimals)}</b>}
+              </button>
+            )
+          })}
+        </div>
+      )}
       <div
         className="fg-pc__lw"
         role="slider"
@@ -523,7 +642,15 @@ export function PriceChart({
         aria-valuemin={0}
         aria-valuemax={Math.max(0, count - 1)}
         aria-valuenow={Math.max(0, kbIndex)}
-        aria-valuetext={chartValueText(shown, kbIndex, kbMarker?.title ?? null, markerLabel, kind, format)}
+        aria-valuetext={chartValueText(
+          shown,
+          kbIndex,
+          kbMarker?.title ?? null,
+          markerLabel,
+          kind,
+          format,
+          averagesAt(kbIndex),
+        )}
         aria-describedby={hintId}
         onKeyDown={onKeyDown}
       >
