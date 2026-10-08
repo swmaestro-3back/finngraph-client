@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
@@ -6,9 +6,9 @@ import { GapValue } from '@/components/fg/Gap'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { ThemeIndexRetry } from '@/components/fg/ThemeIndexRetry'
-import type { PeerMetricRes, StockDetailRes, StockThemeCompareRes, StockThemeRes } from '@/lib/apiTypes'
+import type { PeerMetricRes, StockDetailRes, StockThemeCompareRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
-import { capRankLabel, navState, stockTabSearch, themeRankLabel, type CapRank } from '@/lib/fg/stockDetail'
+import { capRankLabel, navState, stockTabSearch, type CapRank } from '@/lib/fg/stockDetail'
 import { formatRatio, formatTimes } from '@/lib/fg/stockQuote'
 import { monthDayLabel } from '@/lib/fg/themeCharts'
 
@@ -16,40 +16,16 @@ interface StatProps {
   label: string
   value: ReactNode
   note?: ReactNode
-  extra?: ReactNode
   loading?: boolean
 }
 
-function Stat({ label, value, note, extra, loading = false }: StatProps) {
+function Stat({ label, value, note, loading = false }: StatProps) {
   return (
     <div>
       <dt>{label}</dt>
       <dd className="fg-num">{loading ? <Skeleton width={72} height={24} /> : value}</dd>
       {note !== undefined && note !== null && <small className="fg-num">{note}</small>}
-      {extra !== undefined && extra !== null && <small className="fg-num">{extra}</small>}
     </div>
-  )
-}
-
-interface ThemePickerProps {
-  themes: readonly StockThemeRes[]
-  themeId: number
-  onPick: (id: number) => void
-}
-
-function ThemePicker({ themes, themeId, onPick }: ThemePickerProps) {
-  return (
-    <label className="fg-sks__pick">
-      <span className="fg-sr">비교 테마</span>
-      <select value={themeId} onChange={(event) => onPick(Number(event.target.value))}>
-        {themes.map((theme) => (
-          <option key={theme.id} value={theme.id}>
-            {`${theme.name} · ${theme.stockCount}종목`}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
-    </label>
   )
 }
 
@@ -68,9 +44,6 @@ interface StockKeyStatsProps {
   tradingLoading: boolean
   tradingRatio: number | null
   capRank: CapRank | null
-  themes: readonly StockThemeRes[] | null
-  themeId: number | null
-  onPickTheme: (id: number) => void
   compare: StockThemeCompareRes | null
   streaks: readonly string[]
   failed: KeyStatsFailed
@@ -82,29 +55,20 @@ export function StockKeyStats({
   tradingLoading,
   tradingRatio,
   capRank,
-  themes,
-  themeId,
-  onPickTheme,
   compare,
   streaks,
   failed,
 }: StockKeyStatsProps) {
   const { pathname, search, state } = useLocation()
   const metrics = failed.compare ? null : (compare?.metrics ?? null)
-  const total = compare?.memberCount ?? 0
   const basisDate = compare?.valuationDate ?? compare?.baseDate ?? stock.valuationDate ?? stock.baseDate ?? null
   const versus = (metric: PeerMetricRes | null, format: (value: number) => string) =>
     metric && metric.median !== null ? `테마 ${format(metric.median)}` : null
   return (
     <section className="fg-section fg-sks" aria-labelledby="fg-sks-title">
-      <div className="fg-sks__head">
-        <h2 id="fg-sks-title" className="fg-section__title">
-          핵심 지표
-        </h2>
-        {themes && themes.length > 1 && themeId !== null && (
-          <ThemePicker themes={themes} themeId={themeId} onPick={onPickTheme} />
-        )}
-      </div>
+      <h2 id="fg-sks-title" className="fg-section__title">
+        핵심 지표
+      </h2>
       <dl className="fg-ks">
         <Stat
           label="시가총액"
@@ -112,7 +76,6 @@ export function StockKeyStats({
           note={
             failed.rank ? <RetryText subject="시장 순위" onRetry={failed.rank} /> : capRank ? capRankLabel(capRank) : null
           }
-          extra={themeRankLabel(metrics?.marketCap ?? null, total, '테마 ')}
         />
         <Stat
           label="거래대금"
@@ -121,31 +84,26 @@ export function StockKeyStats({
           note={
             tradingRatio === null ? null : <GapValue gap="stock-quote-ext" mock={`평소의 ${tradingRatio.toFixed(1)}배`} />
           }
-          extra={themeRankLabel(metrics?.tradeValue ?? null, total, '테마 ')}
         />
         <Stat
           label="PER"
           value={formatTimes(stock.per)}
           note={versus(metrics?.per ?? null, formatTimes)}
-          extra={themeRankLabel(metrics?.per ?? null, total)}
         />
         <Stat
           label="PBR"
           value={formatTimes(stock.pbr)}
           note={versus(metrics?.pbr ?? null, formatTimes)}
-          extra={themeRankLabel(metrics?.pbr ?? null, total)}
         />
         <Stat
           label="ROE"
           value={formatRatio(stock.roe)}
           note={versus(metrics?.roe ?? null, formatRatio)}
-          extra={themeRankLabel(metrics?.roe ?? null, total)}
         />
         <Stat
           label="배당수익률"
           value={formatRatio(stock.dividendYield)}
           note={versus(metrics?.dividendYield ?? null, formatRatio)}
-          extra={themeRankLabel(metrics?.dividendYield ?? null, total)}
         />
       </dl>
       {failed.streaks ? (
@@ -165,8 +123,8 @@ export function StockKeyStats({
       {!failed.compare && compare && (
         <span className="fg-sks__cap">
           {metrics && Object.values(metrics).some((metric) => metric.median !== null)
-            ? `‘테마’는 ${compare.themeName} ${compare.memberCount}종목의 중앙값·순위예요 · 값이 없는 종목은 빼고 셌어요`
-            : `${compare.themeName} ${compare.memberCount}종목은 견줄 종목이 적어 중앙값·순위를 보이지 않아요`}
+            ? `‘테마’는 ${compare.themeName} ${compare.memberCount}종목의 중앙값이에요 · 값이 없는 종목은 빼고 셌어요`
+            : `${compare.themeName} ${compare.memberCount}종목은 견줄 종목이 적어 중앙값을 보이지 않아요`}
           {basisDate && ` · ${monthDayLabel(basisDate, Number(basisDate.slice(0, 4)))} 기준`}
         </span>
       )}

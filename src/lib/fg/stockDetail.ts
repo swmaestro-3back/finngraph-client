@@ -1,4 +1,12 @@
-import type { InvestorFlowRes, PeerMetricRes, StockDetailRes, StockRowRes, StockThemeRes, ThemeMarketRes } from '@/lib/apiTypes'
+import type {
+  InvestorFlowRes,
+  PeerMetricRes,
+  StockDetailRes,
+  StockRowRes,
+  StockThemeCompareRes,
+  StockThemeRes,
+  ThemeMarketRes,
+} from '@/lib/apiTypes'
 import { splitSentences } from '@/lib/companyOverview'
 import { marketLabel } from '@/lib/fg/format'
 import { themeBasisLabel } from '@/lib/fg/themes'
@@ -77,14 +85,52 @@ export function capRankLabel(rank: CapRank): string {
   return `${marketLabel(rank.market)} ${rank.rank}위`
 }
 
-export function themeRankLabel(
-  metric: Pick<PeerMetricRes, 'rank' | 'count'> | null,
-  total: number,
-  prefix = '',
-): string | null {
-  if (!metric || metric.rank === null) return null
-  if (prefix && metric.count === total) return `${prefix}${metric.rank}위`
-  return `${prefix}${metric.count}종목 중 ${metric.rank}위`
+type PeerMetricKey = keyof StockThemeCompareRes['metrics']
+
+const POSITION_METRICS: readonly { key: PeerMetricKey; label: string; lowFirst: boolean }[] = [
+  { key: 'change', label: '오늘 등락률', lowFirst: false },
+  { key: 'marketCap', label: '시가총액', lowFirst: false },
+  { key: 'tradeValue', label: '거래대금', lowFirst: false },
+  { key: 'per', label: 'PER', lowFirst: true },
+  { key: 'pbr', label: 'PBR', lowFirst: true },
+  { key: 'roe', label: 'ROE', lowFirst: false },
+  { key: 'dividendYield', label: '배당수익률', lowFirst: false },
+]
+
+export interface PositionRow {
+  key: PeerMetricKey
+  label: string
+  lowFirst: boolean
+  rank: number | null
+  count: number
+  position: number | null
+  note: string | null
+}
+
+function positionOf(metric: Pick<PeerMetricRes, 'rank' | 'count'>): number | null {
+  if (metric.rank === null) return null
+  return metric.count <= 1 ? 0 : (metric.rank - 1) / (metric.count - 1)
+}
+
+export function positionRows(metrics: StockThemeCompareRes['metrics']): PositionRow[] {
+  return POSITION_METRICS.map(({ key, label, lowFirst }) => {
+    const metric = metrics[key]
+    return {
+      key,
+      label,
+      lowFirst,
+      rank: metric.rank,
+      count: metric.count,
+      position: positionOf(metric),
+      note: metric.rank !== null ? null : metric.value === null ? '값이 없어요' : '견줄 종목이 적어요',
+    }
+  })
+}
+
+export function themesByChange<T extends Pick<StockThemeRes, 'change' | 'name'>>(themes: readonly T[]): T[] {
+  return [...themes].sort(
+    (a, b) => (b.change ?? -Infinity) - (a.change ?? -Infinity) || a.name.localeCompare(b.name, 'ko'),
+  )
 }
 
 export function compareThemeId(

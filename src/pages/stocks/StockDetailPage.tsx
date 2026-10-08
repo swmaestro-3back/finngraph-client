@@ -37,6 +37,7 @@ import { useStockDetail } from '@/lib/queries/useStockDetail'
 import { useStockIssues } from '@/lib/queries/useStockIssues'
 import { refreshStocks } from '@/lib/queries/useStocksCached'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
+import { useStockThemes } from '@/lib/queries/useStockThemes'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 import { useGap } from '@/lib/useGap'
 
@@ -64,6 +65,7 @@ function StockDetailView({ code }: { code: string }) {
   const detail = useStockDetail(code)
   const candles = useCandles(code, 'D', QUOTE_CANDLE_LIMIT)
   const themeStocks = useThemeStocks(detail.data?.themeId ?? null)
+  const stockThemes = useStockThemes(code === '' ? null : code)
   const market = useThemeMarket()
   const stockIssues = useStockIssues(code === '' ? null : code)
   const issuesGap = useGap('stock-issues', loadIssues)
@@ -80,15 +82,17 @@ function StockDetailView({ code }: { code: string }) {
   const { refresh: refreshDetail } = detail
   const { refresh: refreshCandles } = candles
   const { refresh: refreshThemeStocks } = themeStocks
+  const { refresh: refreshStockThemes } = stockThemes
   const { refresh: refreshMarket } = market
   const refreshPrices = useCallback(() => {
     refreshDetail()
     refreshCandles()
     refreshThemeStocks()
+    refreshStockThemes()
     refreshMarket()
     refreshStocks()
     setRefreshKey((key) => key + 1)
-  }, [refreshDetail, refreshCandles, refreshThemeStocks, refreshMarket])
+  }, [refreshDetail, refreshCandles, refreshThemeStocks, refreshStockThemes, refreshMarket])
   useAutoRefresh(refreshPrices, market.data)
 
   const shownTab = useRef(tab)
@@ -223,6 +227,7 @@ function StockDetailView({ code }: { code: string }) {
           candlesFailed={candlesFailed}
           onRetryCandles={candles.refetch}
           themeStocks={themeStocks}
+          themes={stockThemes}
           source={eventSource}
           issues={issueState.status === 'ready' ? issueState.events : []}
           issueTotal={issueTotal}
@@ -244,6 +249,7 @@ function StockDetailView({ code }: { code: string }) {
           week52Loading={week52 === null && rows === null && !candlesFailed}
           status={status}
           today={today}
+          themes={stockThemes}
           tab={tab}
           counts={counts}
           tabsRef={setTabsEl}
