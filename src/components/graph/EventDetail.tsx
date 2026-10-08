@@ -1,9 +1,10 @@
 import { Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { type GraphNode, type NodeQuote } from '@/data/graphTypes'
-import { eventInfo, eventPeriod } from '@/lib/graphEvent'
+import { type GraphNode } from '@/data/graphTypes'
+import { eventArticles, eventArticlesNote, eventInfo, eventPeriod } from '@/lib/graphEvent'
 import { formatShortDateTime } from '@/lib/format'
-import { useNewsBriefs } from '@/lib/queries/useNewsBriefs'
+import { toNodeQuote } from '@/lib/kgMappers'
+import { useEventDetail } from '@/lib/queries/useEventDetail'
 import {
   ChangeText,
   LEDGER_ROW,
@@ -44,30 +45,33 @@ export function EventDetail({
   onOpenNews,
 }: Props) {
   const info = eventInfo(node)
+  const detail = useEventDetail(node.data.clusterId)
   const period = eventPeriod(info.firstPublishedAt, info.lastPublishedAt)
-  const keywords = info.keywords.slice(0, MAX_KEYWORDS)
+  const keywords = (detail.data?.keywords ?? info.keywords).slice(0, MAX_KEYWORDS)
+  const memberCount = detail.data?.member_count ?? info.memberCount
 
-  const newsIds = info.representativeNewsId != null ? [String(info.representativeNewsId)] : []
-  const { briefs, loading } = useNewsBriefs(newsIds)
-  // 불러오지 못한 기사(미분석 뉴스는 상세가 404다)는 빠진다 — 남은 것은 전부 모달로 열 수 있다
-  const articles = newsIds
-    .flatMap((id) => briefs.get(id) ?? [])
-    .sort((a, b) => (a.publishedAt ?? '').localeCompare(b.publishedAt ?? ''))
-  const articlesPending = loading && articles.length < newsIds.length
-  const missing = newsIds.length - articles.length
+  const articles = detail.data ? eventArticles(detail.data) : []
+  const articlesPending = detail.loading && !detail.data
+  // 서버는 관계 분석을 거친 기사만 준다 — 빠진 건수는 섹션을 지우지 않고 말로 알린다
+  const articlesNote = detail.data ? eventArticlesNote(articles.length, detail.data.news_total) : null
   const representativeId =
     info.representativeNewsId != null ? String(info.representativeNewsId) : null
 
   // 그래프에 있는 기업이 먼저 — 눌러서 이어 갈 수 있는 쪽이 위다
-  const companies = ([] as { name: string; ticker: string | null; quote?: NodeQuote }[])
-    .map((c) => ({ ...c, hit: nodesByLabel.get(c.name) }))
+  const companies = (detail.data?.companies ?? [])
+    .map((c) => ({
+      name: c.name,
+      ticker: c.ticker,
+      hit: nodesByLabel.get(c.name),
+      quote: toNodeQuote(c.quote),
+    }))
     .sort((a, b) => Number(Boolean(b.hit)) - Number(Boolean(a.hit)))
 
   return (
     <>
-      {(info.memberCount != null || period) && (
+      {(memberCount != null || period) && (
         <div className="mb-1.5 flex flex-wrap items-center gap-x-2 font-mono text-caption text-muted-foreground">
-          {info.memberCount != null && <span>뉴스 {info.memberCount}건</span>}
+          {memberCount != null && <span>뉴스 {memberCount}건</span>}
           {period && <span>{period}</span>}
         </div>
       )}
@@ -84,10 +88,10 @@ export function EventDetail({
         </div>
       )}
 
-      {newsIds.length > 0 && (
+      {(articlesPending || articles.length > 0 || articlesNote || detail.error) && (
         <Section title="이벤트 타임라인">
           {articlesPending ? (
-            <RowSkeleton rows={Math.min(3, newsIds.length)} />
+            <RowSkeleton rows={3} />
           ) : (
             articles.length > 0 && (
               // 왼쪽 세로선이 시간축이다 — 위에서 아래로 보도가 이어진다
@@ -125,12 +129,12 @@ export function EventDetail({
               </ol>
             )
           )}
-          {/* 관계 분석을 거치지 않은 기사는 상세 조회가 404다 — 섹션을 말없이 지우지 않고 빠진 건수를 알린다 */}
-          {!articlesPending && missing > 0 && (
+          {!articlesPending && detail.error && (
+            <p className="m-0 text-caption text-muted-foreground">기사를 불러오지 못했습니다.</p>
+          )}
+          {articlesNote && (
             <p className={cn('mb-0 text-caption text-muted-foreground', articles.length > 0 ? 'mt-2' : 'mt-0')}>
-              {articles.length > 0
-                ? `나머지 ${missing}건은 아직 분석되지 않아 제목을 불러오지 못했습니다.`
-                : `기사 ${missing}건이 아직 분석되지 않아 제목을 불러오지 못했습니다.`}
+              {articlesNote}
             </p>
           )}
         </Section>
