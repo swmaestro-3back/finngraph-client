@@ -5,6 +5,7 @@ import {
   eventArticles,
   eventArticlesNote,
   eventInfo,
+  eventIssuePath,
   eventPeriod,
   findCompanyNode,
   type CompanyIndex,
@@ -36,7 +37,7 @@ interface Props {
   onNodeSelect?: (node: GraphNode) => void
   /** 이벤트 렌즈 hop 2로 — 이 이벤트를 공유하는 다른 기업을 본다. 이미 그 안이면 넘어오지 않는다 */
   onShowSharing?: () => void
-  /** 기사를 모달로 — 뉴스 id 체계가 다르면 넘어오지 않는다 */
+  /** 대표 기사가 아닌 기사를 모달로 — 뉴스 id 체계가 다르면 넘어오지 않는다 */
   onOpenNews?: (newsId: string) => void
 }
 
@@ -64,6 +65,8 @@ export function EventDetail({
   const articlesNote = detail.data ? eventArticlesNote(articles.length, detail.data.news_total) : null
   const representativeId =
     info.representativeNewsId != null ? String(info.representativeNewsId) : null
+  // 대표 기사는 기사 모달이 아니라 이슈 페이지로 — 이벤트가 곧 이슈라 요약·종목·타임라인을 한 번에 본다
+  const issueHref = eventIssuePath(node)
 
   // 그래프에 있는 기업이 먼저 — 눌러서 이어 갈 수 있는 쪽이 위다
   const companies = (detail.data?.companies ?? [])
@@ -112,7 +115,14 @@ export function EventDetail({
                         <span className="ml-1.5 font-sans font-semibold text-foreground">대표 기사</span>
                       )}
                     </div>
-                    {onOpenNews ? (
+                    {a.id === representativeId && issueHref ? (
+                      <Link
+                        to={issueHref}
+                        className="mt-0.5 block text-body leading-snug text-foreground hover:underline"
+                      >
+                        {a.title}
+                      </Link>
+                    ) : onOpenNews ? (
                       <button
                         type="button"
                         onClick={() => onOpenNews(a.id)}

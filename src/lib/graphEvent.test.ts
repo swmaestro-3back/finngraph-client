@@ -4,6 +4,7 @@ import {
   eventArticles,
   eventArticlesNote,
   eventInfo,
+  eventIssuePath,
   eventPeriod,
   eventSubtitle,
   findCompanyNode,
@@ -46,6 +47,11 @@ describe('graphEvent', () => {
   it('툴팁 부제는 건수와 기간을 잇고, 둘 다 없으면 "이벤트"', () => {
     expect(eventSubtitle(full)).toBe('뉴스 3건 · 2026-09-01 ~ 2026-09-07')
     expect(eventSubtitle(bare)).toBe('이벤트')
+  })
+
+  it('이슈 페이지 경로는 클러스터 id로 — 클러스터 id가 없으면 없다', () => {
+    expect(eventIssuePath({ ...full, data: { ...full.data, clusterId: 3521 } })).toBe('/issues/3521')
+    expect(eventIssuePath(bare)).toBeNull()
   })
 })
 

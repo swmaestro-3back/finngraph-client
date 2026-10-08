@@ -1,6 +1,7 @@
 // 이벤트(뉴스 클러스터) 노드의 data를 읽고 사람이 읽는 문자열로 바꾼다 — 캔버스 툴팁과 상세 패널이 함께 쓴다.
 
 import type { GraphNode } from '@/data/graphTypes'
+import { issuePath } from '@/lib/fg/paths'
 import type { KgEventDetailRes } from '@/lib/kgApiTypes'
 
 export interface EventInfo {
@@ -44,6 +45,12 @@ export function eventSubtitle(node: GraphNode): string {
   const period = eventPeriod(info.firstPublishedAt, info.lastPublishedAt)
   if (period) parts.push(period)
   return parts.length ? parts.join(' · ') : '이벤트'
+}
+
+/** 이벤트는 곧 이슈다 — KG의 cluster_id와 이슈 API의 id가 같은 번호 체계라 상세 페이지로 바로 이어진다 */
+export function eventIssuePath(node: GraphNode): string | null {
+  const clusterId = node.data.clusterId
+  return clusterId != null ? issuePath(clusterId) : null
 }
 
 export interface EventArticle {
