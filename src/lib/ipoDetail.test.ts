@@ -306,13 +306,13 @@ describe('homepageUrl — 홈페이지 링크', () => {
 })
 
 describe('ipoIntroSource — 기업 소개 출처', () => {
-  it('DART_LLM은 증권신고서 AI 요약', () => {
-    expect(ipoIntroSource('DART_LLM')).toEqual({ ai: true, label: '증권신고서 「사업의 내용」 요약', linkLabel: '증권신고서 원문' })
+  it('DART_LLM은 증권신고서 요약', () => {
+    expect(ipoIntroSource('DART_LLM')).toEqual({ label: '증권신고서 「사업의 내용」 요약', linkLabel: '증권신고서 원문' })
   })
 
-  it('그 밖의 출처는 AI 표기 없이 기존 출처 이름', () => {
-    expect(ipoIntroSource('NAVER')).toEqual({ ai: false, label: '네이버 금융 기업개요', linkLabel: '원문 공시' })
-    expect(ipoIntroSource(null)).toEqual({ ai: false, label: null, linkLabel: '원문 공시' })
+  it('그 밖의 출처는 기존 출처 이름', () => {
+    expect(ipoIntroSource('NAVER')).toEqual({ label: '네이버 금융 기업개요', linkLabel: '원문 공시' })
+    expect(ipoIntroSource(null)).toEqual({ label: null, linkLabel: '원문 공시' })
   })
 })
 

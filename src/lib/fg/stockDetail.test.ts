@@ -3,16 +3,13 @@ import type { InvestorFlowRes, StockRowRes } from '@/lib/apiTypes'
 import {
   capRankLabel,
   companySummary,
-  isAiSummary,
   marketCapRank,
-  median,
   navState,
   parseStockTab,
   sheetPushed,
   stockBasisLabel,
   stockTabSearch,
   streakLabels,
-  themeCompare,
   withIssue,
 } from '@/lib/fg/stockDetail'
 
@@ -124,39 +121,6 @@ describe('marketCapRank', () => {
   })
 })
 
-describe('median', () => {
-  it('값이 있는 것만으로 중앙값을 구한다', () => {
-    expect(median([3, null, 1, 2])).toBe(2)
-    expect(median([4, 1, 3, 2])).toBe(2.5)
-    expect(median([null, null])).toBeNull()
-    expect(median([])).toBeNull()
-  })
-})
-
-describe('themeCompare', () => {
-  const index = new Map(
-    [
-      row('A', 'KOSPI', 1, { per: 10, pbr: 1, roe: 5, dividendYield: 1 }),
-      row('B', 'KOSPI', 1, { per: 20, pbr: 2, roe: null, dividendYield: 2 }),
-      row('C', 'KOSDAQ', 1, { per: 30, pbr: 3, roe: 15, dividendYield: null }),
-    ].map((stock) => [stock.ticker, stock]),
-  )
-
-  it('테마 구성 종목의 지표별 중앙값과 구성 종목 수', () => {
-    expect(themeCompare([{ ticker: 'A' }, { ticker: 'B' }, { ticker: 'C' }, { ticker: 'X' }], index)).toEqual({
-      count: 4,
-      per: 20,
-      pbr: 2,
-      roe: 10,
-      dividendYield: 1.5,
-    })
-  })
-
-  it('견줄 종목이 셋보다 적으면 비교하지 않는다', () => {
-    expect(themeCompare([{ ticker: 'A' }, { ticker: 'B' }], index)).toBeNull()
-  })
-})
-
 describe('streakLabels', () => {
   it('외국인·기관의 2일 이상 연속 순매수·순매도를 배지 문구로', () => {
     const flows = [
@@ -210,13 +174,5 @@ describe('companySummary', () => {
   it('비어 있으면 null', () => {
     expect(companySummary(null)).toBeNull()
     expect(companySummary('   ')).toBeNull()
-  })
-})
-
-describe('isAiSummary', () => {
-  it('DART 사업보고서 AI 요약만 AI 요약 배지를 단다', () => {
-    expect(isAiSummary('DART_LLM')).toBe(true)
-    expect(isAiSummary('NAVER')).toBe(false)
-    expect(isAiSummary(null)).toBe(false)
   })
 })

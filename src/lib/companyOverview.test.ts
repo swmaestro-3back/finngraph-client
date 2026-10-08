@@ -3,7 +3,7 @@ import { dartFilingUrl, describeSource, profileRows, splitSentences } from '@/li
 
 describe('describeSource', () => {
   it('알려진 출처는 사람이 읽을 라벨로 바꾼다', () => {
-    expect(describeSource('DART_LLM')).toBe('DART 사업보고서 「사업의 개요」 AI 요약')
+    expect(describeSource('DART_LLM')).toBe('DART 사업보고서 「사업의 개요」 요약')
     expect(describeSource('NAVER')).toBe('네이버 금융 기업개요')
   })
 
