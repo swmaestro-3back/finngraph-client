@@ -15,7 +15,7 @@ export function ExPriceMetric({ exPrice, inputsMissing }: { exPrice: ExPriceRes;
           {confirmed && exPrice.actualOpen !== null && (
             <>
               {' · 실제 시초가 '}
-              <span className="font-mono tabular-nums text-foreground-secondary">{formatWon(exPrice.actualOpen)}</span>
+              <b className="fg-num">{formatWon(exPrice.actualOpen)}</b>
             </>
           )}
         </>

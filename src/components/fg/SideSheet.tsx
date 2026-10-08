@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { Dialog } from 'radix-ui'
 import type { ReactNode, RefObject } from 'react'
+import { cn } from '@/lib/utils'
 
 interface SideSheetProps {
   open: boolean
@@ -9,16 +10,26 @@ interface SideSheetProps {
   meta?: ReactNode
   closeLabel: string
   returnFocusRef?: RefObject<HTMLElement | null>
+  variant?: 'side' | 'modal'
   children: ReactNode
 }
 
-export function SideSheet({ open, onOpenChange, title, meta, closeLabel, returnFocusRef, children }: SideSheetProps) {
+export function SideSheet({
+  open,
+  onOpenChange,
+  title,
+  meta,
+  closeLabel,
+  returnFocusRef,
+  variant = 'side',
+  children,
+}: SideSheetProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fg-scrim" />
         <Dialog.Content
-          className="fg fg-sidesheet"
+          className={cn('fg fg-sidesheet', variant === 'modal' && 'fg-sidesheet--modal')}
           aria-describedby={undefined}
           onCloseAutoFocus={(event) => {
             if (!returnFocusRef?.current) return

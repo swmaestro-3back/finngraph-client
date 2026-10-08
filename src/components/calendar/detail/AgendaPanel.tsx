@@ -1,4 +1,4 @@
-import { DetailSection, SectionNotice } from '@/components/calendar/detail/DetailParts'
+import { DetailNote, DetailSection, SectionNotice, Tag } from '@/components/calendar/detail/DetailParts'
 import type { CorporateActionRes } from '@/lib/apiTypes'
 import { cn } from '@/lib/utils'
 
@@ -12,38 +12,26 @@ export function AgendaPanel({ action }: { action: CorporateActionRes }) {
       ) : (
         <>
           {flagged > 0 && (
-            <p className="mb-3 text-caption text-foreground-secondary break-keep">
-              주목 안건 <span className="font-mono tabular-nums">{flagged}</span>건 — 이사 선임·보수 한도·정관 변경 같은 정례 안건이 아닌 것에 표시합니다.
-            </p>
+            <DetailNote>
+              주목 안건 <b className="fg-num">{flagged}</b>건 — 이사 선임·보수 한도·정관 변경 같은 정례 안건이 아닌 것에 표시합니다.
+            </DetailNote>
           )}
-          <ol aria-label="주총 안건" className="flex flex-col gap-2">
+          <ol aria-label="주총 안건" className="fg-cal-agenda">
             {action.agenda.map((item, index) => (
-              <li key={`${index}-${item.text}`} className="flex gap-2">
-                <span className="w-5 shrink-0 text-right font-mono text-caption leading-relaxed tabular-nums text-muted-foreground">
-                  {index + 1}
-                </span>
-                <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <span
-                    className={cn(
-                      'break-keep text-body leading-relaxed',
-                      item.tags.length > 0 ? 'font-medium text-foreground' : 'text-foreground-secondary',
-                    )}
-                  >
+              <li key={`${index}-${item.text}`}>
+                <span className="fg-cal-agenda__no fg-num">{index + 1}</span>
+                <span className="fg-cal-agenda__item">
+                  <span className={cn('fg-cal-agenda__text', item.tags.length > 0 && 'fg-cal-agenda__text--flag')}>
                     {item.text}
                   </span>
                   {item.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center rounded-full border border-border px-1.5 text-micro font-medium leading-tight text-foreground"
-                    >
-                      {tag}
-                    </span>
+                    <Tag key={tag}>{tag}</Tag>
                   ))}
                 </span>
               </li>
             ))}
           </ol>
-          {action.agendaTruncated && <p className="mt-3 text-caption text-muted-foreground">외 다수 — 일부 안건만 받았습니다</p>}
+          {action.agendaTruncated && <DetailNote>외 다수 — 일부 안건만 받았습니다</DetailNote>}
         </>
       )}
     </DetailSection>

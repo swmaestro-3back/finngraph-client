@@ -4,16 +4,6 @@
 // 두 차트가 각자 slot을 계산하면 반드시 어긋난다. 축을 쓰는 쪽은 전부 여기를 거친다.
 // DOM 없이 계산되므로 매핑이 같은지 순수 함수로 확인할 수 있다 (lib/graphLayout.ts와 같은 이유).
 
-/** 가격 라벨이 들어가는 오른쪽 여백 — 축을 공유하는 레인은 전부 이걸 달아야 정렬된다 */
-export const AXIS_GUTTER = 'mr-16'
-
-/** 상승·호재 / 하락·악재 — index.css 변수 참조 (--stock-up / --stock-down) */
-export const UP = 'var(--stock-up)'
-export const DOWN = 'var(--stock-down)'
-
-/** 크로스헤어·선택 룰 색 */
-export const RULE = 'var(--chart-rule)'
-
 /** 한 항목이 차지하는 폭(%) */
 export function slotPct(count: number): number {
   return 100 / count
