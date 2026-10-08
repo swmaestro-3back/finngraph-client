@@ -77,7 +77,7 @@ export function GraphView({ focus }: Props) {
   const gatedQuery = gatedHop === hop ? query : { ...query, hop: gatedHop }
   // 개요는 서버가 1홉 고정이라 URL에 hop이 남아 있어도 강조 범위는 1홉이다
   const effectiveHop = controls.hop ? gatedHop : 1
-  const { data, loading, error, refetch } = useKgGraph(focus, gatedQuery)
+  const { data, loading, error, refetch } = useKgGraph(focus, gatedQuery, !pending)
   // 전종목·테마 목록은 수백 KB다 — 재중심으로 이 화면이 다시 마운트될 때마다 받지 않도록 탭 공용 캐시를 탄다
   const { data: stocks } = useStocksCached()
   const { data: themes } = useThemesCached()
@@ -363,7 +363,7 @@ export function GraphView({ focus }: Props) {
     updateQuery({ hop: 1, scope: 'all', lens: 'overview' })
   }
 
-  if (loading && !data) {
+  if ((loading || pending) && !data) {
     return (
       <div className="flex h-full items-center justify-center bg-background">
         <div className="w-72 space-y-3">
