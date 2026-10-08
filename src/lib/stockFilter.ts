@@ -18,6 +18,8 @@ export interface FilterState {
   presets: Set<PresetKey>
   ranges: Partial<Record<RangeKey, { min?: number; max?: number }>>
   themeId?: number | null
+  themeQ?: string | null
+  nameQ?: string | null
 }
 
 export interface FilterContext {
@@ -30,12 +32,16 @@ export const DEFAULT_FILTER: FilterState = {
   presets: new Set<PresetKey>(),
   ranges: {},
   themeId: null,
+  themeQ: null,
+  nameQ: null,
 }
 
 /** 대형주 = 전체 종목 중 시가총액 순위 1~LARGE_CAP_RANK위 */
 export const LARGE_CAP_RANK = 100
 /** 거래대금 상위 = 지금 시장 탭 안에서 거래대금 순위 1~VALUE_TOP_RANK위 */
 export const VALUE_TOP_RANK = 100
+export const THEME_QUERY_MAX = 30
+export const NAME_QUERY_MAX = 30
 
 type SpecialPreset = 'largeCap' | 'valueTop100' | 'week52High' | 'week52Low'
 
@@ -87,7 +93,8 @@ export function isFilterActive(state: FilterState): boolean {
   return (
     state.market !== 'ALL' ||
     state.presets.size > 0 ||
-    (state.themeId ?? null) !== null ||
+    themeFilterOn(state) ||
+    (state.nameQ ?? '') !== '' ||
     RANGE_KEYS.some((key) => {
       const range = state.ranges[key]
       return range !== undefined && (range.min !== undefined || range.max !== undefined)
@@ -96,22 +103,28 @@ export function isFilterActive(state: FilterState): boolean {
 }
 
 /** 시가총액·PER·PBR·등락률 범위 + ROE·배당수익률 최소 등 패널 필터만 센다(시장·조건 칩은 뺀다) */
-export function panelFilterCount(state: Pick<FilterState, 'ranges' | 'themeId'>): number {
+export function themeFilterOn(state: Pick<FilterState, 'themeId' | 'themeQ'>): boolean {
+  return (state.themeId ?? null) !== null || (state.themeQ ?? '') !== ''
+}
+
+export function panelFilterCount(state: Pick<FilterState, 'ranges' | 'themeId' | 'themeQ' | 'nameQ'>): number {
   const rangeCount = RANGE_KEYS.filter((key) => {
     const range = state.ranges[key]
     return range !== undefined && (range.min !== undefined || range.max !== undefined)
   }).length
-  return rangeCount + ((state.themeId ?? null) !== null ? 1 : 0)
+  return rangeCount + (themeFilterOn(state) ? 1 : 0) + ((state.nameQ ?? '') !== '' ? 1 : 0)
 }
 
 export function applyStockFilters(rows: StockRowRes[], state: FilterState, context: FilterContext = {}): StockRowRes[] {
   const largeCaps = state.presets.has('largeCap') ? largeCapTickers(rows) : null
   const valueTops = state.presets.has('valueTop100') ? tradeValueTopTickers(rows, state.market) : null
   const basisDate = context.basisDate ?? null
-  const themeId = state.themeId ?? null
+  const themeOn = themeFilterOn(state)
+  const nameQ = (state.nameQ ?? '').trim().toLowerCase()
   return rows.filter((row) => {
     if (state.market !== 'ALL' && row.market !== state.market) return false
-    if (themeId !== null && !context.themeTickers?.has(row.ticker)) return false
+    if (themeOn && !context.themeTickers?.has(row.ticker)) return false
+    if (nameQ !== '' && !row.name.toLowerCase().includes(nameQ) && !row.ticker.toLowerCase().includes(nameQ)) return false
     for (const preset of state.presets) {
       if (preset === 'largeCap') {
         if (!largeCaps?.has(row.ticker)) return false
@@ -174,7 +187,10 @@ export function filterFromParams(params: URLSearchParams): FilterState {
   }
   const themeRaw = params.get('theme')
   const themeId = themeRaw !== null && /^\d+$/.test(themeRaw) ? Number(themeRaw) : null
-  return { market, presets, ranges, themeId }
+  const themeQRaw = (params.get('themeq') ?? '').trim().slice(0, THEME_QUERY_MAX)
+  const themeQ = themeId === null && themeQRaw !== '' ? themeQRaw : null
+  const nameQRaw = (params.get('name') ?? '').trim().slice(0, NAME_QUERY_MAX)
+  return { market, presets, ranges, themeId, themeQ, nameQ: nameQRaw === '' ? null : nameQRaw }
 }
 
 /** params의 필터 항목을 state로 덮어쓴다 (다른 항목은 건드리지 않는다) */
@@ -198,4 +214,12 @@ export function filterToParams(state: FilterState, params: URLSearchParams): voi
   const themeId = state.themeId ?? null
   if (themeId === null) params.delete('theme')
   else params.set('theme', String(themeId))
+
+  const themeQ = themeId === null ? (state.themeQ ?? '').trim() : ''
+  if (themeQ === '') params.delete('themeq')
+  else params.set('themeq', themeQ)
+
+  const nameQ = (state.nameQ ?? '').trim()
+  if (nameQ === '') params.delete('name')
+  else params.set('name', nameQ)
 }

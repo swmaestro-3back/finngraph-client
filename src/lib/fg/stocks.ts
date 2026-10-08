@@ -1,4 +1,4 @@
-import type { StockRowRes } from '@/lib/apiTypes'
+import type { StockRowRes, ThemeStockRes, ThemeTickersRes } from '@/lib/apiTypes'
 import { readPage, writePage } from '@/lib/listParams'
 import {
   applyStockFilters,
@@ -26,6 +26,8 @@ export interface StockQuery {
   code: string | null
   ranges: FilterState['ranges']
   themeId: number | null
+  themeQ: string | null
+  nameQ: string | null
 }
 
 export type ValueOf = (stock: StockRowRes) => number | null
@@ -57,13 +59,22 @@ export function parseStockQuery(search: string): StockQuery {
     code: parseStockCode(params.get('code')),
     ranges: filter.ranges,
     themeId: filter.themeId ?? null,
+    themeQ: filter.themeQ ?? null,
+    nameQ: filter.nameQ ?? null,
   }
 }
 
 export function stockQueryString(query: StockQuery): string {
   const params = new URLSearchParams()
   filterToParams(
-    { market: query.market, presets: new Set(query.presets), ranges: query.ranges, themeId: query.themeId },
+    {
+      market: query.market,
+      presets: new Set(query.presets),
+      ranges: query.ranges,
+      themeId: query.themeId,
+      themeQ: query.themeQ,
+      nameQ: query.nameQ,
+    },
     params,
   )
   if (query.fav) params.set('fav', '1')
@@ -91,7 +102,7 @@ export function sortStocks(rows: readonly StockRowRes[], sort: StockSort, valueO
 
 export function filterStocks(
   rows: readonly StockRowRes[],
-  query: Pick<StockQuery, 'market' | 'presets' | 'ranges' | 'themeId'>,
+  query: Pick<StockQuery, 'market' | 'presets' | 'ranges' | 'themeId' | 'themeQ' | 'nameQ'>,
   favOnly: boolean,
   isFavorite: (ticker: string) => boolean,
   context: FilterContext = {},
@@ -103,6 +114,8 @@ export function filterStocks(
       presets: new Set(query.presets),
       ranges: query.ranges,
       themeId: query.themeId,
+      themeQ: query.themeQ,
+      nameQ: query.nameQ,
     },
     context,
   )
@@ -216,4 +229,22 @@ export function stockSelection(
 
 export function keepCode(code: string | null, rows: readonly StockRowRes[]): string | null {
   return code !== null && rows.some((stock) => stock.ticker === code) ? code : null
+}
+
+export interface ThemeFilter {
+  themeId: number | null
+  themeQ: string | null
+}
+
+export function themeTickerSet(
+  themeId: number | null,
+  members: readonly Pick<ThemeStockRes, 'ticker'>[] | null,
+  match: Pick<ThemeTickersRes, 'tickers'> | null,
+): ReadonlySet<string> | null {
+  if (themeId !== null) return members ? new Set(members.map((stock) => stock.ticker)) : null
+  return match ? new Set(match.tickers) : null
+}
+
+export function themeChipLabel(themeQ: string | null, themeName: string | null): string {
+  return themeQ !== null ? `테마 ‘${themeQ}’ 포함` : `테마 ${themeName ?? ''}`
 }

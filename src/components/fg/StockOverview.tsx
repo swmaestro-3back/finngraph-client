@@ -16,9 +16,9 @@ import type { CandleRes, StockDetailRes, StockThemeRes, ThemeStockRes } from '@/
 import { issuePath } from '@/lib/fg/paths'
 import { compareThemeId, marketCapRank, STREAK_FLOW_DAYS, streakLabels } from '@/lib/fg/stockDetail'
 import {
+  dayMarkers,
   issueDayLabel,
   RECENT_ISSUE_COUNT,
-  stackMarkers,
   STOCK_ISSUE_ORDER,
   tradingDayLabel,
   type StockIssueEvent,
@@ -303,10 +303,14 @@ interface IssueViewInput {
 function issueView({ recent, picked, today, from, retry }: IssueViewInput): EventView {
   const placed = recent.flatMap((issue) => (issue.index === null ? [] : [{ key: issue.key, index: issue.index, title: issue.title }]))
   const titles = new Map(placed.map((issue) => [issue.key, issue.title]))
-  const markers = stackMarkers(placed).map((marker) => ({ ...marker, title: titles.get(marker.key) ?? '' }))
+  const days = dayMarkers(placed)
+  const markers = days.markers.map(({ count, ...marker }) => {
+    const title = titles.get(marker.key) ?? ''
+    return { ...marker, title: count > 1 ? `${title} 외 ${count - 1}건` : title }
+  })
   const rows: EventRow[] = recent.map((issue) => ({
     key: issue.key,
-    marker: issue.key,
+    marker: days.markerOf.get(issue.key) ?? issue.key,
     dateLabel: issueDayLabel(issue.date, today),
     title: issue.title,
     badge: null,
