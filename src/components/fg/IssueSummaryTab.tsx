@@ -21,7 +21,7 @@ import {
   summaryCaption,
   type IssueFlowModel,
 } from '@/lib/fg/issuePage'
-import type { IssueBook, IssueLink, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
+import { summaryPointItems, type IssueBook, type IssueLink, type IssuePoint, type IssueRecord, type IssueStock } from '@/lib/fg/issueRecords'
 import { connectedCount, representativeCaption, type IssueSubject, type LiveIssue } from '@/lib/fg/issueSubject'
 import { issuePath } from '@/lib/fg/paths'
 import { navState } from '@/lib/fg/stockDetail'
@@ -33,7 +33,24 @@ import type { IssueLinksState } from '@/lib/queries/useLinkedCompanies'
 import { cn } from '@/lib/utils'
 
 const NARROW = '(max-width: 767px)'
-const LIVE_GAPS_NOTE = '핵심 포인트·이어진 흐름·관계 그래프는 준비 중이에요'
+const LIVE_GAPS_NOTE = '이어진 흐름·관계 그래프는 준비 중이에요'
+
+function PointList({ points }: { points: readonly IssuePoint[] }) {
+  if (points.length === 0) return null
+  return (
+    <div className="fg-isum__points">
+      <h3 className="fg-isum__ptitle">핵심 포인트</h3>
+      <ul className="fg-isum__list">
+        {points.map((point) => (
+          <li key={point.label}>
+            <b>{point.label}</b>
+            <span>{point.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 function SummaryCard({ record }: { record: IssueRecord }) {
   const tabTarget = useIssueTabTarget()
@@ -47,19 +64,7 @@ function SummaryCard({ record }: { record: IssueRecord }) {
         요약
       </h2>
       <p className="fg-isum__text">{record.detail}</p>
-      {record.points.length > 0 && (
-        <div className="fg-isum__points">
-          <h3 className="fg-isum__ptitle">핵심 포인트</h3>
-          <ul className="fg-isum__list">
-            {record.points.map((point) => (
-              <li key={point.label}>
-                <b>{point.label}</b>
-                <span>{point.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <PointList points={record.points} />
       <Link {...tabTarget('articles')} className="fg-sdmore fg-isum__more">
         {`기사 ${record.articles}건 보기`}
         <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
@@ -102,6 +107,7 @@ function LiveSummaryCard({ issue, onOpenNews }: { issue: LiveIssue; onOpenNews: 
       ) : (
         <p className="fg-isum__empty">대표 기사에 아직 요약이 없어요</p>
       )}
+      <PointList points={summaryPointItems(issue.detail.summaryPoints)} />
       <div className="fg-isum__links">
         {repLink}
         <Link {...tabTarget('articles')} className="fg-sdmore">

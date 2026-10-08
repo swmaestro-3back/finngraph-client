@@ -936,7 +936,13 @@ export interface IssueListMeta {
 
 export type IssueSort = 'media' | 'recent'
 
+export interface SummaryPointRes {
+  kind: string
+  text: string
+}
+
 export interface IssueDetailRes extends IssueSummaryRes {
+  summaryPoints?: SummaryPointRes[]
   articles: IssueArticleRes[]
 }
 

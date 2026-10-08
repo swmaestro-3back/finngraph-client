@@ -1,3 +1,4 @@
+import type { SummaryPointRes } from '@/lib/apiTypes'
 import type { LinkedCompany } from '@/lib/fg/stockLinks'
 
 export interface IssueStock {
@@ -52,6 +53,22 @@ export interface IssueDaySeed {
 export interface IssuePoint {
   label: string
   text: string
+}
+
+const POINT_LABELS: Readonly<Record<string, string>> = {
+  CHANGE: '무엇이 바뀌었나요?',
+  AFFECTED: '어떤 영향이 있나요?',
+  CAUSE: '무엇이 원인인가요?',
+  SCALE: '얼마나 큰가요?',
+  RIPPLE: '어디로 이어지나요?',
+}
+
+export function summaryPointItems(points: readonly SummaryPointRes[] | undefined): IssuePoint[] {
+  return (points ?? []).flatMap((point) => {
+    const label = POINT_LABELS[point.kind]
+    const text = point.text.trim()
+    return label && text ? [{ label, text }] : []
+  })
 }
 
 export interface IssueLink {
