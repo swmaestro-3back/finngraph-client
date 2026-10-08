@@ -8,7 +8,7 @@ const full: GraphNode = {
   type: 'event',
   data: {
     keywords: ['로봇'],
-    memberCount: 3,
+    newsCount: 3,
     firstPublishedAt: '2026-09-01T09:12:00+09:00',
     lastPublishedAt: '2026-09-07T15:39:00+09:00',
     representativeNewsId: 4,
@@ -20,7 +20,7 @@ describe('graphEvent', () => {
   it('eventInfo는 없는 필드를 null·빈 배열로 채운다', () => {
     expect(eventInfo(bare)).toEqual({
       keywords: [],
-      memberCount: null,
+      newsCount: null,
       firstPublishedAt: null,
       lastPublishedAt: null,
       representativeNewsId: null,
@@ -43,7 +43,7 @@ describe('graphEvent', () => {
 
 describe('이벤트 상세', () => {
   const base = {
-    cluster_id: 9, title: null, keywords: [], member_count: 3, representative_news_id: 11,
+    cluster_id: 9, title: null, keywords: [], representative_news_id: 11,
     first_published_at: null, last_published_at: null, news_total: 3, companies: [],
   }
 

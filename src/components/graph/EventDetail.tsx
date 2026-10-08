@@ -48,7 +48,7 @@ export function EventDetail({
   const detail = useEventDetail(node.data.clusterId)
   const period = eventPeriod(info.firstPublishedAt, info.lastPublishedAt)
   const keywords = (detail.data?.keywords ?? info.keywords).slice(0, MAX_KEYWORDS)
-  const memberCount = detail.data?.member_count ?? info.memberCount
+  const newsCount = detail.data?.news_total ?? info.newsCount
 
   const articles = detail.data ? eventArticles(detail.data) : []
   const articlesPending = detail.loading && !detail.data
@@ -69,9 +69,9 @@ export function EventDetail({
 
   return (
     <>
-      {(memberCount != null || period) && (
+      {(newsCount != null || period) && (
         <div className="mb-1.5 flex flex-wrap items-center gap-x-2 font-mono text-caption text-muted-foreground">
-          {memberCount != null && <span>뉴스 {memberCount}건</span>}
+          {newsCount != null && <span>뉴스 {newsCount}건</span>}
           {period && <span>{period}</span>}
         </div>
       )}

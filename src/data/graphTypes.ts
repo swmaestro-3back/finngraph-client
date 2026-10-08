@@ -37,7 +37,8 @@ export interface GraphNode {
     /** 이벤트(뉴스 클러스터) 전용 — 제목은 label에 있다 */
     clusterId?: number;
     keywords?: string[];
-    memberCount?: number;
+    /** 클러스터 전체 기사 수 */
+    newsCount?: number;
     firstPublishedAt?: string;
     lastPublishedAt?: string;
     representativeNewsId?: number;

@@ -95,7 +95,7 @@ function toEventNode(e: KgEventNode): GraphNode {
     data: {
       clusterId: e.cluster_id ?? undefined,
       keywords: e.keywords,
-      memberCount: e.member_count ?? undefined,
+      newsCount: e.news_count ?? undefined,
       firstPublishedAt: e.first_published_at ?? undefined,
       lastPublishedAt: e.last_published_at ?? undefined,
       representativeNewsId: e.representative_news_id ?? undefined,

@@ -431,9 +431,9 @@ export function NodeDetail({
                       <p className="m-0 line-clamp-2 text-body leading-snug text-foreground">
                         {n.node.label}
                       </p>
-                      {n.node.data.memberCount != null && (
+                      {n.node.data.newsCount != null && (
                         <p className="m-0 mt-0.5 text-caption text-muted-foreground">
-                          뉴스 {n.node.data.memberCount}건
+                          뉴스 {n.node.data.newsCount}건
                         </p>
                       )}
                     </div>

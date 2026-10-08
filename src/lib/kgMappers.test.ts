@@ -30,7 +30,7 @@ function company(
 
 const EVENT: KgEventNode = {
   id: 'e1', cluster_id: 2, title: '로봇 액추에이터 수주 협의',
-  keywords: ['lg전자', '액추에이터', '로봇'], representative_news_id: 4, member_count: 3,
+  keywords: ['lg전자', '액추에이터', '로봇'], representative_news_id: 4, news_count: 40,
   first_published_at: '2026-09-07T09:12:00+09:00', last_published_at: '2026-09-07T15:39:00+09:00',
 }
 
@@ -91,7 +91,7 @@ describe('toCompanyOverviewGraph', () => {
     expect(event.data).toEqual({
       clusterId: 2,
       keywords: ['lg전자', '액추에이터', '로봇'],
-      memberCount: 3,
+      newsCount: 40,
       firstPublishedAt: '2026-09-07T09:12:00+09:00',
       lastPublishedAt: '2026-09-07T15:39:00+09:00',
       representativeNewsId: 4,

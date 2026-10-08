@@ -105,8 +105,8 @@ export interface KgEventNode {
   title: string | null
   keywords: string[]
   representative_news_id: number | null
-  /** 정제 후 남은 뉴스 건수 */
-  member_count: number | null
+  /** 클러스터 전체 기사 수 */
+  news_count: number | null
   first_published_at: string | null
   last_published_at: string | null
 }
@@ -209,7 +209,6 @@ export interface KgEventDetailRes {
   cluster_id: number
   title: string | null
   keywords: string[]
-  member_count: number | null
   representative_news_id: number | null
   first_published_at: string | null
   last_published_at: string | null

@@ -6,7 +6,7 @@ import type { KgEventDetailRes } from '@/lib/kgApiTypes'
 export interface EventInfo {
   keywords: string[]
   /** 뉴스 건수 */
-  memberCount: number | null
+  newsCount: number | null
   firstPublishedAt: string | null
   lastPublishedAt: string | null
   representativeNewsId: number | null
@@ -17,7 +17,7 @@ export function eventInfo(node: GraphNode): EventInfo {
   const d = node.data
   return {
     keywords: d.keywords ?? [],
-    memberCount: d.memberCount ?? null,
+    newsCount: d.newsCount ?? null,
     firstPublishedAt: d.firstPublishedAt ?? null,
     lastPublishedAt: d.lastPublishedAt ?? null,
     representativeNewsId: d.representativeNewsId ?? null,
@@ -40,7 +40,7 @@ export function eventPeriod(first: string | null, last: string | null): string {
 export function eventSubtitle(node: GraphNode): string {
   const info = eventInfo(node)
   const parts: string[] = []
-  if (info.memberCount != null) parts.push(`뉴스 ${info.memberCount}건`)
+  if (info.newsCount != null) parts.push(`뉴스 ${info.newsCount}건`)
   const period = eventPeriod(info.firstPublishedAt, info.lastPublishedAt)
   if (period) parts.push(period)
   return parts.length ? parts.join(' · ') : '이벤트'
