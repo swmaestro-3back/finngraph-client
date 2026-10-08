@@ -7,7 +7,7 @@ import { gapFromHigh, week52Position } from '@/lib/fg/week52'
 
 export type HubTab = 'issues' | 'stocks' | 'themes'
 
-export const DEFAULT_HUB_TAB: HubTab = 'stocks'
+export const DEFAULT_HUB_TAB: HubTab = 'issues'
 
 export const HUB_TABS: readonly { value: HubTab; label: string }[] = [
   { value: 'issues', label: '뜨는 이슈' },
