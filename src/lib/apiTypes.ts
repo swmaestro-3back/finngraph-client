@@ -156,6 +156,12 @@ export interface StockRowRes {
   themeName: string | null
 }
 
+export interface ThemeTickersRes {
+  query: string
+  themes: { id: number; name: string }[]
+  tickers: string[]
+}
+
 export interface StockThemeRes {
   id: number
   name: string
