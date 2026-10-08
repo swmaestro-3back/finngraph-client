@@ -24,7 +24,7 @@ import { stockIndexOf, useStocksCached } from '@/lib/queries/useStocksCached'
 import type { PriceBasis } from '@/lib/referenceDate'
 import { cn } from '@/lib/utils'
 
-const HOME_NOTE = '이슈 요약과 연결 정보는 AI가 인용된 기사·공시로 만든 참고 자료이며 투자 권유가 아니에요.'
+const HOME_NOTE = '이슈 요약과 연결 정보는 인용된 기사·공시로 만든 참고 자료이며 투자 권유가 아니에요.'
 
 const REDUCED = '(prefers-reduced-motion: reduce)'
 
@@ -164,7 +164,7 @@ export function HomeMovers({ market }: HomeMoversProps) {
           <h2 id="fg-movers-h" className="fg-hsec__title">
             많이 움직인 종목
           </h2>
-          <span className="fg-hsec__cap">왜 움직였는지 이슈 타임라인으로 이어져요</span>
+          <span className="fg-hsec__cap">주요 이슈 타임라인으로 이어져요</span>
         </div>
         <Link
           to={`${pathname}${hubSearch(search, 'stocks', null)}`}

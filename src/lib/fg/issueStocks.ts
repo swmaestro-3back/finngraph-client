@@ -205,10 +205,8 @@ export function issueLinkSummary(links: readonly IssueLink[], cards: readonly Ne
   return merge([...sourceParts(links, cards), { text: ` ${typeSentence(links)}`, strong: false }])
 }
 
-export function newsStocksCaption(kind: 'mock' | 'live', narrow: boolean): string {
-  const parts = [...(narrow ? [] : ['기사에 이름이 나온 종목이에요']), '많이 나온 순']
-  if (kind === 'mock') parts.push('뉴스 속 역할은 AI가 요약했어요')
-  return parts.join(' · ')
+export function newsStocksCaption(narrow: boolean): string {
+  return [...(narrow ? [] : ['기사에 이름이 나온 종목이에요']), '많이 나온 순'].join(' · ')
 }
 
 export function stockSheetTitle(name: string, count: number): string {

@@ -179,19 +179,16 @@ interface CaptionInput {
   autoSec: number | null
 }
 
-const AI_NOTE = '요약은 AI가 만들었어요'
-
 export function hubCaption(tab: HubTab, { day, autoSec }: CaptionInput): string {
   if (tab === 'stocks') {
-    return `오늘 등락률이 큰 종목을 펼치면, 그 종목이 나온 이슈를 타임라인으로 이어 왜 움직였는지 보여 줘요 · 시가총액 상위 ${MOVER_UNIVERSE}종목 기준 · ${AI_NOTE}`
+    return `오늘 등락률이 큰 종목을 펼치면, 그 종목이 나온 주요 이슈를 타임라인으로 이어 보여 줘요 · 시가총액 상위 ${MOVER_UNIVERSE}종목 기준`
   }
   if (tab === 'themes') {
-    return `오늘 많이 움직인 테마를 펼치면, 테마 종목이 나온 이슈를 타임라인으로 이어 보여 줘요 · ${AI_NOTE}`
+    return `오늘 많이 움직인 테마를 펼치면, 테마 종목이 나온 이슈를 타임라인으로 이어 보여 줘요`
   }
   const parts = ['여러 매체가 다룬 기사를 이슈로 묶고, 이어지는 이슈를 타임라인으로 보여 줘요']
   if (day) parts.push(`${day} 보도한 매체가 많은 순`)
   if (autoSec !== null) parts.push(`${autoSec}초마다 다음 이슈로 넘어가고, 마우스를 올리면 멈춰요`)
-  parts.push(AI_NOTE)
   return parts.join(' · ')
 }
 

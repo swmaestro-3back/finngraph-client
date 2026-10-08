@@ -136,7 +136,7 @@ export function mockTimeline(record: IssueRecord, book: IssueBook, order: Timeli
   const heading = '이슈 타임라인'
   return {
     heading,
-    summaryLabel: 'AI 요약',
+    summaryLabel: '요약',
     listLabel: `${heading}, ${orderLabel(order)}`,
     subtitle: single
       ? SINGLE_FLOW

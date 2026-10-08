@@ -120,7 +120,7 @@ export function IssueStockSheet({
           </div>
           {card.role !== null ? (
             <div className="fg-istk__role">
-              <span className="fg-esheet__label">뉴스 속 역할 · AI가 요약했어요</span>
+              <span className="fg-esheet__label">뉴스 속 역할</span>
               <p>{card.role}</p>
             </div>
           ) : (

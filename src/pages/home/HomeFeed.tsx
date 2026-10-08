@@ -43,7 +43,6 @@ import { useIssueQuotes } from '@/lib/queries/useIssue'
 
 const NARROW = '(max-width: 767px)'
 const CAPTION = '같은 소식을 다룬 기사를 하나로 묶었어요'
-const AI_NOTE = '요약은 AI가 만들었어요'
 
 type Quotes = ReadonlyMap<string, IssueQuote> | null
 
@@ -268,7 +267,6 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
     ))
   }
 
-  const caption = narrow ? CAPTION : `${CAPTION} · ${AI_NOTE}`
 
   return (
     <section className="fg-section fg-hsec fg-hfeed" aria-labelledby="fg-feed-h">
@@ -277,7 +275,7 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
           <h2 id="fg-feed-h" className="fg-hsec__title">
             최신 이슈
           </h2>
-          <span className="fg-hsec__cap">{caption}</span>
+          <span className="fg-hsec__cap">{CAPTION}</span>
         </div>
         <Segment label="이슈 정렬" options={FEED_SORTS} value={sort} onChange={onSort} className="fg-hfeed__sort" />
       </div>

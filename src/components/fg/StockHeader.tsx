@@ -13,7 +13,7 @@ import type { StockDetailRes } from '@/lib/apiTypes'
 import { dartFilingUrl, describeSource, profileRows } from '@/lib/companyOverview'
 import { marketLabel } from '@/lib/fg/format'
 import { themePath } from '@/lib/fg/paths'
-import { companySummary, isAiSummary, type StockTab } from '@/lib/fg/stockDetail'
+import { companySummary, type StockTab } from '@/lib/fg/stockDetail'
 import { WEEK52_BASIS, type StockStatus, type Week52Summary } from '@/lib/fg/stockQuote'
 import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
@@ -42,7 +42,6 @@ function CompanyAbout({ stock }: { stock: StockDetailRes }) {
   return (
     <>
       <p className="fg-sdh__sum">
-        {summary && isAiSummary(stock.descriptionSource) && <Badge>AI 요약</Badge>}
         {summary && <span className="fg-sdh__lead">{summary.lead}</span>}
         {expandable && (
           <button

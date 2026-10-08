@@ -149,14 +149,13 @@ export function homepageUrl(raw: string | null): string | null {
 }
 
 export interface IpoIntroSource {
-  ai: boolean
   label: string | null
   linkLabel: string
 }
 
 export function ipoIntroSource(source: string | null): IpoIntroSource {
-  if (source === 'DART_LLM') return { ai: true, label: '증권신고서 「사업의 내용」 요약', linkLabel: '증권신고서 원문' }
-  return { ai: false, label: describeSource(source), linkLabel: '원문 공시' }
+  if (source === 'DART_LLM') return { label: '증권신고서 「사업의 내용」 요약', linkLabel: '증권신고서 원문' }
+  return { label: describeSource(source), linkLabel: '원문 공시' }
 }
 
 export type AfterListingState = 'show' | 'pending' | 'hidden'

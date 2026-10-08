@@ -152,7 +152,7 @@ function StockBody({ stock, today, from, pane }: StockBodyProps) {
     <>
       <div className="fg-hubsec">
         <span className="fg-hubsec__title">
-          {`${subject} 움직인 이유`}
+          {`${stock.name}의 주요 이슈`}
           {timeline.status === 'ready' && timeline.mock && <MockBadge />}
         </span>
         <span className="fg-hubsec__cap">{`${subject} 나온 이슈를 ${STOCK_ISSUE_ORDER}으로 이었어요`}</span>

@@ -10,7 +10,7 @@ import { formatPriceWon, toneClass } from '@/lib/fg/format'
 import { issuePath } from '@/lib/fg/paths'
 import { issueBadge, reportedLabel, shortDate, tradingDayLabel, type PlacedIssue } from '@/lib/fg/stockIssues'
 
-const SHEET_NOTE = '요약은 AI가 묶인 기사로 만든 참고 자료이며 투자 권유가 아니에요.'
+const SHEET_NOTE = '요약은 묶인 기사로 만든 참고 자료이며 투자 권유가 아니에요.'
 
 interface IssuePreviewSheetProps {
   stockName: string
@@ -63,7 +63,7 @@ export function IssuePreviewSheet({
         <>
           <span className="fg-isheet__when">{reportedLabel(issue, refYear)}</span>
           <div className="fg-isheet__sum">
-            <Badge strong>AI 요약</Badge>
+            <Badge strong>요약</Badge>
             <p>{issue.summary}</p>
           </div>
           {issue.change !== null && (

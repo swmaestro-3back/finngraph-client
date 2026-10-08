@@ -164,7 +164,7 @@ function FlowDetail({ flow, stockName, candles, today, onOpenIssue }: FlowDetail
                   {issue.title}
                 </button>
                 <p className="fg-vt__sum">
-                  <Badge>AI 요약</Badge>
+                  <Badge>요약</Badge>
                   {issue.summary}
                 </p>
                 {issue.with.length > 0 && (

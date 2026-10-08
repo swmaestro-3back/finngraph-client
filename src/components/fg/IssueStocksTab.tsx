@@ -361,7 +361,7 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
           <h2 id="fg-ics-title" className="fg-section__title">
             뉴스에 나온 종목 <span className="fg-ist__count fg-num">{cards.length}</span>
           </h2>
-          <p className="fg-section__sub">{newsStocksCaption(issue.kind, narrow)}</p>
+          <p className="fg-section__sub">{newsStocksCaption(narrow)}</p>
         </div>
         {cards.length > 0 ? (
           <ul className="fg-ics__grid" aria-label="뉴스에 나온 종목">

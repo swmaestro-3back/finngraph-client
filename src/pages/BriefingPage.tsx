@@ -11,7 +11,7 @@ import { DataNotice } from '@/components/layout/DataNotice'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { Button } from '@/components/ui/button'
-import { AI_NOTICE, adjacentDates, lockedTeaser } from '@/lib/briefing'
+import { SOURCE_NOTICE, adjacentDates, lockedTeaser } from '@/lib/briefing'
 import { useBriefing, useBriefingDates } from '@/lib/queries/useBriefing'
 
 function SectionTitle({ id, children }: { id: string; children: React.ReactNode }) {
@@ -138,7 +138,7 @@ export default function BriefingPage() {
       )}
 
       <DataNotice className="mt-5" />
-      <p className="mt-1 text-caption text-muted-foreground break-keep [text-wrap:pretty]">{AI_NOTICE}</p>
+      <p className="mt-1 text-caption text-muted-foreground break-keep [text-wrap:pretty]">{SOURCE_NOTICE}</p>
 
       <NewsDetailModal newsId={openNewsId} onOpenChange={(open) => !open && setOpenNewsId(null)} />
     </div>
