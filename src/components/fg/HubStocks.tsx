@@ -1,6 +1,6 @@
 import { useCallback, useMemo, type ReactNode } from 'react'
 import { Badge } from '@/components/fg/Badge'
-import { Button, ButtonLink } from '@/components/fg/Button'
+import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { GapValue, MockBadge } from '@/components/fg/Gap'
 import { MemberGate } from '@/components/fg/MemberGate'
@@ -242,7 +242,7 @@ function StockPane({ stock, summary, retry, baseDate, basisShort, today, from }:
             change={company.change}
           >
             <span className="fg-hq__foot">
-              <span className="fg-qrow__rel">{`AI 추론 · ${company.relation}`}</span>
+              <span className="fg-qrow__rel">{company.relation}</span>
               {hasQuote(company) && (
                 <span className="fg-hq__gap fg-num">
                   {company.newHigh ? (
@@ -286,10 +286,10 @@ function StockPane({ stock, summary, retry, baseDate, basisShort, today, from }:
         {linkedBody}
       </div>
       <div className="fg-hubp__acts">
-        <ButtonLink to={stockPath(stock.ticker)} state={state}>{`${stock.name} 종목 보기`}</ButtonLink>
-        <ButtonLink to={`${stockPath(stock.ticker)}?tab=news`} state={state}>
+        <HubMore to={stockPath(stock.ticker)} state={state}>{`${stock.name} 종목 보기`}</HubMore>
+        <HubMore to={`${stockPath(stock.ticker)}?tab=news`} state={state}>
           타임라인 전체 보기
-        </ButtonLink>
+        </HubMore>
       </div>
     </>
   )

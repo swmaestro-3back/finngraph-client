@@ -926,6 +926,8 @@ export interface IssueSummaryRes {
   summary: string | null
   representativeNewsId: number
   companies: IssueCompanyRes[]
+  kind?: 'event' | 'market_reaction' | null
+  timelinePosition?: number
 }
 
 export interface IssueListMeta {

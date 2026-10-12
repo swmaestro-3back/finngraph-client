@@ -1,5 +1,5 @@
 import { useCallback, useMemo, type ReactNode } from 'react'
-import { Button, ButtonLink } from '@/components/fg/Button'
+import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { MockBadge } from '@/components/fg/Gap'
 import { ChangeText } from '@/components/fg/PriceChange'
@@ -212,11 +212,11 @@ function ThemePane({ theme, stocks, failed, onRetry, quoteOf, basisShort, from }
       </div>
       {list}
       <div className="fg-hubp__acts">
-        <ButtonLink to={themePath(theme.id)} state={state}>{`테마 종목 ${theme.stockCount}개 보기`}</ButtonLink>
+        <HubMore to={themePath(theme.id)} state={state}>{`테마 종목 ${theme.stockCount}개 보기`}</HubMore>
         {split && (
-          <ButtonLink to={issueTabPath(split.current.id, 'timeline')} state={state}>
+          <HubMore to={issueTabPath(split.current.id, 'timeline')} state={state}>
             타임라인 전체 보기
-          </ButtonLink>
+          </HubMore>
         )}
       </div>
     </>

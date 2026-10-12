@@ -45,16 +45,29 @@ interface HubFrameProps {
   children: ReactNode
 }
 
+const HUB_LABEL = '지금 뜨는 이슈'
+
 export function HubFrame({ heading, tab, tabs, basis, caption, layout, auto = null, children }: HubFrameProps) {
   const mobile = layout === 'mobile'
   return (
     <section className={cn('fg-hubc', mobile && 'fg-hubc--mobile')} aria-labelledby="fg-hub-h">
       <div className="fg-hubc__head">
-        <h1 id="fg-hub-h" className="fg-sr">
-          {heading}
-        </h1>
         <div className="fg-hubc__bar">
-          <HeadingTabs label="허브 보기" options={tabs} current={tab} className="fg-hubc__tabs" />
+          <div className="fg-hubc__main">
+            {heading === HUB_LABEL ? (
+              <h1 id="fg-hub-h" className="fg-hubc__label">
+                {heading}
+              </h1>
+            ) : (
+              <>
+                <p className="fg-hubc__label">{HUB_LABEL}</p>
+                <h1 id="fg-hub-h" className="fg-sr">
+                  {heading}
+                </h1>
+              </>
+            )}
+            <HeadingTabs label="허브 보기" options={tabs} current={tab} className="fg-hubc__tabs" />
+          </div>
           {!mobile && (basis || auto) && (
             <div className="fg-hubc__side">
               {basis && <span className="fg-hubc__basis fg-num">{basis}</span>}
@@ -78,7 +91,7 @@ export function AutoButton({ running, onToggle }: AutoButtonProps) {
   const Icon = running ? Pause : Play
   return (
     <button type="button" className="fg-hubc__auto" onClick={onToggle}>
-      <Icon size={14} strokeWidth={1.75} aria-hidden="true" />
+      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
       {running ? '자동 넘김 멈추기' : '자동 넘김 켜기'}
     </button>
   )

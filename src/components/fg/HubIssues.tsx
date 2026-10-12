@@ -2,9 +2,8 @@ import { ChevronRight } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
-import { Button, ButtonLink } from '@/components/fg/Button'
+import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
-import { GapValue, MockBadge } from '@/components/fg/Gap'
 import { MemberGate } from '@/components/fg/MemberGate'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { QuoteRetryNote, RetryText } from '@/components/fg/RetryText'
@@ -39,6 +38,7 @@ import {
   nextAuto,
   panelStocks,
   quoteExtOf,
+  storyExtra,
   toggleAuto,
   type AutoState,
   type HubIssueExtra,
@@ -56,8 +56,7 @@ import { useHubSelection, usePageHidden, useSeen } from '@/lib/fg/useHub'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { useMemberGate } from '@/lib/memberGate'
 import { fromState } from '@/lib/navigation'
-import { useHubFixture } from '@/lib/queries/useHubSlots'
-import { isIssueApiId, useIssueDetail, useIssueList, useIssueQuotes, type IssueListQuery } from '@/lib/queries/useIssue'
+import { isIssueApiId, useIssueDetail, useIssueList, useIssueQuotes, useIssueTimeline, type IssueListQuery } from '@/lib/queries/useIssue'
 import { useIssueLinks, type IssueLinksState } from '@/lib/queries/useLinkedCompanies'
 import { cn } from '@/lib/utils'
 
@@ -99,9 +98,9 @@ function IssueHead({ item, extra, quotes }: { item: HubIssueItem; extra: HubIssu
         <span className="fg-acc__title">{item.title}</span>
         <span className="fg-hh__meta">
           {extra ? (
-            <GapValue gap="issue-timeline" mock={flowLabels(extra.flow).meta} />
+            <span className="fg-num">{flowLabels(extra.flow).meta}</span>
           ) : (
-            <span className="fg-num">{`기사 ${item.articles}건`}</span>
+            <span className="fg-num">{item.position > 1 ? `이슈 ${item.position}개째` : `기사 ${item.articles}건`}</span>
           )}
           {lead && (
             <span className="fg-hh__lead">
@@ -130,7 +129,6 @@ function FlowRow({ extra }: { extra: HubIssueExtra }) {
     <span className="fg-hubflow">
       <Badge tone="issue">{labels.badge}</Badge>
       <span className="fg-hubflow__since">{labels.since}</span>
-      <MockBadge />
     </span>
   )
 }
@@ -145,7 +143,7 @@ interface IssueBodyProps {
 function IssueBody({ item, extra, today, pane }: IssueBodyProps) {
   return (
     <>
-      {extra && <FlowRow extra={extra} />}
+      {extra && extra.flow.count > 1 && <FlowRow extra={extra} />}
       <HubTimeline label="이슈 타임라인, 최신순" today={today} current={item} past={pastOf(extra, item.day)} showTitle={false} />
       <HubMore to={issueTabPath(item.id, 'timeline')}>타임라인 전체 보기</HubMore>
       {pane && <HubInline>{pane}</HubInline>}
@@ -240,7 +238,7 @@ function IssuePane({ item, stocks, total, linked, lookup, basisShort, from, onRe
     <>
       <div className="fg-hubp__head">
         <span className="fg-hubp__title">이 이슈와 연결된 종목</span>
-        <span className="fg-hubp__cap">{basisShort ? `${item.title} · ${basisShort}` : item.title}</span>
+        <span className="fg-hubp__cap fg-hubp__topic">{basisShort ? `${item.title} · ${basisShort}` : item.title}</span>
       </div>
       <div className="fg-hubp__news">
         <span className="fg-hubp__label fg-num">
@@ -295,10 +293,7 @@ function IssuePane({ item, stocks, total, linked, lookup, basisShort, from, onRe
       </div>
       {onRetryQuotes && stocks.length > 0 && <QuoteRetryNote onRetry={onRetryQuotes} />}
       <InferredBlock linked={linked} to={all} />
-      <ButtonLink to={rep?.ticker ? `/graph/${rep.ticker}` : '/graph'} className="fg-hubp__go">
-        관계 탐색에서 보기
-        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
-      </ButtonLink>
+      <HubMore to={rep?.ticker ? `/graph/${rep.ticker}` : '/graph'}>관계 탐색에서 보기</HubMore>
     </>
   )
 }
@@ -309,28 +304,27 @@ interface MobileProps {
   stocks: readonly IssueStock[]
   total: number
   linked: IssueLinksState
-  extraOf: ((index: number) => HubIssueExtra) | null
+  extra: HubIssueExtra | null
   quotes: Quotes
   lookup: QuoteLookup
   today: string
   from: string
 }
 
-function IssuesMobile({ items, index, stocks, total, linked, extraOf, quotes, lookup, today, from }: MobileProps) {
+function IssuesMobile({ items, index, stocks, total, linked, extra, quotes, lookup, today, from }: MobileProps) {
   const { locked, pending, promptLogin } = useMemberGate()
   const item = items[index]
-  const extra = extraOf ? extraOf(index) : null
   const links = linked.links && linked.links.length > 0 ? linked.links : null
   const all = issueTabPath(item.id, 'stocks')
   const state = fromState(from)
   const cards = stocks.filter((stock) => stock.ticker).slice(0, links ? 1 : 5)
-  const others = items.flatMap((other, i) => (i === index ? [] : [{ other, i }]))
+  const others = items.filter((_, i) => i !== index)
   const allLabel = links ? `뉴스 종목 ${total} · 이런 기업 ${links.length}` : `뉴스 종목 ${total}`
   return (
     <div className="fg-hubm">
       <article className="fg-hubm__card" aria-label="선택한 이슈 타임라인">
         <div className="fg-hubm__top">
-          {extra && <FlowRow extra={extra} />}
+          {extra && extra.flow.count > 1 && <FlowRow extra={extra} />}
           <span className="fg-cov fg-hubm__cov">
             <span className="fg-cov__bar" aria-hidden="true">
               <span className="fg-cov__fill" style={{ width: `${item.pct}%` }} />
@@ -434,10 +428,9 @@ function IssuesMobile({ items, index, stocks, total, linked, extraOf, quotes, lo
         <div className="fg-hubm__others">
           <span className="fg-hubm__label">다른 뜨는 이슈</span>
           <ul className="fg-hubm__list">
-            {others.map(({ other, i }) => {
+            {others.map((other) => {
               const lead = other.companies[0] ?? null
               const change = lead ? (quotes?.get(lead.ticker)?.change ?? null) : null
-              const otherExtra = extraOf ? extraOf(i) : null
               return (
                 <li key={other.id}>
                   <Link to={issuePath(other.id)} className="fg-hubm__row">
@@ -445,7 +438,7 @@ function IssuesMobile({ items, index, stocks, total, linked, extraOf, quotes, lo
                       <span className="fg-hubm__rowtitle">{other.title}</span>
                       <span className="fg-hubm__rowmeta fg-num">
                         <b>{`${dayWord(other.day, today)} ${other.media}개 매체`}</b>
-                        {otherExtra && <GapValue gap="issue-timeline" mock={flowLabels(otherExtra.flow).count} />}
+                        {other.position > 1 && <span>{`이슈 ${other.position}개`}</span>}
                         {lead && (
                           <span className="fg-hh__lead">
                             <span className="fg-lg fg-lg--s">
@@ -513,8 +506,11 @@ export function HubIssues({ layout, tabs, basis, basisShort, market, pick, onPic
     }),
     [quotes, baseDate],
   )
-  const mock = useHubFixture('issue-timeline')
-  const extraOf = mock ? mock.issueExtra : null
+  const story = useIssueTimeline(selectedItem?.id ?? null)
+  const extra = useMemo(
+    () => (selectedItem && story.data && String(story.data.issueId) === selectedItem.id ? storyExtra(story.data, selectedItem) : null),
+    [selectedItem, story.data],
+  )
   const detailCompanies =
     selectedItem !== null && detail.data !== null && String(detail.data.id) === selectedItem.id ? detail.data.companies : null
   const listCompanies = selectedItem?.companies ?? null
@@ -586,7 +582,7 @@ export function HubIssues({ layout, tabs, basis, basisShort, market, pick, onPic
         stocks={stocks}
         total={total}
         linked={linked}
-        extraOf={extraOf}
+        extra={extra}
         quotes={quotes}
         lookup={lookup}
         today={today}
@@ -613,15 +609,15 @@ export function HubIssues({ layout, tabs, basis, basisShort, market, pick, onPic
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         onFocus={pauseOnFocus}
-        items={items.map((item, index) => {
+        items={items.map((item) => {
           const open = item.id === selected
-          const extra = extraOf ? extraOf(index) : null
+          const own = open ? extra : null
           return (
             <HubItem
               key={item.id}
               open={open}
               bodyId={`fg-hub-issue-${item.id}`}
-              head={<IssueHead item={item} extra={extra} quotes={quotes} />}
+              head={<IssueHead item={item} extra={own} quotes={quotes} />}
               onPick={() => pickItem(item.id)}
               progress={
                 open && autoOn ? (
@@ -630,7 +626,7 @@ export function HubIssues({ layout, tabs, basis, basisShort, market, pick, onPic
               }
             >
               {seen.has(item.id) && (
-                <IssueBody item={item} extra={extra} today={today} pane={!wide && open ? pane : null} />
+                <IssueBody item={item} extra={own} today={today} pane={!wide && open ? pane : null} />
               )}
             </HubItem>
           )
