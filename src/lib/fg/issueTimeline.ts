@@ -1,7 +1,9 @@
+import type { IssueTimelineNodeRes, IssueTimelineRes } from '@/lib/apiTypes'
 import { chainRecords, mediaTrend, monthDay, SINGLE_FLOW, windowStart } from '@/lib/fg/issuePage'
 import type { IssueArticleItem, IssueBook, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
 import { dayWord, type LiveIssue } from '@/lib/fg/issueSubject'
 import { shortDate } from '@/lib/fg/stockIssues'
+import { kstDayTime } from '@/lib/fg/themeNews'
 
 export type TimelineOrder = 'new' | 'old'
 
@@ -12,6 +14,7 @@ export const TIMELINE_ORDERS: readonly { value: TimelineOrder; label: string }[]
 
 export const TIMELINE_LIMIT = 20
 export const FREQUENT_LIMIT = 5
+export const FOLD_MIN = 6
 const STOCKS_SHOWN = 3
 const DAY_MS = 86_400_000
 
@@ -33,6 +36,7 @@ export interface TimelineNode {
   summary: string | null
   stocks: string | null
   newsId: string | null
+  minor: boolean
 }
 
 export interface GlanceStat {
@@ -128,6 +132,7 @@ export function mockTimeline(record: IssueRecord, book: IssueBook, order: Timeli
       summary: now ? leadSentences(r.detail, 2) : r.summary,
       stocks: stocksLine(r.stocks.map((s) => s.name)),
       newsId: null,
+      minor: false,
     }
   })
   const first = chain[0]
@@ -216,9 +221,16 @@ function liveSubtitle(sorted: readonly IssueArticleItem[], subject: LiveIssue): 
   return `${when} 처음 보도된 뒤 ${span} 동안 기사 ${n}건이 이어졌어요. ${media}`
 }
 
+export function keyArticles(sorted: readonly IssueArticleItem[], representative: string | null): ReadonlySet<string> | null {
+  if (sorted.length < FOLD_MIN) return null
+  const keys = [sorted[0]?.id, representative, sorted[sorted.length - 1]?.id]
+  return new Set(keys.filter((key): key is string => key !== null && key !== undefined))
+}
+
 export function liveTimeline(subject: LiveIssue, order: TimelineOrder): TimelineModel {
   const sorted = [...subject.articles].sort(byPublished)
   const rep = subject.representative?.id ?? null
+  const keys = keyArticles(sorted, rep)
   const nodes = sorted.map((article, i): TimelineNode => {
     const now = article.id === rep
     let badge = i === 0 ? '처음 보도' : `${i + 1}번째 보도`
@@ -239,6 +251,7 @@ export function liveTimeline(subject: LiveIssue, order: TimelineOrder): Timeline
       summary: article.summary,
       stocks: null,
       newsId: article.id,
+      minor: keys !== null && !keys.has(article.id),
     }
   })
   const dated = sorted.filter((a) => minuteOf(a) !== null)
@@ -262,5 +275,92 @@ export function liveTimeline(subject: LiveIssue, order: TimelineOrder): Timeline
     frequentNote: `기사 ${sorted.length}건 중 몇 건에 나왔는지 · 오늘 등락`,
     frequent: liveFrequent(subject),
     footnote: '기사 제목을 누르면 기사 분석을 보여 드려요 · 원문은 각 매체 사이트에서 열려요',
+  }
+}
+
+function nodeDay(node: IssueTimelineNodeRes): string | null {
+  if (node.date) return node.date
+  const at = node.firstPublishedAt ?? node.lastPublishedAt
+  return at ? (kstDayTime(at)?.day ?? null) : null
+}
+
+function lastDay(node: IssueTimelineNodeRes): string | null {
+  const at = node.lastPublishedAt ?? node.firstPublishedAt
+  return at ? (kstDayTime(at)?.day ?? null) : nodeDay(node)
+}
+
+function nodeMeta(node: IssueTimelineNodeRes): string {
+  const from = nodeDay(node)
+  const to = lastDay(node)
+  const span = from && to && from !== to ? `${shortDate(from)}~${shortDate(to)}` : null
+  const merged = node.mergedIssueIds.length > 1 ? `같은 사건 이슈 ${node.mergedIssueIds.length}개 합침` : null
+  return [span, merged].filter(Boolean).join(' · ')
+}
+
+export function isStory(story: IssueTimelineRes | null): story is IssueTimelineRes {
+  if (story === null) return false
+  const withCurrent = story.nodes.some((node) => node.current) ? story.nodes.length : story.nodes.length + 1
+  return withCurrent > 1
+}
+
+function currentNode(subject: LiveIssue): IssueTimelineNodeRes {
+  const first = subject.detail.firstPublishedAt
+  return {
+    issueId: subject.detail.id,
+    title: subject.title,
+    summary: subject.detail.summary,
+    date: first ? (kstDayTime(first)?.day ?? null) : null,
+    firstPublishedAt: first,
+    lastPublishedAt: subject.detail.lastPublishedAt,
+    current: true,
+    mergedIssueIds: [subject.detail.id],
+  }
+}
+
+export function storyTimeline(subject: LiveIssue, story: IssueTimelineRes, order: TimelineOrder): TimelineModel {
+  const latestFirst = story.nodes.some((node) => node.current) ? story.nodes : [currentNode(subject), ...story.nodes]
+  const chain = [...latestFirst].reverse()
+  const currentStocks = stocksLine(subject.stocks.map((stock) => stock.name))
+  const nodes = chain.map((node, i): TimelineNode => {
+    const day = nodeDay(node)
+    return {
+      key: String(node.issueId),
+      date: day ? (day === subject.today ? `오늘 · ${shortDate(day)}` : shortDate(day)) : '날짜 미상',
+      badge: node.current ? '지금 보는 이슈' : `타임라인 ${i + 1}번째`,
+      meta: nodeMeta(node),
+      title: node.title.trim() || '제목 없는 이슈',
+      now: node.current,
+      target: node.current ? null : { kind: 'issue', id: String(node.issueId) },
+      cov: null,
+      summary: node.summary?.trim() || null,
+      stocks: node.current ? currentStocks : null,
+      newsId: null,
+      minor: false,
+    }
+  })
+  const firstDay = nodeDay(chain[0])
+  const latestDay = lastDay(chain[chain.length - 1])
+  const days = firstDay && latestDay ? daysBetween(firstDay, latestDay) : null
+  const heading = '이슈 타임라인'
+  const opening = firstDay ? `${monthDay(firstDay)} 처음 보도된 뒤 ` : ''
+  const span = days === null ? '' : days === 0 ? '하루 동안 ' : `${days}일 동안 `
+  return {
+    heading,
+    summaryLabel: '요약',
+    listLabel: `${heading}, ${orderLabel(order)}`,
+    subtitle: `${opening}${span}이슈 ${chain.length}개로 이어졌어요.`,
+    nodes: ordered(nodes, order),
+    glanceTitle: '흐름 한눈에',
+    glance: [
+      { label: '처음 보도', value: firstDay ? monthDay(firstDay) : '—' },
+      { label: '이어진 기간', value: days === null ? '—' : days === 0 ? '하루' : `${days}일` },
+      { label: '이슈', value: `${chain.length}개` },
+      { label: '최근 보도', value: latestDay ? monthDay(latestDay) : '—' },
+    ],
+    glanceNote: '지금 이슈에서 앞선 이슈를 따라 거슬러 올라간 흐름이에요',
+    frequentTitle: '이 이슈에 자주 나온 종목',
+    frequentNote: `기사 ${subject.articles.length}건 중 몇 건에 나왔는지 · 오늘 등락`,
+    frequent: liveFrequent(subject),
+    footnote: '이전 이슈 제목을 누르면 그 이슈 페이지로 가요 · 기사 하나하나는 기사 탭에서 볼 수 있어요',
   }
 }

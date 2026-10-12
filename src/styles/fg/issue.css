@@ -566,6 +566,36 @@
 .fg-itl__toggle[aria-expanded='true'] svg {
   transform: rotate(90deg);
 }
+.fg-itl__dot--fold {
+  width: 8px;
+  height: 8px;
+  margin: var(--space-3) var(--space-1) 0;
+  border: 0;
+  background: var(--border-default);
+}
+.fg-itl__foldbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--space-1);
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: var(--bg-subtle);
+  font: 600 14px/20px var(--font-sans);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.fg-itl__foldbtn::before {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+.fg-itl__foldbtn[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
 .fg-itl__cap,
 .fg-itl__note {
   margin: 0;
@@ -890,6 +920,9 @@ a.fg-iar__main {
   }
   .fg-itl__toggle {
     height: 44px;
+  }
+  .fg-itl__foldbtn::before {
+    inset: -6px 0;
   }
   .fg-itl__toggle::before {
     inset: 0 -8px;

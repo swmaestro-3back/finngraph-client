@@ -946,6 +946,22 @@ export interface IssueDetailRes extends IssueSummaryRes {
   articles: IssueArticleRes[]
 }
 
+export interface IssueTimelineNodeRes {
+  issueId: number
+  title: string
+  summary: string | null
+  date: string | null
+  firstPublishedAt: string | null
+  lastPublishedAt: string | null
+  current: boolean
+  mergedIssueIds: number[]
+}
+
+export interface IssueTimelineRes {
+  issueId: number
+  nodes: IssueTimelineNodeRes[]
+}
+
 export interface StockIssueRes extends IssueSummaryRes {
   mentionCount: number
 }

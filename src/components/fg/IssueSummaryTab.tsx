@@ -33,7 +33,7 @@ import type { IssueLinksState } from '@/lib/queries/useLinkedCompanies'
 import { cn } from '@/lib/utils'
 
 const NARROW = '(max-width: 767px)'
-const LIVE_GAPS_NOTE = '이어진 흐름·관계 그래프는 준비 중이에요'
+const LIVE_GAPS_NOTE = '관계 그래프는 준비 중이에요'
 
 function PointList({ points }: { points: readonly IssuePoint[] }) {
   if (points.length === 0) return null
