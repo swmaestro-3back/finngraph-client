@@ -85,7 +85,7 @@ describe('canvasFor', () => {
     expect(canvasFor('/stocks')).toBe('page')
     expect(canvasFor('/stocks/005930')).toBe('page')
     expect(canvasFor('/stock/005930')).toBe('surface')
-    expect(canvasFor('/')).toBe('page')
+    expect(canvasFor('/')).toBe('surface')
     expect(canvasFor('/briefing')).toBe('surface')
     expect(canvasFor('/issuesboard')).toBe('surface')
   })
