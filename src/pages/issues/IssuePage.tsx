@@ -125,7 +125,15 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
     let panel: ReactNode
     const onRetryQuotes = subject.kind === 'live' ? retryQuotes : null
     const issueLinks = subject.kind === 'live' ? linked : null
-    if (tab === 'timeline') panel = <IssueTimelineTab issue={subject} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
+    if (tab === 'timeline')
+      panel = (
+        <IssueTimelineTab
+          issue={subject}
+          quotes={subject.kind === 'live' ? quotes : null}
+          onOpenNews={openNews}
+          onRetryQuotes={onRetryQuotes}
+        />
+      )
     else if (tab === 'articles') panel = <IssueArticlesTab issue={subject} onOpenNews={openNews} />
     else if (tab === 'stocks')
       panel = <IssueStocksTab issue={subject} linked={issueLinks} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />

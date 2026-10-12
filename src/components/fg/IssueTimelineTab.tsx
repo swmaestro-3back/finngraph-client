@@ -1,23 +1,23 @@
-import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
+import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
-import { ButtonLink } from '@/components/fg/Button'
+import { Button, ButtonLink } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { QuoteRetryNote } from '@/components/fg/RetryText'
 import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
-import { connectedCount, type IssueSubject } from '@/lib/fg/issueSubject'
+import { StateBlock } from '@/components/fg/StateBlock'
+import { connectedCount, type IssueQuote, type IssueSubject } from '@/lib/fg/issueSubject'
 import {
-  isStory,
-  liveTimeline,
   mockTimeline,
   stocksLine,
   storyTimeline,
   TIMELINE_ORDERS,
   type FrequentStock,
+  type TimelineModel,
   type TimelineNode,
   type TimelineOrder,
 } from '@/lib/fg/issueTimeline'
@@ -143,20 +143,6 @@ function FrequentRow({ stock }: { stock: FrequentStock }) {
   )
 }
 
-function FoldRow({ hidden, onOpen }: { hidden: number; onOpen: () => void }) {
-  return (
-    <li className="fg-itl__node fg-itl__fold">
-      <span className="fg-itl__dot fg-itl__dot--fold" aria-hidden="true" />
-      <div className="fg-itl__body">
-        <button type="button" className="fg-itl__foldbtn" aria-expanded={false} onClick={onOpen}>
-          <span>{`기사 ${hidden}건 더 보기`}</span>
-          <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
-        </button>
-      </div>
-    </li>
-  )
-}
-
 function TimelineSkeleton() {
   return (
     <div className="fg-grid fg-itl" aria-hidden="true">
@@ -172,27 +158,39 @@ function TimelineSkeleton() {
 
 interface IssueTimelineTabProps {
   issue: IssueSubject
+  quotes: ReadonlyMap<string, IssueQuote> | null
   onOpenNews: (id: string) => void
   onRetryQuotes: (() => void) | null
 }
 
-export function IssueTimelineTab({ issue, onOpenNews, onRetryQuotes }: IssueTimelineTabProps) {
+export function IssueTimelineTab({ issue, quotes, onOpenNews, onRetryQuotes }: IssueTimelineTabProps) {
   const tabTarget = useIssueTabTarget()
   const [order, setOrder] = useState<TimelineOrder>('new')
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set())
-  const [showAll, setShowAll] = useState(false)
   const story = useIssueTimeline(issue.kind === 'live' ? issue.id : null)
   const waiting = issue.kind === 'live' && story.data === null && story.error === null
   const skeleton = useDelayed(waiting)
   if (waiting) return skeleton ? <TimelineSkeleton /> : null
-  const model =
-    issue.kind === 'mock'
-      ? mockTimeline(issue.record, issue.book, order)
-      : isStory(story.data)
-        ? storyTimeline(issue, story.data, order)
-        : liveTimeline(issue, order)
-  const hidden = model.nodes.filter((node) => node.minor).length
-  const firstMinor = model.nodes.findIndex((node) => node.minor)
+  if (issue.kind === 'live' && story.data === null) {
+    return (
+      <section className="fg-section">
+        <StateBlock
+          kind="error"
+          title="이슈 타임라인을 불러오지 못했어요"
+          description="잠시 후 다시 시도해 주세요"
+          action={
+            <Button size="sm" onClick={story.retry}>
+              다시 시도
+            </Button>
+          }
+        />
+      </section>
+    )
+  }
+  let model: TimelineModel
+  if (issue.kind === 'mock') model = mockTimeline(issue.record, issue.book, order)
+  else if (story.data) model = storyTimeline(issue, story.data, quotes, order)
+  else return null
   const connected = connectedCount(issue)
   const toggle = (key: string) =>
     setOpen((prev) => {
@@ -217,28 +215,17 @@ export function IssueTimelineTab({ issue, onOpenNews, onRetryQuotes }: IssueTime
             )}
           </div>
           <ol className="fg-itl__list" aria-label={model.listLabel}>
-            {model.nodes.map((node, i) => {
-              if (node.minor && !showAll) {
-                return i === firstMinor ? <FoldRow key="fold" hidden={hidden} onOpen={() => setShowAll(true)} /> : null
-              }
-              return (
-                <TimelineItem
-                  key={node.key}
-                  node={node}
-                  summaryLabel={model.summaryLabel}
-                  expanded={node.now || open.has(node.key)}
-                  onToggle={() => toggle(node.key)}
-                  onOpenNews={onOpenNews}
-                />
-              )
-            })}
+            {model.nodes.map((node) => (
+              <TimelineItem
+                key={node.key}
+                node={node}
+                summaryLabel={model.summaryLabel}
+                expanded={node.now || open.has(node.key)}
+                onToggle={() => toggle(node.key)}
+                onOpenNews={onOpenNews}
+              />
+            ))}
           </ol>
-          {hidden > 0 && showAll && (
-            <button type="button" className="fg-itl__foldbtn" aria-expanded={true} onClick={() => setShowAll(false)}>
-              <span>{`기사 ${hidden}건 접기`}</span>
-              <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
-            </button>
-          )}
           <p className="fg-itl__cap">{model.footnote}</p>
         </section>
       </div>

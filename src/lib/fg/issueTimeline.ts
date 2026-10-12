@@ -1,7 +1,7 @@
-import type { IssueTimelineNodeRes, IssueTimelineRes } from '@/lib/apiTypes'
+import type { IssueStoryCompanyRes, IssueTimelineNodeRes, IssueTimelineRes } from '@/lib/apiTypes'
 import { chainRecords, mediaTrend, monthDay, SINGLE_FLOW, windowStart } from '@/lib/fg/issuePage'
 import type { IssueArticleItem, IssueBook, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
-import { dayWord, type LiveIssue } from '@/lib/fg/issueSubject'
+import type { IssueQuote, LiveIssue } from '@/lib/fg/issueSubject'
 import { shortDate } from '@/lib/fg/stockIssues'
 import { kstDayTime } from '@/lib/fg/themeNews'
 
@@ -14,7 +14,6 @@ export const TIMELINE_ORDERS: readonly { value: TimelineOrder; label: string }[]
 
 export const TIMELINE_LIMIT = 20
 export const FREQUENT_LIMIT = 5
-export const FOLD_MIN = 6
 const STOCKS_SHOWN = 3
 const DAY_MS = 86_400_000
 
@@ -36,7 +35,6 @@ export interface TimelineNode {
   summary: string | null
   stocks: string | null
   newsId: string | null
-  minor: boolean
 }
 
 export interface GlanceStat {
@@ -132,7 +130,6 @@ export function mockTimeline(record: IssueRecord, book: IssueBook, order: Timeli
       summary: now ? leadSentences(r.detail, 2) : r.summary,
       stocks: stocksLine(r.stocks.map((s) => s.name)),
       newsId: null,
-      minor: false,
     }
   })
   const first = chain[0]
@@ -179,128 +176,10 @@ export function byPublished(a: IssueArticleItem, b: IssueArticleItem): number {
   return x - y || byId(a, b)
 }
 
-function spanText(first: IssueArticleItem, last: IssueArticleItem): string | null {
-  const from = minuteOf(first)
-  const to = minuteOf(last)
-  if (from === null || to === null || to <= from) return null
-  if (first.day !== last.day) return `${daysBetween(first.day ?? '', last.day ?? '')}일`
-  const minutes = to - from
-  return minutes < 60 ? `${minutes}분` : `${Math.floor(minutes / 60)}시간`
-}
-
-function stamp(article: IssueArticleItem, today: string): string | null {
-  return article.day && article.time ? `${dayWord(article.day, today)} ${article.time}` : null
-}
-
-function liveFrequent(subject: LiveIssue): FrequentStock[] {
-  const total = subject.articles.length
-  return [...subject.stocks]
-    .sort((a, b) => (b.mentions ?? 0) - (a.mentions ?? 0))
-    .slice(0, FREQUENT_LIMIT)
-    .map((stock) => {
-      const count = stock.mentions ?? 0
-      return {
-        name: stock.name,
-        ticker: stock.ticker,
-        change: stock.change,
-        label: total > 1 && count === total ? `기사 ${count}건 모두` : `기사 ${count}건`,
-      }
-    })
-}
-
-function liveSubtitle(sorted: readonly IssueArticleItem[], subject: LiveIssue): string {
-  const n = sorted.length
-  const dated = sorted.filter((a) => minuteOf(a) !== null)
-  const media = `${subject.media}개 매체가 다뤘어요.`
-  if (dated.length === 0) return `기사 ${n}건이 묶였어요. ${media}`
-  const first = dated[0]
-  const when = stamp(first, subject.today)
-  if (n === 1) return `${when} ${first.press}에서 처음 보도했어요. 아직 이어진 기사가 없어요.`
-  const span = spanText(first, dated[dated.length - 1])
-  if (span === null) return `${when}에 기사 ${n}건이 함께 나왔어요. ${media}`
-  return `${when} 처음 보도된 뒤 ${span} 동안 기사 ${n}건이 이어졌어요. ${media}`
-}
-
-export function keyArticles(sorted: readonly IssueArticleItem[], representative: string | null): ReadonlySet<string> | null {
-  if (sorted.length < FOLD_MIN) return null
-  const keys = [sorted[0]?.id, representative, sorted[sorted.length - 1]?.id]
-  return new Set(keys.filter((key): key is string => key !== null && key !== undefined))
-}
-
-export function liveTimeline(subject: LiveIssue, order: TimelineOrder): TimelineModel {
-  const sorted = [...subject.articles].sort(byPublished)
-  const rep = subject.representative?.id ?? null
-  const keys = keyArticles(sorted, rep)
-  const nodes = sorted.map((article, i): TimelineNode => {
-    const now = article.id === rep
-    let badge = i === 0 ? '처음 보도' : `${i + 1}번째 보도`
-    if (now) badge = '대표 기사'
-    const day = article.day ? (article.day === subject.today ? '오늘' : shortDate(article.day)) : null
-    let target: TimelineTarget = null
-    if (article.analyzed) target = { kind: 'news', id: article.id }
-    else if (article.url) target = { kind: 'url', url: article.url }
-    return {
-      key: article.id,
-      date: day && article.time ? `${day} ${article.time}` : '시각 미상',
-      badge,
-      meta: article.press,
-      title: article.title,
-      now,
-      target,
-      cov: null,
-      summary: article.summary,
-      stocks: null,
-      newsId: article.id,
-      minor: keys !== null && !keys.has(article.id),
-    }
-  })
-  const dated = sorted.filter((a) => minuteOf(a) !== null)
-  const span = dated.length > 1 ? spanText(dated[0], dated[dated.length - 1]) : null
-  const heading = '보도 타임라인'
-  return {
-    heading,
-    summaryLabel: '기사 요약',
-    listLabel: `${heading}, ${orderLabel(order)}`,
-    subtitle: liveSubtitle(sorted, subject),
-    nodes: ordered(nodes, order),
-    glanceTitle: '보도 한눈에',
-    glance: [
-      { label: '처음 보도', value: dated[0] ? (stamp(dated[0], subject.today) ?? '—') : '—' },
-      { label: '이어진 기간', value: span ?? '—' },
-      { label: '매체', value: `${subject.media}곳` },
-      { label: '묶인 기사', value: `${sorted.length}건` },
-    ],
-    glanceNote: '매체는 기사 원문 주소로 셌어요',
-    frequentTitle: '이 이슈에 자주 나온 종목',
-    frequentNote: `기사 ${sorted.length}건 중 몇 건에 나왔는지 · 오늘 등락`,
-    frequent: liveFrequent(subject),
-    footnote: '기사 제목을 누르면 기사 분석을 보여 드려요 · 원문은 각 매체 사이트에서 열려요',
-  }
-}
-
 function nodeDay(node: IssueTimelineNodeRes): string | null {
   if (node.date) return node.date
   const at = node.firstPublishedAt ?? node.lastPublishedAt
   return at ? (kstDayTime(at)?.day ?? null) : null
-}
-
-function lastDay(node: IssueTimelineNodeRes): string | null {
-  const at = node.lastPublishedAt ?? node.firstPublishedAt
-  return at ? (kstDayTime(at)?.day ?? null) : nodeDay(node)
-}
-
-function nodeMeta(node: IssueTimelineNodeRes): string {
-  const from = nodeDay(node)
-  const to = lastDay(node)
-  const span = from && to && from !== to ? `${shortDate(from)}~${shortDate(to)}` : null
-  const merged = node.mergedIssueIds.length > 1 ? `같은 사건 이슈 ${node.mergedIssueIds.length}개 합침` : null
-  return [span, merged].filter(Boolean).join(' · ')
-}
-
-export function isStory(story: IssueTimelineRes | null): story is IssueTimelineRes {
-  if (story === null) return false
-  const withCurrent = story.nodes.some((node) => node.current) ? story.nodes.length : story.nodes.length + 1
-  return withCurrent > 1
 }
 
 function currentNode(subject: LiveIssue): IssueTimelineNodeRes {
@@ -314,33 +193,75 @@ function currentNode(subject: LiveIssue): IssueTimelineNodeRes {
     lastPublishedAt: subject.detail.lastPublishedAt,
     current: true,
     mergedIssueIds: [subject.detail.id],
+    articleCount: subject.articleCount,
+    mediaCount: subject.media,
+    companies: subject.detail.companies,
   }
 }
 
-export function storyTimeline(subject: LiveIssue, story: IssueTimelineRes, order: TimelineOrder): TimelineModel {
-  const latestFirst = story.nodes.some((node) => node.current) ? story.nodes : [currentNode(subject), ...story.nodes]
-  const chain = [...latestFirst].reverse()
-  const currentStocks = stocksLine(subject.stocks.map((stock) => stock.name))
-  const nodes = chain.map((node, i): TimelineNode => {
+function withCurrent(nodes: readonly IssueTimelineNodeRes[], current: IssueTimelineNodeRes): IssueTimelineNodeRes[] {
+  const at = current.firstPublishedAt ? Date.parse(current.firstPublishedAt) : Number.POSITIVE_INFINITY
+  const index = nodes.findIndex((node) => node.firstPublishedAt !== null && Date.parse(node.firstPublishedAt) < at)
+  return index === -1 ? [...nodes, current] : [...nodes.slice(0, index), current, ...nodes.slice(index)]
+}
+
+function storyCompanies(story: IssueTimelineRes, extra: IssueTimelineNodeRes | null): IssueStoryCompanyRes[] {
+  if (!extra) return story.companies
+  const counts = new Map(story.companies.map((company) => [company.ticker, { ...company }]))
+  for (const company of extra.companies) {
+    const hit = counts.get(company.ticker)
+    if (hit) hit.issueCount += 1
+    else counts.set(company.ticker, { ticker: company.ticker, name: company.name, issueCount: 1 })
+  }
+  return [...counts.values()].sort((a, b) => b.issueCount - a.issueCount)
+}
+
+function storyFrequent(
+  companies: readonly IssueStoryCompanyRes[],
+  total: number,
+  quotes: ReadonlyMap<string, IssueQuote> | null,
+): FrequentStock[] {
+  return companies.slice(0, FREQUENT_LIMIT).map((company) => ({
+    name: company.name,
+    ticker: company.ticker,
+    change: quotes?.get(company.ticker)?.change ?? null,
+    label: total > 1 && company.issueCount === total ? `이슈 ${company.issueCount}개 모두` : `이슈 ${company.issueCount}개`,
+  }))
+}
+
+export function storyTimeline(
+  subject: LiveIssue,
+  story: IssueTimelineRes,
+  quotes: ReadonlyMap<string, IssueQuote> | null,
+  order: TimelineOrder,
+): TimelineModel {
+  const extra = story.nodes.some((node) => node.current) ? null : currentNode(subject)
+  const chain = [...(extra ? withCurrent(story.nodes, extra) : story.nodes)].reverse()
+  const max = Math.max(...chain.map((node) => node.mediaCount), 1)
+  const single = chain.length === 1
+  const nodes = chain.map((node): TimelineNode => {
     const day = nodeDay(node)
+    let badge: string | null = null
+    if (node.current) badge = single ? '새 이슈' : '지금 보는 이슈'
     return {
       key: String(node.issueId),
       date: day ? (day === subject.today ? `오늘 · ${shortDate(day)}` : shortDate(day)) : '날짜 미상',
-      badge: node.current ? '지금 보는 이슈' : `타임라인 ${i + 1}번째`,
-      meta: nodeMeta(node),
+      badge,
+      meta: `${node.mediaCount}개 매체 · 기사 ${node.articleCount}건`,
       title: node.title.trim() || '제목 없는 이슈',
       now: node.current,
       target: node.current ? null : { kind: 'issue', id: String(node.issueId) },
-      cov: null,
+      cov: { media: node.mediaCount, pct: Math.round((node.mediaCount / max) * 100) },
       summary: node.summary?.trim() || null,
-      stocks: node.current ? currentStocks : null,
+      stocks: stocksLine(node.companies.map((company) => company.name)),
       newsId: null,
-      minor: false,
     }
   })
-  const firstDay = nodeDay(chain[0])
-  const latestDay = lastDay(chain[chain.length - 1])
-  const days = firstDay && latestDay ? daysBetween(firstDay, latestDay) : null
+  const first = chain[0]
+  const last = chain[chain.length - 1]
+  const firstDay = nodeDay(first)
+  const lastDay = nodeDay(last)
+  const days = firstDay && lastDay ? daysBetween(firstDay, lastDay) : null
   const heading = '이슈 타임라인'
   const opening = firstDay ? `${monthDay(firstDay)} 처음 보도된 뒤 ` : ''
   const span = days === null ? '' : days === 0 ? '하루 동안 ' : `${days}일 동안 `
@@ -348,19 +269,21 @@ export function storyTimeline(subject: LiveIssue, story: IssueTimelineRes, order
     heading,
     summaryLabel: '요약',
     listLabel: `${heading}, ${orderLabel(order)}`,
-    subtitle: `${opening}${span}이슈 ${chain.length}개로 이어졌어요.`,
+    subtitle: single
+      ? SINGLE_FLOW
+      : `${opening}${span}이슈 ${chain.length}개로 이어졌어요. ${mediaTrend(first.mediaCount, last.mediaCount, false)}`,
     nodes: ordered(nodes, order),
     glanceTitle: '흐름 한눈에',
     glance: [
       { label: '처음 보도', value: firstDay ? monthDay(firstDay) : '—' },
       { label: '이어진 기간', value: days === null ? '—' : days === 0 ? '하루' : `${days}일` },
       { label: '이슈', value: `${chain.length}개` },
-      { label: '최근 보도', value: latestDay ? monthDay(latestDay) : '—' },
+      { label: '묶인 기사', value: `${chain.reduce((sum, node) => sum + node.articleCount, 0)}건` },
     ],
-    glanceNote: '지금 이슈에서 앞선 이슈를 따라 거슬러 올라간 흐름이에요',
-    frequentTitle: '이 이슈에 자주 나온 종목',
-    frequentNote: `기사 ${subject.articles.length}건 중 몇 건에 나왔는지 · 오늘 등락`,
-    frequent: liveFrequent(subject),
-    footnote: '이전 이슈 제목을 누르면 그 이슈 페이지로 가요 · 기사 하나하나는 기사 탭에서 볼 수 있어요',
+    glanceNote: '매체 수는 이슈마다 서로 다른 매체를 셌어요',
+    frequentTitle: '이 흐름에 자주 나온 종목',
+    frequentNote: `이슈 ${chain.length}개 중 몇 번 나왔는지 · 오늘 등락`,
+    frequent: storyFrequent(storyCompanies(story, extra), chain.length, quotes),
+    footnote: '다른 이슈 제목을 누르면 그 이슈 페이지로 가요 · 타임라인은 최대 20개까지 보여 줘요',
   }
 }
