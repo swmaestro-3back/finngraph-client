@@ -955,11 +955,21 @@ export interface IssueTimelineNodeRes {
   lastPublishedAt: string | null
   current: boolean
   mergedIssueIds: number[]
+  articleCount: number
+  mediaCount: number
+  companies: IssueCompanyRes[]
+}
+
+export interface IssueStoryCompanyRes {
+  ticker: string
+  name: string
+  issueCount: number
 }
 
 export interface IssueTimelineRes {
   issueId: number
   nodes: IssueTimelineNodeRes[]
+  companies: IssueStoryCompanyRes[]
 }
 
 export interface StockIssueRes extends IssueSummaryRes {
