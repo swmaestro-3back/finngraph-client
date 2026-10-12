@@ -1,4 +1,4 @@
-import { ChevronRight, ExternalLink } from 'lucide-react'
+import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
@@ -8,11 +8,14 @@ import { Disclaimer } from '@/components/fg/Disclaimer'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { QuoteRetryNote } from '@/components/fg/RetryText'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { Skeleton } from '@/components/fg/Skeleton'
 import { connectedCount, type IssueSubject } from '@/lib/fg/issueSubject'
 import {
+  isStory,
   liveTimeline,
   mockTimeline,
   stocksLine,
+  storyTimeline,
   TIMELINE_ORDERS,
   type FrequentStock,
   type TimelineNode,
@@ -20,9 +23,10 @@ import {
 } from '@/lib/fg/issueTimeline'
 import { issuePath, stockPath } from '@/lib/fg/paths'
 import { navState } from '@/lib/fg/stockDetail'
+import { useDelayed } from '@/lib/fg/useDelayed'
 import { useIssueTabTarget } from '@/lib/fg/useIssueTab'
 import { fromState } from '@/lib/navigation'
-import { useArticleCompanies } from '@/lib/queries/useIssue'
+import { useArticleCompanies, useIssueTimeline } from '@/lib/queries/useIssue'
 
 function ArticleStocks({ newsId }: { newsId: string }) {
   const { data } = useArticleCompanies(newsId)
@@ -139,6 +143,33 @@ function FrequentRow({ stock }: { stock: FrequentStock }) {
   )
 }
 
+function FoldRow({ hidden, onOpen }: { hidden: number; onOpen: () => void }) {
+  return (
+    <li className="fg-itl__node fg-itl__fold">
+      <span className="fg-itl__dot fg-itl__dot--fold" aria-hidden="true" />
+      <div className="fg-itl__body">
+        <button type="button" className="fg-itl__foldbtn" aria-expanded={false} onClick={onOpen}>
+          <span>{`기사 ${hidden}건 더 보기`}</span>
+          <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      </div>
+    </li>
+  )
+}
+
+function TimelineSkeleton() {
+  return (
+    <div className="fg-grid fg-itl" aria-hidden="true">
+      <div className="fg-col">
+        <Skeleton height={360} shape="card" />
+      </div>
+      <div className="fg-rail">
+        <Skeleton height={240} shape="card" />
+      </div>
+    </div>
+  )
+}
+
 interface IssueTimelineTabProps {
   issue: IssueSubject
   onOpenNews: (id: string) => void
@@ -149,7 +180,19 @@ export function IssueTimelineTab({ issue, onOpenNews, onRetryQuotes }: IssueTime
   const tabTarget = useIssueTabTarget()
   const [order, setOrder] = useState<TimelineOrder>('new')
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set())
-  const model = issue.kind === 'mock' ? mockTimeline(issue.record, issue.book, order) : liveTimeline(issue, order)
+  const [showAll, setShowAll] = useState(false)
+  const story = useIssueTimeline(issue.kind === 'live' ? issue.id : null)
+  const waiting = issue.kind === 'live' && story.data === null && story.error === null
+  const skeleton = useDelayed(waiting)
+  if (waiting) return skeleton ? <TimelineSkeleton /> : null
+  const model =
+    issue.kind === 'mock'
+      ? mockTimeline(issue.record, issue.book, order)
+      : isStory(story.data)
+        ? storyTimeline(issue, story.data, order)
+        : liveTimeline(issue, order)
+  const hidden = model.nodes.filter((node) => node.minor).length
+  const firstMinor = model.nodes.findIndex((node) => node.minor)
   const connected = connectedCount(issue)
   const toggle = (key: string) =>
     setOpen((prev) => {
@@ -174,17 +217,28 @@ export function IssueTimelineTab({ issue, onOpenNews, onRetryQuotes }: IssueTime
             )}
           </div>
           <ol className="fg-itl__list" aria-label={model.listLabel}>
-            {model.nodes.map((node) => (
-              <TimelineItem
-                key={node.key}
-                node={node}
-                summaryLabel={model.summaryLabel}
-                expanded={node.now || open.has(node.key)}
-                onToggle={() => toggle(node.key)}
-                onOpenNews={onOpenNews}
-              />
-            ))}
+            {model.nodes.map((node, i) => {
+              if (node.minor && !showAll) {
+                return i === firstMinor ? <FoldRow key="fold" hidden={hidden} onOpen={() => setShowAll(true)} /> : null
+              }
+              return (
+                <TimelineItem
+                  key={node.key}
+                  node={node}
+                  summaryLabel={model.summaryLabel}
+                  expanded={node.now || open.has(node.key)}
+                  onToggle={() => toggle(node.key)}
+                  onOpenNews={onOpenNews}
+                />
+              )
+            })}
           </ol>
+          {hidden > 0 && showAll && (
+            <button type="button" className="fg-itl__foldbtn" aria-expanded={true} onClick={() => setShowAll(false)}>
+              <span>{`기사 ${hidden}건 접기`}</span>
+              <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          )}
           <p className="fg-itl__cap">{model.footnote}</p>
         </section>
       </div>

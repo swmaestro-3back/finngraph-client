@@ -4,6 +4,7 @@ import type {
   IssueListMeta,
   IssueSort,
   IssueSummaryRes,
+  IssueTimelineRes,
   RelatedCompanyRes,
 } from '@/lib/apiTypes'
 import type { IssueQuote } from '@/lib/fg/issueSubject'
@@ -21,6 +22,16 @@ export function loadIssue(id: string): Promise<IssueDetailRes> {
 
 export function useIssueDetail(id: string | null): KeyedState<IssueDetailRes> {
   return useKeyed(id !== null && isIssueApiId(id) ? id : null, loadIssue)
+}
+
+const TIMELINE_FETCH_LIMIT = 20
+
+export function loadIssueTimeline(id: string): Promise<IssueTimelineRes> {
+  return getData<IssueTimelineRes>(`/v1/issues/${id}/timeline`, { limit: TIMELINE_FETCH_LIMIT })
+}
+
+export function useIssueTimeline(id: string | null): KeyedState<IssueTimelineRes> {
+  return useKeyed(id !== null && isIssueApiId(id) ? id : null, loadIssueTimeline)
 }
 
 export interface IssueListQuery {
