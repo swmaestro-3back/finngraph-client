@@ -262,6 +262,7 @@ export interface HubQuoteExt {
   gapFromHigh: number
   position: number | null
   high: boolean
+  low: boolean
 }
 
 type QuoteRow = Pick<StockRowRes, 'price'> & Week52Row
@@ -270,10 +271,12 @@ export function quoteExtOf(row: QuoteRow | null | undefined, baseDate: string | 
   if (!row || row.price === null) return null
   const range = week52Of(row)
   if (range === null) return null
+  const mark = week52Mark(row, baseDate)
   return {
     gapFromHigh: gapFromHigh(row.price, range.high),
     position: week52Position({ price: row.price, high: range.high, low: range.low }),
-    high: week52Mark(row, baseDate) === 'high',
+    high: mark === 'high',
+    low: mark === 'low',
   }
 }
 

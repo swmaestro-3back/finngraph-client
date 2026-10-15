@@ -328,11 +328,12 @@ interface HubQuoteRowProps {
   price: number | null
   change: number | null
   high?: boolean
+  low?: boolean
   badge?: ReactNode
   children?: ReactNode
 }
 
-export function HubQuoteRow({ to, state, name, ticker = null, market, price, change, high = false, badge = null, children = null }: HubQuoteRowProps) {
+export function HubQuoteRow({ to, state, name, ticker = null, market, price, change, high = false, low = false, badge = null, children = null }: HubQuoteRowProps) {
   const body = (
     <>
       <CompanyLogo name={name} ticker={ticker} size={32} />
@@ -342,6 +343,7 @@ export function HubQuoteRow({ to, state, name, ticker = null, market, price, cha
             <span className="fg-hq__name">{name}</span>
             {market && <span className="fg-hq__mkt">{marketLabel(market)}</span>}
             {high && <Badge tone="high">52주 신고가</Badge>}
+            {low && <Badge tone="low">52주 신저가</Badge>}
             {badge}
           </span>
           <span className="fg-hq__px fg-num">
