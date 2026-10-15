@@ -227,7 +227,7 @@ interface HubThemesProps extends HubTabProps {
   hot: ApiState<ThemeRes[] | null>
 }
 
-export function HubThemes({ layout, tabs, basis, basisShort, market, pick, onPick, today, from, refreshKey, hot }: HubThemesProps) {
+export function HubThemes({ layout, tabs, basis, basisShort, market, breadth, pick, onPick, today, from, refreshKey, hot }: HubThemesProps) {
   const wide = layout === 'wide'
   const themes = useMemo(() => (hot.data ? pickHubThemes(hot.data) : null), [hot.data])
   const keys = useMemo(() => (themes ?? []).map((theme) => String(theme.id)), [themes])
@@ -330,7 +330,7 @@ export function HubThemes({ layout, tabs, basis, basisShort, market, pick, onPic
   }
 
   return (
-    <HubFrame heading={HEADING} tab="themes" tabs={tabs} basis={basis} caption={caption} layout={layout}>
+    <HubFrame heading={HEADING} tab="themes" tabs={tabs} basis={basis} caption={caption} layout={layout} breadth={breadth}>
       {body}
     </HubFrame>
   )

@@ -475,7 +475,7 @@ function HubSkeletonBody({ wide }: { wide: boolean }) {
   )
 }
 
-export function HubIssues({ layout, tabs, basis, basisShort, market, pick, onPick, today, from }: HubTabProps) {
+export function HubIssues({ layout, tabs, basis, basisShort, market, breadth, pick, onPick, today, from }: HubTabProps) {
   const wide = layout === 'wide'
   const mobile = layout === 'mobile'
   const list = useIssueList(LIST_QUERY)
@@ -648,6 +648,7 @@ export function HubIssues({ layout, tabs, basis, basisShort, market, pick, onPic
       basis={basis}
       caption={caption}
       layout={layout}
+      breadth={breadth}
       auto={enabled ? <AutoButton running={running} onToggle={toggle} /> : null}
     >
       {body}
