@@ -14,7 +14,7 @@ export function ThemeAverageLine({ theme, className }: ThemeAverageLineProps) {
   const hasCounts = fact.up !== undefined && fact.down !== undefined
   return (
     <small className={cn('fg-tavg', className)} title={AVERAGE_BREADTH_HELP}>
-      {'종목 평균 '}
+      {'평균 '}
       <ChangeText value={fact.change} />
       {hasCounts && ` · 상승 ${fact.up} · 하락 ${fact.down}`}
     </small>

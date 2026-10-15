@@ -27,9 +27,6 @@
   gap: var(--space-1);
   min-width: 0;
 }
-.fg-tdp__titles--tight {
-  gap: 2px;
-}
 .fg-tdp__cap {
   font: 500 12px/17px var(--font-sans);
   color: var(--text-secondary);
@@ -39,13 +36,10 @@
   top: calc(var(--layout-header-height) + var(--space-4));
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-12);
 }
 .fg-tdp__go {
-  display: flex;
-}
-.fg-tdp__go > a {
-  flex: 1;
+  align-self: flex-start;
 }
 .fg-tdp__retry {
   display: flex;
@@ -59,15 +53,17 @@
   flex-shrink: 0;
   color: var(--text-tertiary);
 }
+.fg-tdh {
+  position: relative;
+  min-width: 0;
+}
 .fg-tdh__row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-4) var(--space-8);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: var(--space-10);
+  align-items: start;
 }
 .fg-tdh__main {
-  flex: 1 1 400px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -76,14 +72,18 @@
 .fg-tdh__id {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
 }
 .fg-tdh__name {
   margin: 0;
   font: 700 22px/31px var(--font-sans);
   letter-spacing: -0.015em;
   color: var(--text-primary);
+}
+.fg-tdh__count {
+  font: 400 14px/21px var(--font-sans);
+  color: var(--text-tertiary);
 }
 .fg-tdh__price {
   display: flex;
@@ -102,6 +102,9 @@
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
+.fg-tdh__at {
+  color: var(--text-tertiary);
+}
 .fg-tdh__mean b {
   font-weight: 600;
   color: var(--text-primary);
@@ -109,17 +112,14 @@
 .fg-tdh__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1) var(--space-5);
+  margin-top: var(--space-1);
 }
 .fg-tdh__chip {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-2);
-  height: 32px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-chip);
-  background: var(--bg-subtle);
-  font: 500 14px/20px var(--font-sans);
+  font: 600 14px/20px var(--font-sans);
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
@@ -128,18 +128,19 @@
 }
 .fg-tdh__ratio {
   max-width: 480px;
+  margin-top: var(--space-1);
 }
 .fg-tdh__sum {
-  margin: 0;
-  font: 400 14px/21px var(--font-sans);
+  max-width: 640px;
+  margin: var(--space-2) 0 0;
+  font: 400 16px/26px var(--font-sans);
   color: var(--text-secondary);
 }
 .fg-tdh__side {
-  flex: 0 1 420px;
-  min-width: 280px;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
 }
 .fg-tdh__acts {
   display: flex;
@@ -155,31 +156,21 @@
   margin-left: 0;
 }
 .fg-tdh__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
-  gap: var(--space-2);
-  margin: 0;
+  border-top: 1px solid var(--border-default);
 }
-.fg-tdh__stats > div,
 .fg-tcm__mstats > div {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-3);
-  border-radius: var(--radius-control);
-  background: var(--bg-subtle);
   font-variant-numeric: tabular-nums;
 }
-.fg-tdh__stats dt,
-.fg-tdh__stats small,
 .fg-tcm__mstats dt {
   font: 500 12px/17px var(--font-sans);
   color: var(--text-secondary);
 }
-.fg-tdh__stats dd,
 .fg-tcm__mstats dd {
   margin: 0;
-  font: 700 16px/24px var(--font-sans);
+  font: 600 16px/24px var(--font-sans);
   color: var(--text-primary);
 }
 .fg-tcm__skel {
@@ -191,7 +182,7 @@
   padding: 0;
 }
 .fg-tcm {
-  min-width: 800px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   font-variant-numeric: tabular-nums;
@@ -202,18 +193,18 @@
   grid-template-columns: minmax(160px, 0.8fr) 88px 68px 68px 64px 64px minmax(0, 1.2fr);
   align-items: center;
   gap: var(--space-3);
-  padding: 10px var(--space-3);
-  border-bottom: 1px solid var(--border-divider);
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-default);
   font: 400 14px/20px var(--font-sans);
   color: var(--text-primary);
 }
 .fg-tcm__row--head {
-  min-height: 40px;
-  padding: 0 var(--space-3);
-  border-bottom: 0;
-  border-radius: var(--radius-control);
-  background: var(--bg-subtle);
-  font-weight: 600;
+  min-height: 0;
+  align-items: end;
+  padding: 0 0 var(--space-2);
+  font: 600 12px/17px var(--font-sans);
   color: var(--text-secondary);
 }
 .fg-tcm__row:not(.fg-tcm__row--head):hover {
@@ -263,12 +254,17 @@
   min-width: 0;
 }
 .fg-tcm__name a {
+  align-self: flex-start;
+  max-width: 100%;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--text-disabled);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 .fg-tcm__name a::after {
   content: '';
@@ -279,8 +275,7 @@
   outline: none;
 }
 .fg-tcm__row:hover .fg-tcm__name a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration-color: var(--text-primary);
 }
 .fg-tcm__name small {
   font: 500 12px/17px var(--font-sans);
@@ -295,7 +290,8 @@
   white-space: nowrap;
 }
 .fg-tcm__sub {
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 21px;
   color: var(--text-secondary);
 }
 .fg-tcm__why {
@@ -311,14 +307,16 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  border-top: 1px solid var(--border-default);
 }
 .fg-tcm__item {
-  border-bottom: 1px solid var(--border-divider);
+  border-bottom: 1px solid var(--border-default);
 }
 .fg-tcm__item[data-open='true'] {
+  margin: 0 calc(-1 * var(--space-3));
   padding: 0 var(--space-3);
-  border-radius: var(--radius-control);
   border-bottom-color: transparent;
+  background: var(--bg-subtle);
   box-shadow: inset 0 0 0 2px var(--action-primary);
 }
 .fg-tcm__btn {
@@ -353,11 +351,17 @@
   min-width: 0;
 }
 .fg-tcm__bname b {
+  align-self: flex-start;
+  max-width: 100%;
   font: 700 14px/20px var(--font-sans);
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: underline;
+  text-decoration-color: var(--text-disabled);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 .fg-tcm__bname small {
   font: 500 12px/17px var(--font-sans);
@@ -374,7 +378,7 @@
   white-space: nowrap;
 }
 .fg-tcm__bnum > b {
-  font: 700 14px/20px var(--font-sans);
+  font: 600 14px/20px var(--font-sans);
   color: var(--text-primary);
 }
 .fg-tcm__bnum > span {
@@ -385,7 +389,7 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3) 0 var(--space-4);
-  border-top: 1px solid var(--border-divider);
+  border-top: 1px solid var(--border-default);
 }
 .fg-tcm__more > p {
   margin: 0;
@@ -395,16 +399,34 @@
 .fg-tcm__mstats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--space-3) var(--space-4);
   margin: 0;
 }
+@media (min-width: 768px) and (max-width: 1279px) {
+  .fg-tcm__row {
+    grid-template-columns: minmax(0, 1fr) 88px 68px 68px 64px 64px;
+  }
+  .fg-tcm__row > :nth-child(7) {
+    display: none;
+  }
+  .fg-tcm__row--head > :nth-child(6) .fg-tcm__sort::before {
+    left: auto;
+    right: 0;
+    translate: none;
+  }
+}
 @media (max-width: 1023px) {
-  .fg-tdh__side {
-    flex-basis: 100%;
-    min-width: 0;
+  .fg-tdh__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+  .fg-tdh__main {
+    padding-right: 56px;
   }
   .fg-tdh__acts {
-    justify-content: flex-start;
+    position: absolute;
+    top: 0;
+    right: 0;
   }
   .fg-tdp__stick {
     position: static;
@@ -415,21 +437,15 @@
   }
 }
 @media (max-width: 767px) {
-  .fg-tdp__back {
-    margin: var(--space-4) var(--space-4) 0;
-  }
   .fg-tdp .fg-col,
   .fg-tdp .fg-rail {
     display: contents;
   }
-  .fg-tdp__go {
-    padding: var(--space-2) var(--space-4) 0;
+  .fg-tdh__row {
+    gap: var(--space-4);
   }
-  .fg-tdh__stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .fg-tdh__stats > div:last-child {
-    grid-column: 1 / -1;
+  .fg-tdh__sum {
+    margin-top: var(--space-1);
   }
   .fg-tcm__wrap {
     display: none;

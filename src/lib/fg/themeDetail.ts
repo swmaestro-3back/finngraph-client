@@ -107,7 +107,7 @@ export function formatWeight(percent: number | null): string {
 
 export function volumeRatioNote(ratio: number | null | undefined): string | null {
   if (ratio === null || ratio === undefined) return null
-  return `20일 평균의 ${ratio.toFixed(1)}배`
+  return `평소의 ${ratio.toFixed(1)}배`
 }
 
 export interface LeaderRow {

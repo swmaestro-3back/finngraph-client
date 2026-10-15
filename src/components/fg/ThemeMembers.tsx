@@ -80,7 +80,7 @@ export function ThemeMembers({ stocks, loading, error, onRetry, leaderTicker, fr
         ))}
       </ul>
       {!showAll && rows.length > MEMBER_LIMIT && (
-        <Button className="fg-reveal" onClick={() => setShowAll(true)}>
+        <Button className="fg-tmore fg-reveal" onClick={() => setShowAll(true)}>
           테마 종목 {rows.length}개 모두 보기
         </Button>
       )}

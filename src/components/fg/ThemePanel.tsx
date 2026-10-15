@@ -1,6 +1,5 @@
 import type { ReactNode, Ref } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Badge } from '@/components/fg/Badge'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { ThemeAverageLine } from '@/components/fg/ThemeAverageLine'
@@ -53,7 +52,7 @@ export function ThemePanel({ theme, changeOf, issue, members, ref }: ThemePanelP
   return (
     <section ref={ref} className="fg-section fg-tdet fg-rail__wide fg-reveal" aria-labelledby="fg-tdet-name">
       <div className="fg-tdet__kick">
-        <Badge>고른 테마</Badge>
+        <span className="fg-section__title">고른 테마</span>
         <span className="fg-tdet__count fg-num">{theme.stockCount}종목</span>
         <ThemeStar theme={theme} />
       </div>
@@ -76,6 +75,10 @@ export function ThemePanel({ theme, changeOf, issue, members, ref }: ThemePanelP
         </span>
         <ThemeAverageLine theme={theme} className="fg-tdet__avg" />
       </div>
+      <div className="fg-tdet__acts">
+        <ThemeDetailLink theme={theme} />
+        <ThemeGraphLink theme={theme} />
+      </div>
       <ThemeRatio up={up} down={down} large caption={false} />
       <dl className="fg-tdet__stats">
         <div>
@@ -87,10 +90,6 @@ export function ThemePanel({ theme, changeOf, issue, members, ref }: ThemePanelP
           <dd className="fg-num">{formatCompactKrw(theme.tradingValue)}</dd>
         </div>
       </dl>
-      <div className="fg-tdet__acts">
-        <ThemeDetailLink theme={theme} />
-        <ThemeGraphLink theme={theme} />
-      </div>
       <div className="fg-tdet__sec">
         <span className="fg-tdet__label">대표 이슈</span>
         <ThemeIssue view={issue} state={state} />

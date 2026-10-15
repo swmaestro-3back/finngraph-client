@@ -1,4 +1,5 @@
-import { useLocation } from 'react-router-dom'
+import { ChevronRight } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { ButtonLink } from '@/components/fg/Button'
 import type { ThemeRes } from '@/lib/apiTypes'
@@ -10,6 +11,7 @@ type ThemeRef = Pick<ThemeRes, 'id' | 'name'>
 interface ThemeLinkProps {
   theme: ThemeRef
   label?: string
+  text?: boolean
   className?: string
 }
 
@@ -17,9 +19,18 @@ export function ThemeStar({ theme }: { theme: ThemeRef }) {
   return <FavoriteStar type="THEME" targetKey={String(theme.id)} label={theme.name} className="fg-tdet__star" />
 }
 
-export function ThemeGraphLink({ theme, label = '관계 탐색', className }: ThemeLinkProps) {
+export function ThemeGraphLink({ theme, label = '관계 탐색', text = false, className }: ThemeLinkProps) {
+  const to = `/graph/theme/${encodeURIComponent(theme.name)}`
+  if (text) {
+    return (
+      <Link to={to} className={className ? `fg-sdmore ${className}` : 'fg-sdmore'}>
+        {label}
+        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+      </Link>
+    )
+  }
   return (
-    <ButtonLink to={`/graph/theme/${encodeURIComponent(theme.name)}`} className={className}>
+    <ButtonLink to={to} className={className}>
       {label}
     </ButtonLink>
   )
