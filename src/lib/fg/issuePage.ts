@@ -195,6 +195,11 @@ export function issueRail(record: Pick<IssueRecord, 'stocks' | 'links'>): IssueR
   }
 }
 
+export function issueGraphPath(stocks: readonly Pick<IssueStock, 'ticker'>[]): string {
+  const lead = stocks.find((stock) => stock.ticker)?.ticker
+  return lead ? `/graph/${encodeURIComponent(lead)}` : '/graph'
+}
+
 export function graphSentence(news: number, inferred: number): string {
   if (news === 0) return '이 이슈에는 뉴스에 나온 종목이 없어요.'
   if (inferred === 0) return `이 이슈에서 뉴스에 나온 종목 ${news}개로 이어져요.`
