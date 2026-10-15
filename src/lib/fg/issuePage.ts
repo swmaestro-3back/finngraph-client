@@ -55,7 +55,7 @@ export interface IssueHead {
   media: string
   when: string
   since: string | null
-  counts: Readonly<Record<Exclude<IssueTab, 'summary'>, number>>
+  counts: Readonly<Record<Exclude<IssueTab, 'summary'>, number | null>>
   keywords: readonly string[]
 }
 
@@ -112,25 +112,36 @@ export function windowStart(index: number, length: number, size: number): number
   return Math.min(Math.max(0, index - (size - 1)), Math.max(0, length - size))
 }
 
-export function issueFlow(record: IssueRecord, book: IssueBook, size = FLOW_WINDOW): IssueFlowModel {
-  const chain = chainRecords(record, book)
-  const index = Math.max(0, chain.findIndex((r) => r.id === record.id))
+export interface FlowItem {
+  id: string
+  day: string | null
+  title: string
+  media: number
+}
+
+export function flowDate(day: string | null, today: string): string {
+  if (!day) return '날짜 미상'
+  return day === today ? `오늘 · ${shortDate(day)}` : shortDate(day)
+}
+
+export function buildFlow(chain: readonly FlowItem[], currentId: string, today: string, size = FLOW_WINDOW): IssueFlowModel {
+  const index = Math.max(0, chain.findIndex((item) => item.id === currentId))
   const start = windowStart(index, chain.length, size)
-  const max = Math.max(...chain.map((r) => r.media), 1)
-  const steps = chain.slice(start, start + size).map((r): FlowStep => {
-    const now = r.id === record.id
-    return {
-      id: r.id,
-      date: r.date === book.today ? `오늘 · ${shortDate(r.date)}` : shortDate(r.date),
-      title: now ? r.shortTitle : r.title,
-      media: r.media,
-      pct: Math.round((r.media / max) * 100),
-      now,
-    }
-  })
+  const max = Math.max(...chain.map((item) => item.media), 1)
+  const steps = chain.slice(start, start + size).map(
+    (item): FlowStep => ({
+      id: item.id,
+      date: flowDate(item.day, today),
+      title: item.title,
+      media: item.media,
+      pct: Math.round((item.media / max) * 100),
+      now: item.id === currentId,
+    }),
+  )
   const position = index + 1
   const first = chain[0]
-  const lead = `${monthDay(first.date)} 처음 보도된`
+  const current = chain[index]
+  const lead = first.day ? `${monthDay(first.day)} 처음 보도된` : '처음 보도된'
   let subtitle = SINGLE_FLOW
   let subtitleShort = SINGLE_FLOW
   if (chain.length > 1 && position === 1) {
@@ -138,10 +149,17 @@ export function issueFlow(record: IssueRecord, book: IssueBook, size = FLOW_WIND
     subtitleShort = subtitle
   } else if (chain.length > 1) {
     const head = `${lead} 뒤 ${position}번째 이슈예요.`
-    subtitle = `${head} ${mediaTrend(first.media, record.media, false)}`
-    subtitleShort = `${head} ${mediaTrend(first.media, record.media, true)}`
+    subtitle = `${head} ${mediaTrend(first.media, current.media, false)}`
+    subtitleShort = `${head} ${mediaTrend(first.media, current.media, true)}`
   }
   return { steps, position, total: chain.length, subtitle, subtitleShort }
+}
+
+export function issueFlow(record: IssueRecord, book: IssueBook, size = FLOW_WINDOW): IssueFlowModel {
+  const chain = chainRecords(record, book).map(
+    (r): FlowItem => ({ id: r.id, day: r.date, title: r.id === record.id ? r.shortTitle : r.title, media: r.media }),
+  )
+  return buildFlow(chain, record.id, book.today, size)
 }
 
 export function rankLinks(links: readonly IssueLink[]): IssueLink[] {
@@ -197,12 +215,18 @@ export interface GraphNode {
   y: number
   w: number
   label: string
+  name: string | null
+  ticker: string | null
+  from: string | null
 }
 
 export interface GraphEdge {
   key: string
   kind: 'direct' | 'inferred'
+  confirmed: boolean
   d: string
+  from: string
+  to: string
 }
 
 export interface IssueGraphModel {
@@ -236,6 +260,8 @@ interface Row {
   kind: 'link' | 'link-more'
   label: string
   name: string | null
+  ticker: string | null
+  confirmed: boolean
 }
 
 interface Source {
@@ -246,6 +272,10 @@ interface Source {
 function curve(x1: number, y1: number, x2: number, y2: number): string {
   const mid = (x1 + x2) / 2
   return `M${x1} ${y1} C${mid} ${y1} ${mid} ${y2} ${x2} ${y2}`
+}
+
+function hopConfirmed(link: IssueLink, index: number): boolean {
+  return link.company.hops[index]?.confirmed ?? link.company.confirmed
 }
 
 function bundleLabel(names: readonly string[]): string {
@@ -284,9 +314,18 @@ export function issueGraph(record: Pick<IssueRecord, 'flowTitle' | 'stocks' | 'l
       kind: 'link',
       label: clipLabel(l.company.name, G.link.max),
       name: l.company.name,
+      ticker: l.company.code,
+      confirmed: hopConfirmed(l, 0),
     }))
     if (direct.length > alloc) {
-      rows.push({ key: `lm-${name}`, kind: 'link-more', label: `외 ${direct.length - shown.length}곳`, name: null })
+      rows.push({
+        key: `lm-${name}`,
+        kind: 'link-more',
+        label: `외 ${direct.length - shown.length}곳`,
+        name: null,
+        ticker: null,
+        confirmed: direct.slice(shown.length).every((l) => hopConfirmed(l, 0)),
+      })
     }
     return { name, rows }
   })
@@ -299,8 +338,19 @@ export function issueGraph(record: Pick<IssueRecord, 'flowTitle' | 'stocks' | 'l
   const rowOffset = ((slots - rowCount) * G.step) / 2
   const rowY = (i: number) => G.top + rowOffset + i * G.step
 
+  const tickerOf = (name: string) => stocks.find((stock) => stock.name === name)?.ticker ?? null
   const nodes: GraphNode[] = [
-    { key: 'event', kind: 'event', x: G.event.x, y: eventY, w: G.event.w, label: clipLabel(flowTitle, G.event.max) },
+    {
+      key: 'event',
+      kind: 'event',
+      x: G.event.x,
+      y: eventY,
+      w: G.event.w,
+      label: clipLabel(flowTitle, G.event.max),
+      name: flowTitle,
+      ticker: null,
+      from: null,
+    },
   ]
   const edges: GraphEdge[] = []
 
@@ -313,12 +363,15 @@ export function issueGraph(record: Pick<IssueRecord, 'flowTitle' | 'stocks' | 'l
     key: string
     kind: 'news' | 'news-more'
     label: string
+    name: string | null
     desired: number | null
   }
   const items: NewsItem[] = [
-    ...solo.map((name): NewsItem => ({ key: `n-${name}`, kind: 'news', label: clipLabel(name, G.news.max), desired: null })),
+    ...solo.map(
+      (name): NewsItem => ({ key: `n-${name}`, kind: 'news', label: clipLabel(name, G.news.max), name, desired: null }),
+    ),
     ...(bundled.length > 0
-      ? [{ key: 'n-more', kind: 'news-more' as const, label: bundleLabel(bundled), desired: null }]
+      ? [{ key: 'n-more', kind: 'news-more' as const, label: bundleLabel(bundled), name: null, desired: null }]
       : []),
     ...sources.map((source, i): NewsItem => {
       const ys = placedRows[i].map((row) => row.y)
@@ -326,6 +379,7 @@ export function issueGraph(record: Pick<IssueRecord, 'flowTitle' | 'stocks' | 'l
         key: `n-${source.name}`,
         kind: 'news',
         label: clipLabel(source.name, G.news.max),
+        name: source.name,
         desired: ys.reduce((sum, y) => sum + y, 0) / ys.length,
       }
     }),
@@ -342,20 +396,55 @@ export function issueGraph(record: Pick<IssueRecord, 'flowTitle' | 'stocks' | 'l
   }
 
   items.forEach((item, i) => {
-    nodes.push({ key: item.key, kind: item.kind, x: G.news.x, y: ys[i], w: G.news.w, label: item.label })
-    edges.push({ key: `e-${item.key}`, kind: 'direct', d: curve(G.event.x + G.event.w, eventY, G.news.x, ys[i]) })
+    nodes.push({
+      key: item.key,
+      kind: item.kind,
+      x: G.news.x,
+      y: ys[i],
+      w: G.news.w,
+      label: item.label,
+      name: item.name,
+      ticker: item.name ? tickerOf(item.name) : null,
+      from: null,
+    })
+    edges.push({
+      key: `e-${item.key}`,
+      kind: 'direct',
+      confirmed: false,
+      d: curve(G.event.x + G.event.w, eventY, G.news.x, ys[i]),
+      from: 'event',
+      to: item.key,
+    })
   })
 
   const sourceY = new Map(sources.map((source, i) => [source.name, ys[items.length - sources.length + i]]))
   for (const rows of placedRows) {
     for (const row of rows) {
-      nodes.push({ key: row.key, kind: row.kind, x: G.link.x, y: row.y, w: G.link.w, label: row.label })
+      nodes.push({
+        key: row.key,
+        kind: row.kind,
+        x: G.link.x,
+        y: row.y,
+        w: G.link.w,
+        label: row.label,
+        name: row.name,
+        ticker: row.ticker,
+        from: row.from,
+      })
       const from = sourceY.get(row.from) ?? eventY
-      edges.push({ key: `e-${row.key}`, kind: 'inferred', d: curve(G.news.x + G.news.w, from, G.link.x, row.y) })
+      edges.push({
+        key: `e-${row.key}`,
+        kind: 'inferred',
+        confirmed: row.confirmed,
+        d: curve(G.news.x + G.news.w, from, G.link.x, row.y),
+        from: `n-${row.from}`,
+        to: row.key,
+      })
       if (row.name === null) continue
       const seconds = secondOf(row.from, row.name)
       if (seconds.length === 0) continue
       const names = seconds.map((l) => l.company.name)
+      const single = seconds.length === 1 ? seconds[0] : null
       nodes.push({
         key: `s-${row.key}`,
         kind: 'second',
@@ -363,8 +452,18 @@ export function issueGraph(record: Pick<IssueRecord, 'flowTitle' | 'stocks' | 'l
         y: row.y,
         w: G.second.w,
         label: names.length > 1 ? bundleLabel(names) : clipLabel(names[0], G.second.max),
+        name: single ? single.company.name : null,
+        ticker: single ? single.company.code : null,
+        from: row.from,
       })
-      edges.push({ key: `e-s-${row.key}`, kind: 'inferred', d: `M${G.link.x + G.link.w} ${row.y} L${G.second.x} ${row.y}` })
+      edges.push({
+        key: `e-s-${row.key}`,
+        kind: 'inferred',
+        confirmed: seconds.every((l) => hopConfirmed(l, 1)),
+        d: `M${G.link.x + G.link.w} ${row.y} L${G.second.x} ${row.y}`,
+        from: row.key,
+        to: `s-${row.key}`,
+      })
     }
   }
 

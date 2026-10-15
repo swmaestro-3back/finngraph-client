@@ -26,7 +26,9 @@ export function IssueTabs({ current, counts, ref }: IssueTabsProps) {
               aria-current={tab.value === current ? 'page' : undefined}
             >
               {tab.label}
-              {tab.value !== 'summary' && <b className="fg-ptab__count fg-num">{counts[tab.value]}</b>}
+              {tab.value !== 'summary' && counts[tab.value] !== null && (
+                <b className="fg-ptab__count fg-num">{counts[tab.value]}</b>
+              )}
             </Link>
           </li>
         ))}
@@ -45,7 +47,7 @@ interface IssueHeadProps {
 
 export function IssueHead({ title, head, tab, mock, tabsRef }: IssueHeadProps) {
   return (
-    <section className="fg-section fg-ish" aria-labelledby="fg-ish-title">
+    <section className="fg-ish" aria-labelledby="fg-ish-title">
       <div className="fg-ish__meta fg-num">
         {head.badge && <Badge tone={head.tone}>{head.badge}</Badge>}
         <span className="fg-ish__cap">
@@ -65,9 +67,7 @@ export function IssueHead({ title, head, tab, mock, tabsRef }: IssueHeadProps) {
           </span>
           <ul aria-labelledby="fg-ish-keys">
             {head.keywords.map((keyword) => (
-              <li key={keyword}>
-                <Badge>{keyword}</Badge>
-              </li>
+              <li key={keyword}>{keyword}</li>
             ))}
           </ul>
         </div>

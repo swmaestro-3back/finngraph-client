@@ -1,7 +1,8 @@
-import type { IssueArticleRes, IssueCompanyRes, IssueDetailRes } from '@/lib/apiTypes'
+import type { IssueArticleRes, IssueCompanyRes, IssueDetailRes, IssueTimelineRes } from '@/lib/apiTypes'
 import { pressName } from '@/lib/format'
 import { issueHead, type IssueHead } from '@/lib/fg/issuePage'
-import type { IssueArticleItem, IssueBook, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
+import type { IssueArticleItem, IssueBook, IssueLink, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
+import { storyChain, storySince } from '@/lib/fg/issueTimeline'
 import { week52Mark, type Week52Row } from '@/lib/fg/stockQuote'
 import { kstDayTime } from '@/lib/fg/themeNews'
 import { gapFromHigh, week52Position } from '@/lib/fg/week52'
@@ -79,6 +80,7 @@ export function issueArticleItems(articles: readonly IssueArticleRes[]): IssueAr
       time: at?.time ?? null,
       summary: article.summary?.trim() || null,
       analyzed: article.tripleExtracted,
+      tickers: article.tickers,
     }
   })
 }
@@ -90,6 +92,7 @@ export function liveStocks(
 ): IssueStock[] {
   return companies.map((company) => {
     const quote = quotes?.get(company.ticker) ?? null
+    const role = company.role?.trim()
     return {
       name: company.name,
       ticker: company.ticker,
@@ -97,6 +100,7 @@ export function liveStocks(
       mentions: company.mentionCount,
       market: quote?.market ?? null,
       price: quote?.price ?? null,
+      ...(role ? { role } : {}),
       ...quoteRange(quote, basisDate),
     }
   })
@@ -142,19 +146,33 @@ export function liveSubject(
   }
 }
 
-export function subjectHead(subject: IssueSubject): IssueHead {
+export const MARKET_REACTION_BADGE = '주가 반응'
+export const MARKET_REACTION_NOTE = '주가 움직임을 다룬 이슈라 앞선 이슈와 잇지 않아요'
+
+export function isMarketReaction(subject: IssueSubject): boolean {
+  return subject.kind === 'live' && subject.detail.kind === 'market_reaction'
+}
+
+export interface SubjectExtras {
+  story: IssueTimelineRes | null
+  links: readonly IssueLink[] | null
+}
+
+export function subjectHead(subject: IssueSubject, { story, links }: SubjectExtras): IssueHead {
   if (subject.kind === 'mock') return issueHead(subject.record, subject.book)
   const { detail } = subject
+  const chain = story ? storyChain(subject, story) : null
+  const reaction = isMarketReaction(subject)
   return {
-    badge: null,
+    badge: reaction ? MARKET_REACTION_BADGE : null,
     tone: 'neutral',
     media: `${subject.media}개 매체`,
     when: periodLabel(detail.firstPublishedAt, detail.lastPublishedAt, subject.today) ?? '',
-    since: null,
+    since: chain && !reaction ? storySince(chain) : null,
     counts: {
-      timeline: subject.articles.length,
+      timeline: chain ? chain.length : null,
       articles: subject.articleCount,
-      stocks: subject.stocks.length,
+      stocks: connectedCount(subject, links),
     },
     keywords: subject.keywords,
   }
@@ -167,17 +185,19 @@ export function representativeCaption(subject: LiveIssue): string {
   return `${rep.press}${when} 보도`
 }
 
-export function connectedCount(subject: IssueSubject): number {
-  return subject.kind === 'mock' ? subject.stocks.length + subject.record.links.length : subject.stocks.length
+export function connectedCount(subject: IssueSubject, links: readonly IssueLink[] | null): number | null {
+  if (subject.kind === 'mock') return subject.stocks.length + subject.record.links.length
+  return links === null ? null : subject.stocks.length + links.length
 }
 
-export function articlesByTicker(
-  articles: readonly IssueArticleItem[],
-  companies: ReadonlyMap<string, readonly { ticker: string | null }[]>,
-): Map<string, IssueArticleItem[]> {
+export function connectedLabel(count: number | null): string {
+  return count === null ? '연결된 종목 모두 보기' : `연결된 종목 ${count} 모두 보기`
+}
+
+export function articlesByTicker(articles: readonly IssueArticleItem[]): Map<string, IssueArticleItem[]> {
   const result = new Map<string, IssueArticleItem[]>()
   for (const article of articles) {
-    const tickers = new Set((companies.get(article.id) ?? []).flatMap((c) => (c.ticker ? [c.ticker] : [])))
+    const tickers = new Set((article.tickers ?? []).filter(Boolean))
     for (const ticker of tickers) {
       const list = result.get(ticker)
       if (list) list.push(article)

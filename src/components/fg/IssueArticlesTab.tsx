@@ -84,7 +84,7 @@ export function IssueArticlesTab({ issue, onOpenNews }: IssueArticlesTabProps) {
           <div className="fg-section__head fg-itl__head">
             <div className="fg-iflow__titles">
               <h2 id="fg-iar-title" className="fg-section__title">
-                {`묶인 기사 ${rows.length}건`}
+                묶인 기사 <span className="fg-isp__count fg-num">{`${rows.length}건`}</span>
               </h2>
               <p className="fg-section__sub">{articlesSubtitle(issue.articles, issue.media, issue.today)}</p>
             </div>

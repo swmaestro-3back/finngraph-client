@@ -12,13 +12,13 @@ import { StateBlock } from '@/components/fg/StateBlock'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
 import { kstToday } from '@/lib/calendar'
 import { hubSearch } from '@/lib/fg/hub'
-import { parseIssueTab, type IssueHead as IssueHeadModel } from '@/lib/fg/issuePage'
-import { findIssue, resolveIssueId, type IssueBook, type IssueLink } from '@/lib/fg/issueRecords'
+import { parseIssueTab } from '@/lib/fg/issuePage'
+import { findIssue, resolveIssueId, type IssueBook } from '@/lib/fg/issueRecords'
 import { liveSubject, mockSubject, subjectHead, type IssueSubject } from '@/lib/fg/issueSubject'
 import { issuePath } from '@/lib/fg/paths'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { useBackTarget } from '@/lib/navigation'
-import { isIssueApiId, useIssueDetail, useIssueQuotes } from '@/lib/queries/useIssue'
+import { isIssueApiId, useIssueDetail, useIssueQuotes, useIssueTimeline } from '@/lib/queries/useIssue'
 import { useIssueLinks } from '@/lib/queries/useLinkedCompanies'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useGap, type GapState } from '@/lib/useGap'
@@ -34,14 +34,9 @@ export default function IssuePage() {
   return <IssueView key={id} id={id} gap={gap} />
 }
 
-function withLinkCount(head: IssueHeadModel, links: readonly IssueLink[] | null): IssueHeadModel {
-  if (!links || links.length === 0) return head
-  return { ...head, counts: { ...head.counts, stocks: head.counts.stocks + links.length } }
-}
-
 function NotFound() {
   return (
-    <section className="fg-section">
+    <section className="fg-isp__state">
       <h1 className="fg-sr">이슈</h1>
       <StateBlock
         kind="empty"
@@ -89,6 +84,7 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
   const record = book && resolved ? findIssue(book, resolved) : null
   const live = gap.status === 'not-ready' || (book !== null && record === null && isIssueApiId(id))
   const detail = useIssueDetail(live ? id : null)
+  const story = useIssueTimeline(live ? id : null)
   const { quotes, retry: retryQuotes } = useIssueQuotes(live && detail.data !== null)
   const market = useThemeMarket()
   const basisDate = market.data?.baseDate ?? null
@@ -125,10 +121,13 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
     let panel: ReactNode
     const onRetryQuotes = subject.kind === 'live' ? retryQuotes : null
     const issueLinks = subject.kind === 'live' ? linked : null
+    const issueStory = subject.kind === 'live' ? story : null
     if (tab === 'timeline')
       panel = (
         <IssueTimelineTab
           issue={subject}
+          story={issueStory}
+          linked={issueLinks}
           quotes={subject.kind === 'live' ? quotes : null}
           onOpenNews={openNews}
           onRetryQuotes={onRetryQuotes}
@@ -137,12 +136,21 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
     else if (tab === 'articles') panel = <IssueArticlesTab issue={subject} onOpenNews={openNews} />
     else if (tab === 'stocks')
       panel = <IssueStocksTab issue={subject} linked={issueLinks} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
-    else panel = <IssueSummaryTab issue={subject} linked={issueLinks} onOpenNews={openNews} onRetryQuotes={onRetryQuotes} />
+    else
+      panel = (
+        <IssueSummaryTab
+          issue={subject}
+          story={issueStory}
+          linked={issueLinks}
+          onOpenNews={openNews}
+          onRetryQuotes={onRetryQuotes}
+        />
+      )
     body = (
       <>
         <IssueHead
           title={subject.title}
-          head={withLinkCount(subjectHead(subject), issueLinks?.links ?? null)}
+          head={subjectHead(subject, { story: issueStory?.data ?? null, links: issueLinks?.links ?? null })}
           tab={tab}
           mock={subject.kind === 'mock'}
           tabsRef={setTabsEl}
@@ -154,7 +162,7 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
     body = skeleton ? <Loading /> : null
   } else if (live && detail.error && !detail.error.isNotFound && detail.error.code !== 'INVALID_PARAMETER') {
     body = (
-      <section className="fg-section">
+      <section className="fg-isp__state">
         <h1 className="fg-sr">이슈</h1>
         <StateBlock
           kind="error"

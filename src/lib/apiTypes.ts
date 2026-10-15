@@ -202,6 +202,9 @@ export interface StockDetailRes {
   change: number | null
   changeAmount?: number | null
   tradeValue?: number | null
+  tradeValueAverage?: number | null
+  tradeValueAverageDays?: number
+  tradeValueRatio?: number | null
   high52w?: number | null
   high52wDate?: string | null
   low52w?: number | null
@@ -268,6 +271,23 @@ export interface AnnualFinancialsRes {
   pbr: number | null
   dps: number | null
   payoutRatio: number | null
+  bps?: number | null
+}
+
+export type FinancialStatementKind = 'CFS' | 'OFS'
+
+export interface QuarterlyFinancialsRes {
+  year: number
+  quarter: number
+  periodEnd: string
+  fsDiv: FinancialStatementKind | null
+  revenue: number | null
+  operatingProfit: number | null
+  netIncome: number | null
+  operatingMargin: number | null
+  bps: number | null
+  revenueYoY: number | null
+  operatingProfitYoY: number | null
 }
 
 export type CandlePeriod = 'D' | 'W' | 'M'
@@ -474,191 +494,6 @@ export interface RecentContractRes {
   endDate: string | null
   link: string
   isCorrection: boolean
-}
-
-export type CitationType = 'NEWS' | 'DISCLOSURE' | 'RELATION' | 'CLUSTER'
-
-export interface CitationRes {
-  type: CitationType
-  id: string
-  label: string
-  url: string | null
-}
-
-interface BriefingSentenceRes {
-  text: string
-  citations: CitationRes[]
-}
-
-export interface BriefingHeadlineRes {
-  text: string
-  citations: CitationRes[]
-}
-
-interface BriefingStockRes {
-  ticker: string
-  name: string
-  market: string | null
-  change: number | null
-}
-
-interface BriefingStockRefRes {
-  ticker: string
-  name: string
-}
-
-interface BriefingArticleRes {
-  newsId: number
-  title: string
-  url: string | null
-  publishedAt: string | null
-}
-
-export interface BriefingIssueRes {
-  clusterId: number
-  title: string
-  keywords: string[]
-  newsCount: number
-  firstPublishedAt: string
-  lastPublishedAt: string
-  stocks: BriefingStockRes[]
-  articles: BriefingArticleRes[]
-  commentary: { sentences: BriefingSentenceRes[] } | null
-}
-
-interface BriefingLeaderRes {
-  ticker: string
-  name: string
-  change: number
-}
-
-interface BriefingThemeRes {
-  id: number
-  name: string
-  change: number | null
-  hotSide: ThemeHotSide
-  stockCount: number
-  pricedCount: number
-  upCount: number
-  downCount: number
-  flatCount: number
-  leaders: BriefingLeaderRes[]
-}
-
-export type WatchKind = 'CORRECTION' | 'CONTRACT_END' | 'PLANNED_RELATION' | 'ISSUE_SPREAD'
-
-export interface WatchPointRes {
-  kind: WatchKind
-  text: string
-  citations: CitationRes[]
-  stocks: BriefingStockRefRes[]
-}
-
-export type RiskKind =
-  | 'ADMINISTRATION_NEW'
-  | 'SUSPENDED_NEW'
-  | 'DELISTING_NEW'
-  | 'CORRECTION'
-  | 'RELATION_DENIED'
-  | 'RELATION_TERMINATED'
-  | 'SANCTION'
-
-export interface RiskRes {
-  kind: RiskKind
-  ticker: string
-  name: string
-  market: string | null
-  detail: string
-  source: CitationRes | null
-}
-
-export interface RelationPartyRes {
-  name: string
-  ticker: string | null
-}
-
-export interface RelationLineRes {
-  id: number
-  subject: RelationPartyRes
-  relation: string
-  object: RelationPartyRes
-  item: string | null
-  polarity: string
-  tense: string
-  subjectImpact: string | null
-  objectImpact: string | null
-  sourceSentence: string | null
-  source: CitationRes
-}
-
-export interface AnalyzedNewsRes {
-  newsId: number
-  title: string
-  url: string | null
-  publishedAt: string | null
-  summary: string | null
-  companies: BriefingStockRes[]
-  relationCount: number
-  relations: RelationLineRes[] | null
-}
-
-interface RelationGraphNodeRes {
-  id: string
-  name: string
-  ticker: string | null
-  market: string | null
-  change: number | null
-}
-
-interface RelationGraphEdgeRes {
-  id: string
-  source: string
-  target: string
-  relation: string
-  item: string | null
-  polarity: string
-  tense: string
-  mentionedCount: number
-  sources: CitationRes[]
-}
-
-export interface RelationGraphRes {
-  nodes: RelationGraphNodeRes[]
-  edges: RelationGraphEdgeRes[]
-}
-
-export interface BriefingLockedRes {
-  commentaries: number
-  watchPoints: number
-  risks: number
-  relations: number
-  graphEdges: number
-}
-
-export type BriefingStatus = 'READY' | 'PARTIAL'
-
-export interface BriefingRes {
-  baseDate: string
-  previousTradingDate: string | null
-  generatedAt: string
-  status: BriefingStatus
-  promptVersion: string
-  market: ThemeMarketRes
-  headline: BriefingHeadlineRes | null
-  issues: BriefingIssueRes[]
-  themes: BriefingThemeRes[]
-  watchPoints: WatchPointRes[] | null
-  risks: RiskRes[] | null
-  analyzedNews: AnalyzedNewsRes[]
-  relationGraph: RelationGraphRes | null
-  locked: BriefingLockedRes | null
-}
-
-export interface BriefingSummaryRes {
-  baseDate: string
-  status: BriefingStatus
-  generatedAt: string
-  headline: string | null
 }
 
 export type CalendarEventKind =
@@ -902,6 +737,7 @@ export interface IssueCompanyRes {
   ticker: string
   name: string
   mentionCount: number
+  role?: string | null
 }
 
 export interface IssueArticleRes {
@@ -912,6 +748,7 @@ export interface IssueArticleRes {
   publishedAt: string | null
   summary: string | null
   tripleExtracted: boolean
+  tickers?: string[]
 }
 
 export interface IssueSummaryRes {
@@ -960,6 +797,7 @@ export interface IssueTimelineNodeRes {
   articleCount: number
   mediaCount: number
   companies: IssueCompanyRes[]
+  companyCount?: number
 }
 
 export interface IssueStoryCompanyRes {
@@ -974,8 +812,41 @@ export interface IssueTimelineRes {
   companies: IssueStoryCompanyRes[]
 }
 
+export interface SearchStockRes {
+  ticker: string
+  name: string
+  market: string
+  matchedAlias: string | null
+}
+
+export interface SearchThemeRes {
+  id: number
+  name: string
+}
+
+export interface SearchRes {
+  query: string
+  stocks: SearchStockRes[]
+  themes: SearchThemeRes[]
+  issues: IssueSummaryRes[]
+}
+
 export interface StockIssueRes extends IssueSummaryRes {
   mentionCount: number
+  storyRootId?: number | null
+  storyTitle?: string | null
+}
+
+export interface StockIssueFlowRes {
+  id: number
+  title: string | null
+  issueCount: number
+  firstPublishedAt: string | null
+  lastPublishedAt: string | null
+  firstMediaCount: number
+  lastMediaCount: number
+  ongoing: boolean
+  issues: StockIssueRes[]
 }
 
 export interface LatestStockIssueRes {

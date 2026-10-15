@@ -1,12 +1,11 @@
 import { ChevronDown, ChevronRight, Lock, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Button, ButtonLink } from '@/components/fg/Button'
+import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { EvidenceSheet } from '@/components/fg/EvidenceSheet'
 import { FilterChip, FilterChipGroup } from '@/components/fg/FilterChip'
-import { GapValue } from '@/components/fg/Gap'
 import { GapBar, HiddenLinkHead, HiddenLinkRow, LINK_LIST_PAGE, STRENGTH_NOTE } from '@/components/fg/HiddenLinkList'
 import { IssueStockSheet } from '@/components/fg/IssueStockSheet'
 import { MemberGate } from '@/components/fg/MemberGate'
@@ -49,7 +48,6 @@ import { useFavoriteToggles } from '@/lib/fg/useFavoriteToggle'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { useMemberGate } from '@/lib/memberGate'
 import { fromState } from '@/lib/navigation'
-import { useIssueArticleCompanies } from '@/lib/queries/useIssue'
 import { useEvidenceView, type IssueLinksState } from '@/lib/queries/useLinkedCompanies'
 import { cn } from '@/lib/utils'
 
@@ -119,13 +117,7 @@ function StockCard({ card, member, locked, on, onPick, onOpen, onRetryQuotes }: 
           {card.change !== null && <ChangeText value={card.change} className="fg-ics__chg" />}
         </span>
       </div>
-      {card.role !== null ? (
-        <p className="fg-ics__role">{card.role}</p>
-      ) : (
-        <p className="fg-ics__role fg-ics__role--gap">
-          뉴스 속 역할 <GapValue gap="issues" />
-        </p>
-      )}
+      {card.role !== null && <p className="fg-ics__role">{card.role}</p>}
       <span className="fg-ics__gap fg-num">
         <span>
           {card.newHigh ? '52주 최고' : '52주 최고 대비'}{' '}
@@ -238,7 +230,7 @@ function LinkList({ lead, links, scope, narrow, watchedOf, onScope, onToggleWatc
           <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
         </Button>
       )}
-      <Disclaimer text={STRENGTH_NOTE} className="fg-snote" />
+      <Disclaimer text={STRENGTH_NOTE} className="fg-ilk__note" />
     </>
   )
 }
@@ -266,19 +258,11 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
   const [watched, setWatched] = useState<Record<string, boolean>>({})
   const [stockKey, setStockKey] = useState<string | null>(null)
   const [linkId, setLinkId] = useState<string | null>(null)
-  const [wantArticles, setWantArticles] = useState(false)
   const [today] = useState(() => kstToday(new Date()))
   const trigger = useRef<HTMLElement | null>(null)
 
-  const articleIds = useMemo(
-    () => (issue.kind === 'live' && wantArticles ? issue.articles.map((a) => a.id) : null),
-    [issue.kind, issue.articles, wantArticles],
-  )
-  const companies = useIssueArticleCompanies(articleIds)
-  const byTicker = useMemo(
-    () => (companies.data ? articlesByTicker(issue.articles, companies.data) : null),
-    [companies.data, issue.articles],
-  )
+  const tickersMissing = live && issue.articles.some((article) => article.tickers === undefined)
+  const byTicker = useMemo(() => (tickersMissing ? null : articlesByTicker(issue.articles)), [tickersMissing, issue.articles])
 
   const sheetCard = cards.find((card) => card.key === stockKey) ?? null
   const sheetLink = member && links ? (links.find((link) => link.company.id === linkId) ?? null) : null
@@ -291,8 +275,6 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
   }
   const openStock = (key: string) => {
     remember()
-    setWantArticles(true)
-    if (companies.error) companies.retry()
     setStockKey(key)
   }
   const openLink = (id: string) => {
@@ -395,25 +377,25 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
         <div className="fg-section__head fg-ilk__head">
           <div className="fg-sev__titles">
             <span className="fg-sev__title">
-              <h2 id="fg-ilk-title" className="fg-section__title">
+              <h2 id="fg-ilk-title" className="fg-section__title fg-ilk__h">
                 이런 기업은 어때요?
                 {links && links.length > 0 && <span className="fg-ist__count fg-num">{` ${links.length}`}</span>}
               </h2>
             </span>
             <p className="fg-section__sub">뉴스엔 안 나왔지만 관계로 이어진 기업이에요</p>
-            {summary.length > 0 && (
-              <p className="fg-ilk__sum">
-                {summary.map((part, i) => (part.strong ? <b key={i}>{part.text}</b> : <span key={i}>{part.text}</span>))}
-              </p>
-            )}
           </div>
           {links && links.length > 0 && !narrow && (
-            <ButtonLink to="/graph" className="fg-ilk__go">
+            <Link to="/graph" className="fg-sdmore fg-ilk__go">
               관계 탐색에서 크게 보기
               <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
-            </ButtonLink>
+            </Link>
           )}
         </div>
+        {summary.length > 0 && (
+          <p className="fg-ilk__sum">
+            {summary.map((part, i) => (part.strong ? <b key={i}>{part.text}</b> : <span key={i}>{part.text}</span>))}
+          </p>
+        )}
         {linkBody}
       </section>
       <Disclaimer />
@@ -422,8 +404,7 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
         lead={lead}
         total={issue.articles.length}
         articles={sheetArticles}
-        failed={issue.kind === 'live' && companies.error !== null}
-        onRetry={companies.retry}
+        articlesFailed={tickersMissing && sheetArticles === null}
         onRetryQuotes={onRetryQuotes}
         watched={sheetCard ? watched[sheetCard.key] === true : false}
         onToggleWatch={() => {

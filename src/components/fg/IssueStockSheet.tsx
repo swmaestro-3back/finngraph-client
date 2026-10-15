@@ -5,14 +5,11 @@ import { Button, ButtonLink } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { IssuePathLead } from '@/components/fg/EvidenceSheet'
-import { GapValue } from '@/components/fg/Gap'
 import { GapBar } from '@/components/fg/HiddenLinkList'
 import { ArticleLine } from '@/components/fg/IssueArticlesTab'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
 import { SideSheet } from '@/components/fg/SideSheet'
-import { Skeleton } from '@/components/fg/Skeleton'
-import { StateBlock } from '@/components/fg/StateBlock'
 import { StockWatchButton } from '@/components/fg/StockActions'
 import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
 import { articleRows } from '@/lib/fg/issueArticles'
@@ -26,8 +23,7 @@ interface IssueStockSheetProps {
   lead: string
   total: number
   articles: readonly IssueArticleItem[] | null
-  failed: boolean
-  onRetry: () => void
+  articlesFailed: boolean
   onRetryQuotes: (() => void) | null
   watched: boolean
   onToggleWatch: () => void
@@ -36,36 +32,9 @@ interface IssueStockSheetProps {
   onClose: () => void
 }
 
-function ArticleList({
-  articles,
-  failed,
-  onRetry,
-  onOpenNews,
-}: Pick<IssueStockSheetProps, 'articles' | 'failed' | 'onRetry' | 'onOpenNews'>) {
-  if (failed) {
-    return (
-      <StateBlock
-        kind="error"
-        title="기사 목록을 불러오지 못했어요"
-        description="잠시 뒤 다시 시도해 주세요"
-        action={
-          <Button size="sm" onClick={onRetry}>
-            다시 시도
-          </Button>
-        }
-      />
-    )
-  }
-  if (articles === null) {
-    return (
-      <div className="fg-istk__skel" aria-hidden="true">
-        <Skeleton height={56} />
-        <Skeleton height={56} />
-        <Skeleton height={56} />
-      </div>
-    )
-  }
-  if (articles.length === 0) return <p className="fg-istk__empty">이 종목이 나온 기사를 찾지 못했어요</p>
+function ArticleList({ articles, articlesFailed, onOpenNews }: Pick<IssueStockSheetProps, 'articles' | 'articlesFailed' | 'onOpenNews'>) {
+  if (articlesFailed) return <p className="fg-istk__empty">이 종목이 나온 기사를 불러오지 못했어요</p>
+  if (articles === null || articles.length === 0) return <p className="fg-istk__empty">이 종목이 나온 기사를 찾지 못했어요</p>
   return (
     <ul className="fg-iar__list fg-istk__arts" aria-label="이 종목이 나온 기사">
       {articleRows(articles, 'time').map((row) => (
@@ -82,8 +51,7 @@ export function IssueStockSheet({
   lead,
   total,
   articles,
-  failed,
-  onRetry,
+  articlesFailed,
   onRetryQuotes,
   watched,
   onToggleWatch,
@@ -115,24 +83,25 @@ export function IssueStockSheet({
         <>
           <div className="fg-rpath fg-istk__path" role="group" aria-label="이슈와 종목">
             <IssuePathLead title={lead}>
-              <span className="fg-rpath__node">{card.name}</span>
+              <span className="fg-rpath__node">
+                <i className="fg-ilk__cdot" aria-hidden="true" />
+                {card.name}
+              </span>
             </IssuePathLead>
           </div>
-          {card.role !== null ? (
-            <div className="fg-istk__role">
-              <span className="fg-esheet__label">뉴스 속 역할</span>
+          <div className="fg-istk__role fg-istk__sec">
+            <span className="fg-esheet__label">뉴스 속 역할</span>
+            {card.role !== null ? (
               <p>{card.role}</p>
-            </div>
-          ) : (
-            <p className="fg-istk__role fg-istk__role--gap">
-              뉴스 속 역할 <GapValue gap="issues" />
-            </p>
-          )}
-          <div className="fg-esheet__quotes">
-            <span className="fg-esheet__label">이 종목이 나온 기사 · 최신순</span>
-            <ArticleList articles={articles} failed={failed} onRetry={onRetry} onOpenNews={onOpenNews} />
+            ) : (
+              <p className="fg-istk__none">이 이슈 기사에는 역할 문장이 아직 없어요</p>
+            )}
           </div>
-          <div className="fg-esheet__target fg-num">
+          <div className="fg-esheet__quotes fg-istk__sec">
+            <span className="fg-esheet__label">이 종목이 나온 기사 · 최신순</span>
+            <ArticleList articles={articles} articlesFailed={articlesFailed} onOpenNews={onOpenNews} />
+          </div>
+          <div className="fg-esheet__target fg-istk__target fg-num">
             <div className="fg-esheet__trow">
               <span className="fg-esheet__who">
                 <CompanyLogo name={card.name} size={24} />
@@ -157,11 +126,13 @@ export function IssueStockSheet({
             </span>
             <div className="fg-esheet__acts">
               {card.ticker ? (
-                <ButtonLink to={stockPath(card.ticker)} state={fromState(`${pathname}${search}`)}>
+                <ButtonLink to={stockPath(card.ticker)} state={fromState(`${pathname}${search}`)} variant="secondary">
                   종목 보기
                 </ButtonLink>
               ) : (
-                <Button disabled>종목 보기</Button>
+                <Button variant="secondary" disabled>
+                  종목 보기
+                </Button>
               )}
               {card.ticker ? (
                 <StockWatchButton stock={{ ticker: card.ticker, name: card.name }} />
@@ -172,7 +143,7 @@ export function IssueStockSheet({
               )}
             </div>
           </div>
-          <Disclaimer className="fg-snote" />
+          <Disclaimer />
         </>
       )}
     </SideSheet>
