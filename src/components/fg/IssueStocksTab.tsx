@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { kstToday } from '@/lib/calendar'
 import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
+import { issueGraphPath } from '@/lib/fg/issuePage'
 import type { IssueLink } from '@/lib/fg/issueRecords'
 import {
   cardArticles,
@@ -393,7 +394,7 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
             <p className="fg-section__sub">뉴스엔 안 나왔지만 관계로 이어진 기업이에요</p>
           </div>
           {links && links.length > 0 && !narrow && (
-            <Link to="/graph" className="fg-sdmore fg-ilk__go">
+            <Link to={issueGraphPath(issue.stocks)} state={fromState(`${pathname}${search}`)} className="fg-sdmore fg-ilk__go">
               관계 탐색에서 크게 보기
               <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
             </Link>

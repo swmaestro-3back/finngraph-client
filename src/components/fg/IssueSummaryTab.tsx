@@ -15,7 +15,7 @@ import { StateBlock } from '@/components/fg/StateBlock'
 import { StockChip } from '@/components/fg/StockChip'
 import { LinkedRailRow } from '@/components/fg/StockLinkedRail'
 import type { IssueTimelineRes } from '@/lib/apiTypes'
-import { graphSentence, issueFlow, issueGraph, issueRail, summaryCaption, type IssueFlowModel } from '@/lib/fg/issuePage'
+import { graphSentence, issueFlow, issueGraph, issueGraphPath, issueRail, summaryCaption, type IssueFlowModel } from '@/lib/fg/issuePage'
 import { summaryPointItems, type IssueLink, type IssuePoint, type IssueRecord, type IssueStock } from '@/lib/fg/issueRecords'
 import {
   connectedCount,
@@ -277,6 +277,7 @@ interface GraphCardProps {
 
 function GraphCard({ source, live, today, error, onRetry, emptyNote, narrow }: GraphCardProps) {
   const { locked, pending } = useMemberGate()
+  const { pathname, search } = useLocation()
   const { stocks, links } = source
   const ready = (links !== null || locked) && !pending
   const skeleton = useDelayed(!ready && !(links === null && error))
@@ -333,7 +334,7 @@ function GraphCard({ source, live, today, error, onRetry, emptyNote, narrow }: G
         <h2 id="fg-igr-title" className="fg-section__title fg-section__title--issue">
           관계 그래프
         </h2>
-        <Link to="/graph" className="fg-sdmore">
+        <Link to={issueGraphPath(stocks)} state={fromState(`${pathname}${search}`)} className="fg-sdmore">
           {narrow ? '관계 탐색에서 보기' : '관계 탐색에서 크게 보기'}
           <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
         </Link>
