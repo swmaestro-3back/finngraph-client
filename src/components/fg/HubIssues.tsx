@@ -174,6 +174,8 @@ function InferredBlock({ linked, to }: { linked: IssueLinksState; to: string }) 
         <RetryText subject="이어진 기업" onRetry={linked.retry} />
       </p>
     )
+  } else if (links === null && locked) {
+    body = <MemberGate subject="관계로 이어진 기업" variant="compact" className="fg-hubp__gate" />
   } else if (links === null || pending) {
     body = <Skeleton height={120} />
   } else if (links.length === 0) {
@@ -371,6 +373,15 @@ function IssuesMobile({ items, index, stocks, total, linked, extra, quotes, look
               <HubGapLine ext={lookup.ext(stock.ticker)} />
             </Link>
           ))}
+          {!links && locked && (
+            <div className="fg-hubm__gcard">
+              <span className="fg-hubm__gtitle">관계로 이어진 기업은 로그인하면 볼 수 있어요</span>
+              <span className="fg-hubm__gsub">관계 경로와 원문 근거까지 볼 수 있어요</span>
+              <Button variant="primary" onClick={promptLogin}>
+                로그인
+              </Button>
+            </div>
+          )}
           {links &&
             !pending &&
             (locked ? (

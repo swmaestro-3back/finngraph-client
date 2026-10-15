@@ -76,8 +76,8 @@ export function ThemePanel({ theme, changeOf, issue, members, ref }: ThemePanelP
         <ThemeAverageLine theme={theme} className="fg-tdet__avg" />
       </div>
       <div className="fg-tdet__acts">
-        <ThemeDetailLink theme={theme} />
-        <ThemeGraphLink theme={theme} />
+        <ThemeDetailLink theme={theme} text />
+        <ThemeGraphLink theme={theme} text />
       </div>
       <ThemeRatio up={up} down={down} large caption={false} />
       <dl className="fg-tdet__stats">

@@ -54,8 +54,26 @@ export function StockGraphLink({ stock, text = false, className }: StockGraphLin
   )
 }
 
-export function StockDetailLink({ stock, className }: { stock: StockRef; className?: string }) {
+interface StockDetailLinkProps {
+  stock: StockRef
+  text?: boolean
+  className?: string
+}
+
+export function StockDetailLink({ stock, text = false, className }: StockDetailLinkProps) {
   const { pathname, search } = useLocation()
+  if (text) {
+    return (
+      <Link
+        to={stockPath(stock.ticker)}
+        state={fromState(`${pathname}${search}`)}
+        className={className ? `fg-sdmore ${className}` : 'fg-sdmore'}
+      >
+        종목 상세 보기
+        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+      </Link>
+    )
+  }
   return (
     <ButtonLink
       to={stockPath(stock.ticker)}

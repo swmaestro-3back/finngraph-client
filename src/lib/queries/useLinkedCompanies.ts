@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import type { EvidenceView } from '@/components/fg/EvidenceSheet'
 import { ApiError, getData } from '@/lib/api'
+import { useAuth } from '@/lib/auth'
 import type { IssueLink } from '@/lib/fg/issueRecords'
 import {
   buildLinkedCompanies,
@@ -97,12 +98,14 @@ export function useLinkedCompanies(
   centerName: string | null,
   basisDate: string | null | undefined,
 ): LinkedCompaniesState {
-  const graph = useLinkGraph(ticker)
-  const stocks = useStocksCached(ticker !== null)
+  const member = useAuth().status === 'authenticated'
+  const target = member ? ticker : null
+  const graph = useLinkGraph(target)
+  const stocks = useStocksCached(target !== null)
   const quotes = stockIndexOf(stocks.data)
   const base = useMemo(
-    () => (graph.data && ticker && centerName ? buildLinkedCompanies(graph.data, ticker, centerName) : null),
-    [graph.data, ticker, centerName],
+    () => (graph.data && target && centerName ? buildLinkedCompanies(graph.data, target, centerName) : null),
+    [graph.data, target, centerName],
   )
   const list = useMemo(() => (base ? withQuotes(base, quotes, basisDate) : null), [base, quotes, basisDate])
   return {
@@ -132,7 +135,8 @@ function parseStocks(key: string | null): IssueLinkStock[] | null {
 }
 
 export function useIssueLinks(stocks: readonly IssueLinkStock[] | null, basisDate: string | null | undefined): IssueLinksState {
-  const key = stocksKey(stocks)
+  const member = useAuth().status === 'authenticated'
+  const key = member ? stocksKey(stocks) : null
   const parsed = useMemo(() => parseStocks(key), [key])
   const sources = useMemo(() => (parsed ? issueLinkTickers(parsed) : []), [parsed])
   const all = useMemo(() => (parsed ? issueStockTickers(parsed) : []), [parsed])

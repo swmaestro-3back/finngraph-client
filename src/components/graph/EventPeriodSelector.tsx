@@ -13,7 +13,7 @@ interface Props {
 export function EventPeriodSelector({ value, onChange }: Props) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur">
-      <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground">기간</span>
+      <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground md:text-xs">기간</span>
       <ToggleGroup
         type="single"
         size="sm"
@@ -32,7 +32,7 @@ export function EventPeriodSelector({ value, onChange }: Props) {
             value={period}
             aria-label={`이벤트 기간 ${EVENT_PERIOD_LABELS[period]}`}
             // 켜짐 = 채운 배경 (Hop 선택기와 같은 규칙)
-            className="rounded-md px-2.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            className="rounded-md px-2.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground md:h-8 md:px-3 md:text-body"
           >
             {EVENT_PERIOD_LABELS[period]}
           </ToggleGroupItem>

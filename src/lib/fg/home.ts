@@ -8,25 +8,7 @@ export const FEED_THEME_CHIPS = 5
 export const RAIL_MOVERS = 4
 export const WATCH_ROWS = 5
 export const HOME_STOCK_ROWS = 10
-export const DEFAULT_FEED_SORT: IssueSort = 'media'
-
-export const FEED_SORTS: readonly { value: IssueSort; label: string }[] = [
-  { value: 'recent', label: '최신순' },
-  { value: 'media', label: '매체 많은 순' },
-]
-
-export function parseFeedSort(search: string): IssueSort {
-  const raw = new URLSearchParams(search).get('sort')
-  return FEED_SORTS.find((option) => option.value === raw)?.value ?? DEFAULT_FEED_SORT
-}
-
-export function feedSortSearch(search: string, sort: IssueSort): string {
-  const params = new URLSearchParams(search)
-  params.delete('sort')
-  if (sort !== DEFAULT_FEED_SORT) params.set('sort', sort)
-  const text = params.toString()
-  return text ? `?${text}` : ''
-}
+export const FEED_SORT: IssueSort = 'recent'
 
 export interface FeedChunk {
   date: string | null

@@ -8,6 +8,7 @@ import { HopSelector, type Hop } from '@/components/graph/HopSelector'
 import { Legend } from '@/components/graph/Legend'
 import { Toolbar } from '@/components/graph/Toolbar'
 import { MemberVeil } from '@/components/gate/MemberVeil'
+import { GraphBackdrop } from '@/components/graph/GraphBackdrop'
 import {
   ALL_CATEGORIES,
   ALL_PREDICATES,
@@ -62,6 +63,21 @@ function captionOf(hop: Hop, relationCount: number, neighborCount: number, trunc
   if (hop === 1) return base
   const neighbors = `주변 기업 ${neighborCount}곳${truncated ? ' (일부만 표시)' : ''}`
   return `기사 관계 ${relationCount}건 + ${neighbors}`
+}
+
+export function NewsGraphLocked() {
+  const { promptLogin } = useMemberGate()
+  return (
+    <div className="relative overflow-hidden rounded-lg border border-border" style={{ height: GRAPH_HEIGHT }}>
+      <GraphBackdrop />
+      <MemberVeil
+        title="기사 속 관계는 로그인하면 열려요"
+        description="이 기사에서 추출한 기업 관계와 근거 문장을 그래프로 따라갈 수 있습니다."
+        onLogin={promptLogin}
+        actionClassName="h-10 max-md:h-11"
+      />
+    </div>
+  )
 }
 
 /** 기사 속 관계 — 요약문 아래 이어지는 한 장면. 관계 내용은 간선 툴팁으로 본다 */

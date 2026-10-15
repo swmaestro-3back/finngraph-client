@@ -46,7 +46,8 @@ export function OriginBar({ center, onSelect }: Props) {
   if (searching || !center) {
     return (
       <div
-        className="flex h-10.5 w-72 max-w-full items-center [&>div]:w-full [&_input]:bg-background"
+        data-guide="origin"
+        className="flex h-10.5 w-72 max-w-full items-center md:h-11.5 md:w-80 [&>div]:w-full [&_input]:bg-background"
         // 포커스가 검색창 밖으로 나가면(선택 완료 포함) 다시 중심 표시로 돌아간다
         onBlur={(e) => {
           if (center && !e.currentTarget.contains(e.relatedTarget)) setSearching(false)
@@ -72,16 +73,17 @@ export function OriginBar({ center, onSelect }: Props) {
   return (
     <button
       type="button"
+      data-guide="origin"
       onClick={() => setSearching(true)}
       aria-label={`중심 ${center.label} — 다른 종목이나 테마로 바꾸기`}
-      className="flex h-10.5 max-w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-background/90 pr-3 pl-2 shadow-soft backdrop-blur hover:border-border-strong"
+      className="flex h-10.5 max-w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-background/90 pr-3 pl-2 shadow-soft backdrop-blur hover:border-border-strong md:h-11.5 md:gap-2.5 md:pr-3.5 md:pl-2.5"
     >
-      <NodeMark node={center} size={22} />
-      <span className="min-w-0 truncate text-body font-semibold text-foreground">{center.label}</span>
-      <span className="shrink-0 font-mono text-caption text-muted-foreground">
+      <NodeMark node={center} size={24} />
+      <span className="min-w-0 truncate text-body font-semibold text-foreground md:text-[15px]">{center.label}</span>
+      <span className="shrink-0 font-mono text-caption text-muted-foreground md:text-xs">
         {ticker ?? '테마'}
       </span>
-      <Search className="ml-1.5 size-4 shrink-0 text-muted-foreground" strokeWidth={2} />
+      <Search className="ml-1.5 size-4 shrink-0 text-muted-foreground md:size-[18px]" strokeWidth={2} />
     </button>
   )
 }

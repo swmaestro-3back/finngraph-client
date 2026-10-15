@@ -1,6 +1,8 @@
 import { Fragment, useState, type ReactNode } from 'react'
+import { Lock } from 'lucide-react'
 import { nodeColor, type GraphNode } from '@/data/graphTypes'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
+import { Button } from '@/components/ui/button'
 import { changeColorClass, formatChange } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -154,6 +156,25 @@ export function MoreButton({ onClick, children }: { onClick: () => void; childre
     >
       {children}
     </button>
+  )
+}
+
+export function LockedNote({ text, onLogin }: { text: string; onLogin: () => void }) {
+  return (
+    <div className="flex flex-col items-start gap-2.5 rounded-lg bg-muted px-3.5 py-3">
+      <div aria-hidden className="flex w-full flex-col gap-1.5">
+        <span className="h-2.5 w-[92%] rounded bg-border" />
+        <span className="h-2.5 w-[74%] rounded bg-border" />
+        <span className="h-2.5 w-[83%] rounded bg-border" />
+      </div>
+      <p className="m-0 flex items-center gap-1.5 text-caption text-muted-foreground">
+        <Lock className="size-3.5 shrink-0" strokeWidth={2} />
+        {text}
+      </p>
+      <Button size="sm" onClick={onLogin}>
+        로그인하고 보기
+      </Button>
+    </div>
   )
 }
 

@@ -941,9 +941,6 @@ a.fg-hq:hover .fg-hq__name {
   }
 }
 
-.fg-hfeed__sort {
-  flex-shrink: 0;
-}
 .fg-hfeed__chips {
   display: flex;
   flex-wrap: wrap;
@@ -1649,8 +1646,7 @@ a.fg-hq:hover .fg-hq__name {
   .fg-hfeed__chips > * {
     flex-shrink: 0;
   }
-  .fg-hfeed__chips > .fg-filter::before,
-  .fg-hfeed__sort button::before {
+  .fg-hfeed__chips > .fg-filter::before {
     inset: -6px 0;
   }
   .fg-hfeed__rail::before {

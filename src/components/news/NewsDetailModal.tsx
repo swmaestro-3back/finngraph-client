@@ -8,13 +8,14 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import type { Hop } from '@/components/graph/HopSelector'
-import { NewsGraphSection } from '@/components/news/NewsGraphSection'
+import { NewsGraphLocked, NewsGraphSection } from '@/components/news/NewsGraphSection'
 import { NewsSummary } from '@/components/news/NewsSummary'
 import { NewsStockChips } from '@/components/news/NewsStockChips'
 import { NewsSection } from '@/components/theme/NewsSection'
 import { sourceUrl, toNewsItem } from '@/lib/apiMappers'
 import { formatDateTime, pressName } from '@/lib/format'
 import { useNewsGraph } from '@/lib/useNewsGraph'
+import { useMemberGate } from '@/lib/memberGate'
 import { useNewsCompanies } from '@/lib/queries/useNewsCompanies'
 import { useNewsDetail } from '@/lib/queries/useNewsDetail'
 import { cn } from '@/lib/utils'
@@ -45,7 +46,8 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
 
   const { data: news, loading, error, refetch } = useNewsDetail(currentId)
   const { data: companies } = useNewsCompanies(currentId)
-  const { data: graphData, similar } = useNewsGraph(currentId, hop)
+  const { locked, pending } = useMemberGate()
+  const { data: graphData, similar } = useNewsGraph(currentId, hop, !locked && !pending)
 
   const relatedStocks = companies ?? []
   // 종목 칩에 올리면 아래 그래프에서 그 기업 노드를 켠다 — 칩(시세)과 그래프(관계)가 같은 기업으로 이어진다
@@ -170,6 +172,13 @@ export function NewsDetailModal({ newsId, onOpenChange, returnFocusRef }: Props)
                 onNavigate={() => onOpenChange(false)}
               />
             </article>
+
+            {locked && news.tripleExtracted === true && (
+              <section className="mt-8 border-t border-border pt-6">
+                <h3 className="mb-4 text-sm font-semibold text-foreground">관계 그래프</h3>
+                <NewsGraphLocked />
+              </section>
+            )}
 
             {graphData && graphData.graph.metadata.stats.total_nodes > 0 && (
               <section className="mt-8 border-t border-border pt-6">

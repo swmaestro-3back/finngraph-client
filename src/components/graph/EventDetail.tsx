@@ -18,6 +18,7 @@ import {
   ChangeText,
   LEDGER_ROW,
   Ledger,
+  LockedNote,
   NameMark,
   NodeMark,
   RowAction,
@@ -39,6 +40,7 @@ interface Props {
   onShowSharing?: () => void
   /** 대표 기사가 아닌 기사를 모달로 — 뉴스 id 체계가 다르면 넘어오지 않는다 */
   onOpenNews?: (newsId: string) => void
+  onLogin?: () => void
 }
 
 /**
@@ -52,9 +54,10 @@ export function EventDetail({
   onNodeSelect,
   onShowSharing,
   onOpenNews,
+  onLogin,
 }: Props) {
   const info = eventInfo(node)
-  const detail = useEventDetail(node.data.clusterId)
+  const detail = useEventDetail(onLogin ? undefined : node.data.clusterId)
   const period = eventPeriod(info.firstPublishedAt, info.lastPublishedAt)
   const keywords = (detail.data?.keywords ?? info.keywords).slice(0, MAX_KEYWORDS)
   const newsCount = detail.data?.news_total ?? info.newsCount
@@ -97,6 +100,12 @@ export function EventDetail({
             이 이벤트를 공유하는 기업
           </Button>
         </div>
+      )}
+
+      {onLogin && (
+        <Section title="이벤트 타임라인">
+          <LockedNote text="이 이벤트의 기사는 로그인하면 볼 수 있어요" onLogin={onLogin} />
+        </Section>
       )}
 
       {(articlesPending || articles.length > 0 || articlesNote || detail.error) && (

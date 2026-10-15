@@ -191,7 +191,7 @@ export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPa
         </div>
         <PanelPrice stock={stock} summary={summary} />
         <div className="fg-sdet__acts">
-          <StockDetailLink stock={stock} />
+          <StockDetailLink stock={stock} text />
         </div>
         {summary.candlesFailed ? (
           <CandlesFailed retry={retry} />
@@ -251,7 +251,7 @@ export function StockFold({ stock, summary, retry }: { stock: StockRowRes; summa
       <StockThemeChips stock={stock} className="fg-sfold__sec" />
       <div className="fg-sfold__acts">
         <StockStar stock={stock} className="fg-sfold__star" />
-        <StockDetailLink stock={stock} />
+        <StockDetailLink stock={stock} text />
       </div>
     </div>
   )

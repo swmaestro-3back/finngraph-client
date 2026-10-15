@@ -12,6 +12,7 @@ import {
 import {
   ChangeText,
   LEDGER_ROW,
+  LockedNote,
   MoreButton,
   NodeMark,
   RowAction,
@@ -44,6 +45,7 @@ interface Props {
   onLinkSelect?: (link: GraphLink) => void
   /** 근거 기사를 누르면 상세 모달로 — KG 근거 뉴스는 전부 삼중항 추출분이라 미분석 케이스가 없다 */
   onOpenNews?: (newsId: string) => void
+  onLogin?: () => void
 }
 
 const DART_VIEWER = 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo='
@@ -67,6 +69,7 @@ export function EdgeDetail({
   onNodeSelect,
   onLinkSelect,
   onOpenNews,
+  onLogin,
 }: Props) {
   const color = nodeColor(source)
   const newsCount = link.news_mention_count ?? link.news?.length ?? 0
@@ -84,10 +87,11 @@ export function EdgeDetail({
 
   // 기사 제목·월별 건수·공시 접수일은 kg-api 근거 조회 한 번으로 — 품목·건수·기간은 간선에 실려 온 것을 그대로 쓴다
   // 테마 소속·이벤트 언급, 근거 0건인 관계는 조회할 것이 없다
-  const evidence = useEdgeEvidence(link.id, hasEvidence(link))
+  const evidenceOpen = !onLogin && hasEvidence(link)
+  const evidence = useEdgeEvidence(link.id, evidenceOpen)
   const news = evidence.data ? evidenceNews(evidence.data) : []
   const newsTotal = evidence.data?.news_total ?? 0
-  const titlesPending = awaiting(evidence, hasEvidence(link))
+  const titlesPending = awaiting(evidence, evidenceOpen)
   const days = groupNewsByDay(news)
 
   // 월별 막대는 서버가 전체 근거 기사로 센다 — 목록에 보이는 기사 수와 무관하게 그릴 수 있다
@@ -194,7 +198,13 @@ export function EdgeDetail({
         </Section>
       )}
 
-      {newsCount > 0 && (
+      {onLogin && (newsCount > 0 || disclosureCount > 0) && (
+        <Section title="출처" meta={countMeta}>
+          <LockedNote text="근거 기사·공시 문장은 로그인하면 볼 수 있어요" onLogin={onLogin} />
+        </Section>
+      )}
+
+      {!onLogin && newsCount > 0 && (
         <Section title="출처 기사" meta={showMonths ? '최신순' : (period ?? '최신순')}>
           {titlesPending ? (
             <RowSkeleton rows={Math.min(3, newsCount)} />

@@ -166,7 +166,7 @@ export function IssueTreeGraph({ graph, locked, links, onOpenLink }: IssueTreeGr
   const { promptLogin } = useMemberGate()
   const clip = `${useId().replace(/[^a-zA-Z0-9_-]/g, '')}-logo`
   const [active, setActive] = useState<string | null>(null)
-  const gated = locked && graph.inferred > 0
+  const gated = locked
   const lit = useMemo(() => (active ? lineage(graph, active) : null), [graph, active])
   const linkOf = useCallback(
     (node: GraphNode) => links.find((link) => link.from === node.from && link.company.name === node.name) ?? null,
@@ -251,7 +251,11 @@ export function IssueTreeGraph({ graph, locked, links, onOpenLink }: IssueTreeGr
             <span className="fg-igraph__lock" aria-hidden="true">
               <Lock size={16} strokeWidth={1.75} />
             </span>
-            <p className="fg-igraph__gtext">{`이런 기업 ${graph.inferred}곳은 로그인하면 볼 수 있어요`}</p>
+            <p className="fg-igraph__gtext">
+              {graph.inferred > 0
+                ? `이런 기업 ${graph.inferred}곳은 로그인하면 볼 수 있어요`
+                : '관계로 이어진 기업은 로그인하면 볼 수 있어요'}
+            </p>
             <Button variant="primary" size="sm" onClick={promptLogin}>
               로그인
             </Button>

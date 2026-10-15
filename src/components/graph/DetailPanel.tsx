@@ -40,6 +40,7 @@ interface Props {
   companies: CompanyIndex
   onShowSharing?: () => void
   onOpenNews?: (newsId: string) => void
+  onLogin?: () => void
 }
 
 /** 선택한 노드/간선의 상세 — 데스크톱은 우측 패널, 모바일은 바텀시트 */
@@ -61,6 +62,7 @@ export function DetailPanel({
   companies,
   onShowSharing,
   onOpenNews,
+  onLogin,
 }: Props) {
   // 선택이 바뀌면 맨 위부터 — 앞 대상을 읽던 스크롤 위치가 새 대상의 중간을 보여주지 않게 한다
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -81,6 +83,7 @@ export function DetailPanel({
         onNodeSelect={onNodeSelect}
         onLinkSelect={onLinkSelect}
         onOpenNews={onOpenNews}
+        onLogin={onLogin}
       />
     ) : selection.node.type === 'event' ? (
       <EventDetail
@@ -90,6 +93,7 @@ export function DetailPanel({
         onNodeSelect={onNodeSelect}
         onShowSharing={onShowSharing}
         onOpenNews={onOpenNews}
+        onLogin={onLogin}
       />
     ) : (
       <NodeDetail
@@ -103,6 +107,7 @@ export function DetailPanel({
         onRecenter={onRecenter}
         onThemeOpen={onThemeOpen}
         centerShortcuts={centerShortcuts}
+        onLogin={onLogin}
       />
     )
 
