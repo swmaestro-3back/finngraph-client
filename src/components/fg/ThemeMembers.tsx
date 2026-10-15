@@ -60,7 +60,7 @@ export function ThemeMembers({ stocks, loading, error, onRetry, leaderTicker, fr
         {shown.map((row) => (
           <li key={row.ticker}>
             <Link to={stockPath(row.ticker)} state={fromState(from)}>
-              <CompanyLogo name={row.name} />
+              <CompanyLogo name={row.name} ticker={row.ticker} />
               <span className="fg-mlist__body">
                 <span className="fg-mlist__top">
                   <span className="fg-mlist__name">{row.name}</span>

@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "build:dev": "tsc -b && vite build --mode dev",
     "lint": "oxlint",
+    "logos": "node scripts/fetch-logos.mjs",
     "preview": "vite preview",
     "test": "vitest run"
   },
@@ -38,6 +39,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "sharp": "^0.35.5",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "vitest": "^5.0.0"

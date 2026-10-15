@@ -5,6 +5,16 @@ export function stockLogoUrl(ticker: string): string {
   return `https://static.toss.im/png-icons/securities/icn-sec-fill-${encodeURIComponent(ticker)}.png`
 }
 
+/** 레포에 미리 받아둔 로고 — scripts/fetch-logos.mjs 가 public/logos/{ticker}.png 로 저장한다 */
+export function localLogoUrl(ticker: string): string {
+  return `/logos/${encodeURIComponent(ticker)}.png`
+}
+
+/** 로고를 찾아볼 순서 — 받아둔 파일이 먼저, 없으면 CDN. 전부 실패하면 호출처가 이니셜로 떨어진다 */
+export function logoSources(ticker: string): readonly string[] {
+  return [localLogoUrl(ticker), stockLogoUrl(ticker)]
+}
+
 /** 로고를 그릴 수 있는 노드인가 — 티커가 있는 기업만 */
 export function nodeLogoUrl(node: GraphNode): string | null {
   if (node.type !== 'company') return null

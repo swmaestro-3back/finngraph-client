@@ -98,7 +98,7 @@ function StockCard({ card, member, locked, on, onPick, onOpen, onRetryQuotes }: 
     <li className={cn('fg-ics__card', on && 'is-on')}>
       <div className="fg-ics__top fg-num">
         <span className="fg-ics__id">
-          <CompanyLogo name={card.name} size={24} />
+          <CompanyLogo name={card.name} ticker={card.ticker} size={24} />
           {card.ticker ? (
             <Link to={stockPath(card.ticker)} state={fromState(`${pathname}${search}`)} className="fg-ics__name">
               {card.name}

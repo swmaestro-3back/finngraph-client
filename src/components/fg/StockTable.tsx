@@ -116,7 +116,7 @@ export function StockTable({
                     aria-pressed={selected}
                     onClick={(e) => pick(stock.ticker, e.currentTarget)}
                   >
-                    <CompanyLogo name={stock.name} />
+                    <CompanyLogo name={stock.name} ticker={stock.ticker} />
                     <span className="fg-srow__id">
                       <span className="fg-srow__nm">
                         <b>{stock.name}</b>

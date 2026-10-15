@@ -20,13 +20,14 @@ export const MAP_GROUP_LIMIT = 5
 
 interface RelationMapProps {
   name: string
+  ticker: string
   price: number | null
   change: number | null
   companies: readonly LinkedCompany[]
   onOpen: (id: string) => void
 }
 
-export function RelationMap({ name, price, change, companies, onOpen }: RelationMapProps) {
+export function RelationMap({ name, ticker, price, change, companies, onOpen }: RelationMapProps) {
   const [open, setOpen] = useState<Partial<Record<MapGroupKey, boolean>>>({})
   const groups = linkMapGroups(companies)
   const heads = mapHeads(name, groups)
@@ -40,7 +41,7 @@ export function RelationMap({ name, price, change, companies, onOpen }: Relation
       onClick={() => onOpen(company.id)}
     >
       <span className="fg-rnode__who">
-        <CompanyLogo name={company.name} />
+        <CompanyLogo name={company.name} ticker={company.code} />
         <span className="fg-rnode__name">
           <b>{company.name}</b>
           <small>{nodeTag(company)}</small>
@@ -97,7 +98,7 @@ export function RelationMap({ name, price, change, companies, onOpen }: Relation
         {side('supply')}
       </div>
       <div className="fg-rmap__center">
-        <CompanyLogo name={name} size={40} />
+        <CompanyLogo name={name} ticker={ticker} size={40} />
         <span className="fg-rmap__id">
           <b>{name}</b>
           {price !== null && (

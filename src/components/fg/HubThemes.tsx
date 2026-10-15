@@ -67,7 +67,7 @@ function ThemeHead({ theme, open }: { theme: ThemeRes; open: boolean }) {
               <>
                 주도주{' '}
                 <span className="fg-lg fg-lg--s">
-                  <CompanyLogo name={leader.name} size={16} />
+                  <CompanyLogo name={leader.name} ticker={leader.ticker} size={16} />
                   {leader.name}
                 </span>
               </>
@@ -194,6 +194,7 @@ function ThemePane({ theme, stocks, failed, onRetry, quoteOf, basisShort, from }
             to={stockPath(row.ticker)}
             state={state}
             name={row.name}
+            ticker={row.ticker}
             market={row.market}
             price={row.price}
             change={row.change}

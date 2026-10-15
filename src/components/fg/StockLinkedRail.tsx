@@ -42,7 +42,7 @@ export function LinkedRailRow({ company, to, state, replace, footClassName }: Li
     <Link to={to} state={state} replace={replace} className="fg-slr__row fg-num">
       <span className="fg-slr__top">
         <span className="fg-slr__id">
-          <CompanyLogo name={company.name} size={24} />
+          <CompanyLogo name={company.name} ticker={company.code} size={24} />
           <span className="fg-slr__name">{company.name}</span>
           <span className="fg-slr__mkt">{marketLabel(company.market)}</span>
         </span>

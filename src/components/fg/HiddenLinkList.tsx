@@ -94,7 +94,7 @@ export function HiddenLinkRow({ company, meta, openLabel, watched, onToggleWatch
   return (
     <li className="fg-hlist__row">
       <div className="fg-hlist__name">
-        <CompanyLogo name={company.name} />
+        <CompanyLogo name={company.name} ticker={company.code} />
         <span className="fg-hlist__nm">
           {company.code ? (
             <Link to={stockPath(company.code)} state={fromState(`${pathname}${search}`)} className="fg-hlist__link">

@@ -22,7 +22,7 @@ export function StockContractList({ items }: StockContractListProps) {
           <li key={item.key} className="fg-dl__contract fg-sfc__row">
             <span className="fg-dl__contract-top">
               <span className="fg-lg fg-sfc__who">
-                {item.anon ? <i className="fg-clogo fg-clogo--24" aria-hidden="true" /> : <CompanyLogo name={item.who} size={24} />}
+                {item.anon ? <i className="fg-clogo fg-clogo--24" aria-hidden="true" /> : <CompanyLogo name={item.who} ticker={item.ticker} size={24} />}
                 {item.ticker ? (
                   <Link to={stockPath(item.ticker)} state={fromState(`${pathname}${search}`)} className="fg-sfc__name">
                     <span className="fg-sfc__nm">{item.who}</span>

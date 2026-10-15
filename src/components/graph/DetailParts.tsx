@@ -1,6 +1,6 @@
 import { Fragment, useState, type ReactNode } from 'react'
 import { nodeColor, type GraphNode } from '@/data/graphTypes'
-import { StockLogo } from '@/components/stock/StockLogo'
+import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { changeColorClass, formatChange } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -54,7 +54,7 @@ export function NodeMark({ node, size = 24 }: { node: GraphNode; size?: number }
   )
   const ticker = node.data.ticker
   if (node.type !== 'company' || !ticker) return dot
-  return <StockLogo ticker={ticker} size={size} fallback={dot} />
+  return <CompanyLogo name={node.label} ticker={ticker} size={size} fallback={dot} />
 }
 
 /**
@@ -79,7 +79,7 @@ export function NameMark({
       {name.trim().charAt(0)}
     </span>
   )
-  return ticker ? <StockLogo ticker={ticker} size={size} fallback={initial} /> : initial
+  return ticker ? <CompanyLogo name={name} ticker={ticker} size={size} fallback={initial} /> : initial
 }
 
 /** 등락률 — 값이 없으면 아무것도 그리지 않는다(해외 기업·시세 미수집) */

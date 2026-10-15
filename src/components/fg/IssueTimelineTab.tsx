@@ -115,7 +115,7 @@ function FrequentRow({ stock }: { stock: FrequentStock }) {
   const body = (
     <>
       <span className="fg-itl__who">
-        <CompanyLogo name={stock.name} size={24} />
+        <CompanyLogo name={stock.name} ticker={stock.ticker} size={24} />
         <span className="fg-itl__name">
           <b>{stock.name}</b>
           <small>{stock.label}</small>
