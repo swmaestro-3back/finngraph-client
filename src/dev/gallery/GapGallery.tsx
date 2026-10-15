@@ -6,8 +6,8 @@ import { useGap, useGapMode } from '@/lib/useGap'
 export function GapGallery() {
   const mode = useGapMode()
   const quote = useGap(
-    'stock-quote-ext',
-    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.tradingRatio) : null,
+    'investor-flow-amount',
+    import.meta.env.DEV ? () => import('@/dev/fixtures/gallery').then((m) => m.galleryFixture.flowAmount) : null,
   )
   const issue = useGap(
     'issue-timeline',
@@ -24,7 +24,7 @@ export function GapGallery() {
       </div>
       <div className="fg-gal__row">
         <span>
-          거래대금 <GapValue gap="stock-quote-ext" mock={quote.status === 'mock' ? quote.data : null} />
+          외국인 순매수 <GapValue gap="investor-flow-amount" mock={quote.status === 'mock' ? quote.data : null} />
         </span>
         <span>
           이어진 흐름 <GapValue gap="issue-timeline" mock={issue.status === 'mock' ? issue.data : null} />

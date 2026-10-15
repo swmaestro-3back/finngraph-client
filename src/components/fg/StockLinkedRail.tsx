@@ -1,6 +1,5 @@
 import { ChevronRight } from 'lucide-react'
 import { Link, useLocation, type To } from 'react-router-dom'
-import { ButtonLink } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { MemberGate } from '@/components/fg/MemberGate'
 import { RetryText } from '@/components/fg/RetryText'
@@ -101,10 +100,10 @@ export function StockLinkedRail({ stockName, linked }: StockLinkedRailProps) {
             ))}
           </div>
         )}
-        <ButtonLink to={linksTab} state={navState(state)} replace className="fg-slr__all">
+        <Link to={linksTab} state={navState(state)} replace className="fg-sdmore fg-slr__all">
           {`이어진 기업 ${preview.total}곳 모두 보기`}
           <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
-        </ButtonLink>
+        </Link>
       </>
     )
   }
@@ -113,7 +112,7 @@ export function StockLinkedRail({ stockName, linked }: StockLinkedRailProps) {
     <section className="fg-section fg-slr" aria-labelledby="fg-slr-title">
       <div className="fg-slr__head">
         <span className="fg-slr__title">
-          <h2 id="fg-slr-title" className="fg-section__title">
+          <h2 id="fg-slr-title" className="fg-sdtitle">
             이런 기업은 어때요?
           </h2>
         </span>

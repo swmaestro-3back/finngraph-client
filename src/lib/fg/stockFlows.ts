@@ -1,7 +1,7 @@
-import type { CandleRes } from '@/lib/apiTypes'
+import type { CandleRes, StockIssueFlowRes } from '@/lib/apiTypes'
 import { daysBetween } from '@/lib/calendar'
 import { formatChange } from '@/lib/format'
-import { shortDate, type PlacedIssue } from '@/lib/fg/stockIssues'
+import { placeFlowIssues, positionBadge, shortDate, type PlacedIssue } from '@/lib/fg/stockIssues'
 import { minusMonths, monthDayLabel } from '@/lib/fg/themeCharts'
 
 export type FlowPeriod = '1m' | '3m' | '6m' | '1y'
@@ -49,7 +49,12 @@ export interface IssueFlow {
   maxMedia: number
 }
 
-export function issueFlows(placed: readonly PlacedIssue[], candles: readonly CandleRes[], today: string): IssueFlow[] {
+export function issueFlows(
+  placed: readonly PlacedIssue[],
+  candles: readonly CandleRes[],
+  today: string,
+  ongoing?: ReadonlyMap<string, boolean>,
+): IssueFlow[] {
   if (candles.length === 0) return []
   const groups = new Map<string, PlacedIssue[]>()
   for (const issue of placed) {
@@ -62,7 +67,7 @@ export function issueFlows(placed: readonly PlacedIssue[], candles: readonly Can
     const first = items[0]
     const last = items[items.length - 1]
     const daysAgo = daysBetween(last.date, today)
-    const live = daysAgo <= LIVE_DAYS
+    const live = ongoing?.get(first.flowId) ?? daysAgo <= LIVE_DAYS
     const fromIndex = Math.max(0, first.index - 1)
     const toIndex = live ? candles.length - 1 : last.index
     const fromClose = candles[fromIndex].close
@@ -86,8 +91,28 @@ export function issueFlows(placed: readonly PlacedIssue[], candles: readonly Can
   })
 }
 
+export function stockFlows(
+  flows: readonly StockIssueFlowRes[],
+  candles: readonly CandleRes[],
+  ticker: string,
+  today: string,
+): IssueFlow[] {
+  const ongoing = new Map(flows.map((flow) => [String(flow.id), flow.ongoing]))
+  return issueFlows(placeFlowIssues(flows, candles, ticker), candles, today, ongoing)
+}
+
 function periodInfo(period: FlowPeriod) {
   return FLOW_PERIODS.find((p) => p.value === period) ?? FLOW_PERIODS[1]
+}
+
+export const WIDEST_FLOW_PERIOD: FlowPeriod = '1y'
+
+export function flowRange(period: FlowPeriod, today: string): { from: string; to: string } {
+  return { from: minusMonths(today, periodInfo(period).months), to: today }
+}
+
+export function widestFlowRange(today: string): { from: string; to: string } {
+  return flowRange(WIDEST_FLOW_PERIOD, today)
 }
 
 function inPeriod(flow: IssueFlow, period: FlowPeriod, today: string): boolean {
@@ -175,7 +200,7 @@ export function flowCompareNote(flow: IssueFlow, today: string): string {
 
 export function flowListTitle(flow: IssueFlow, order: FlowOrder): string {
   const n = flow.items.length
-  return n > 1 ? `이슈 ${n}개를 ${order === 'time' ? '시간순' : '최신순'}으로` : '이 흐름의 이슈'
+  return n > 1 ? `이 종목이 나온 이슈 ${n}개를 ${order === 'time' ? '시간순' : '최신순'}으로` : '이 흐름의 이슈'
 }
 
 export function flowChartLabel(flow: IssueFlow, stockName: string): string {
@@ -220,7 +245,7 @@ export function timelineNodes(
       issue,
       dateText: isToday ? '오늘' : shortDate(issue.date),
       dateSub: isToday ? shortDate(issue.date) : `${weekdayOf(issue.date)}요일`,
-      badge: n > 1 ? (issue.order === 1 ? '첫 보도' : `타임라인 ${issue.order}번째`) : '새 이슈',
+      badge: positionBadge(issue.position, n),
       now: flow.live && issue.key === flow.last.key,
       since: prev
         ? { days: daysBetween(prev.date, issue.date), change: before > 0 ? (after / before - 1) * 100 : null }

@@ -79,7 +79,7 @@ export function StockLinksTab({ stock, linked }: StockLinksTabProps) {
               </span>
               <span>
                 <i className="is-inferred" aria-hidden="true" />
-                AI가 기사에서 찾은 관계
+                기사에서 찾은 관계
               </span>
               <span>기업을 누르면 근거를 볼 수 있어요</span>
             </div>
@@ -95,19 +95,20 @@ export function StockLinksTab({ stock, linked }: StockLinksTabProps) {
       <section className="fg-section" aria-labelledby="fg-slt-title">
         <div className="fg-section__head">
           <div className="fg-sev__titles">
-            <span className="fg-sev__title">
-              <h2 id="fg-slt-title" className="fg-section__title">
-                이런 기업은 어때요?
-              </h2>
-            </span>
+            <h2 id="fg-slt-title" className="fg-sdtitle">
+              이런 기업은 어때요?
+            </h2>
             <p className="fg-section__sub">뉴스엔 안 나왔지만 관계로 이어진 기업이에요</p>
           </div>
-          <StockGraphLink stock={stock} />
+          <StockGraphLink stock={stock} text />
         </div>
         {mapPart}
       </section>
       {listed && (
         <section className="fg-section" aria-labelledby="fg-hlist-title">
+          <h2 id="fg-hlist-title" className="fg-section__title">
+            이어진 기업 목록
+          </h2>
           {member && linked.quotesRetry && <QuoteRetryNote onRetry={linked.quotesRetry} />}
           {member && (
             <HiddenLinkList
@@ -118,21 +119,9 @@ export function StockLinksTab({ stock, linked }: StockLinksTabProps) {
               onOpen={openSheet}
             />
           )}
-          {pending && (
-            <>
-              <h2 id="fg-hlist-title" className="fg-sr">
-                이어진 기업 목록
-              </h2>
-              <Skeleton height={280} />
-            </>
-          )}
+          {pending && <Skeleton height={280} />}
           {locked && (
-            <>
-              <h2 id="fg-hlist-title" className="fg-sr">
-                이어진 기업 목록
-              </h2>
-              <MemberGate subject={`이런 기업 ${counts.total}곳`} scope={gateScope(counts)} className="fg-slt__gate" />
-            </>
+            <MemberGate subject={`이런 기업 ${counts.total}곳`} scope={gateScope(counts)} className="fg-slt__gate" />
           )}
         </section>
       )}

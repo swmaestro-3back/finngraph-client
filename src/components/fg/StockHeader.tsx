@@ -45,12 +45,12 @@ function ThemeEntry({ stock, themes }: { stock: StockDetailRes; themes: ApiState
         <button
           ref={trigger}
           type="button"
-          className="fg-badge fg-sdh__theme"
+          className="fg-sdh__theme"
           aria-haspopup="dialog"
           onClick={() => setOpen(true)}
         >
-          {`테마 ${list.length}개`}
-          <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />
+          <span>{`테마 ${list.length}개`}</span>
+          <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
         </button>
         <StockThemesSheet
           stockName={stock.name}
@@ -65,8 +65,8 @@ function ThemeEntry({ stock, themes }: { stock: StockDetailRes; themes: ApiState
   const single = list?.[0] ?? (themes.error && stock.themeId !== null ? { id: stock.themeId, name: stock.themeName } : null)
   if (!single?.name) return null
   return (
-    <Link to={themePath(single.id)} state={fromState(`${pathname}${search}`)} className="fg-badge fg-sdh__theme">
-      {single.name}
+    <Link to={themePath(single.id)} state={fromState(`${pathname}${search}`)} className="fg-sdh__theme">
+      <span>{single.name}</span>
     </Link>
   )
 }
@@ -157,20 +157,22 @@ export function StockHeader({
 }: StockHeaderProps) {
   const priced = stock.price !== null && (stock.change !== null || status !== null)
   return (
-    <section className="fg-section fg-sdh fg-reveal" aria-labelledby="fg-sdh-name">
+    <section className="fg-sdh fg-reveal" aria-labelledby="fg-sdh-name">
       <div className="fg-sdh__row">
         <div className="fg-sdh__main">
+          <div className="fg-sdh__meta">
+            <span className="fg-sdh__code fg-num">
+              {stock.ticker} · {marketLabel(stock.market)}
+            </span>
+            <ThemeEntry stock={stock} themes={themes} />
+          </div>
           <div className="fg-sdh__id">
-            <CompanyLogo name={stock.name} size={40} className="fg-sdh__logo" />
+            <CompanyLogo name={stock.name} size={32} className="fg-sdh__logo" />
             <h1 id="fg-sdh-name" className="fg-sdh__name">
               {stock.name}
             </h1>
             {week52?.state === 'high' && <Badge tone="high">52주 신고가</Badge>}
             {week52?.state === 'low' && <Badge tone="low">52주 신저가</Badge>}
-            <span className="fg-sdh__code fg-num">
-              {stock.ticker} · {marketLabel(stock.market)}
-            </span>
-            <ThemeEntry stock={stock} themes={themes} />
           </div>
           <div className="fg-sdh__price">
             <HeaderPrice stock={stock} amount={amount} status={status} />

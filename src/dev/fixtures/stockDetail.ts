@@ -104,8 +104,6 @@ export const stockIssueFlowsFixture: IssueFlowsFixture = {
   ],
 }
 
-export const tradingRatioFixture = 1.4
-
 const DART = 'https://dart.fss.or.kr/'
 const ARTICLE = 'https://news.test/finngraph-mock'
 

@@ -91,6 +91,7 @@ function ActionIcon({ action }: { action: EventAction }) {
 
 interface StockEventListProps {
   title: string
+  issue?: boolean
   sub: string
   moreLabel: string
   mock: boolean
@@ -101,14 +102,25 @@ interface StockEventListProps {
   children?: ReactNode
 }
 
-export function StockEventList({ title, sub, moreLabel, mock, rows, selected, onPick, tools, children }: StockEventListProps) {
+export function StockEventList({
+  title,
+  issue = false,
+  sub,
+  moreLabel,
+  mock,
+  rows,
+  selected,
+  onPick,
+  tools,
+  children,
+}: StockEventListProps) {
   const { pathname, search, state } = useLocation()
   return (
     <section className="fg-section fg-sev" aria-labelledby="fg-sev-title">
       <div className="fg-section__head">
         <div className="fg-sev__titles">
           <span className="fg-sev__title">
-            <h2 id="fg-sev-title" className="fg-section__title">
+            <h2 id="fg-sev-title" className={cn('fg-section__title', issue && 'fg-section__title--issue')}>
               {title}
             </h2>
             {mock && <MockBadge />}

@@ -1,4 +1,4 @@
-import type { CandleRes, IssueCompanyRes, StockIssueRes } from '@/lib/apiTypes'
+import type { CandleRes, IssueCompanyRes, StockIssueFlowRes, StockIssueRes } from '@/lib/apiTypes'
 import { addDays, daysBetween } from '@/lib/calendar'
 import { candleChangeAt } from '@/lib/fg/candleChange'
 import { issueTitle } from '@/lib/fg/hub'
@@ -32,6 +32,7 @@ export interface PlacedIssue {
   flowId: string
   flowTitle: string
   order: number
+  position: number
   total: number
   date: string
   index: number
@@ -48,6 +49,7 @@ export interface PlacedIssue {
 }
 
 export const RECENT_ISSUE_COUNT = 5
+const FLOW_WITH = 3
 
 export function placeIssues(fixture: IssueFlowsFixture, candles: readonly CandleRes[]): PlacedIssue[] {
   if (candles.length === 0) return []
@@ -65,6 +67,7 @@ export function placeIssues(fixture: IssueFlowsFixture, candles: readonly Candle
           flowId: flow.id,
           flowTitle: flow.title,
           order: k + 1,
+          position: k + 1,
           total: flow.issues.length,
           date,
           index,
@@ -125,8 +128,13 @@ export function issueDayLabel(date: string, today: string): string {
   return date === today ? '오늘' : shortDate(date)
 }
 
-export function issueBadge(issue: Pick<PlacedIssue, 'order' | 'total'>): string {
-  return issue.total > 1 ? `타임라인 ${issue.order}번째` : '새 이슈'
+export function positionBadge(position: number, total: number): string {
+  if (position > 1) return `타임라인 ${position}번째`
+  return total > 1 ? '첫 보도' : '새 이슈'
+}
+
+export function issueBadge(issue: Pick<PlacedIssue, 'position' | 'total'>): string {
+  return positionBadge(issue.position, issue.total)
 }
 
 export function tradingDayLabel(issue: Pick<PlacedIssue, 'sameDay'>): string {
@@ -157,6 +165,8 @@ export interface StockIssueEvent {
   articles: number
   mentions: number
   companies: readonly IssueCompanyRes[]
+  storyTitle: string | null
+  reaction: boolean
 }
 
 export function tradeIndexOf(candles: readonly Pick<CandleRes, 'date'>[], day: string): number | null {
@@ -193,6 +203,8 @@ export function placeStockIssues(items: readonly StockIssueRes[], candles: reado
         articles: item.articleCount,
         mentions: item.mentionCount,
         companies: item.companies,
+        storyTitle: item.storyTitle?.trim() || null,
+        reaction: item.kind === 'market_reaction',
       },
     ]
   })
@@ -204,4 +216,57 @@ export function placeStockIssues(items: readonly StockIssueRes[], candles: reado
 export function issueSpanLabel(event: Pick<StockIssueEvent, 'date' | 'lastDate'>, today: string): string {
   const first = issueDayLabel(event.date, today)
   return event.lastDate > event.date ? `${first} → ${issueDayLabel(event.lastDate, today)}` : first
+}
+
+export function issueRowMeta(event: Pick<StockIssueEvent, 'storyTitle' | 'title' | 'media'>): string {
+  const media = `${event.media}개 매체`
+  const story = event.storyTitle?.trim()
+  return story && story !== event.title.trim() ? `${story} · ${media}` : media
+}
+
+function issueDay(item: Pick<StockIssueRes, 'firstPublishedAt' | 'lastPublishedAt'>): string | null {
+  return kstDayTime(item.firstPublishedAt ?? item.lastPublishedAt ?? '')?.day ?? null
+}
+
+export function placeFlowIssues(
+  flows: readonly StockIssueFlowRes[],
+  candles: readonly CandleRes[],
+  ticker: string,
+): PlacedIssue[] {
+  if (candles.length === 0) return []
+  const last = candles.length - 1
+  const placed = flows.flatMap((flow) => {
+    const items = flow.issues.flatMap((issue) => {
+      const date = issueDay(issue)
+      return date ? [{ issue, date }] : []
+    })
+    const flowTitle = flow.title?.trim() || (items[0] ? issueTitle(items[0].issue) : '')
+    return items.map(({ issue, date }, k): PlacedIssue => {
+      const found = tradeIndexOf(candles, date)
+      const index = found ?? (date > candles[last].date ? last : 0)
+      const priced = found !== null
+      const others = issue.companies.filter((company) => company.ticker !== ticker)
+      return {
+        key: String(issue.id),
+        flowId: String(flow.id),
+        flowTitle,
+        order: k + 1,
+        position: issue.timelinePosition ?? 1,
+        total: items.length,
+        date,
+        index,
+        sameDay: priced && candles[index].date === date,
+        change: priced ? candleChangeAt(candles, index) : null,
+        close: candles[index].close,
+        volumeRatio: priced ? volumeRatio(candles, index) : null,
+        title: issueTitle(issue),
+        media: issue.mediaCount,
+        articles: issue.articleCount,
+        summary: issue.summary?.trim() ?? '',
+        with: others.slice(0, FLOW_WITH).map((company) => company.name),
+        more: Math.max(0, others.length - FLOW_WITH),
+      }
+    })
+  })
+  return placed.sort((a, b) => b.date.localeCompare(a.date))
 }

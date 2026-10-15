@@ -1,7 +1,5 @@
 import type { HubFixture, HubFlow, HubIssueNode } from '@/lib/fg/hub'
 
-const MOCK_DAY = '2026-10-02'
-
 interface Story {
   past: readonly HubIssueNode[]
   flow: HubFlow
@@ -56,27 +54,9 @@ const BIO: Story = {
   inferred: 1,
 }
 
-const ESS: Story = {
-  past: [],
-  flow: { count: 1, since: MOCK_DAY },
-  inferred: 0,
-}
-
 const ISSUE_ORDER: readonly Story[] = [EXPORT, GRID, SHIP, SEP, BIO]
-const STOCK_ORDER: readonly Story[] = [BIO, GRID, ESS, SHIP, EXPORT]
-
-function seed(text: string): number {
-  let hash = 7
-  for (const char of text) hash = (hash * 31 + char.charCodeAt(0)) % 100003
-  return hash
-}
-
-function stockStory(ticker: string): Story {
-  return STOCK_ORDER[seed(ticker) % STOCK_ORDER.length]
-}
 
 export const hubFixture: HubFixture = {
-  stockFlow: (ticker) => stockStory(ticker).flow,
   issueExtra: (index) => {
     const story = ISSUE_ORDER[index % ISSUE_ORDER.length]
     return { flow: story.flow, past: [...story.past], inferred: story.inferred }

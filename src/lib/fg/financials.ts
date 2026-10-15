@@ -1,5 +1,5 @@
 import { sliceRecentYears } from '@/lib/annualPeriod'
-import type { AnnualFinancialsRes } from '@/lib/apiTypes'
+import type { AnnualFinancialsRes, FinancialStatementKind, QuarterlyFinancialsRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
 import { toneOf, type Tone } from '@/lib/fg/format'
 import { formatShares, type ForeignSummaryValue } from '@/lib/fg/investorFlows'
@@ -19,14 +19,16 @@ export type ResultPeriod = 'annual' | 'quarter'
 
 export interface QuarterResult {
   year: number
-  quarter: 1 | 2 | 3 | 4
-  sales: number
-  op: number
+  quarter: number
+  sales: number | null
+  op: number | null
+  margin?: number | null
+  salesYoY?: number | null
+  opYoY?: number | null
+  fsDiv?: FinancialStatementKind | null
 }
 
 export interface FinanceGapFixture {
-  quarters: readonly QuarterResult[]
-  bps: readonly number[]
   currentRatio: readonly number[]
 }
 
@@ -39,6 +41,9 @@ export interface ResultPoint {
   sales: number | null
   op: number | null
   margin: number | null
+  salesYoY?: number | null
+  opYoY?: number | null
+  fsDiv?: FinancialStatementKind | null
 }
 
 type TurnLabel = '흑자 전환' | '적자 전환' | '적자 지속'
@@ -102,6 +107,21 @@ function quarterKey(year: number, quarter: number): string {
   return `${year}Q${quarter}`
 }
 
+export function quarterResults(rows: readonly QuarterlyFinancialsRes[]): QuarterResult[] {
+  return rows
+    .filter((row) => row.quarter >= 1 && row.quarter <= 4)
+    .map((row) => ({
+      year: row.year,
+      quarter: row.quarter,
+      sales: row.revenue,
+      op: row.operatingProfit,
+      margin: row.operatingMargin,
+      salesYoY: row.revenueYoY,
+      opYoY: row.operatingProfitYoY,
+      fsDiv: row.fsDiv,
+    }))
+}
+
 export function quarterPoints(quarters: readonly QuarterResult[]): ResultPoint[] {
   const sorted = [...quarters].sort((a, b) => a.year - b.year || a.quarter - b.quarter)
   return sorted.map((q, i) => ({
@@ -112,8 +132,20 @@ export function quarterPoints(quarters: readonly QuarterResult[]): ResultPoint[]
     when: `${q.year}년 ${q.quarter}분기`,
     sales: q.sales,
     op: q.op,
-    margin: marginOf(q.sales, q.op),
+    margin: q.margin ?? marginOf(q.sales, q.op),
+    salesYoY: q.salesYoY ?? null,
+    opYoY: q.opYoY ?? null,
+    fsDiv: q.fsDiv ?? null,
   }))
+}
+
+const BASIS_LABEL: Record<FinancialStatementKind, string> = { CFS: '연결 기준', OFS: '별도 기준' }
+const MIXED_BASIS = '연결 기준(연결 재무제표가 없으면 별도)'
+
+export function resultsBasis(points: readonly ResultPoint[]): string {
+  const kinds = new Set(points.map((point) => point.fsDiv ?? null))
+  const only = kinds.size === 1 ? [...kinds][0] : null
+  return only ? BASIS_LABEL[only] : MIXED_BASIS
 }
 
 function emptyYear(year: number): ResultPoint {
@@ -165,11 +197,22 @@ function prevOf(point: ResultPoint, all: readonly ResultPoint[]): ResultPoint | 
   return all.find((p) => p.key === point.prevKey) ?? null
 }
 
+function servedRate(rate: number | null | undefined): Growth | null {
+  return rate === null || rate === undefined ? null : { kind: 'rate', rate }
+}
+
+function servedProfit(point: ResultPoint): Growth | null {
+  if (point.opYoY === null || point.opYoY === undefined) return null
+  if (point.op !== null && point.op <= 0) return { kind: 'turn', label: '적자 전환' }
+  return { kind: 'rate', rate: point.opYoY }
+}
+
 function growthsOf(point: ResultPoint, all: readonly ResultPoint[]): { sales: Growth | null; op: Growth | null } {
   const prev = prevOf(point, all)
+  if (!prev) return { sales: servedRate(point.salesYoY), op: servedProfit(point) }
   return {
-    sales: prev ? growthOf(point.sales, prev.sales, 'plain') : null,
-    op: prev ? growthOf(point.op, prev.op, 'profit') : null,
+    sales: growthOf(point.sales, prev.sales, 'plain'),
+    op: growthOf(point.op, prev.op, 'profit'),
   }
 }
 
@@ -255,9 +298,9 @@ interface RowSpec {
 }
 
 interface GapSpec {
-  key: 'currentRatio' | 'bps'
+  key: 'currentRatio'
   label: string
-  kind: 'ratio' | 'perShare'
+  kind: 'ratio'
 }
 
 const GROUPS: readonly { title: string; rows: readonly (RowSpec | GapSpec)[] }[] = [
@@ -282,7 +325,7 @@ const GROUPS: readonly { title: string; rows: readonly (RowSpec | GapSpec)[] }[]
     title: '주당 가치',
     rows: [
       { key: 'eps', label: 'EPS(주당순이익)', kind: 'perShare', growth: 'profit', value: (r) => r.eps },
-      { key: 'bps', label: 'BPS(주당순자산)', kind: 'perShare' },
+      { key: 'bps', label: 'BPS(주당순자산)', kind: 'perShare', growth: 'plain', value: (r) => r.bps ?? null },
       { key: 'dps', label: '주당 배당금', kind: 'perShare', growth: 'plain', value: (r) => r.dps },
     ],
   },
@@ -332,7 +375,7 @@ function isGap(spec: RowSpec | GapSpec): spec is GapSpec {
 }
 
 function gapRow(spec: GapSpec, fixture: FinanceGapFixture | null, count: number): FinanceRow {
-  const mock = fixture ? (spec.key === 'bps' ? fixture.bps : fixture.currentRatio).slice(-count) : null
+  const mock = fixture ? fixture.currentRatio.slice(-count) : null
   const { unit, format } = cellFormat(spec.kind, mock ?? [])
   const cells = mock && mock.length === count ? mock.map(format) : Array.from({ length: count }, () => null)
   const yoy = mock && mock.length >= 2 ? yoyOf(spec.kind, 'plain', mock[mock.length - 1], mock[mock.length - 2]) : null
@@ -393,17 +436,45 @@ function versus(text: string | null): string | null {
   return text === null ? null : `1년 전보다 ${text}`
 }
 
-export function financeSummary(
+export function latestQuarter(points: readonly ResultPoint[]): ResultPoint | null {
+  const latest = points[points.length - 1]
+  return latest && (latest.sales !== null || latest.op !== null) ? latest : null
+}
+
+function resultTiles(
   rows: readonly AnnualFinancialsRes[],
-  foreign: ForeignSummaryValue | null,
-  failed: SummaryFailed = {},
+  quarters: readonly ResultPoint[],
+  financeFailed: boolean,
 ): SummaryTile[] {
-  const financeFailed = failed.finance === true
+  const quarter = latestQuarter(quarters)
+  if (quarter) {
+    const { sales, op } = growthsOf(quarter, quarters)
+    return [
+      {
+        key: 'sales',
+        label: `${quarter.label} 매출액`,
+        value: formatCompactKrw(quarter.sales),
+        note: versus(growthText(sales)),
+        tone: null,
+        target: 'results',
+        failed: false,
+      },
+      {
+        key: 'op',
+        label: `${quarter.label} 영업이익`,
+        value: formatCompactKrw(quarter.op),
+        note: versus(growthText(op)),
+        tone: null,
+        target: 'results',
+        failed: false,
+      },
+    ]
+  }
   const sorted = sliceRecentYears([...rows], null)
   const latest = sorted[sorted.length - 1] ?? null
   const prev = latest ? (sorted.find((row) => row.year === latest.year - 1) ?? null) : null
   const year = latest ? `${latest.year}년 ` : ''
-  const tiles: SummaryTile[] = [
+  return [
     {
       key: 'sales',
       label: `${year}매출액`,
@@ -423,6 +494,19 @@ export function financeSummary(
       failed: financeFailed,
     },
   ]
+}
+
+export function financeSummary(
+  rows: readonly AnnualFinancialsRes[],
+  foreign: ForeignSummaryValue | null,
+  failed: SummaryFailed = {},
+  quarters: readonly ResultPoint[] = [],
+): SummaryTile[] {
+  const financeFailed = failed.finance === true
+  const sorted = sliceRecentYears([...rows], null)
+  const latest = sorted[sorted.length - 1] ?? null
+  const prev = latest ? (sorted.find((row) => row.year === latest.year - 1) ?? null) : null
+  const tiles: SummaryTile[] = resultTiles(rows, quarters, financeFailed)
   if (foreign)
     tiles.push({
       key: 'foreign',
@@ -447,10 +531,16 @@ export function financeSummary(
   return tiles
 }
 
-export function summaryBasis(year: number | null, flowDate: string | null, refYear: number): string | null {
+export function summaryBasis(
+  year: number | null,
+  flowDate: string | null,
+  refYear: number,
+  quarter: number | null = null,
+): string | null {
   const flow = flowDate ? `${monthDayLabel(flowDate, refYear)} 장 마감 수급` : null
-  if (year !== null && flow) return `${year}년 실적과 ${flow} 기준이에요`
-  if (year !== null) return `${year}년 실적 기준이에요`
+  const results = year === null ? null : quarter === null ? `${year}년 실적` : `${year}년 ${quarter}분기 실적`
+  if (results && flow) return `${results}과 ${flow} 기준이에요`
+  if (results) return `${results} 기준이에요`
   if (flow) return `${flow} 기준이에요`
   return null
 }

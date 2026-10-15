@@ -7,10 +7,10 @@ import { Skeleton } from '@/components/fg/Skeleton'
 import { StockIssueCards, type StockIssueState } from '@/components/fg/StockIssueCards'
 import { StockIssueFlows } from '@/components/fg/StockIssueFlows'
 import { StockNewsList } from '@/components/fg/StockNewsList'
-import type { CandleRes, StockDetailRes } from '@/lib/apiTypes'
+import type { CandleRes, StockDetailRes, StockIssueFlowRes } from '@/lib/apiTypes'
 import { placeDisclosures } from '@/lib/fg/disclosures'
-import { issueFlows } from '@/lib/fg/stockFlows'
-import { shortDate, type PlacedIssue } from '@/lib/fg/stockIssues'
+import { shortDate } from '@/lib/fg/stockIssues'
+import type { KeyedState } from '@/lib/queries/useKeyed'
 import { useGap } from '@/lib/useGap'
 
 const loadDisclosures = import.meta.env.DEV
@@ -21,16 +21,15 @@ interface StockNewsTabProps {
   stock: StockDetailRes
   candles: CandleRes[] | null
   issues: StockIssueState
-  placed: readonly PlacedIssue[] | null
+  flows: KeyedState<StockIssueFlowRes[]>
   today: string
   refreshKey: number
   onOpenIssue: (key: string) => void
   onOpenNews: (id: string) => void
 }
 
-export function StockNewsTab({ stock, candles, issues, placed, today, refreshKey, onOpenIssue, onOpenNews }: StockNewsTabProps) {
+export function StockNewsTab({ stock, candles, issues, flows, today, refreshKey, onOpenIssue, onOpenNews }: StockNewsTabProps) {
   const disclosures = useGap('disclosures', loadDisclosures)
-  const flows = useMemo(() => (placed && candles ? issueFlows(placed, candles, today) : null), [placed, candles, today])
   const lastDate = candles && candles.length > 0 ? candles[candles.length - 1].date : null
   const disclosureData = disclosures.status === 'mock' ? disclosures.data : null
   const disclosureRows = useMemo(
@@ -43,8 +42,15 @@ export function StockNewsTab({ stock, candles, issues, placed, today, refreshKey
   return (
     <div className="fg-grid fg-reveal">
       <div className="fg-col">
-        {flows && candles && (
-          <StockIssueFlows stockName={stock.name} flows={flows} candles={candles} today={today} onOpenIssue={onOpenIssue} />
+        {candles && (
+          <StockIssueFlows
+            stockName={stock.name}
+            ticker={stock.ticker}
+            flows={flows}
+            candles={candles}
+            today={today}
+            onOpenIssue={onOpenIssue}
+          />
         )}
         <StockIssueCards key={stock.ticker} ticker={stock.ticker} issues={issues} today={today} />
         <StockNewsList

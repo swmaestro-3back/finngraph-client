@@ -5,7 +5,7 @@ import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FinanceTable, TABLE_TITLE_ID } from '@/components/fg/FinanceTable'
 import { FLOW_TITLE_ID, InvestorFlowChart } from '@/components/fg/InvestorFlowChart'
 import { RESULTS_TITLE_ID, ResultsChart } from '@/components/fg/ResultsChart'
-import { RetryText } from '@/components/fg/RetryText'
+import { RetryNote, RetryText } from '@/components/fg/RetryText'
 import type { TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
@@ -15,7 +15,10 @@ import {
   annualPoints,
   financeSummary,
   financeTable,
+  latestQuarter,
   quarterPoints,
+  quarterResults,
+  resultsBasis,
   shownAnnual,
   summaryBasis,
   type ResultPeriod,
@@ -27,7 +30,7 @@ import { motionAllowed } from '@/lib/fg/motion'
 import { contractItems, contractsCaption, CONTRACT_FETCH_LIMIT } from '@/lib/fg/stockContracts'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import type { ApiState } from '@/lib/queries/useApi'
-import { useAnnualFinancials } from '@/lib/queries/useFinancials'
+import { useAnnualFinancials, useQuarterlyFinancials } from '@/lib/queries/useFinancials'
 import { useInvestorFlows } from '@/lib/queries/useInvestorFlows'
 import { useStockContracts } from '@/lib/queries/useStockContracts'
 import { calcSupplyStreaks } from '@/lib/supplyStreak'
@@ -151,9 +154,10 @@ export function StockFinanceTab({ stock, candles, today, refreshKey }: StockFina
   const financials = useAnnualFinancials(stock.ticker)
   const flows = useInvestorFlows(stock.ticker, FLOW_FETCH_DAYS)
   const contracts = useStockContracts(stock.ticker, CONTRACT_FETCH_LIMIT)
+  const quarterly = useQuarterlyFinancials(stock.ticker)
   const gap = useGap('financials-quarter', loadFinanceGap)
   const fixture = gap.status === 'mock' ? gap.data : null
-  const [period, setPeriod] = useState<ResultPeriod>('annual')
+  const [picked, setPeriod] = useState<ResultPeriod | null>(null)
   const refYear = Number(today.slice(0, 4))
 
   const { refresh: refreshFlows } = flows
@@ -167,23 +171,36 @@ export function StockFinanceTab({ stock, candles, today, refreshKey }: StockFina
   const days = useMemo(() => flowDays(flows.data ?? [], candles), [flows.data, candles])
   const streaks = useMemo(() => calcSupplyStreaks(flows.data ?? [], tradingDays), [flows.data, tradingDays])
   const annual = useMemo(() => annualPoints(rows ?? []), [rows])
-  const quarters = useMemo(() => (fixture ? quarterPoints(fixture.quarters) : null), [fixture])
+  const quarterRows = quarterly.data
+  const quarters = useMemo(() => {
+    const points = quarterPoints(quarterResults(quarterRows ?? []))
+    return points.length > 0 ? points : null
+  }, [quarterRows])
   const table = useMemo(() => financeTable(rows ?? [], fixture), [rows, fixture])
   const items = useMemo(() => contractItems(contracts.data ?? [], today), [contracts.data, today])
 
+  const quarterPending = !settled(quarterly)
   const finWaiting = useDelayed(!settled(financials))
   const flowWaiting = useDelayed(!settled(flows))
+  const quarterWaiting = useDelayed(quarterPending)
   const contractWaiting = useDelayed(!settled(contracts))
+  const quarterFailed = quarterRows === null && quarterly.error !== null
+  const quarterNotice = quarterFailed ? <RetryNote subject="분기 실적" onRetry={quarterly.refetch} /> : null
   const hasFinance = (rows ?? []).length > 0
-  const quarterly = period === 'quarter' && quarters !== null
+  const period = picked ?? (quarters ? 'quarter' : 'annual')
+  const quarterView = period === 'quarter' && quarters !== null
+  const recentQuarter = quarters ? latestQuarter(quarters) : null
   const latestYear = hasFinance && table.years.length > 0 ? table.years[table.years.length - 1] : null
   const lastFlow = days.length > 0 ? days[days.length - 1].date : null
+  const basisYear = recentQuarter ? Number(recentQuarter.key.slice(0, 4)) : latestYear
+  const basisQuarter = recentQuarter ? Number(recentQuarter.key.slice(5)) : null
 
   const financeFailed = rows === null && financials.error !== null
   const flowsFailed = flows.data === null && flows.error !== null
   const summaryRetry = { finance: financials.refetch, flows: flows.refetch }
   let summary: ReactNode
-  if (!settled(financials) || !settled(flows)) summary = finWaiting || flowWaiting ? <Skeleton height={104} /> : null
+  if (!settled(financials) || !settled(flows) || quarterPending)
+    summary = finWaiting || flowWaiting || quarterWaiting ? <Skeleton height={104} /> : null
   else if (financeFailed && flowsFailed)
     summary = (
       <LoadError
@@ -194,12 +211,17 @@ export function StockFinanceTab({ stock, candles, today, refreshKey }: StockFina
         }}
       />
     )
-  else if (!financeFailed && !flowsFailed && !hasFinance && days.length === 0)
+  else if (!financeFailed && !flowsFailed && !hasFinance && !recentQuarter && days.length === 0)
     summary = <StateBlock kind="empty" title="아직 볼 실적·수급이 없어요" description="사업보고서와 장 마감 집계가 쌓이면 보여 드려요" />
   else
     summary = (
       <SummaryTiles
-        tiles={financeSummary(rows ?? [], foreignSummary(days, streaks), { finance: financeFailed, flows: flowsFailed })}
+        tiles={financeSummary(
+          rows ?? [],
+          foreignSummary(days, streaks),
+          { finance: financeFailed, flows: flowsFailed },
+          quarters ?? [],
+        )}
         retry={summaryRetry}
       />
     )
@@ -215,20 +237,31 @@ export function StockFinanceTab({ stock, candles, today, refreshKey }: StockFina
         )}
       </Section>
     )
-  else if (!hasFinance && !quarterly)
+  else if (quarterPending && picked === null)
     results = (
       <Section id={RESULTS_TITLE_ID} title="실적" anchor>
-        <StateBlock kind="empty" title="실적 정보가 없어요" description="사업보고서가 나오면 보여 드려요" />
+        {quarterWaiting && <Skeleton height={300} />}
+      </Section>
+    )
+  else if (!hasFinance && !quarterView)
+    results = (
+      <Section id={RESULTS_TITLE_ID} title="실적" anchor>
+        {quarterFailed ? (
+          <LoadError title="분기 실적을 불러오지 못했어요" onRetry={quarterly.refetch} />
+        ) : (
+          <StateBlock kind="empty" title="실적 정보가 없어요" description="사업보고서가 나오면 보여 드려요" />
+        )}
       </Section>
     )
   else
     results = (
       <ResultsChart
-        shown={quarterly ? quarters : shownAnnual(annual)}
-        all={quarterly ? quarters : annual}
-        period={quarterly ? 'quarter' : 'annual'}
-        periods={quarters ? RESULT_PERIODS : null}
-        mock={quarterly}
+        shown={quarterView ? quarters : shownAnnual(annual)}
+        all={quarterView ? quarters : annual}
+        period={quarterView ? 'quarter' : 'annual'}
+        periods={quarters && hasFinance ? RESULT_PERIODS : null}
+        basis={quarterView ? resultsBasis(quarters) : null}
+        notice={quarterNotice}
         onPeriod={setPeriod}
       />
     )
@@ -277,7 +310,11 @@ export function StockFinanceTab({ stock, candles, today, refreshKey }: StockFina
     <div className="fg-grid fg-reveal">
       <div className="fg-col">
         <section className="fg-section" aria-labelledby={SUMMARY_TITLE_ID}>
-          <SectionHead id={SUMMARY_TITLE_ID} title="한눈에 보기" sub={summaryBasis(latestYear, lastFlow, refYear)} />
+          <SectionHead
+            id={SUMMARY_TITLE_ID}
+            title="한눈에 보기"
+            sub={quarterPending ? null : summaryBasis(basisYear, lastFlow, refYear, basisQuarter)}
+          />
           {summary}
         </section>
         {results}

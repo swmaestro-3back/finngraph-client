@@ -1,8 +1,6 @@
 import { ChevronRight } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Badge } from '@/components/fg/Badge'
-import { GapValue } from '@/components/fg/Gap'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { ThemeIndexRetry } from '@/components/fg/ThemeIndexRetry'
@@ -11,20 +9,33 @@ import { formatCompactKrw } from '@/lib/format'
 import { capRankLabel, navState, stockTabSearch, type CapRank } from '@/lib/fg/stockDetail'
 import { formatRatio, formatTimes } from '@/lib/fg/stockQuote'
 import { monthDayLabel } from '@/lib/fg/themeCharts'
+import { volumeRatioNote } from '@/lib/fg/themeDetail'
+
+const RATIO_BASIS = '거래대금 ‘평소’는 직전 20거래일 평균이에요'
 
 interface StatProps {
   label: string
+  sub?: string
   value: ReactNode
   note?: ReactNode
   loading?: boolean
 }
 
-function Stat({ label, value, note, loading = false }: StatProps) {
+const STREAK_DAYS = /(\d+일 연속)/
+
+function StreakText({ label }: { label: string }) {
+  return label.split(STREAK_DAYS).map((part, i) => (i % 2 === 1 ? <b key={i}>{part}</b> : part))
+}
+
+function Stat({ label, sub, value, note, loading = false }: StatProps) {
   return (
     <div>
-      <dt>{label}</dt>
+      <dt>
+        {label}
+        {sub && <small className="fg-ks__sub">{sub}</small>}
+      </dt>
       <dd className="fg-num">{loading ? <Skeleton width={72} height={24} /> : value}</dd>
-      {note !== undefined && note !== null && <small className="fg-num">{note}</small>}
+      {note !== undefined && note !== null && <small className="fg-ks__note fg-num">{note}</small>}
     </div>
   )
 }
@@ -81,22 +92,23 @@ export function StockKeyStats({
           label="거래대금"
           value={failed.trading ? <RetryText subject="거래대금" onRetry={failed.trading} /> : formatCompactKrw(tradingValue)}
           loading={tradingLoading}
-          note={
-            tradingRatio === null ? null : <GapValue gap="stock-quote-ext" mock={`평소의 ${tradingRatio.toFixed(1)}배`} />
-          }
+          note={volumeRatioNote(tradingRatio)}
         />
         <Stat
           label="PER"
+          sub="주가수익비율"
           value={formatTimes(stock.per)}
           note={versus(metrics?.per ?? null, formatTimes)}
         />
         <Stat
           label="PBR"
+          sub="주가순자산비율"
           value={formatTimes(stock.pbr)}
           note={versus(metrics?.pbr ?? null, formatTimes)}
         />
         <Stat
           label="ROE"
+          sub="자기자본이익률"
           value={formatRatio(stock.roe)}
           note={versus(metrics?.roe ?? null, formatRatio)}
         />
@@ -110,22 +122,31 @@ export function StockKeyStats({
         <ThemeIndexRetry message="수급 연속 배지를 불러오지 못했어요" onRetry={failed.streaks} />
       ) : (
         streaks.length > 0 && (
-          <div className="fg-sks__badges">
-            {streaks.map((label) => (
-              <Badge key={label}>{label}</Badge>
+          <p className="fg-sks__flow fg-num">
+            {streaks.map((label, i) => (
+              <Fragment key={label}>
+                {i > 0 && ' · '}
+                <StreakText label={label} />
+              </Fragment>
             ))}
-          </div>
+          </p>
         )
       )}
       {failed.compare && (
         <ThemeIndexRetry message="테마 비교를 불러오지 못했어요" onRetry={failed.compare} />
       )}
-      {!failed.compare && compare && (
+      {((!failed.compare && compare) || tradingRatio !== null) && (
         <span className="fg-sks__cap">
-          {metrics && Object.values(metrics).some((metric) => metric.median !== null)
-            ? `‘테마’는 ${compare.themeName} ${compare.memberCount}종목의 중앙값이에요 · 값이 없는 종목은 빼고 셌어요`
-            : `${compare.themeName} ${compare.memberCount}종목은 견줄 종목이 적어 중앙값을 보이지 않아요`}
-          {basisDate && ` · ${monthDayLabel(basisDate, Number(basisDate.slice(0, 4)))} 기준`}
+          {!failed.compare && compare && (
+            <>
+              {metrics && Object.values(metrics).some((metric) => metric.median !== null)
+                ? `‘테마’는 ${compare.themeName} ${compare.memberCount}종목의 중앙값이에요 · 값이 없는 종목은 빼고 셌어요`
+                : `${compare.themeName} ${compare.memberCount}종목은 견줄 종목이 적어 중앙값을 보이지 않아요`}
+              {basisDate && ` · ${monthDayLabel(basisDate, Number(basisDate.slice(0, 4)))} 기준`}
+              {tradingRatio !== null && ' · '}
+            </>
+          )}
+          {tradingRatio !== null && RATIO_BASIS}
         </span>
       )}
       <Link

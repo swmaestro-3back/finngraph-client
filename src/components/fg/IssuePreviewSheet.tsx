@@ -62,10 +62,12 @@ export function IssuePreviewSheet({
       {issue && (
         <>
           <span className="fg-isheet__when">{reportedLabel(issue, refYear)}</span>
-          <div className="fg-isheet__sum">
-            <Badge strong>요약</Badge>
-            <p>{issue.summary}</p>
-          </div>
+          {issue.summary && (
+            <div className="fg-isheet__sum">
+              <Badge strong>요약</Badge>
+              <p>{issue.summary}</p>
+            </div>
+          )}
           {issue.change !== null && (
             <div className="fg-isheet__day fg-num">
               <span>{`${tradingDayLabel(issue)} ${stockName}`}</span>
@@ -75,7 +77,7 @@ export function IssuePreviewSheet({
           )}
           {steps.length > 1 && (
             <div className="fg-isheet__sec">
-              <span className="fg-isheet__label">{`이 흐름의 이슈 ${steps.length}개`}</span>
+              <span className="fg-isheet__label">{`이 흐름에서 이 종목이 나온 이슈 ${steps.length}개`}</span>
               <ol className="fg-isheet__steps">
                 {steps.map((step) => {
                   const now = step.key === issue.key

@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import type { StockIssueFlowRes } from '@/lib/apiTypes'
+import { kstToday } from '@/lib/calendar'
 import type { GapId } from '@/lib/dataGaps'
 import {
   HUB_PAST_LIMIT,
@@ -6,18 +8,23 @@ import {
   issueRef,
   themeIssueSet,
   type HubFixture,
+  type HubFlow,
   type HubIssueRef,
   type HubThemeIssues,
   type HubTimeline,
 } from '@/lib/fg/hub'
+import { widestFlowRange } from '@/lib/fg/stockFlows'
 import { placeStockIssues } from '@/lib/fg/stockIssues'
+import { kstDayTime } from '@/lib/fg/themeNews'
 import { useKeyed } from '@/lib/queries/useKeyed'
 import {
   loadLatestIssues,
+  loadStockIssueFlows,
   loadStockIssues,
   loadThemeIssues,
   STOCK_ISSUE_LIMIT,
   themeIssueKey,
+  type StockIssuePage,
 } from '@/lib/queries/useStockIssues'
 import { useGap } from '@/lib/useGap'
 
@@ -64,25 +71,37 @@ export function useStockIssueLine(ticker: string | null): HubSlot<HubIssueRef | 
   }, [lines, ticker])
 }
 
-function loadTimeline(ticker: string) {
-  return loadStockIssues(ticker, STOCK_ISSUE_LIMIT)
+interface StockStory {
+  issues: StockIssuePage
+  flows: StockIssueFlowRes[] | null
+}
+
+function loadTimeline(ticker: string): Promise<StockStory> {
+  return Promise.all([
+    loadStockIssues(ticker, STOCK_ISSUE_LIMIT),
+    loadStockIssueFlows(ticker, widestFlowRange(kstToday(new Date()))).catch(() => null),
+  ]).then(([issues, flows]) => ({ issues, flows }))
+}
+
+function storyFlow(flows: readonly StockIssueFlowRes[] | null, latest: string | undefined): HubFlow | null {
+  const flow = latest ? flows?.find((item) => item.issues.some((issue) => String(issue.id) === latest)) : undefined
+  const since = flow ? kstDayTime(flow.firstPublishedAt ?? '')?.day : undefined
+  return flow && since ? { count: flow.issueCount, since } : null
 }
 
 export function useStockTimeline(ticker: string | null): HubSlot<HubTimeline> {
-  const fixture = useHubFixture('stock-issues')
   const { data, error, retry } = useKeyed(ticker, loadTimeline)
   return useMemo(() => {
     if (ticker === null) return LOADING
     if (data) {
-      const flow = fixture ? fixture.stockFlow(ticker) : null
-      const nodes = placeStockIssues(data.items, [])
+      const nodes = placeStockIssues(data.issues.items, [])
         .slice(0, TIMELINE_NODES)
         .map((event) => ({ id: event.id, title: event.title, summary: event.summary, day: event.date, media: event.media }))
-      return { status: 'ready', data: { flow, nodes }, mock: false }
+      return { status: 'ready', data: { flow: storyFlow(data.flows, nodes[0]?.id), nodes }, mock: false }
     }
     if (error) return { status: 'error', retry }
     return LOADING
-  }, [ticker, fixture, data, error, retry])
+  }, [ticker, data, error, retry])
 }
 
 export function useThemeTimeline(themeId: number | null): HubSlot<HubTimeline> {

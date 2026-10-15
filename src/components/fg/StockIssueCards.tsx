@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -8,7 +9,7 @@ import { StateBlock } from '@/components/fg/StateBlock'
 import { StockChip } from '@/components/fg/StockChip'
 import { splitChips } from '@/lib/fg/home'
 import { issueTabPath } from '@/lib/fg/issuePage'
-import type { IssueQuote } from '@/lib/fg/issueSubject'
+import { MARKET_REACTION_BADGE, type IssueQuote } from '@/lib/fg/issueSubject'
 import { issuePath } from '@/lib/fg/paths'
 import { issueSpanLabel, STOCK_ISSUE_ORDER, tradingDayLabel, type StockIssueEvent } from '@/lib/fg/stockIssues'
 import { useDelayed } from '@/lib/fg/useDelayed'
@@ -37,6 +38,7 @@ function IssueCard({ event, ticker, today, quotes, state }: CardProps) {
   return (
     <li className="fg-hcard">
       <div className="fg-hcard__meta fg-num">
+        {event.reaction && <Badge>{MARKET_REACTION_BADGE}</Badge>}
         <span>
           <b>{issueSpanLabel(event, today)}</b>
           {` 보도 · ${event.media}개 매체 · 기사 ${event.articles}건 · 이 종목 언급 ${event.mentions}건`}
@@ -148,7 +150,7 @@ export function StockIssueCards({ ticker, issues, today }: StockIssueCardsProps)
     <section className="fg-section fg-sic" aria-labelledby="fg-sic-title">
       <div className="fg-section__head">
         <div className="fg-sev__titles">
-          <h2 id="fg-sic-title" className="fg-section__title">
+          <h2 id="fg-sic-title" className="fg-section__title fg-section__title--issue">
             이 종목이 나온 이슈
           </h2>
           <p className="fg-section__sub fg-num">{sub}</p>

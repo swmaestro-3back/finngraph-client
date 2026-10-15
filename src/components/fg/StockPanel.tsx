@@ -190,6 +190,9 @@ export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPa
           <StockStar stock={stock} className="fg-tdet__star fg-sdet__star" />
         </div>
         <PanelPrice stock={stock} summary={summary} />
+        <div className="fg-sdet__acts">
+          <StockDetailLink stock={stock} />
+        </div>
         {summary.candlesFailed ? (
           <CandlesFailed retry={retry} />
         ) : (
@@ -226,9 +229,6 @@ export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPa
         <StockFlows summary={summary} retry={retry} />
         <StockThemeChips stock={stock} />
         <StockIssue line={issue} />
-      </div>
-      <div className="fg-sdet__foot">
-        <StockDetailLink stock={stock} />
       </div>
     </section>
   )
