@@ -18,7 +18,7 @@ import {
   RowAction,
   Section,
 } from '@/components/graph/DetailParts'
-import { StockLogo } from '@/components/stock/StockLogo'
+import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -188,7 +188,7 @@ export function NodeDetail({
     <>
       {/* 로고가 없는 종목은 자리를 비우지 않고 이름만 왼쪽으로 붙는다 */}
       <div className="mb-3 flex items-center gap-2.5">
-        {ticker && <StockLogo ticker={ticker} size={36} />}
+        {ticker && <CompanyLogo name={node.label} ticker={ticker} size={36} />}
         <div className="min-w-0">
           <h2 className="m-0 text-xl leading-[1.25] font-semibold tracking-[-0.4px] text-foreground">
             {node.label}

@@ -105,7 +105,7 @@ function IssueHead({ item, extra, quotes }: { item: HubIssueItem; extra: HubIssu
           {lead && (
             <span className="fg-hh__lead">
               <span className="fg-lg fg-lg--s">
-                <CompanyLogo name={lead.name} size={16} />
+                <CompanyLogo name={lead.name} ticker={lead.ticker} size={16} />
                 {lead.name}
               </span>
               {change !== null && <ChangeText value={change} />}
@@ -191,6 +191,7 @@ function InferredBlock({ linked, to }: { linked: IssueLinksState; to: string }) 
               key={company.id}
               to={to}
               name={company.name}
+              ticker={company.code}
               market={company.market}
               price={company.price}
               change={company.change}
@@ -252,6 +253,7 @@ function IssuePane({ item, stocks, total, linked, lookup, basisShort, from, onRe
             to={rep.ticker ? stockPath(rep.ticker) : null}
             state={state}
             name={rep.name}
+            ticker={rep.ticker}
             market={rep.market ?? null}
             price={rep.price ?? null}
             change={rep.change}
@@ -359,7 +361,7 @@ function IssuesMobile({ items, index, stocks, total, linked, extra, quotes, look
               <Badge>뉴스에 나온 종목</Badge>
               <span className="fg-hubm__id">
                 <span className="fg-lg">
-                  <CompanyLogo name={stock.name} size={24} />
+                  <CompanyLogo name={stock.name} ticker={stock.ticker} size={24} />
                   <span className="fg-hubm__name">{stock.name}</span>
                 </span>
                 {stock.market && <span className="fg-hubm__mkt">{marketLabel(stock.market)}</span>}
@@ -396,7 +398,7 @@ function IssuesMobile({ items, index, stocks, total, linked, extra, quotes, look
                   <Badge tone="inferred">{`근거 강도 ${STRENGTH_LABEL[company.strength]}`}</Badge>
                   <span className="fg-hubm__id">
                     <span className="fg-lg">
-                      <CompanyLogo name={company.name} size={24} />
+                      <CompanyLogo name={company.name} ticker={company.code} size={24} />
                       <span className="fg-hubm__name">{company.name}</span>
                     </span>
                     <span className="fg-hubm__mkt">{marketLabel(company.market)}</span>
@@ -453,7 +455,7 @@ function IssuesMobile({ items, index, stocks, total, linked, extra, quotes, look
                         {lead && (
                           <span className="fg-hh__lead">
                             <span className="fg-lg fg-lg--s">
-                              <CompanyLogo name={lead.name} size={16} />
+                              <CompanyLogo name={lead.name} ticker={lead.ticker} size={16} />
                               {lead.name}
                             </span>
                             {change !== null && <ChangeText value={change} />}

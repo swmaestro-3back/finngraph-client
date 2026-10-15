@@ -78,7 +78,7 @@ function StockHead({ stock, open, line, flow, high }: StockHeadProps) {
       <span className="fg-hh">
         <span className="fg-hh__who">
           <span className="fg-lg">
-            <CompanyLogo name={stock.name} size={open ? 32 : 24} />
+            <CompanyLogo name={stock.name} ticker={stock.ticker} size={open ? 32 : 24} />
             <span className="fg-hh__name">{stock.name}</span>
           </span>
           <span className="fg-hh__sub">{subLabel(stock)}</span>
@@ -238,6 +238,7 @@ function StockPane({ stock, summary, retry, baseDate, basisShort, today, from }:
             to={linksTo}
             state={state}
             name={company.name}
+            ticker={company.code}
             market={company.market}
             price={company.price}
             change={company.change}

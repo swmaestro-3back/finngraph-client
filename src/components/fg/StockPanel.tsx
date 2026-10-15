@@ -177,7 +177,7 @@ export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPa
     <section ref={ref} className="fg-section fg-sdet fg-rail__wide fg-reveal" aria-labelledby="fg-sdet-name">
       <div className="fg-sdet__body">
         <div className="fg-sdet__id">
-          <CompanyLogo name={stock.name} size={40} />
+          <CompanyLogo name={stock.name} ticker={stock.ticker} size={40} />
           <div className="fg-sdet__who">
             <h2 id="fg-sdet-name" className="fg-tdet__name">
               {stock.name}

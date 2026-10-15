@@ -72,7 +72,7 @@ export function StockLinksTab({ stock, linked }: StockLinksTabProps) {
         {pending && <Skeleton height={280} />}
         {member && (
           <>
-            <RelationMap name={stock.name} price={stock.price} change={stock.change} companies={companies} onOpen={openSheet} />
+            <RelationMap name={stock.name} ticker={stock.ticker} price={stock.price} change={stock.change} companies={companies} onOpen={openSheet} />
             <div className="fg-rlegend">
               <span>
                 <i aria-hidden="true" />

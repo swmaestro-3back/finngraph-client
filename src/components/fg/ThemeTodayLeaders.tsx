@@ -34,7 +34,7 @@ export function ThemeTodayLeaders({ theme, stocks, from, className, children }: 
           {rows.map((row) => (
             <li key={row.ticker}>
               <Link to={stockPath(row.ticker)} state={fromState(from)}>
-                <CompanyLogo name={row.name} />
+                <CompanyLogo name={row.name} ticker={row.ticker} />
                 <span className="fg-mlist__body">
                   <span className="fg-mlist__name">{row.name}</span>
                   {row.price !== null && <span className="fg-mlist__price fg-num">{formatPriceWon(row.price)}</span>}

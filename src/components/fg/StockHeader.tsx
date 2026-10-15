@@ -167,7 +167,7 @@ export function StockHeader({
             <ThemeEntry stock={stock} themes={themes} />
           </div>
           <div className="fg-sdh__id">
-            <CompanyLogo name={stock.name} size={32} className="fg-sdh__logo" />
+            <CompanyLogo name={stock.name} ticker={stock.ticker} size={32} className="fg-sdh__logo" />
             <h1 id="fg-sdh-name" className="fg-sdh__name">
               {stock.name}
             </h1>

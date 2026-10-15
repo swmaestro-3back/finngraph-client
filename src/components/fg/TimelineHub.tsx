@@ -323,6 +323,7 @@ interface HubQuoteRowProps {
   to: string | null
   state?: unknown
   name: string
+  ticker?: string | null
   market: string | null
   price: number | null
   change: number | null
@@ -331,10 +332,10 @@ interface HubQuoteRowProps {
   children?: ReactNode
 }
 
-export function HubQuoteRow({ to, state, name, market, price, change, high = false, badge = null, children = null }: HubQuoteRowProps) {
+export function HubQuoteRow({ to, state, name, ticker = null, market, price, change, high = false, badge = null, children = null }: HubQuoteRowProps) {
   const body = (
     <>
-      <CompanyLogo name={name} size={32} />
+      <CompanyLogo name={name} ticker={ticker} size={32} />
       <span className="fg-hq__body">
         <span className="fg-hq__top">
           <span className="fg-hq__id">

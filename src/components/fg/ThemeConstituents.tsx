@@ -155,7 +155,7 @@ export function ThemeConstituents({ stocks, loading, error, onRetry, themeCap, f
             {rows.map((stock) => (
               <div key={stock.ticker} className="fg-tcm__row" role="row">
                 <span role="cell" className="fg-tcm__name">
-                  <CompanyLogo name={stock.name} />
+                  <CompanyLogo name={stock.name} ticker={stock.ticker} />
                   <span>
                     <Link to={stockPath(stock.ticker)} state={fromState(from)}>
                       {stock.name}
@@ -201,7 +201,7 @@ export function ThemeConstituents({ stocks, loading, error, onRetry, themeCap, f
                   onClick={() => setOpen(isOpen ? null : stock.ticker)}
                 >
                   <span className="fg-tcm__bname">
-                    <CompanyLogo name={stock.name} />
+                    <CompanyLogo name={stock.name} ticker={stock.ticker} />
                     <span>
                       <b>{stock.name}</b>
                       <small>{stock.reason ?? `${marketLabel(stock.market)} · ${stock.ticker}`}</small>

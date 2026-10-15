@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Search } from 'lucide-react'
 import { CATEGORY_COLORS, type GraphFocus } from '@/data/graphTypes'
-import { StockLogo } from '@/components/stock/StockLogo'
+import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Input } from '@/components/ui/input'
 import { isBareKey } from '@/lib/keyboard'
 import { searchResults, type SearchableStock, type SearchableTheme } from '@/lib/searchResults'
@@ -205,7 +205,7 @@ export function SearchBar({
             >
               {/* 종목은 주식 목록의 종목명 칸과 같은 로고, 테마는 색 점 */}
               {r.focus.kind === 'company' ? (
-                <StockLogo ticker={r.focus.ticker} size={24} reserveSpace />
+                <CompanyLogo name={r.label} ticker={r.focus.ticker} size={24} />
               ) : (
                 <span
                   className="size-2.5 shrink-0 rounded-full"

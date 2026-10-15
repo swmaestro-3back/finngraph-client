@@ -93,7 +93,7 @@ export function ThemeTable({
                   <span role="cell" className="fg-trow__lead">
                     {leader && leader.change !== null ? (
                       <>
-                        <CompanyLogo name={leader.name} size={24} />
+                        <CompanyLogo name={leader.name} ticker={leader.ticker} size={24} />
                         <span>
                           <b>{leader.name}</b>
                           <small className={toneClass(leader.change)}>주도주 {formatChange(leader.change)}</small>
