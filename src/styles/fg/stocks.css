@@ -193,7 +193,7 @@
   min-width: 720px;
 }
 .fg-trow--stock {
-  grid-template-columns: minmax(170px, 1.6fr) repeat(6, minmax(76px, 1fr));
+  grid-template-columns: minmax(170px, 2.2fr) repeat(6, minmax(76px, 1fr));
 }
 .fg-trow--head [aria-sort] {
   color: var(--text-primary);
@@ -247,8 +247,16 @@
   gap: 6px;
   min-width: 0;
 }
+.fg-srow__nm > b {
+  min-width: 0;
+}
 .fg-srow__nm > .fg-badge {
   flex-shrink: 0;
+}
+.fg-srow__mark {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
 }
 .fg-srow__sub {
   font-weight: 400;
