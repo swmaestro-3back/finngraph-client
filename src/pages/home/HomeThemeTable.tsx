@@ -88,7 +88,7 @@ function TableRow({ theme, issues, state }: RowProps) {
         {leader && leader.change !== null ? (
           <span className="fg-htt__lead">
             <span className="fg-lg">
-              <CompanyLogo name={leader.name} size={24} />
+              <CompanyLogo name={leader.name} ticker={leader.ticker} size={24} />
               <span>{leader.name}</span>
             </span>
             <ChangeText value={leader.change} />
@@ -118,7 +118,7 @@ function ListRow({ theme, issues, state }: RowProps) {
               <>
                 주도주{' '}
                 <span className="fg-lg fg-lg--s">
-                  <CompanyLogo name={leader.name} size={16} />
+                  <CompanyLogo name={leader.name} ticker={leader.ticker} size={16} />
                   {leader.name}
                 </span>
                 {' · '}

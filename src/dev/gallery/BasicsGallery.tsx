@@ -123,6 +123,7 @@ export function BasicsGallery() {
           <CompanyLogo name="한빛반도체" size={24} />
           <CompanyLogo name="한빛반도체" />
           <CompanyLogo name="한빛반도체" size={40} />
+          <CompanyLogo name="삼성전자" ticker="005930" size={40} />
         </div>
       </GallerySection>
       <GallerySection title="PriceChange">

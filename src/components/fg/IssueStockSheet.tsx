@@ -104,7 +104,7 @@ export function IssueStockSheet({
           <div className="fg-esheet__target fg-istk__target fg-num">
             <div className="fg-esheet__trow">
               <span className="fg-esheet__who">
-                <CompanyLogo name={card.name} size={24} />
+                <CompanyLogo name={card.name} ticker={card.ticker} size={24} />
                 <b>{card.name}</b>
                 <span>{marketLabel(card.market)}</span>
               </span>

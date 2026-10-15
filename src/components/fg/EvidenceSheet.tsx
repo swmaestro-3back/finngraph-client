@@ -162,7 +162,7 @@ export function EvidenceSheet({
           <div className="fg-esheet__target fg-num">
             <div className="fg-esheet__trow">
               <span className="fg-esheet__who">
-                <CompanyLogo name={company.name} />
+                <CompanyLogo name={company.name} ticker={company.code} />
                 <b>{company.name}</b>
                 <span>{marketLabel(company.market)}</span>
               </span>

@@ -135,7 +135,7 @@ export function ThemeTopThree({ theme, stocks, from, refreshKey, className }: Th
             >
               <span className="fg-t3__top">
                 <span className="fg-t3__rank fg-num">{i + 1}</span>
-                <CompanyLogo name={row.name} />
+                <CompanyLogo name={row.name} ticker={row.ticker} />
                 <span className="fg-t3__who">
                   <b>{row.name}</b>
                   <small>{row.market ? marketLabel(row.market) : '—'}</small>
@@ -304,7 +304,7 @@ function ReturnPlot({ chart, rows, group, period, periodLabel, hl }: ReturnPlotP
                 className={cn('fg-t3c__end', hl !== null && hl !== i && 'is-dim')}
                 style={{ top: `${((tops[k] / VIEW_H) * 100).toFixed(2)}%` }}
               >
-                <CompanyLogo name={row.name} size={16} />
+                <CompanyLogo name={row.name} ticker={row.ticker} size={16} />
                 <span className="fg-t3c__endt fg-num">
                   <b>{row.name}</b>
                   <span>{price === null ? '—' : formatPriceWon(price)}</span>

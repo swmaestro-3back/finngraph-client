@@ -471,9 +471,17 @@
   box-sizing: border-box;
   border-radius: var(--radius-chip);
   overflow: hidden;
-  background: var(--bg-page) center / cover no-repeat;
+  background: var(--bg-page);
   color: var(--text-secondary);
   font: normal 700 14px/1 var(--font-sans);
+}
+.fg-clogo > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 .fg-clogo::after {
   content: '';
@@ -483,9 +491,6 @@
   box-shadow: inset 0 0 0 1px var(--border-default);
   mix-blend-mode: multiply;
   pointer-events: none;
-}
-.fg-clogo[data-img='true'] {
-  color: transparent;
 }
 .fg-clogo--16 {
   width: 16px;

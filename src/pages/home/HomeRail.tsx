@@ -193,7 +193,7 @@ function MoverRow({ stock, line, ext, to, onClick }: MoverRowProps) {
   const sub = [marketLabel(stock.market), stock.themeName].filter(Boolean).join(' · ')
   return (
     <Link to={to} replace className="fg-hsr" onClick={onClick}>
-      <CompanyLogo name={stock.name} size={32} />
+      <CompanyLogo name={stock.name} ticker={stock.ticker} size={32} />
       <span className="fg-hsr__body">
         <span className="fg-hsr__top">
           <span className="fg-hsr__id">
@@ -237,7 +237,7 @@ interface WatchRowViewProps {
 function WatchRowView({ row, line, ext, state }: WatchRowViewProps) {
   return (
     <Link to={stockPath(row.ticker)} state={state} className="fg-hsr fg-hsr--watch">
-      <CompanyLogo name={row.name} size={32} />
+      <CompanyLogo name={row.name} ticker={row.ticker} size={32} />
       <span className="fg-hsr__body">
         <span className="fg-hsr__top">
           <span className="fg-hsr__name">{row.name}</span>

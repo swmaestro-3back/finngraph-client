@@ -20,7 +20,7 @@ export function StockPinBar({ stock, on, status, tab, counts }: StockPinBarProps
     <div className="fg-sdpin" data-on={on ? 'true' : 'false'}>
       <div className="fg-wrap fg-sdpin__in">
         <div className="fg-sdpin__id fg-num">
-          <CompanyLogo name={stock.name} size={24} />
+          <CompanyLogo name={stock.name} ticker={stock.ticker} size={24} />
           <b>{stock.name}</b>
           {stock.price !== null && <span>{formatPriceWon(stock.price)}</span>}
           {status ? (
