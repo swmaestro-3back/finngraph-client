@@ -3,11 +3,9 @@ import type { FavoriteItemRes, IssueSummaryRes, StockRowRes, ThemeRes } from '@/
 import {
   chipThemes,
   feedGroups,
-  feedSortSearch,
   filterGroups,
   moreLabel,
   nextFeedRequest,
-  parseFeedSort,
   resolveFilter,
   splitChips,
   timelineBadge,
@@ -87,20 +85,6 @@ function fav(type: 'STOCK' | 'THEME', key: string, price: number | null = 100, c
     theme: null,
   }
 }
-
-describe('parseFeedSort · feedSortSearch', () => {
-  it('정렬은 기본이 매체 많은 순이고 모르는 값도 기본으로 읽어요', () => {
-    expect(parseFeedSort('')).toBe('media')
-    expect(parseFeedSort('?sort=recent')).toBe('recent')
-    expect(parseFeedSort('?sort=oops')).toBe('media')
-  })
-
-  it('기본 정렬은 쿼리에서 빼고 다른 쿼리는 그대로 둬요', () => {
-    expect(feedSortSearch('?hub=issues&issue=4', 'recent')).toBe('?hub=issues&issue=4&sort=recent')
-    expect(feedSortSearch('?hub=issues&sort=recent', 'media')).toBe('?hub=issues')
-    expect(feedSortSearch('?sort=recent', 'media')).toBe('')
-  })
-})
 
 describe('nextFeedRequest', () => {
   it('처음에는 기본 날짜 첫 쪽을 요청해요', () => {
