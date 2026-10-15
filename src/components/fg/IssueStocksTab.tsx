@@ -68,7 +68,14 @@ function StockCard({ card, member, locked, on, onPick, onOpen, onRetryQuotes }: 
   const { pathname, search } = useLocation()
   let links
   if (card.links === null) {
-    links = <span className="fg-ics__none" />
+    links = locked ? (
+      <span className="fg-ics__locked">
+        <Lock size={14} strokeWidth={1.75} aria-hidden="true" />
+        이어진 기업
+      </span>
+    ) : (
+      <span className="fg-ics__none" />
+    )
   } else if (card.links === 0) {
     links = <span className="fg-ics__none">이어진 기업은 아직 없어요</span>
   } else if (member && cardPicks(card) > 0) {
@@ -307,6 +314,7 @@ export function IssueStocksTab({ issue, linked, onOpenNews, onRetryQuotes }: Iss
         }
       />
     )
+  else if (!links && locked) linkBody = <MemberGate subject="관계로 이어진 기업" className="fg-ilk__gate" />
   else if (!links) linkBody = <Skeleton height={280} />
   else if (links.length === 0)
     linkBody = <StateBlock kind="empty" title="아직 이어진 기업이 없어요" description="관계가 새로 확인되면 여기에 보여 드려요" />

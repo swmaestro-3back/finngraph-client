@@ -221,6 +221,8 @@ function StockPane({ stock, summary, retry, baseDate, basisShort, today, from }:
         <RetryText subject="이어진 종목" onRetry={linked.retry} />
       </p>
     )
+  } else if (locked && !preview) {
+    linkedBody = <MemberGate subject="관계로 이어진 종목" variant="compact" className="fg-hubp__gate" />
   } else if (!preview || pending) {
     linkedBody = <Skeleton height={96} />
   } else if (preview.total === 0) {

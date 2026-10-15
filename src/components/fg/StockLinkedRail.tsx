@@ -84,6 +84,8 @@ export function StockLinkedRail({ stockName, linked }: StockLinkedRailProps) {
         <RetryText subject="이어진 기업" onRetry={linked.retry} />
       </p>
     )
+  } else if (locked && !preview) {
+    body = <MemberGate subject="관계로 이어진 기업" variant="compact" />
   } else if (!preview || pending) {
     body = <Skeleton height={168} />
   } else if (preview.total === 0) {

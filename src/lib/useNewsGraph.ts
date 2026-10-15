@@ -34,13 +34,14 @@ const NO_SIMILAR: NewsDetail[] = []
 export function useNewsGraph(
   newsId: string | null,
   hop: Hop = 1,
+  enabled = true,
 ): {
   data: NewsGraphData | null
   similar: NewsDetail[]
 } {
   const res = useApi<KgNewsGraphRes | null>(
     () =>
-      newsId
+      newsId && enabled
         ? getKgData<KgNewsGraphRes>(`/v1/news/${encodeURIComponent(newsId)}/graph`, { hop }).catch(
             (e: unknown) => {
               if (e instanceof ApiError && e.isNotFound) return null
@@ -48,7 +49,7 @@ export function useNewsGraph(
             },
           )
         : Promise.resolve(null),
-    [newsId, hop],
+    [newsId, hop, enabled],
   )
 
   const data = useMemo(() => (res.data ? toNewsGraph(res.data) : null), [res.data])

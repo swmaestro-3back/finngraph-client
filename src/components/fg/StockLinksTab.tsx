@@ -58,6 +58,7 @@ export function StockLinksTab({ stock, linked }: StockLinksTabProps) {
         }
       />
     )
+  else if (locked && !companies) mapPart = <MemberGate subject="관계로 이어진 기업" className="fg-slt__gate" />
   else if (!companies || !counts || !summary) mapPart = <Skeleton height={320} />
   else if (companies.length === 0)
     mapPart = <StateBlock kind="empty" title="아직 이어진 기업이 없어요" description="관계가 새로 확인되면 여기에 보여 드려요" />

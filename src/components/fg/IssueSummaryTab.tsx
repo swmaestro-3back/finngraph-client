@@ -278,7 +278,7 @@ interface GraphCardProps {
 function GraphCard({ source, live, today, error, onRetry, emptyNote, narrow }: GraphCardProps) {
   const { locked, pending } = useMemberGate()
   const { stocks, links } = source
-  const ready = links !== null && !pending
+  const ready = (links !== null || locked) && !pending
   const skeleton = useDelayed(!ready && !(links === null && error))
   const graph = useMemo(
     () => (ready && !narrow ? issueGraph({ flowTitle: source.title, stocks: source.stocks, links: source.links ?? [] }) : null),
@@ -397,6 +397,7 @@ function InferredRail({ stocks, links, error, onRetry }: InferredRailProps) {
         <RetryText subject="이어진 기업" onRetry={onRetry} />
       </p>
     )
+  else if (locked && links === null) inferred = <MemberGate subject="관계로 이어진 기업" variant="compact" className="fg-irail__gate" />
   else if (links === null || pending) inferred = <Skeleton height={168} />
   else if (rail.inferred === 0) inferred = <p className="fg-irail__empty">아직 이어진 기업이 없어요</p>
   else if (locked) inferred = <MemberGate subject={`이런 기업 ${rail.inferred}곳`} variant="compact" className="fg-irail__gate" />
