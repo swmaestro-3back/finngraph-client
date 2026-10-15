@@ -8,7 +8,7 @@ export function lockedIssueCount(total: number, locked: boolean): number {
   return locked ? Math.max(0, total - FREE_ISSUE_SLOTS) : 0
 }
 
-const MEMBER_ONLY_PATHS = ['/me', '/briefing']
+const MEMBER_ONLY_PATHS = ['/me']
 
 export function logoutLanding(pathname: string): string | null {
   const memberOnly = MEMBER_ONLY_PATHS.some(

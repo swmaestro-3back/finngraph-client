@@ -185,7 +185,7 @@
   flex-direction: column;
   align-items: stretch;
   min-width: 0;
-  min-height: 112px;
+  min-height: 92px;
   padding: 6px;
   border: 0;
   border-radius: 0;
@@ -557,7 +557,8 @@ button.fg-cal-ipo__row {
   min-width: 0;
   color: var(--text-primary);
 }
-.fg-cal-ipo__more {
+.fg-cal-ipo__more,
+.fg-cal-ctr__more {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
@@ -575,6 +576,108 @@ button.fg-cal-ipo__row {
   color: var(--text-tertiary);
 }
 
+.fg-cal-ctr__desc {
+  margin: var(--space-1) 0 0;
+  font: 400 12px/18px var(--font-sans);
+  color: var(--text-secondary);
+}
+.fg-cal-ctr__skel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.fg-cal-ctr__state {
+  padding: var(--space-6) 0;
+}
+.fg-cal-ctr__filer {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.fg-cal-ctr__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 700 14px/20px var(--font-sans);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.fg-cal-ctr__mkt {
+  flex-shrink: 0;
+  font: 500 12px/17px var(--font-sans);
+  color: var(--text-tertiary);
+}
+.fg-cal-ctr__party {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fg-cal-ctr__party {
+  font: 500 14px/20px var(--font-sans);
+  color: var(--text-primary);
+}
+.fg-cal-ctr__amount {
+  flex-shrink: 0;
+  font: 600 14px/20px var(--font-sans);
+  color: var(--text-primary);
+}
+.fg-cal-ctr__ratio--high {
+  color: var(--text-primary);
+}
+.fg-cal-ctr__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fg-cal-ctr__list > li + li {
+  border-top: 1px solid var(--border-divider);
+}
+.fg-cal-ctr__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3) 0;
+}
+.fg-cal-ctr__item > .fg-cal-ctr__party {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.fg-cal-ctr__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.fg-cal-ctr__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  font: 500 12px/17px var(--font-sans);
+  color: var(--text-secondary);
+}
+.fg-cal-ctr__meta > span[aria-hidden='true'] {
+  color: var(--text-tertiary);
+}
+.fg-cal-ctr__date {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.fg-cal-ctr__date::before {
+  content: '';
+  position: absolute;
+  inset: -12px -8px;
+}
+
 @media (hover: hover) {
   .fg-cal-day:hover {
     background: var(--bg-subtle);
@@ -588,13 +691,20 @@ button.fg-cal-ipo__row {
     text-decoration: underline;
     text-underline-offset: 3px;
   }
-  .fg-cal-ipo__more:hover {
+  .fg-cal-ipo__more:hover,
+  .fg-cal-ctr__more:hover,
+  .fg-cal-ctr__date:hover {
     color: var(--text-primary);
+  }
+  .fg-cal-ctr__name:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
   .fg-cal-day,
-  .fg-cal-ipo__more {
+  .fg-cal-ipo__more,
+  .fg-cal-ctr__more {
     transition-property: color, background-color, box-shadow;
     transition-duration: var(--fg-motion-fast);
     transition-timing-function: var(--fg-ease);
@@ -646,7 +756,8 @@ button.fg-cal-ipo__row {
     display: flex;
     justify-content: center;
   }
-  .fg-cal-ipo__more {
+  .fg-cal-ipo__more,
+  .fg-cal-ctr__more {
     min-height: 44px;
   }
 }

@@ -1,10 +1,9 @@
-import { CalendarDays, ChartLine, House, LayoutGrid, Newspaper, Share2, type LucideIcon } from 'lucide-react'
+import { CalendarDays, ChartLine, House, LayoutGrid, Share2, type LucideIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { activeMenu, BOTTOM_TABS, type MenuKey } from '@/lib/fg/nav'
 
 const ICONS: Record<MenuKey, LucideIcon> = {
   home: House,
-  briefing: Newspaper,
   themes: LayoutGrid,
   stocks: ChartLine,
   graph: Share2,
