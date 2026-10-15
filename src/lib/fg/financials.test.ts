@@ -188,7 +188,7 @@ describe('재무 지표 표', () => {
     expect(rows.eps).toMatchObject({ unit: '원', cells: ['8,057', '—', '—', '—'], yoy: null })
     expect(rows.dps).toMatchObject({ cells: ['—', '361', '1,446', '1,668'], yoy: '+15.4%' })
     expect(rows.currentRatio).toMatchObject({ gap: true, cells: [null, null, null, null], yoy: null })
-    expect(rows.bps).toMatchObject({ gap: true, cells: [null, null, null, null] })
+    expect(rows.bps).toMatchObject({ gap: false, cells: ['—', '—', '—', '—'] })
   })
 
   it('작은 회사는 억 원, 적자는 U+2212', () => {
@@ -200,9 +200,8 @@ describe('재무 지표 표', () => {
   })
 
   it('갭 줄은 목업이 있으면 목업 값을 채운다', () => {
-    const fixture: FinanceGapFixture = { quarters: [], bps: [46230, 44390, 47400, 51760], currentRatio: [182.4, 165.1, 171.8, 188.6] }
+    const fixture: FinanceGapFixture = { currentRatio: [182.4, 165.1, 171.8, 188.6] }
     const rows = Object.fromEntries(financeTable(samsung, fixture).groups.flatMap((g) => g.rows).map((r) => [r.key, r]))
-    expect(rows.bps).toMatchObject({ gap: true, cells: ['46,230', '44,390', '47,400', '51,760'], yoy: '+9.2%' })
     expect(rows.currentRatio).toMatchObject({ gap: true, cells: ['182.4', '165.1', '171.8', '188.6'], yoy: '+16.8%p' })
   })
 

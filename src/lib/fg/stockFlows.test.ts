@@ -164,8 +164,8 @@ describe('흐름 문구', () => {
   })
 
   it('목록 제목과 차트 이름', () => {
-    expect(flowListTitle(byId('export'), 'time')).toBe('이슈 3개를 시간순으로')
-    expect(flowListTitle(byId('export'), 'new')).toBe('이슈 3개를 최신순으로')
+    expect(flowListTitle(byId('export'), 'time')).toBe('이 종목이 나온 이슈 3개를 시간순으로')
+    expect(flowListTitle(byId('export'), 'new')).toBe('이 종목이 나온 이슈 3개를 최신순으로')
     expect(flowListTitle(byId('buyback'), 'time')).toBe('이 흐름의 이슈')
     expect(flowChartLabel(byId('export'), '삼성전자')).toBe('수출 규제 흐름 동안 삼성전자 주가, +20.00%')
   })
