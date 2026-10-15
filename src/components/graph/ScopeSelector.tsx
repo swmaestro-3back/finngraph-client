@@ -20,7 +20,7 @@ interface Props {
 }
 
 const ITEM =
-  'rounded-md px-2.5 font-mono text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
+  'rounded-md px-2.5 font-mono text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground md:h-8 md:px-3 md:text-body'
 
 /**
  * 시장·지수를 한 그룹의 단일 선택으로 묶은 토글.
@@ -103,7 +103,7 @@ export function ScopeSelector({ value, onChange, compact = false }: Props) {
 
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur">
-      <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground">
+      <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground md:text-xs">
         범위
       </span>
       <ScopeToggle value={value} onChange={onChange} />

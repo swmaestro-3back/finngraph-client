@@ -48,6 +48,8 @@ export interface GraphCanvasRef {
   zoomIn: () => void
   zoomOut: () => void
   resetZoom: () => void
+  nodeRects: (id: string) => { body: DOMRect; label: DOMRect | null } | null
+  linkMidpoint: (id: string) => { x: number; y: number } | null
 }
 
 export type GraphHighlight =
@@ -197,6 +199,23 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         .duration(500)
         .call(zoomRef.current.transform, fitTransformRef.current)
     },
+    linkMidpoint: (id: string) => {
+      const path = svgRef.current?.querySelector<SVGPathElement>(`[data-link="${CSS.escape(id)}"]`)
+      const matrix = path?.getScreenCTM()
+      if (!path || !matrix) return null
+      const point = path.getPointAtLength(path.getTotalLength() / 2)
+      const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix)
+      return { x: screen.x, y: screen.y }
+    },
+    nodeRects: (id: string) => {
+      const svg = svgRef.current
+      if (!svg) return null
+      const key = CSS.escape(id)
+      const body = svg.querySelector(`[data-node-body="${key}"]`)
+      if (!body) return null
+      const label = svg.querySelector(`[data-node-label="${key}"]`)
+      return { body: body.getBoundingClientRect(), label: label?.getBoundingClientRect() ?? null }
+    },
   }))
 
   // 중심은 연결이 없어도 남긴다 — 관계가 0개인 기업도 캔버스에 자기 노드는 보여야 한다
@@ -340,6 +359,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .selectAll<SVGPathElement, GraphLink>('path')
       .data(links)
       .join('path')
+      .attr('data-link', (l) => l.id)
       .attr('fill', 'none')
       .attr('stroke', 'transparent')
       .attr('stroke-width', 14)
@@ -363,6 +383,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .selectAll<SVGRectElement, GraphNode>('rect')
       .data(nodes)
       .join('rect')
+      .attr('data-node-body', (d) => d.id)
       .attr('width', bodyW)
       .attr('height', bodyH)
       .attr('rx', (d) => bodyH(d) / 2)
@@ -394,6 +415,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .selectAll<SVGTextElement, GraphNode>('text')
       .data(nodes)
       .join('text')
+      .attr('data-node-label', (d) => d.id)
       .text((d) => (isEvent(d) ? truncateEventLabel(d.label) : truncateLabel(d.label)))
       .attr('font-size', (d) =>
         isEvent(d) ? EVENT_LABEL_SIZE : isPrimary(d) ? CENTER_LABEL_SIZE : LABEL_SIZE,

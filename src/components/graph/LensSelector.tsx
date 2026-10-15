@@ -12,7 +12,7 @@ interface Props {
  */
 export function LensSelector({ value, onChange }: Props) {
   return (
-    <div className="flex items-center rounded-lg border border-border bg-background/90 p-1.5 shadow-soft backdrop-blur">
+    <div data-guide="lens" className="flex items-center rounded-lg border border-border bg-background/90 p-1.5 shadow-soft backdrop-blur">
       <ToggleGroup
         type="single"
         size="sm"
@@ -29,7 +29,7 @@ export function LensSelector({ value, onChange }: Props) {
           <ToggleGroupItem
             key={lens}
             value={lens}
-            className="rounded-md px-2.5 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            className="rounded-md px-2.5 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground md:h-8 md:px-3 md:text-body"
           >
             {LENS_LABELS[lens]}
           </ToggleGroupItem>

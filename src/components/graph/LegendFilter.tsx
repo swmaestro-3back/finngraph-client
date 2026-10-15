@@ -152,10 +152,10 @@ export function LegendFilter({
     </div>
   )
 
-  if (!isMobile) return <div className="absolute bottom-4 left-4 z-10">{panel}</div>
+  if (!isMobile) return <div data-guide="legend" className="absolute bottom-4 left-4 z-10">{panel}</div>
 
   return (
-    <div className="absolute bottom-4 left-4 z-10">
+    <div data-guide="legend" className="absolute bottom-4 left-4 z-10">
       {expanded && (
         <div className="mb-2 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">{panel}</div>
       )}

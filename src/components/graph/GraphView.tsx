@@ -8,6 +8,8 @@ import {
   type GraphPreview,
 } from '@/components/graph/GraphCanvas'
 import { DetailPanel } from '@/components/graph/DetailPanel'
+import { NodeMark } from '@/components/graph/DetailParts'
+import { GraphGuide, type GuideHole, type GuideStep } from '@/components/graph/GraphGuide'
 import { LegendFilter, type LegendPreview } from '@/components/graph/LegendFilter'
 import { OriginBar } from '@/components/graph/OriginBar'
 import { NewsDetailModal } from '@/components/news/NewsDetailModal'
@@ -18,7 +20,6 @@ import { Toolbar } from '@/components/graph/Toolbar'
 import { HopSelector } from '@/components/graph/HopSelector'
 import { EventPeriodSelector } from '@/components/graph/EventPeriodSelector'
 import { LensSelector } from '@/components/graph/LensSelector'
-import { MemberVeil } from '@/components/gate/MemberVeil'
 import { Button } from '@/components/ui/button'
 import {
   endId,
@@ -46,16 +47,36 @@ import { eventInPeriod, eventPeriodCutoff } from '@/lib/eventPeriod'
 import { indexCompanies } from '@/lib/graphEvent'
 import { useMemberGate } from '@/lib/memberGate'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
+import { useExampleGraph } from '@/lib/queries/useExampleGraph'
+import { EXAMPLE_BASIS, guideSeen, markGuideSeen, pickKey, rememberPick, STARTER_PICKS } from '@/lib/graphStart'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 interface Props {
   /** 그래프의 원점 — 기업(공급망) 또는 테마(소속 기업) */
   focus: GraphFocus
+  example?: boolean
 }
 
 /** 패널 안 이동 이력 상한 — 되돌아가기는 몇 걸음이면 충분하다 */
 const MAX_TRAIL = 20
+
+const GUIDE_DELAY_MS = 600
+const EDGE_HOLE = 40
+const HELP_HINT_MS = 3500
+
+type GuideMode = 'auto' | 'manual'
+
+function unionRect(a: DOMRect, b: DOMRect | null): DOMRect {
+  if (!b) return a
+  const left = Math.min(a.left, b.left)
+  const top = Math.min(a.top, b.top)
+  return new DOMRect(left, top, Math.max(a.right, b.right) - left, Math.max(a.bottom, b.bottom) - top)
+}
+
+function rectsOverlap(a: DOMRect, b: DOMRect): boolean {
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+}
 
 /** 재중심 이동에 실어 보내는 navigation state — 도착한 화면이 중심 노드를 자동 선택하라는 요청 */
 interface GraphNavState {
@@ -66,7 +87,7 @@ interface GraphNavState {
  * 지식그래프 통합 뷰 — 그래프 캔버스 + 상세 패널. 왼쪽 사이드바는 없다: 컨트롤은 전부 캔버스 위에 뜬다.
  * 위쪽(원점·렌즈·범위·Hop)은 무엇을 가져올지, 아래쪽(범례)은 가져온 것 중 무엇을 볼지다.
  */
-export function GraphView({ focus }: Props) {
+export function GraphView({ focus, example = false }: Props) {
   const isTheme = focus.kind === 'theme'
   const focusKey = focus.kind === 'theme' ? focus.name : focus.ticker
   const noun = isTheme ? '테마' : '종목'
@@ -86,12 +107,21 @@ export function GraphView({ focus }: Props) {
   const gatedQuery = gatedHop === hop ? query : { ...query, hop: gatedHop }
   // 개요는 서버가 1홉 고정이라 URL에 hop이 남아 있어도 강조 범위는 1홉이다
   const effectiveHop = controls.hop ? gatedHop : 1
-  const { data, loading, error, refetch } = useKgGraph(focus, gatedQuery, !pending)
+  const kgGraph = useKgGraph(focus, gatedQuery, !pending && !example)
+  const exampleGraph = useExampleGraph(example)
+  const { data, loading, error, refetch } = example ? exampleGraph : kgGraph
+  const open = example || (!locked && !pending)
   const navigate = useNavigate()
   const location = useLocation()
   const navState = location.state as GraphNavState | null
   const isMobile = useIsMobile()
   const graphRef = useRef<GraphCanvasRef>(null)
+  const canvasAreaRef = useRef<HTMLDivElement>(null)
+  const [guide, setGuide] = useState<GuideMode | null>(null)
+  const [helpHint, setHelpHint] = useState(false)
+  const [guideIndex, setGuideIndex] = useState<number | null>(null)
+  const guideTried = useRef(false)
+  const guideNeighborRef = useRef<string | null>(null)
 
   // 선택이 유일한 출처 — 캔버스 하이라이트도 여기서 파생된다
   const [selection, setSelection] = useState<GraphSelection | null>(null)
@@ -165,6 +195,187 @@ export function GraphView({ focus }: Props) {
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const centerId = data?.metadata.centerId ?? null
+
+  useEffect(() => {
+    if (example || !data || !centerId || locked) return
+    const center = nodeById.get(centerId)
+    if (!center) return
+    rememberPick({
+      focus: isTheme ? { kind: 'theme', name: focusKey } : { kind: 'company', ticker: focusKey },
+      label: center.label,
+    })
+  }, [example, data, centerId, nodeById, isTheme, focusKey, locked])
+
+  const companyNeighbors = useMemo(() => {
+    if (!data || !centerId) return []
+    const degree = new Map<string, number>()
+    const ids = new Set<string>()
+    data.links.forEach((l) => {
+      const source = endId(l.source)
+      const target = endId(l.target)
+      degree.set(source, (degree.get(source) ?? 0) + 1)
+      degree.set(target, (degree.get(target) ?? 0) + 1)
+      if (source === centerId) ids.add(target)
+      else if (target === centerId) ids.add(source)
+    })
+    return [...ids]
+      .filter((id) => nodeById.get(id)?.type === 'company')
+      .sort((a, b) => (degree.get(b) ?? 0) - (degree.get(a) ?? 0))
+  }, [data, centerId, nodeById])
+
+  useEffect(() => {
+    if (guideTried.current || !open || loading || isTheme || companyNeighbors.length === 0) return
+    const timer = window.setTimeout(() => {
+      guideTried.current = true
+      if (guideSeen()) return
+      markGuideSeen()
+      guideNeighborRef.current = null
+      setGuide('auto')
+    }, GUIDE_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [open, loading, isTheme, companyNeighbors])
+
+  useEffect(() => {
+    if (!helpHint) return
+    const timer = window.setTimeout(() => setHelpHint(false), HELP_HINT_MS)
+    return () => window.clearTimeout(timer)
+  }, [helpHint])
+
+  const openGuide = useCallback(() => {
+    guideNeighborRef.current = null
+    setHelpHint(false)
+    setGuide('manual')
+  }, [])
+
+  const closeGuide = useCallback(() => {
+    if (guide === 'auto') setHelpHint(true)
+    setGuide(null)
+  }, [guide])
+
+  const guideSteps = useMemo<GuideStep[]>(() => {
+    const area = () => canvasAreaRef.current
+    const rectOf = (key: string) =>
+      area()?.querySelector<HTMLElement>(`[data-guide="${key}"]`)?.getBoundingClientRect() ?? null
+    const reserved = () => {
+      const toolbar = rectOf('toolbar')
+      return toolbar ? [toolbar] : []
+    }
+    const nodeHole = (id: string | null, pulse: boolean): GuideHole | null => {
+      const rects = id ? graphRef.current?.nodeRects(id) : null
+      if (!rects) return null
+      return {
+        rect: unionRect(rects.body, rects.label),
+        round: true,
+        pulseAt: pulse
+          ? { x: rects.body.left + rects.body.width / 2, y: rects.body.top + rects.body.height / 2 }
+          : undefined,
+      }
+    }
+    const pickNeighbor = () => {
+      const box = area()?.getBoundingClientRect()
+      const canvas = graphRef.current
+      if (!box || !canvas) return companyNeighbors[0] ?? null
+      const legend = rectOf('legend')
+      const bottom = box.top + box.height * (isMobile ? 0.5 : 1) - 24
+      const fits = (id: string) => {
+        const rect = canvas.nodeRects(id)?.body
+        if (!rect) return false
+        const inside =
+          rect.left > box.left + 24 && rect.right < box.right - 72 && rect.top > box.top + 96 && rect.bottom < bottom
+        return inside && !(legend && rectsOverlap(rect, legend))
+      }
+      return companyNeighbors.find(fits) ?? companyNeighbors[0] ?? null
+    }
+    const holes = (...items: (GuideHole | null)[]) => items.filter((h): h is GuideHole => h !== null)
+    const guideLinkOf = (neighbor: string) =>
+      data?.links.find((l) => {
+        if (isEventLink(l)) return false
+        const source = endId(l.source)
+        const target = endId(l.target)
+        return (source === centerId && target === neighbor) || (source === neighbor && target === centerId)
+      })
+    const steps: GuideStep[] = [
+      {
+        title: isTheme ? '가운데가 지금 보는 테마예요' : '가운데가 지금 보는 기업이에요',
+        text: isTheme
+          ? '둘레는 이 테마에 속한 기업이에요. 색은 시장을 뜻하고, 범례를 눌러 끄고 켤 수 있어요.'
+          : '둘레에 공급·투자·테마·이벤트로 이어진 곳이 모여요. 색은 시장, 선은 관계 종류이고 범례를 눌러 끄고 켤 수 있어요.',
+        locate: () => {
+          const legend = isMobile ? null : rectOf('legend')
+          return { holes: holes(nodeHole(centerId, false), legend && { rect: legend }), avoid: reserved() }
+        },
+      },
+    ]
+    if (companyNeighbors.length > 0) {
+      steps.push({
+        title: '기업을 눌러 보세요',
+        text: example
+          ? '그 기업의 공급처·납품처가 열려요. 그 기업을 가운데에 두고 다시 보기는 로그인하면 열려요.'
+          : '그 기업의 공급처·납품처·지분 관계가 열려요. 두 번 누르거나 ‘이 기업 중심으로 탐색’을 누르면 그 기업이 가운데로 와요.',
+        locate: () => {
+          guideNeighborRef.current ??= pickNeighbor()
+          const center = nodeHole(centerId, false)
+          return {
+            holes: holes(nodeHole(guideNeighborRef.current, true)),
+            avoid: [...reserved(), ...(center ? [center.rect] : [])],
+          }
+        },
+      })
+      steps.push({
+        title: '선을 눌러 보세요',
+        text: isTheme
+          ? '기업을 누를 때와 달리 그 기업이 이 테마에 묶인 이유가 열려요.'
+          : example
+            ? '기업을 누를 때와 달리 두 기업 사이 관계 하나가 열려요. 근거 기사·공시 문장은 로그인하면 볼 수 있어요.'
+            : '기업을 누를 때와 달리 두 기업 사이 관계 하나가 열려요. 무엇을 대는지, 언제 언급됐는지, 근거 기사·공시까지 나와요.',
+        linkId: () => {
+          const neighbor = guideNeighborRef.current
+          return (neighbor && guideLinkOf(neighbor)?.id) ?? null
+        },
+        locate: () => {
+          guideNeighborRef.current ??= pickNeighbor()
+          const neighbor = guideNeighborRef.current
+          const link = neighbor ? guideLinkOf(neighbor) : undefined
+          const point = link ? graphRef.current?.linkMidpoint(link.id) : null
+          if (!point) return null
+          const ends = [nodeHole(centerId, false), nodeHole(neighbor, false)].filter((h): h is GuideHole => h !== null)
+          return {
+            holes: [
+              {
+                rect: new DOMRect(point.x - EDGE_HOLE / 2, point.y - EDGE_HOLE / 2, EDGE_HOLE, EDGE_HOLE),
+                round: true,
+                pulseAt: point,
+              },
+            ],
+            avoid: [...reserved(), ...ends.map((h) => h.rect)],
+          }
+        },
+      })
+    }
+    if (example) {
+      steps.push({
+        title: '예시는 여기까지예요',
+        text: '로그인하면 원하는 기업을 골라 2·3단계 관계와 근거 문장까지 볼 수 있어요.',
+        locate: () => {
+          const banner = rectOf('example')
+          return { holes: holes(banner && { rect: banner }), avoid: reserved() }
+        },
+      })
+      return steps
+    }
+    steps.push({
+      title: '보고 싶은 관계만 골라요',
+      text: isTheme
+        ? '테마 이름을 누르면 다른 기업이나 테마로 바꿀 수 있어요.'
+        : '기업 이름을 누르면 다른 기업으로 바꾸고, 탭으로 테마·공급망·이벤트만 골라 볼 수 있어요.',
+      locate: () => {
+        const origin = rectOf('origin')
+        const lens = isTheme ? null : rectOf('lens')
+        return { holes: holes(origin && { rect: origin }, lens && { rect: lens }), avoid: reserved() }
+      },
+    })
+    return steps
+  }, [example, isTheme, isMobile, data, centerId, companyNeighbors])
 
   /**
    * 재중심 직후 도착한 새 그래프에서 중심 노드를 자동 선택한다 — 패널이 새 중심의 정보로 이어진다.
@@ -317,8 +528,11 @@ export function GraphView({ focus }: Props) {
     return counts
   }, [data])
 
+  const guideLinkId = guide && guideIndex !== null ? (guideSteps[guideIndex]?.linkId?.() ?? null) : null
+
   // 캔버스에 넘기는 미리 보기 — 패널 행이 범례보다 먼저다(둘이 동시에 걸릴 일은 없지만 더 좁은 쪽을 따른다)
   const preview = useMemo<GraphPreview | null>(() => {
+    if (guideLinkId) return { kind: 'link', id: guideLinkId }
     if (hoverLinkId) return { kind: 'link', id: hoverLinkId }
     if (!data || !legendPreview) return null
     return legendPreview.kind === 'category'
@@ -330,7 +544,7 @@ export function GraphView({ focus }: Props) {
           kind: 'links',
           ids: data.links.filter((l) => l.type === legendPreview.predicate).map((l) => l.id),
         }
-  }, [data, hoverLinkId, legendPreview])
+  }, [data, guideLinkId, hoverLinkId, legendPreview])
 
   // 선택 노드의 이웃 — 필터 전 전체 links로 분류해, 캔버스에서 숨긴 테마도 칩으로는 보인다
   const neighbors = useMemo<NodeNeighbors>(() => {
@@ -408,7 +622,7 @@ export function GraphView({ focus }: Props) {
   const scoped = controls.scope && scope !== 'all'
 
   // 데스크톱은 캔버스 옆 칸, 모바일은 바텀시트 — 자리만 다르고 내용은 같다
-  const detailPanel = selection && !locked && !pending && (
+  const detailPanel = selection && open && (
     <DetailPanel
       selection={selection}
       onClose={clearSelection}
@@ -423,9 +637,10 @@ export function GraphView({ focus }: Props) {
       onLinkHover={setHoverLinkId}
       onRecenter={recenter}
       onThemeOpen={openTheme}
-      centerShortcuts={centerShortcuts}
+      centerShortcuts={example ? undefined : centerShortcuts}
       companies={companyIndex}
-      onShowSharing={showSharing}
+      onShowSharing={example ? undefined : showSharing}
+      onLogin={example ? promptLogin : undefined}
       onOpenNews={setOpenNewsId}
     />
   )
@@ -434,7 +649,7 @@ export function GraphView({ focus }: Props) {
     <>
       <div className="flex size-full bg-background">
         {/* @container — 상단 컨트롤이 뷰포트가 아니라 캔버스 폭(상세 패널을 뺀 나머지)에 맞춰 접히도록 */}
-        <div className="@container relative min-w-0 flex-1 overflow-hidden">
+        <div ref={canvasAreaRef} className="@container relative min-w-0 flex-1 overflow-hidden">
           {/* 렌즈·홉을 바꾸는 동안 이전 그래프를 그대로 두고 상단에 얇은 진행 표시만 — 화면이 비었다 채워지는 깜빡임을 피한다 */}
           {loading && (
             <div
@@ -445,12 +660,12 @@ export function GraphView({ focus }: Props) {
               <div className="h-full w-1/3 animate-pulse bg-primary" />
             </div>
           )}
-          <div inert={locked || pending || undefined} className="absolute inset-0">
+          <div className="absolute inset-0">
             <GraphCanvas
               ref={graphRef}
               data={data}
               onNodeClick={selectNode}
-              onNodeDoubleClick={recenter}
+              onNodeDoubleClick={example ? undefined : recenter}
               onLinkClick={selectLink}
               onBackgroundClick={clearSelection}
               highlight={highlight}
@@ -461,16 +676,8 @@ export function GraphView({ focus }: Props) {
               eventCutoff={eventCutoff}
             />
           </div>
-          {(locked || pending) && (
-            <MemberVeil
-              title={`${noun} 관계 그래프는 로그인하면 열려요`}
-              description="공급·투자·인수 관계를 근거 뉴스와 공시까지 따라갈 수 있습니다."
-              pending={pending}
-              onLogin={promptLogin}
-            />
-          )}
           {/* 관계가 0개여도 캔버스와 중심 노드는 그대로 두고 안내만 얹는다 — 패널·범례와 화면이 어긋나지 않도록 */}
-          {!locked && !pending && data.links.length === 0 && (
+          {!example && data.links.length === 0 && (
             <div
               // 캔버스는 중심 노드 하나를 가운데에 그리고 있다 — 그 아래 빈자리에 겹쳐 두고, 노드 클릭·드래그는 통과시킨다
               className="pointer-events-none absolute inset-x-0 top-[calc(50%+4.5rem)] z-10 flex flex-col items-center gap-2 px-4 text-center"
@@ -495,7 +702,9 @@ export function GraphView({ focus }: Props) {
                       ? '공급망에서 연결된 기업을 살펴보세요.'
                       : scoped
                         ? '범위를 전체로 넓히거나 홉을 늘려 보세요.'
-                        : '다른 종목을 검색하거나 홉을 넓혀 보세요.'}
+                        : lens === 'overview'
+                          ? '관계가 많은 기업부터 둘러보세요.'
+                          : '다른 종목을 검색하거나 홉을 넓혀 보세요.'}
               </p>
               {(lens === 'events' || lens === 'themes') && !isTheme && (
                 <Button
@@ -517,6 +726,20 @@ export function GraphView({ focus }: Props) {
                   범위를 전체로
                 </Button>
               )}
+              {!isTheme && !scoped && lens !== 'events' && lens !== 'themes' && (
+                <div className="pointer-events-auto mt-2 flex flex-wrap justify-center gap-1.5">
+                  {STARTER_PICKS.filter((pick) => pickKey(pick.focus) !== `company:${focusKey}`).map((pick) => (
+                    <Button
+                      key={pickKey(pick.focus)}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(graphPath(pick.focus, query))}
+                    >
+                      {pick.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -531,16 +754,24 @@ export function GraphView({ focus }: Props) {
               isMobile ? 'max-w-[calc(100%-1.5rem)]' : 'max-w-[calc(100%-4.75rem)]',
             )}
           >
-            <OriginBar
-              center={centerId ? nodeById.get(centerId) : undefined}
-              onSelect={(next) => navigate(graphPath(next, query))}
-            />
-            {!isTheme && <LensSelector value={lens} onChange={(next) => updateQuery({ lens: next })} />}
+            {example ? (
+              <ExampleBar
+                center={centerId ? nodeById.get(centerId) : undefined}
+                compact={isMobile}
+                onLogin={promptLogin}
+              />
+            ) : (
+              <OriginBar
+                center={centerId ? nodeById.get(centerId) : undefined}
+                onSelect={(next) => navigate(graphPath(next, query))}
+              />
+            )}
+            {!isTheme && !example && <LensSelector value={lens} onChange={(next) => updateQuery({ lens: next })} />}
             {/*
               Hop·범위는 렌즈가 서버에 보내는 파라미터만큼만 보인다 — 개요는 둘 다 없음, 이벤트는 Hop만.
               한 묶음으로 둔다: 폭이 모자라면 Hop만 혼자 내려가지 않고 "얼마나"가 함께 둘째 줄로 간다.
             */}
-            {(controls.scope || controls.hop || showPeriod) && (
+            {!example && (controls.scope || controls.hop || showPeriod) && (
               <div className="flex flex-wrap items-center gap-2">
                 {controls.scope && (
                   <>
@@ -555,6 +786,7 @@ export function GraphView({ focus }: Props) {
                 )}
                 {controls.hop && (
                   <HopSelector
+                    itemClassName="md:h-8 md:px-3 md:text-body"
                     value={gatedHop}
                     onChange={(next) => updateQuery({ hop: next })}
                     lockedFrom={locked ? 2 : undefined}
@@ -594,13 +826,52 @@ export function GraphView({ focus }: Props) {
             onZoomOut={() => graphRef.current?.zoomOut()}
             onReset={handleReset}
             isMobile={isMobile}
+            onHelp={open ? openGuide : undefined}
+            helpHint={helpHint}
           />
+          {guide && open && (
+            <GraphGuide
+              steps={guideSteps}
+              containerRef={canvasAreaRef}
+              isMobile={isMobile}
+              onClose={closeGuide}
+              onStepChange={setGuideIndex}
+            />
+          )}
         </div>
         {!isMobile && detailPanel}
       </div>
 
       {isMobile && detailPanel}
       <NewsDetailModal newsId={openNewsId} onOpenChange={(open) => !open && setOpenNewsId(null)} />
+    </>
+  )
+}
+
+function ExampleBar({ center, compact, onLogin }: { center?: GraphNode; compact: boolean; onLogin: () => void }) {
+  return (
+    <>
+      <span
+        data-guide="origin"
+        className="flex h-10.5 max-w-full items-center gap-2 rounded-lg border border-border bg-background/90 pr-3 pl-2 shadow-soft backdrop-blur md:h-11.5 md:gap-2.5 md:pl-2.5"
+      >
+        {center && <NodeMark node={center} size={24} />}
+        <span className="min-w-0 truncate text-body font-semibold text-foreground md:text-[15px]">{center?.label}</span>
+        <span className="shrink-0 rounded bg-accent-warm-bg px-1.5 text-micro leading-4 font-semibold text-accent-warm">
+          예시
+        </span>
+      </span>
+      <div
+        data-guide="example"
+        className="flex h-10.5 max-w-full items-center gap-2.5 rounded-lg border border-accent-warm/20 bg-accent-warm-bg/60 pr-1.5 pl-3 text-caption text-accent-warm shadow-soft backdrop-blur md:h-11.5 md:text-xs"
+      >
+        <span className="whitespace-nowrap">
+          <strong className="font-semibold">예시 그래프</strong> · {EXAMPLE_BASIS}
+        </span>
+        <Button size="sm" onClick={onLogin} className="whitespace-nowrap">
+          {compact ? '로그인하고 보기' : '로그인하고 실제로 보기'}
+        </Button>
+      </div>
     </>
   )
 }

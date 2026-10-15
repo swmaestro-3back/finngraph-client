@@ -1,4 +1,4 @@
-import { ArrowRight, Crosshair, ExternalLink, Network, Newspaper } from 'lucide-react'
+import { ArrowRight, Crosshair, ExternalLink, Lock, Network, Newspaper } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   CATEGORY_LABELS,
@@ -59,6 +59,7 @@ interface Props {
   onLinkHover?: (linkId: string | null) => void
   /** 이 노드를 새 중심으로 다시 조회 */
   onRecenter?: (node: GraphNode) => void
+  onLogin?: () => void
   /** 소속 테마 행 — 필터로 캔버스에서 꺼져 있을 수 있어 선택이 아니라 테마 그래프로 이동한다 */
   onThemeOpen?: (node: GraphNode) => void
   /** 중심 기업 + 개요 렌즈일 때만 넘어온다 */
@@ -90,6 +91,7 @@ export function NodeDetail({
   onLinkSelect,
   onLinkHover,
   onRecenter,
+  onLogin,
   onThemeOpen,
   centerShortcuts,
 }: Props) {
@@ -246,8 +248,8 @@ export function NodeDetail({
           </Button>
         ) : (
           onRecenter && (
-            <Button size="sm" className="flex-1" onClick={() => onRecenter(node)}>
-              <Crosshair data-icon="inline-start" />
+            <Button size="sm" className="flex-1" onClick={() => (onLogin ? onLogin() : onRecenter(node))}>
+              {onLogin ? <Lock data-icon="inline-start" /> : <Crosshair data-icon="inline-start" />}
               {isTheme ? '이 테마 중심으로 탐색' : '이 기업 중심으로 탐색'}
             </Button>
           )
