@@ -36,8 +36,20 @@ export function ThemeGraphLink({ theme, label = '관계 탐색', text = false, c
   )
 }
 
-export function ThemeDetailLink({ theme, label = '테마 상세 보기', className }: ThemeLinkProps) {
+export function ThemeDetailLink({ theme, label = '테마 상세 보기', text = false, className }: ThemeLinkProps) {
   const { pathname, search } = useLocation()
+  if (text) {
+    return (
+      <Link
+        to={themePath(theme.id)}
+        state={fromState(`${pathname}${search}`)}
+        className={className ? `fg-sdmore ${className}` : 'fg-sdmore'}
+      >
+        {label}
+        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+      </Link>
+    )
+  }
   return (
     <ButtonLink
       to={themePath(theme.id)}
@@ -53,8 +65,8 @@ export function ThemeDetailLink({ theme, label = '테마 상세 보기', classNa
 export function ThemeActions({ theme }: { theme: ThemeRef }) {
   return (
     <div className="fg-tacts">
-      <ThemeDetailLink theme={theme} />
-      <ThemeGraphLink theme={theme} />
+      <ThemeDetailLink theme={theme} text />
+      <ThemeGraphLink theme={theme} text />
       <ThemeStar theme={theme} />
     </div>
   )
