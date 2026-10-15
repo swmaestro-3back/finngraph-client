@@ -36,8 +36,7 @@ import {
   themeMovers,
   type HubQuoteExt,
 } from '@/lib/fg/hub'
-import { issueTabPath } from '@/lib/fg/issuePage'
-import { stockPath, themePath } from '@/lib/fg/paths'
+import { issuePath, stockPath, themePath } from '@/lib/fg/paths'
 import { themeLeader, weightedChangeOf } from '@/lib/fg/themes'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { useHubSelection, useSeen } from '@/lib/fg/useHub'
@@ -128,8 +127,8 @@ function ThemeBody({ theme, today, from, pane }: ThemeBodyProps) {
     )
     if (split) {
       more = (
-        <HubMore to={issueTabPath(split.current.id, 'timeline')} state={state}>
-          타임라인 전체 보기
+        <HubMore to={issuePath(split.current.id)} state={state}>
+          이슈 상세 보기
         </HubMore>
       )
     }
@@ -215,8 +214,8 @@ function ThemePane({ theme, stocks, failed, onRetry, quoteOf, basisShort, from }
       <div className="fg-hubp__acts">
         <HubMore to={themePath(theme.id)} state={state}>{`테마 종목 ${theme.stockCount}개 보기`}</HubMore>
         {split && (
-          <HubMore to={issueTabPath(split.current.id, 'timeline')} state={state}>
-            타임라인 전체 보기
+          <HubMore to={issuePath(split.current.id)} state={state}>
+            이슈 상세 보기
           </HubMore>
         )}
       </div>

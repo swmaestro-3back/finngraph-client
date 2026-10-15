@@ -145,7 +145,7 @@ function IssueBody({ item, extra, today, pane }: IssueBodyProps) {
     <>
       {extra && extra.flow.count > 1 && <FlowRow extra={extra} />}
       <HubTimeline label="이슈 타임라인, 최신순" today={today} current={item} past={pastOf(extra, item.day)} showTitle={false} />
-      <HubMore to={issueTabPath(item.id, 'timeline')}>타임라인 전체 보기</HubMore>
+      <HubMore to={issuePath(item.id)}>이슈 상세 보기</HubMore>
       {pane && <HubInline>{pane}</HubInline>}
     </>
   )
@@ -345,7 +345,7 @@ function IssuesMobile({ items, index, stocks, total, linked, extra, quotes, look
           showTitle
           variant="card"
         />
-        <HubMore to={issueTabPath(item.id, 'timeline')}>타임라인 전체 보기</HubMore>
+        <HubMore to={issuePath(item.id)}>이슈 상세 보기</HubMore>
       </article>
       <div className="fg-hubm__head">
         <h2 className="fg-hubm__h2">이 이슈와 연결된 종목</h2>
