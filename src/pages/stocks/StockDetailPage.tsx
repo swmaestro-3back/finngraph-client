@@ -26,7 +26,8 @@ import {
   withIssue,
 } from '@/lib/fg/stockDetail'
 import { firstHopOf } from '@/lib/fg/linkedCompanies'
-import { flowSteps, placeIssues, placeStockIssues } from '@/lib/fg/stockIssues'
+import { widestFlowRange } from '@/lib/fg/stockFlows'
+import { flowSteps, placeFlowIssues, placeStockIssues } from '@/lib/fg/stockIssues'
 import { changeAmount, QUOTE_CANDLE_LIMIT, statusOf, week52Resolved } from '@/lib/fg/stockQuote'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { usePinned } from '@/lib/fg/usePinned'
@@ -34,19 +35,11 @@ import { useBackTarget } from '@/lib/navigation'
 import { useCandles } from '@/lib/queries/useCandles'
 import { useLinkedCompanies } from '@/lib/queries/useLinkedCompanies'
 import { useStockDetail } from '@/lib/queries/useStockDetail'
-import { useStockIssues } from '@/lib/queries/useStockIssues'
+import { useStockIssueFlows, useStockIssues } from '@/lib/queries/useStockIssues'
 import { refreshStocks } from '@/lib/queries/useStocksCached'
 import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { useStockThemes } from '@/lib/queries/useStockThemes'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
-import { useGap } from '@/lib/useGap'
-
-const loadIssues = import.meta.env.DEV
-  ? () => import('@/dev/fixtures/stockDetail').then((m) => m.stockIssueFlowsFixture)
-  : null
-const loadRatio = import.meta.env.DEV
-  ? () => import('@/dev/fixtures/stockDetail').then((m) => m.tradingRatioFixture)
-  : null
 
 const HEADER_SELECTOR = '.fg-gh'
 
@@ -68,9 +61,9 @@ function StockDetailView({ code }: { code: string }) {
   const stockThemes = useStockThemes(code === '' ? null : code)
   const market = useThemeMarket()
   const stockIssues = useStockIssues(code === '' ? null : code)
-  const issuesGap = useGap('stock-issues', loadIssues)
-  const ratioGap = useGap('stock-quote-ext', loadRatio)
   const [today] = useState(() => kstToday(new Date()))
+  const flowsWanted = code !== '' && (tab === 'news' || issueKey !== null)
+  const issueFlows = useStockIssueFlows(flowsWanted ? code : null, widestFlowRange(today))
   const [refreshKey, setRefreshKey] = useState(0)
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
   const [tabsEl, setTabsEl] = useState<HTMLElement | null>(null)
@@ -117,8 +110,8 @@ function StockDetailView({ code }: { code: string }) {
   const linkedCount = linked.list ? firstHopOf(linked.list).length : 0
   const status = statusOf(themeStocks.data, code, rows)
   const candlesFailed = candles.error !== null && rows === null
-  const issueFixture = issuesGap.status === 'mock' ? issuesGap.data : null
-  const placed = useMemo(() => (issueFixture && rows ? placeIssues(issueFixture, rows) : null), [issueFixture, rows])
+  const flowData = issueFlows.data
+  const placed = useMemo(() => (flowData && rows ? placeFlowIssues(flowData, rows, code) : null), [flowData, rows, code])
   const issuePage = stockIssues.data
   const issueEvents = useMemo(() => {
     if (issuePage === null) return null
@@ -132,7 +125,6 @@ function StockDetailView({ code }: { code: string }) {
   if (issueState.status === 'error') eventSource = 'issues'
   else if (issueState.status === 'ready') eventSource = issueState.total > 0 ? 'issues' : 'news'
   const issueTotal = issueState.status === 'ready' ? issueState.total : 0
-  const tradingRatio = ratioGap.status === 'mock' ? ratioGap.data : null
   const counts: TabCounts = {
     ...(issueTotal > 0 ? { news: { value: issueTotal } } : {}),
     ...(linkedCount > 0 ? { links: { value: linkedCount } } : {}),
@@ -209,7 +201,7 @@ function StockDetailView({ code }: { code: string }) {
           stock={stock}
           candles={rows}
           issues={issueState}
-          placed={placed}
+          flows={issueFlows}
           today={today}
           refreshKey={refreshKey}
           onOpenIssue={openIssue}
@@ -233,7 +225,6 @@ function StockDetailView({ code }: { code: string }) {
           issueTotal={issueTotal}
           issueRetry={issueState.status === 'error' ? issueState.retry : null}
           linked={linked}
-          tradingRatio={tradingRatio}
           today={today}
           refreshKey={refreshKey}
           onOpenNews={openNews}

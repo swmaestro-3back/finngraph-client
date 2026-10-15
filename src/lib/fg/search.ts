@@ -1,18 +1,86 @@
-import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
+import type { IssueSummaryRes, SearchRes, StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import { marketLabel } from '@/lib/fg/format'
-import { stockPath, themePath } from '@/lib/fg/paths'
+import { dayWord } from '@/lib/fg/issueSubject'
+import { issuePath, stockPath, themePath } from '@/lib/fg/paths'
+import { kstDayTime } from '@/lib/fg/themeNews'
 
 type SearchStock = Pick<StockRowRes, 'ticker' | 'name' | 'market'>
 type SearchTheme = Pick<ThemeRes, 'id' | 'name'>
 
 export const SEARCH_GROUP_LIMIT = 5
 
+export type SearchGroup = 'stock' | 'theme' | 'issue'
+
+export const SEARCH_GROUPS: readonly { group: SearchGroup; label: string }[] = [
+  { group: 'stock', label: '종목' },
+  { group: 'theme', label: '테마' },
+  { group: 'issue', label: '이슈' },
+]
+
 export interface SearchOption {
   key: string
-  group: 'stock' | 'theme'
+  group: SearchGroup
   label: string
+  alias?: string | null
   meta: string
   to: string
+}
+
+function stockOption(stock: SearchStock, alias: string | null = null): SearchOption {
+  const shown = alias?.trim() || null
+  return {
+    key: `stock:${stock.ticker}`,
+    group: 'stock',
+    label: stock.name,
+    alias: shown && shown.toLowerCase() !== stock.name.toLowerCase() ? shown : null,
+    meta: [stock.ticker, marketLabel(stock.market)].filter(Boolean).join(' · '),
+    to: stockPath(stock.ticker),
+  }
+}
+
+function themeOption(theme: SearchTheme): SearchOption {
+  return {
+    key: `theme:${theme.id}`,
+    group: 'theme',
+    label: theme.name,
+    meta: '테마',
+    to: themePath(theme.id),
+  }
+}
+
+function issueOption(issue: IssueSummaryRes, today: string): SearchOption {
+  const at = kstDayTime(issue.lastPublishedAt ?? issue.firstPublishedAt ?? '')
+  const media = `${issue.mediaCount}개 매체`
+  return {
+    key: `issue:${issue.id}`,
+    group: 'issue',
+    label: issue.title?.trim() || '제목 없는 이슈',
+    meta: at ? `${dayWord(at.day, today)} · ${media}` : media,
+    to: issuePath(String(issue.id)),
+  }
+}
+
+export function remoteSearchOptions(result: SearchRes, today: string): SearchOption[] {
+  return [
+    ...result.stocks.map((stock) => stockOption(stock, stock.matchedAlias)),
+    ...result.themes.map(themeOption),
+    ...result.issues.map((issue) => issueOption(issue, today)),
+  ]
+}
+
+function hit(text: string | null | undefined, q: string): boolean {
+  return (text ?? '').toLowerCase().includes(q)
+}
+
+export function narrowSearch(result: SearchRes, rawQuery: string): SearchRes {
+  const q = rawQuery.trim().toLowerCase()
+  if (!q) return result
+  return {
+    query: rawQuery.trim(),
+    stocks: result.stocks.filter((stock) => hit(stock.name, q) || hit(stock.matchedAlias, q) || hit(stock.ticker, q)),
+    themes: result.themes.filter((theme) => hit(theme.name, q)),
+    issues: result.issues.filter((issue) => hit(issue.title, q)),
+  }
 }
 
 export function searchOptions(
@@ -32,27 +100,11 @@ export function searchOptions(
     else if (name.startsWith(q) || ticker.startsWith(q)) prefix.push(stock)
     else if (name.includes(q) || ticker.includes(q)) partial.push(stock)
   }
-  const stockOptions = [...exact, ...prefix, ...partial].slice(0, SEARCH_GROUP_LIMIT).map(
-    (stock): SearchOption => ({
-      key: `stock:${stock.ticker}`,
-      group: 'stock',
-      label: stock.name,
-      meta: [stock.ticker, marketLabel(stock.market)].filter(Boolean).join(' · '),
-      to: stockPath(stock.ticker),
-    }),
-  )
+  const stockOptions = [...exact, ...prefix, ...partial].slice(0, SEARCH_GROUP_LIMIT).map((stock) => stockOption(stock))
   const themeOptions = themes
     .filter((theme) => theme.name.toLowerCase().includes(q))
     .slice(0, SEARCH_GROUP_LIMIT)
-    .map(
-      (theme): SearchOption => ({
-        key: `theme:${theme.id}`,
-        group: 'theme',
-        label: theme.name,
-        meta: '테마',
-        to: themePath(theme.id),
-      }),
-    )
+    .map(themeOption)
   return [...stockOptions, ...themeOptions]
 }
 

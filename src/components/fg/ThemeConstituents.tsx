@@ -251,7 +251,7 @@ export function ThemeConstituents({ stocks, loading, error, onRetry, themeCap, f
           })}
         </ul>
         {!showAll && scope.length > MEMBER_TABLE_LIMIT && (
-          <Button className="fg-reveal" onClick={() => setShowAll(true)}>
+          <Button className="fg-tmore fg-reveal" onClick={() => setShowAll(true)}>
             {scope.length}종목 모두 보기
           </Button>
         )}

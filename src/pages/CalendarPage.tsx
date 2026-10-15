@@ -7,6 +7,7 @@ import { EventDetailModal } from '@/components/calendar/EventDetailModal'
 import { EstimateBadge, FamilyLegend } from '@/components/calendar/EventMarker'
 import { IpoBoard } from '@/components/calendar/IpoBoard'
 import { MonthGrid } from '@/components/calendar/MonthGrid'
+import { RecentContractsBoard } from '@/components/calendar/RecentContractsBoard'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { IconButton } from '@/components/fg/IconButton'
@@ -234,6 +235,7 @@ export default function CalendarPage() {
             failed={failed}
             onOpen={openEvent}
           />
+          <RecentContractsBoard from={pathname + search} />
           <Disclaimer text={CALENDAR_NOTICE} />
         </div>
       </div>

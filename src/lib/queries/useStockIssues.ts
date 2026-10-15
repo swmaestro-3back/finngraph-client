@@ -1,5 +1,11 @@
 import { getData, getDataMeta, getPage } from '@/lib/api'
-import type { LatestStockIssueRes, StockIssueRes, ThemeIssuesMeta, ThemeIssuesRes } from '@/lib/apiTypes'
+import type {
+  LatestStockIssueRes,
+  StockIssueFlowRes,
+  StockIssueRes,
+  ThemeIssuesMeta,
+  ThemeIssuesRes,
+} from '@/lib/apiTypes'
 import { createTtlCache } from '@/lib/queries/ttlCache'
 import { useKeyed, type KeyedState } from '@/lib/queries/useKeyed'
 
@@ -24,6 +30,7 @@ interface ThemeIssuesPart {
 }
 
 const stockIssues = createTtlCache<StockIssuePage>(ISSUE_TTL_MS)
+const stockFlows = createTtlCache<StockIssueFlowRes[]>(ISSUE_TTL_MS)
 const latestIssues = createTtlCache<LatestStockIssueRes[]>(ISSUE_TTL_MS)
 const themeIssues = createTtlCache<ThemeIssuesPart>(ISSUE_TTL_MS)
 
@@ -46,6 +53,28 @@ export function useStockIssues(ticker: string | null, size = STOCK_ISSUE_LIMIT):
   return useKeyed(ticker === null ? null : `${ticker}:${size}`, (key) => {
     const [code, count] = key.split(':')
     return loadStockIssues(code, Number(count))
+  })
+}
+
+export interface FlowRange {
+  from: string
+  to: string
+}
+
+function flowKey(ticker: string, range: FlowRange | null): string {
+  return range ? `${ticker}|${range.from}|${range.to}` : ticker
+}
+
+export function loadStockIssueFlows(ticker: string, range: FlowRange | null = null): Promise<StockIssueFlowRes[]> {
+  return stockFlows(flowKey(ticker, range), () =>
+    getData<StockIssueFlowRes[]>(`/v1/stocks/${ticker}/issue-flows`, range ? { from: range.from, to: range.to } : undefined),
+  )
+}
+
+export function useStockIssueFlows(ticker: string | null, range: FlowRange | null): KeyedState<StockIssueFlowRes[]> {
+  return useKeyed(ticker === null ? null : flowKey(ticker, range), (key) => {
+    const [code, from, to] = key.split('|')
+    return loadStockIssueFlows(code, from && to ? { from, to } : null)
   })
 }
 

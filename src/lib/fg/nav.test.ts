@@ -3,7 +3,6 @@ import {
   activeMenu,
   authSlot,
   BOTTOM_TABS,
-  canvasFor,
   MAIN_MENU,
   outletKey,
   SIDE_LINKS,
@@ -22,10 +21,9 @@ describe('MAIN_MENU', () => {
 })
 
 describe('BOTTOM_TABS', () => {
-  it('하단 탭 다섯 칸은 뉴스 자리에 브리핑을 둔다', () => {
+  it('하단 탭 네 칸은 홈·테마·종목·관계 탐색이다', () => {
     expect(BOTTOM_TABS.map((item) => [item.key, item.label, item.to])).toEqual([
       ['home', '홈', '/'],
-      ['briefing', '브리핑', '/briefing'],
       ['themes', '테마', '/themes'],
       ['stocks', '종목', '/stocks'],
       ['graph', '관계 탐색', '/graph'],
@@ -34,12 +32,9 @@ describe('BOTTOM_TABS', () => {
 })
 
 describe('SIDE_LINKS', () => {
-  it('오른쪽 링크는 브리핑과 캘린더이고, 브리핑은 하단 탭이 있는 폭에서, 캘린더는 상단 메뉴가 있는 폭에서 숨긴다', () => {
-    expect(
-      SIDE_LINKS.map((link) => [link.label, link.to, link.wideOnly ?? false, link.narrowOnly ?? false]),
-    ).toEqual([
-      ['브리핑', '/briefing', true, false],
-      ['캘린더', '/calendar', false, true],
+  it('오른쪽 링크는 캘린더 하나이고, 상단 메뉴가 있는 폭에서 숨긴다', () => {
+    expect(SIDE_LINKS.map((link) => [link.label, link.to, link.narrowOnly ?? false])).toEqual([
+      ['캘린더', '/calendar', true],
     ])
   })
 })
@@ -49,7 +44,6 @@ describe('activeMenu', () => {
     ['/', 'home'],
     ['/issues/42', 'home'],
     ['/issues/export', 'home'],
-    ['/briefing', 'briefing'],
     ['/themes', 'themes'],
     ['/themes/7', 'themes'],
     ['/theme/7', 'themes'],
@@ -69,25 +63,6 @@ describe('activeMenu', () => {
     expect(activeMenu('/news/42')).toBeNull()
     expect(activeMenu('/me/account')).toBeNull()
     expect(activeMenu('/issuesboard')).toBeNull()
-  })
-})
-
-describe('canvasFor', () => {
-  it('개편된 화면은 회색 바탕, 나머지는 흰 바탕', () => {
-    expect(canvasFor('/issues/1')).toBe('page')
-    expect(canvasFor('/issues/export')).toBe('page')
-    expect(canvasFor('/news')).toBe('surface')
-    expect(canvasFor('/news/1')).toBe('surface')
-    expect(canvasFor('/dev/fg')).toBe('page')
-    expect(canvasFor('/themes')).toBe('page')
-    expect(canvasFor('/themes/59')).toBe('page')
-    expect(canvasFor('/theme/59')).toBe('surface')
-    expect(canvasFor('/stocks')).toBe('page')
-    expect(canvasFor('/stocks/005930')).toBe('page')
-    expect(canvasFor('/stock/005930')).toBe('surface')
-    expect(canvasFor('/')).toBe('page')
-    expect(canvasFor('/briefing')).toBe('surface')
-    expect(canvasFor('/issuesboard')).toBe('surface')
   })
 })
 

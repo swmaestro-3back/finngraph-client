@@ -87,10 +87,6 @@ export function loadArticleCompanies(newsId: string): Promise<RelatedCompanyRes[
   return request
 }
 
-export function useArticleCompanies(newsId: string | null): KeyedState<RelatedCompanyRes[]> {
-  return useKeyed(newsId, loadArticleCompanies)
-}
-
 export function loadArticleCompaniesMany(joined: string): Promise<Map<string, RelatedCompanyRes[]>> {
   const ids = joined.split(',')
   return Promise.allSettled(ids.map((id) => loadArticleCompanies(id))).then((results) => {
@@ -101,9 +97,4 @@ export function loadArticleCompaniesMany(joined: string): Promise<Map<string, Re
     }
     return found
   })
-}
-
-export function useIssueArticleCompanies(newsIds: readonly string[] | null): KeyedState<Map<string, RelatedCompanyRes[]>> {
-  const key = newsIds && newsIds.length > 0 ? newsIds.join(',') : null
-  return useKeyed(key, loadArticleCompaniesMany)
 }

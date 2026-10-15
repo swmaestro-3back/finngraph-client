@@ -1,4 +1,3 @@
-import { Badge } from '@/components/fg/Badge'
 import { ThemeStar } from '@/components/fg/ThemeActions'
 import { ThemeIndexRetry } from '@/components/fg/ThemeIndexRetry'
 import { ThemeRatio } from '@/components/fg/ThemeRatio'
@@ -29,14 +28,14 @@ export function ThemeDetailHeader({ theme, basis, index, indexFailed, onRetryInd
   const mean = theme.meanChange ?? null
   const volumeNote = volumeRatioNote(theme.tradingValueRatio)
   return (
-    <section className="fg-section fg-tdh fg-reveal" aria-labelledby="fg-tdh-name">
+    <section className="fg-tdh fg-reveal" aria-labelledby="fg-tdh-name">
       <div className="fg-tdh__row">
         <div className="fg-tdh__main">
           <div className="fg-tdh__id">
             <h1 id="fg-tdh-name" className="fg-tdh__name">
               {theme.name}
             </h1>
-            <Badge>{theme.stockCount}종목</Badge>
+            <span className="fg-tdh__count fg-num">{theme.stockCount}종목</span>
           </div>
           <div className="fg-tdh__price">
             <span className={cn('fg-tdh__now', change !== null && toneClass(change))}>
@@ -85,21 +84,21 @@ export function ThemeDetailHeader({ theme, basis, index, indexFailed, onRetryInd
               <ThemeStar theme={theme} />
             </span>
           </div>
-          <dl className="fg-tdh__stats">
+          <dl className="fg-ks fg-tdh__stats">
             <div>
               <dt>시가총액 합</dt>
-              <dd>{formatCompactKrw(theme.marketCap)}</dd>
-              <small>{theme.stockCount}종목 합</small>
+              <dd className="fg-num">{formatCompactKrw(theme.marketCap)}</dd>
+              <small className="fg-ks__note fg-num">{theme.stockCount}종목 합</small>
             </div>
             <div>
               <dt>거래대금</dt>
-              <dd>{formatCompactKrw(theme.tradingValue)}</dd>
-              {volumeNote && <small>{volumeNote}</small>}
+              <dd className="fg-num">{formatCompactKrw(theme.tradingValue)}</dd>
+              {volumeNote && <small className="fg-ks__note fg-num">{volumeNote}</small>}
             </div>
             <div>
               <dt>종목 수</dt>
-              <dd>{theme.stockCount}개</dd>
-              {stocks && stocks.length > 0 && <small>{marketMix(stocks)}</small>}
+              <dd className="fg-num">{theme.stockCount}개</dd>
+              {stocks && stocks.length > 0 && <small className="fg-ks__note fg-num">{marketMix(stocks)}</small>}
             </div>
           </dl>
         </div>

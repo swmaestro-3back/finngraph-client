@@ -2,7 +2,7 @@ import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
-import { Button, ButtonLink } from '@/components/fg/Button'
+import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { ChangeText } from '@/components/fg/PriceChange'
@@ -10,10 +10,10 @@ import { QuoteRetryNote } from '@/components/fg/RetryText'
 import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
-import { connectedCount, type IssueQuote, type IssueSubject } from '@/lib/fg/issueSubject'
+import type { IssueTimelineRes } from '@/lib/apiTypes'
+import { connectedCount, connectedLabel, type IssueQuote, type IssueSubject } from '@/lib/fg/issueSubject'
 import {
   mockTimeline,
-  stocksLine,
   storyTimeline,
   TIMELINE_ORDERS,
   type FrequentStock,
@@ -26,14 +26,8 @@ import { navState } from '@/lib/fg/stockDetail'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { useIssueTabTarget } from '@/lib/fg/useIssueTab'
 import { fromState } from '@/lib/navigation'
-import { useArticleCompanies, useIssueTimeline } from '@/lib/queries/useIssue'
-
-function ArticleStocks({ newsId }: { newsId: string }) {
-  const { data } = useArticleCompanies(newsId)
-  const line = data ? stocksLine([...new Set(data.map((c) => c.companyName))]) : null
-  if (!line) return null
-  return <span className="fg-itl__stocks">{`뉴스에 나온 종목 · ${line}`}</span>
-}
+import type { KeyedState } from '@/lib/queries/useKeyed'
+import type { IssueLinksState } from '@/lib/queries/useLinkedCompanies'
 
 interface NodeProps {
   node: TimelineNode
@@ -68,7 +62,7 @@ function TimelineItem({ node, summaryLabel, expanded, onToggle, onOpenNews }: No
     )
   }
   const moreId = `fg-itl-more-${node.key}`
-  const hasMore = node.summary !== null || node.stocks !== null || node.newsId !== null
+  const hasMore = node.summary !== null || node.stocks !== null
   return (
     <li className="fg-itl__node" data-now={node.now || undefined} aria-current={node.now ? 'step' : undefined}>
       <span className="fg-itl__dot" aria-hidden="true" />
@@ -96,7 +90,6 @@ function TimelineItem({ node, summaryLabel, expanded, onToggle, onOpenNews }: No
               </p>
             )}
             {expanded && node.stocks && <span className="fg-itl__stocks">{`뉴스에 나온 종목 · ${node.stocks}`}</span>}
-            {expanded && node.newsId && <ArticleStocks newsId={node.newsId} />}
           </div>
         )}
         {hasMore && !node.now && (
@@ -158,20 +151,21 @@ function TimelineSkeleton() {
 
 interface IssueTimelineTabProps {
   issue: IssueSubject
+  story: KeyedState<IssueTimelineRes> | null
+  linked: IssueLinksState | null
   quotes: ReadonlyMap<string, IssueQuote> | null
   onOpenNews: (id: string) => void
   onRetryQuotes: (() => void) | null
 }
 
-export function IssueTimelineTab({ issue, quotes, onOpenNews, onRetryQuotes }: IssueTimelineTabProps) {
+export function IssueTimelineTab({ issue, story, linked, quotes, onOpenNews, onRetryQuotes }: IssueTimelineTabProps) {
   const tabTarget = useIssueTabTarget()
   const [order, setOrder] = useState<TimelineOrder>('new')
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set())
-  const story = useIssueTimeline(issue.kind === 'live' ? issue.id : null)
-  const waiting = issue.kind === 'live' && story.data === null && story.error === null
+  const waiting = issue.kind === 'live' && story !== null && story.data === null && story.error === null
   const skeleton = useDelayed(waiting)
   if (waiting) return skeleton ? <TimelineSkeleton /> : null
-  if (issue.kind === 'live' && story.data === null) {
+  if (issue.kind === 'live' && story && story.data === null) {
     return (
       <section className="fg-section">
         <StateBlock
@@ -189,9 +183,9 @@ export function IssueTimelineTab({ issue, quotes, onOpenNews, onRetryQuotes }: I
   }
   let model: TimelineModel
   if (issue.kind === 'mock') model = mockTimeline(issue.record, issue.book, order)
-  else if (story.data) model = storyTimeline(issue, story.data, quotes, order)
+  else if (story?.data) model = storyTimeline(issue, story.data, quotes, order)
   else return null
-  const connected = connectedCount(issue)
+  const connected = connectedCount(issue, linked?.links ?? null)
   const toggle = (key: string) =>
     setOpen((prev) => {
       const next = new Set(prev)
@@ -204,16 +198,14 @@ export function IssueTimelineTab({ issue, quotes, onOpenNews, onRetryQuotes }: I
       <div className="fg-col">
         <section className="fg-section" aria-labelledby="fg-itl-title">
           <div className="fg-section__head fg-itl__head">
-            <div className="fg-iflow__titles">
-              <h2 id="fg-itl-title" className="fg-section__title">
-                {model.heading}
-              </h2>
-              <p className="fg-section__sub">{model.subtitle}</p>
-            </div>
+            <h2 id="fg-itl-title" className="fg-section__title fg-section__title--issue">
+              {model.heading}
+            </h2>
             {model.nodes.length > 1 && (
               <Segment label="정렬" options={TIMELINE_ORDERS} value={order} onChange={setOrder} />
             )}
           </div>
+          <p className="fg-isp__lead">{model.subtitle}</p>
           <ol className="fg-itl__list" aria-label={model.listLabel}>
             {model.nodes.map((node) => (
               <TimelineItem
@@ -231,7 +223,7 @@ export function IssueTimelineTab({ issue, quotes, onOpenNews, onRetryQuotes }: I
       </div>
       <aside className="fg-rail fg-isp__rail" aria-label={model.glanceTitle}>
         <section className="fg-section" aria-labelledby="fg-itl-glance">
-          <h2 id="fg-itl-glance" className="fg-section__title">
+          <h2 id="fg-itl-glance" className="fg-section__title fg-section__title--issue">
             {model.glanceTitle}
           </h2>
           <dl className="fg-itl__stats">
@@ -249,7 +241,7 @@ export function IssueTimelineTab({ issue, quotes, onOpenNews, onRetryQuotes }: I
             <h2 id="fg-itl-freq" className="fg-section__title">
               {model.frequentTitle}
             </h2>
-            <p className="fg-itl__note">{model.frequentNote}</p>
+            <p className="fg-section__sub">{model.frequentNote}</p>
           </div>
           {model.frequent.length > 0 ? (
             <ul className="fg-itl__slist">
@@ -263,11 +255,11 @@ export function IssueTimelineTab({ issue, quotes, onOpenNews, onRetryQuotes }: I
             <p className="fg-irail__empty">이 이슈에 나온 종목이 없어요</p>
           )}
           {onRetryQuotes && model.frequent.length > 0 && <QuoteRetryNote onRetry={onRetryQuotes} />}
-          {connected > 0 && (
-            <ButtonLink {...tabTarget('stocks')} className="fg-irail__all">
-              {`연결된 종목 ${connected} 모두 보기`}
+          {(connected === null ? issue.stocks.length > 0 : connected > 0) && (
+            <Link {...tabTarget('stocks')} className="fg-sdmore fg-irail__all">
+              {connectedLabel(connected)}
               <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
-            </ButtonLink>
+            </Link>
           )}
         </section>
         <Disclaimer />

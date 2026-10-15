@@ -1,14 +1,15 @@
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
+import { FilterChipGroup } from '@/components/fg/FilterChip'
 import { FlowMiniChart } from '@/components/fg/FlowMiniChart'
-import { MockBadge } from '@/components/fg/Gap'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
-import type { CandleRes } from '@/lib/apiTypes'
+import type { CandleRes, StockIssueFlowRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
 import { formatPriceWon, toneClass } from '@/lib/fg/format'
 import { motionAllowed } from '@/lib/fg/motion'
@@ -27,6 +28,7 @@ import {
   flowMeta,
   flowSpan,
   flowStatus,
+  stockFlows,
   timelineNodes,
   visibleFlows,
   widenOffer,
@@ -36,7 +38,9 @@ import {
   type IssueFlow,
 } from '@/lib/fg/stockFlows'
 import { tradingDayLabel } from '@/lib/fg/stockIssues'
+import { useDelayed } from '@/lib/fg/useDelayed'
 import { fromState } from '@/lib/navigation'
+import type { KeyedState } from '@/lib/queries/useKeyed'
 import { cn } from '@/lib/utils'
 
 const CARD_STEP = 268
@@ -110,7 +114,7 @@ function FlowDetail({ flow, stockName, candles, today, onOpenIssue }: FlowDetail
   const nodes = timelineNodes(flow, order, candles, today)
   const listTitle = flowListTitle(flow, order)
   return (
-    <section className="fg-section fg-sfd" aria-labelledby="fg-sfd-title">
+    <section className="fg-sfd" aria-labelledby="fg-sfd-title">
       <div className="fg-sfd__head">
         <div className="fg-sfd__id">
           <FlowBadges flow={flow} />
@@ -163,10 +167,12 @@ function FlowDetail({ flow, stockName, candles, today, onOpenIssue }: FlowDetail
                 <button type="button" className="fg-vt__title" aria-haspopup="dialog" onClick={() => onOpenIssue(issue.key)}>
                   {issue.title}
                 </button>
-                <p className="fg-vt__sum">
-                  <Badge>요약</Badge>
-                  {issue.summary}
-                </p>
+                {issue.summary && (
+                  <p className="fg-vt__sum">
+                    <Badge>요약</Badge>
+                    {issue.summary}
+                  </p>
+                )}
                 {issue.with.length > 0 && (
                   <span className="fg-vt__with">
                     <span>함께 나온 종목</span>
@@ -207,13 +213,14 @@ function FlowDetail({ flow, stockName, candles, today, onOpenIssue }: FlowDetail
 
 interface StockIssueFlowsProps {
   stockName: string
-  flows: readonly IssueFlow[]
+  ticker: string
+  flows: KeyedState<StockIssueFlowRes[]>
   candles: readonly CandleRes[]
   today: string
   onOpenIssue: (key: string) => void
 }
 
-export function StockIssueFlows({ stockName, flows, candles, today, onOpenIssue }: StockIssueFlowsProps) {
+export function StockIssueFlows({ stockName, ticker, flows: found, candles, today, onOpenIssue }: StockIssueFlowsProps) {
   const [period, setPeriod] = useState<FlowPeriod>(DEFAULT_FLOW_PERIOD)
   const [sort, setSort] = useState<FlowSort>('recent')
   const [query, setQuery] = useState('')
@@ -221,9 +228,18 @@ export function StockIssueFlows({ stockName, flows, candles, today, onOpenIssue 
   const [scroller, setScroller] = useState<HTMLDivElement | null>(null)
   const [edges, setEdges] = useState({ start: true, end: true })
 
-  const list = useMemo(() => visibleFlows(flows, { period, sort, query, today }), [flows, period, sort, query, today])
-  const widen = widenOffer(flows, period, query, list.length, today)
+  const flows = useMemo(
+    () => (found.data ? stockFlows(found.data, candles, ticker, today) : null),
+    [found.data, candles, ticker, today],
+  )
+  const waiting = useDelayed(flows === null && found.error === null)
+  const list = useMemo(
+    () => (flows ? visibleFlows(flows, { period, sort, query, today }) : []),
+    [flows, period, sort, query, today],
+  )
+  const widen = flows ? widenOffer(flows, period, query, list.length, today) : null
   const selected = list.find((flow) => flow.id === picked) ?? list[0] ?? null
+  const none = flows !== null && flows.length === 0
 
   const syncEdges = useCallback(() => {
     if (!scroller) return
@@ -243,6 +259,10 @@ export function StockIssueFlows({ stockName, flows, candles, today, onOpenIssue 
   const toStart = () => {
     if (scroller) scroller.scrollLeft = 0
   }
+  const pickPeriod = (next: FlowPeriod) => {
+    setPeriod(next)
+    toStart()
+  }
   const pickSort = (next: FlowSort) => {
     setSort(next)
     toStart()
@@ -258,84 +278,107 @@ export function StockIssueFlows({ stockName, flows, candles, today, onOpenIssue 
   }
 
   const widenButton = widen && (
-    <Button onClick={() => setPeriod(widen.next)} className="fg-sfl__widen">
+    <Button onClick={() => pickPeriod(widen.next)} className="fg-sfl__widen">
       {widen.label}
     </Button>
   )
 
-  return (
-    <>
-      <section className="fg-section fg-sfl" aria-labelledby="fg-sfl-title">
-        <div className="fg-sfl__head">
-          <div className="fg-sev__titles">
-            <span className="fg-sev__title">
-              <h2 id="fg-sfl-title" className="fg-section__title">
-                이 종목이 나온 이슈 흐름
-              </h2>
-              <MockBadge />
-            </span>
-            <p className="fg-section__sub">이어진 이슈끼리 묶었어요. 흐름을 고르면 아래에 시간순으로 펼쳐요</p>
-          </div>
-          <div className="fg-sfl__tools">
-            <Segment label="기간" options={FLOW_PERIODS} value={period} onChange={setPeriod} />
-            <Segment label="정렬" options={FLOW_SORTS} value={sort} onChange={pickSort} />
-            <label className="fg-sfl__search">
-              <Search size={18} strokeWidth={1.75} aria-hidden="true" />
-              <span className="fg-sr">흐름 찾기</span>
-              <input type="search" placeholder="흐름 찾기" value={query} onChange={(e) => changeQuery(e.target.value)} />
-            </label>
-          </div>
-        </div>
-        {flows.length === 0 ? (
-          <StateBlock kind="empty" title="아직 이 종목이 나온 이슈 흐름이 없어요" description="이슈가 묶이면 여기에 보여 드려요" />
-        ) : (
-          <>
-            <div className="fg-sfl__bar">
-              <span className="fg-sfl__cap fg-num" aria-live="polite">
-                {flowCaption(list.length, period, sort, query)}
-              </span>
-              {list.length > 0 && (
-                <div className="fg-sfl__nav">
-                  <button type="button" aria-label="이전 흐름" aria-disabled={edges.start} onClick={() => scrollBy(-1)}>
-                    <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                  <button type="button" aria-label="다음 흐름" aria-disabled={edges.end} onClick={() => scrollBy(1)}>
-                    <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                </div>
-              )}
+  let body: ReactNode
+  if (found.error && flows === null) {
+    body = (
+      <StateBlock
+        kind="error"
+        title="이슈 흐름을 불러오지 못했어요"
+        description="잠시 후 다시 시도해 주세요"
+        action={
+          <Button size="sm" onClick={found.retry}>
+            다시 시도
+          </Button>
+        }
+      />
+    )
+  } else if (flows === null) {
+    body = waiting ? <Skeleton height={176} /> : null
+  } else if (none) {
+    body = (
+      <StateBlock
+        kind="empty"
+        title="이 종목이 나온 이어진 이슈 흐름이 아직 없어요"
+        description="이슈가 둘 이상 이어지면 여기에 묶어 보여 드려요"
+      />
+    )
+  } else {
+    body = (
+      <>
+        <div className="fg-sfl__bar">
+          <span className="fg-sfl__cap fg-num" aria-live="polite">
+            {flowCaption(list.length, period, sort, query)}
+          </span>
+          {list.length > 0 && (
+            <div className="fg-sfl__nav">
+              <button type="button" aria-label="이전 흐름" aria-disabled={edges.start} onClick={() => scrollBy(-1)}>
+                <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+              <button type="button" aria-label="다음 흐름" aria-disabled={edges.end} onClick={() => scrollBy(1)}>
+                <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
+              </button>
             </div>
-            {list.length > 0 ? (
-              <div className="fg-sfl__scroll" ref={setScroller} onScroll={syncEdges} role="group" aria-label="이슈 흐름 목록">
-                {list.map((flow) => (
-                  <FlowCard
-                    key={flow.id}
-                    flow={flow}
-                    today={today}
-                    pressed={flow.id === selected?.id}
-                    onPick={() => setPicked(flow.id)}
-                  />
-                ))}
-                {widen && (
-                  <div className="fg-sfl__more">
-                    <span>{widen.text}</span>
-                    {widenButton}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="fg-sfl__empty">
-                <b>찾는 흐름이 없어요</b>
-                <span>검색어를 바꾸거나 기간을 늘려 보세요</span>
+          )}
+        </div>
+        {list.length > 0 ? (
+          <div className="fg-sfl__scroll" ref={setScroller} onScroll={syncEdges} role="group" aria-label="이슈 흐름 목록">
+            {list.map((flow) => (
+              <FlowCard
+                key={flow.id}
+                flow={flow}
+                today={today}
+                pressed={flow.id === selected?.id}
+                onPick={() => setPicked(flow.id)}
+              />
+            ))}
+            {widen && (
+              <div className="fg-sfl__more">
+                <span>{widen.text}</span>
                 {widenButton}
               </div>
             )}
-          </>
+          </div>
+        ) : (
+          <div className="fg-sfl__empty">
+            <b>찾는 흐름이 없어요</b>
+            <span>검색어를 바꾸거나 기간을 늘려 보세요</span>
+            {widenButton}
+          </div>
         )}
-      </section>
+      </>
+    )
+  }
+
+  return (
+    <section className="fg-section fg-sfl" aria-labelledby="fg-sfl-title">
+      <div className="fg-section__head">
+        <div className="fg-sev__titles">
+          <h2 id="fg-sfl-title" className="fg-section__title fg-section__title--issue">
+            이 종목이 나온 이슈 흐름
+          </h2>
+          <p className="fg-section__sub">이어진 이슈끼리 묶었어요. 흐름을 고르면 아래에 시간순으로 펼쳐요</p>
+        </div>
+        {!none && <Segment label="정렬" options={FLOW_SORTS} value={sort} onChange={pickSort} />}
+      </div>
+      {!none && (
+        <div className="fg-sfl__tools">
+          <FilterChipGroup label="기간" options={FLOW_PERIODS} value={period} onChange={pickPeriod} />
+          <label className="fg-sfl__search">
+            <Search size={18} strokeWidth={1.75} aria-hidden="true" />
+            <span className="fg-sr">흐름 찾기</span>
+            <input type="search" placeholder="흐름 찾기" value={query} onChange={(e) => changeQuery(e.target.value)} />
+          </label>
+        </div>
+      )}
+      {body}
       {selected && (
         <FlowDetail flow={selected} stockName={stockName} candles={candles} today={today} onOpenIssue={onOpenIssue} />
       )}
-    </>
+    </section>
   )
 }

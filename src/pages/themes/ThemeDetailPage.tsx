@@ -132,10 +132,9 @@ function ThemeDetailView({ id }: { id: number | null }) {
           </div>
           <aside className="fg-rail" aria-label="오늘 주도주">
             <div className="fg-tdp__stick">
-              <ThemeTodayLeaders theme={theme} stocks={stocks.data} from={pathname} />
-              <div className="fg-tdp__go">
-                <ThemeGraphLink theme={theme} label="관계 탐색에서 보기" />
-              </div>
+              <ThemeTodayLeaders theme={theme} stocks={stocks.data} from={pathname}>
+                <ThemeGraphLink theme={theme} label="관계 탐색에서 보기" text className="fg-tdp__go" />
+              </ThemeTodayLeaders>
               <Disclaimer />
             </div>
           </aside>

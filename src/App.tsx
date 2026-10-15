@@ -17,7 +17,6 @@ import ThemesPage from '@/pages/themes/ThemesPage'
 import ThemeDetailPage from '@/pages/themes/ThemeDetailPage'
 import StocksPage from '@/pages/stocks/StocksPage'
 import StockDetailPage from '@/pages/stocks/StockDetailPage'
-import BriefingPage from '@/pages/BriefingPage'
 import CalendarPage from '@/pages/CalendarPage'
 import IssuePage from '@/pages/issues/IssuePage'
 
@@ -76,7 +75,7 @@ function App() {
         <Route path="/stock/:stockCode" element={<LegacyStockRedirect />} />
         <Route path="/graph/theme/:name" element={<CorpGraphPage />} />
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
-        <Route path="/briefing" element={<BriefingPage />} />
+        <Route path="/briefing/*" element={<Navigate to="/" replace />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/terms" element={<LegalPage doc="terms" />} />
         <Route path="/privacy" element={<LegalPage doc="privacy" />} />

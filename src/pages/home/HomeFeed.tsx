@@ -33,15 +33,14 @@ import type { HubFixture, HubThemeIssues } from '@/lib/fg/hub'
 import { issueTabPath } from '@/lib/fg/issuePage'
 import { dayWord, type IssueQuote } from '@/lib/fg/issueSubject'
 import { issuePath } from '@/lib/fg/paths'
+import { kstDayTime } from '@/lib/fg/themeNews'
 import { useDelayed } from '@/lib/fg/useDelayed'
-import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { useMemberGate } from '@/lib/memberGate'
 import { fromState } from '@/lib/navigation'
 import { useHubFixture, type HubSlot } from '@/lib/queries/useHubSlots'
 import { useIssueFeed } from '@/lib/queries/useIssueFeed'
 import { useIssueQuotes } from '@/lib/queries/useIssue'
 
-const NARROW = '(max-width: 767px)'
 const CAPTION = '같은 소식을 다룬 기사를 하나로 묶었어요'
 
 type Quotes = ReadonlyMap<string, IssueQuote> | null
@@ -50,68 +49,73 @@ interface IssueCardProps {
   issue: IssueSummaryRes
   index: number
   quotes: Quotes
-  timeline: HubFixture | null
   linked: HubFixture | null
-  narrow: boolean
   from: string
 }
 
-function IssueCard({ issue, index, quotes, timeline, linked, narrow, from }: IssueCardProps) {
+function IssueCard({ issue, index, quotes, linked, from }: IssueCardProps) {
   const state = fromState(from)
   const title = issue.title?.trim() || '제목 없는 이슈'
   const summary = issue.summary?.trim() || null
   const updated = issue.lastPublishedAt ?? issue.firstPublishedAt
   const ago = updated ? formatRelativeTime(updated) : null
-  const flow = timeline ? timeline.issueExtra(index).flow : null
+  const at = updated ? kstDayTime(updated) : null
+  const position = issue.timelinePosition ?? 1
   const inferred = linked ? linked.issueExtra(index).inferred : 0
   const { shown, extra } = splitChips(issue.companies, FEED_STOCK_CHIPS)
   return (
-    <article className="fg-hcard">
-      <div className="fg-hcard__meta fg-num">
-        <span>
-          <b>{`${issue.mediaCount}개 매체`}</b>
-          {` 보도${ago ? ` · ${ago}${narrow ? '' : ' 갱신'}` : ''}`}
-        </span>
-        {flow && (
-          <GapValue
-            gap="issue-timeline"
-            mock={<Badge tone={flow.count > 1 ? 'issue' : 'neutral'}>{timelineBadge(flow.count)}</Badge>}
-          />
+    <li className="fg-hfeed__item">
+      <div className="fg-hfeed__time fg-num">
+        {updated && at && (
+          <time className="fg-hfeed__clock" dateTime={updated}>
+            {at.time}
+          </time>
         )}
+        {ago && <span className="fg-hfeed__ago">{ago}</span>}
       </div>
-      <Link to={issuePath(issue.id)} state={state} className="fg-hcard__title">
-        {title}
-      </Link>
-      {summary && <p className="fg-hcard__sum">{summary}</p>}
-      {(shown.length > 0 || inferred > 0) && (
-        <div className="fg-hcard__foot">
-          {shown.map((company) => (
-            <StockChip
-              key={company.ticker}
-              ticker={company.ticker}
-              name={company.name}
-              change={quotes?.get(company.ticker)?.change ?? null}
-              withLogo
-              state={state}
-              className="fg-hcard__chip"
-            />
-          ))}
-          {extra > 0 && (
-            <Link
-              to={issueTabPath(String(issue.id), 'stocks')}
-              state={state}
-              className="fg-chip fg-chip--more fg-hcard__more"
-              aria-label={`이 이슈에 나온 종목 ${extra}개 더 보기`}
-            >
-              {`+${extra}`}
-            </Link>
-          )}
-          {inferred > 0 && (
-            <GapValue gap="linked-companies" mock={<Badge tone="inferred">{`이어진 기업 ${inferred}곳`}</Badge>} />
-          )}
+      <span className="fg-hfeed__dot" aria-hidden="true" />
+      <article className="fg-hcard">
+        <div className="fg-hcard__meta fg-num">
+          <span>
+            <b>{`${issue.mediaCount}개 매체`}</b> 보도
+          </span>
+          {issue.kind === 'market_reaction' && <Badge>주가 반응</Badge>}
+          {position > 1 && <Badge tone="issue">{timelineBadge(position)}</Badge>}
         </div>
-      )}
-    </article>
+        <Link to={issuePath(issue.id)} state={state} className="fg-hcard__title">
+          {title}
+        </Link>
+        {summary && <p className="fg-hcard__sum">{summary}</p>}
+        {(shown.length > 0 || inferred > 0) && (
+          <div className="fg-hcard__foot">
+            {shown.map((company) => (
+              <StockChip
+                key={company.ticker}
+                ticker={company.ticker}
+                name={company.name}
+                change={quotes?.get(company.ticker)?.change ?? null}
+                withLogo
+                state={state}
+                className="fg-hcard__chip"
+              />
+            ))}
+            {extra > 0 && (
+              <Link
+                to={issueTabPath(String(issue.id), 'stocks')}
+                state={state}
+                className="fg-chip fg-chip--more fg-hcard__more"
+                aria-label={`이 이슈에 나온 종목 ${extra}개 더 보기`}
+              >
+                {`+${extra}`}
+              </Link>
+            )}
+            {inferred > 0 && (
+              <GapValue gap="linked-companies" mock={<Badge tone="inferred">{`이어진 기업 ${inferred}곳`}</Badge>} />
+            )}
+          </div>
+        )}
+      </article>
+    </li>
   )
 }
 
@@ -139,7 +143,6 @@ interface HomeFeedProps {
 export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
   const { pathname, search } = useLocation()
   const navigate = useNavigate()
-  const narrow = useMediaQuery(NARROW)
   const sort = parseFeedSort(search)
   const feed = useIssueFeed(sort)
   const { locked, pending: authPending } = useMemberGate()
@@ -163,7 +166,6 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
     [groups, filter, favoriteSet, themeIssueIds],
   )
   const { quotes, retry: retryQuotes } = useIssueQuotes(true)
-  const timeline = useHubFixture('issue-timeline')
   const linked = useHubFixture('linked-companies')
   const skeleton = useDelayed(feed.chunks.length === 0 && feed.pending !== null)
   const from = `${pathname}${search}`
@@ -251,28 +253,27 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
     body = shownGroups.map((group) => (
       <div key={group.date ?? 'none'} className="fg-hfeed__group">
         {group.date && <h3 className="fg-hfeed__day fg-num">{dayWord(group.date, today)}</h3>}
-        {group.items.map((issue) => (
-          <IssueCard
-            key={issue.id}
-            issue={issue}
-            index={order.get(issue.id) ?? 0}
-            quotes={quotes}
-            timeline={timeline}
-            linked={linked}
-            narrow={narrow}
-            from={from}
-          />
-        ))}
+        <ol className="fg-hfeed__rail">
+          {group.items.map((issue) => (
+            <IssueCard
+              key={issue.id}
+              issue={issue}
+              index={order.get(issue.id) ?? 0}
+              quotes={quotes}
+              linked={linked}
+              from={from}
+            />
+          ))}
+        </ol>
       </div>
     ))
   }
-
 
   return (
     <section className="fg-section fg-hsec fg-hfeed" aria-labelledby="fg-feed-h">
       <div className="fg-hsec__head">
         <div className="fg-hsec__titles">
-          <h2 id="fg-feed-h" className="fg-hsec__title">
+          <h2 id="fg-feed-h" className="fg-hsec__title fg-hsec__title--issue">
             최신 이슈
           </h2>
           <span className="fg-hsec__cap">{CAPTION}</span>

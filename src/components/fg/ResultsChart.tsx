@@ -1,5 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
-import { MockBadge } from '@/components/fg/Gap'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import {
   resultColumnLabel,
@@ -18,7 +17,8 @@ interface ResultsChartProps {
   all: readonly ResultPoint[]
   period: ResultPeriod
   periods: readonly TabOption<ResultPeriod>[] | null
-  mock: boolean
+  basis: string | null
+  notice?: ReactNode
   onPeriod: (period: ResultPeriod) => void
 }
 
@@ -26,7 +26,9 @@ function boxStyle(box: BarBox) {
   return { top: box.top, height: box.height }
 }
 
-export function ResultsChart({ shown, all, period, periods, mock, onPeriod }: ResultsChartProps) {
+const ANNUAL_BASIS = '연결 기준(연결 재무제표가 없으면 별도)'
+
+export function ResultsChart({ shown, all, period, periods, basis, notice, onPeriod }: ResultsChartProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<number | null>(null)
   const count = shown.length
@@ -50,22 +52,18 @@ export function ResultsChart({ shown, all, period, periods, mock, onPeriod }: Re
   return (
     <section className="fg-section" aria-labelledby={RESULTS_TITLE_ID}>
       <div className="fg-section__head">
-        <div className="fg-sf__heading">
-          <span className="fg-sev__title">
-            <h2 id={RESULTS_TITLE_ID} className="fg-section__title fg-sf__anchor" tabIndex={-1}>
-              실적
-            </h2>
-            {mock && <MockBadge />}
-          </span>
-          {lead && (
-            <p className="fg-section__sub">
-              <b className="fg-sf__lead">{lead.lead}</b>
-              {lead.tail && ` ${lead.tail}`}
-            </p>
-          )}
-        </div>
+        <h2 id={RESULTS_TITLE_ID} className="fg-section__title fg-sf__anchor" tabIndex={-1}>
+          실적
+        </h2>
         {periods && <Segment label="실적 기간" options={periods} value={period} onChange={pick} />}
       </div>
+      {notice}
+      {lead && (
+        <p className="fg-sf__lede">
+          <b className="fg-sf__lead">{lead.lead}</b>
+          {lead.tail && ` ${lead.tail}`}
+        </p>
+      )}
       <div className="fg-rcx__read fg-num" aria-live="polite">
         <span className="fg-rcx__when">{reading.when}</span>
         <span>
@@ -119,7 +117,7 @@ export function ResultsChart({ shown, all, period, periods, mock, onPeriod }: Re
           <span className="fg-rcx__zero" style={{ top: scale.zero }} aria-hidden="true" />
         </div>
       </div>
-      <p className="fg-sf__foot">연결 기준(연결 재무제표가 없으면 별도) · 영업이익률은 매출액에서 영업이익이 차지하는 비율이에요</p>
+      <p className="fg-sf__foot">{`${basis ?? ANNUAL_BASIS} · 영업이익률은 매출액에서 영업이익이 차지하는 비율이에요`}</p>
     </section>
   )
 }

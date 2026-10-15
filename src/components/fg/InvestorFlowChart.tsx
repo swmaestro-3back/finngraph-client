@@ -285,23 +285,21 @@ export function InvestorFlowChart({ days, streaks }: InvestorFlowChartProps) {
   return (
     <section className="fg-section fg-sff" aria-labelledby={FLOW_TITLE_ID}>
       <div className="fg-section__head">
-        <div className="fg-sf__heading">
-          <h2 id={FLOW_TITLE_ID} className="fg-section__title fg-sf__anchor" tabIndex={-1}>
-            투자자별 매매
-          </h2>
-          {(lead || tail) && (
-            <p className="fg-section__sub">
-              {lead && <b className="fg-sf__lead">{lead}</b>}
-              {lead && tail && ' '}
-              {tail}
-            </p>
-          )}
-        </div>
+        <h2 id={FLOW_TITLE_ID} className="fg-section__title fg-sf__anchor" tabIndex={-1}>
+          투자자별 매매
+        </h2>
         <div className="fg-sff__tools">
           <Segment label="보기" options={FLOW_MODES} value={mode} onChange={pickMode} />
           {options.length > 1 && <Segment label="기간" options={options} value={active} onChange={pickRange} />}
         </div>
       </div>
+      {(lead || tail) && (
+        <p className="fg-sf__lede">
+          {lead && <b className="fg-sf__lead">{lead}</b>}
+          {lead && tail && ' '}
+          {tail}
+        </p>
+      )}
       <p className="fg-sff__when fg-num" aria-hidden="true">
         {reading.when}
       </p>

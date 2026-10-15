@@ -1,8 +1,8 @@
 import { useCallback, useMemo, type ReactNode } from 'react'
 import { Badge } from '@/components/fg/Badge'
-import { Button, ButtonLink } from '@/components/fg/Button'
+import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
-import { GapValue, MockBadge } from '@/components/fg/Gap'
+import { MockBadge } from '@/components/fg/Gap'
 import { MemberGate } from '@/components/fg/MemberGate'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
@@ -27,12 +27,12 @@ import { useRefreshTick } from '@/lib/autoRefresh'
 import { formatCompactKrw } from '@/lib/format'
 import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
 import {
-  flowLabels,
   HUB_INFERRED,
   HUB_STOCK_LIMIT,
   hubCaption,
   pickMovers,
   splitTimeline,
+  stockFlowLabel,
   type HubIssueRef,
 } from '@/lib/fg/hub'
 import { linkedPreview } from '@/lib/fg/linkedCompanies'
@@ -105,8 +105,7 @@ function StockHead({ stock, open, line, flow, high }: StockHeadProps) {
 function StockFlowText({ ticker }: { ticker: string }) {
   const timeline = useStockTimeline(ticker)
   if (timeline.status !== 'ready' || timeline.data.flow === null) return null
-  const labels = flowLabels(timeline.data.flow)
-  return <GapValue gap="stock-issues" mock={`${labels.count} · ${labels.since}`} />
+  return stockFlowLabel(timeline.data.flow)
 }
 
 interface StockBodyProps {
@@ -242,7 +241,7 @@ function StockPane({ stock, summary, retry, baseDate, basisShort, today, from }:
             change={company.change}
           >
             <span className="fg-hq__foot">
-              <span className="fg-qrow__rel">{`AI 추론 · ${company.relation}`}</span>
+              <span className="fg-qrow__rel">{company.relation}</span>
               {hasQuote(company) && (
                 <span className="fg-hq__gap fg-num">
                   {company.newHigh ? (
@@ -286,10 +285,10 @@ function StockPane({ stock, summary, retry, baseDate, basisShort, today, from }:
         {linkedBody}
       </div>
       <div className="fg-hubp__acts">
-        <ButtonLink to={stockPath(stock.ticker)} state={state}>{`${stock.name} 종목 보기`}</ButtonLink>
-        <ButtonLink to={`${stockPath(stock.ticker)}?tab=news`} state={state}>
+        <HubMore to={stockPath(stock.ticker)} state={state}>{`${stock.name} 종목 보기`}</HubMore>
+        <HubMore to={`${stockPath(stock.ticker)}?tab=news`} state={state}>
           타임라인 전체 보기
-        </ButtonLink>
+        </HubMore>
       </div>
     </>
   )
@@ -299,7 +298,7 @@ function lineOf(lines: Lines, ticker: string): HubIssueRef | null {
   return lines.status === 'ready' ? (lines.data.get(ticker) ?? null) : null
 }
 
-export function HubStocks({ layout, tabs, basis, basisShort, market, pick, onPick, today, from, refreshKey }: HubTabProps) {
+export function HubStocks({ layout, tabs, basis, basisShort, market, breadth, pick, onPick, today, from, refreshKey }: HubTabProps) {
   const wide = layout === 'wide'
   const stocks = useStocksCached()
   const movers = useMemo(() => (stocks.data ? pickMovers(stocks.data) : null), [stocks.data])
@@ -424,7 +423,7 @@ export function HubStocks({ layout, tabs, basis, basisShort, market, pick, onPic
   }
 
   return (
-    <HubFrame heading={HEADING} tab="stocks" tabs={tabs} basis={basis} caption={caption} layout={layout}>
+    <HubFrame heading={HEADING} tab="stocks" tabs={tabs} basis={basis} caption={caption} layout={layout} breadth={breadth}>
       {body}
       {lines.status === 'error' && movers !== null && movers.length > 0 && (
         <p className="fg-hubc__fail" role="status">

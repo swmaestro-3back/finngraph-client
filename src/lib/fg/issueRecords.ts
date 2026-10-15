@@ -25,6 +25,7 @@ export interface IssueArticleItem {
   time: string | null
   summary: string | null
   analyzed: boolean
+  tickers?: readonly string[]
 }
 
 export interface IssueStep {

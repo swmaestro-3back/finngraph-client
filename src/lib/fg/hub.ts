@@ -1,4 +1,4 @@
-import type { IssueCompanyRes, IssueSummaryRes, StockRowRes, ThemeIssuesRes, ThemeRes } from '@/lib/apiTypes'
+import type { IssueCompanyRes, IssueSummaryRes, IssueTimelineRes, StockRowRes, ThemeIssuesRes, ThemeMarketRes, ThemeRes } from '@/lib/apiTypes'
 import { week52Mark, week52Of, type Week52Row } from '@/lib/fg/stockQuote'
 import { parseStockCode } from '@/lib/fg/stocks'
 import { kstDayTime } from '@/lib/fg/themeNews'
@@ -101,6 +101,24 @@ export function themeMovers<T extends MoverRow>(rows: readonly T[], themeChange:
     .slice(0, count)
 }
 
+export interface MarketBreadth {
+  up: number
+  flat: number
+  down: number
+  median: number | null
+}
+
+export function marketBreadth(
+  market: Pick<ThemeMarketRes, 'upCount' | 'flatCount' | 'downCount' | 'medianChange'> | null,
+): MarketBreadth | null {
+  if (!market) return null
+  const { upCount: up, flatCount: flat, downCount: down } = market
+  if (![up, flat, down].every((count) => Number.isFinite(count) && count >= 0)) return null
+  if (up + flat + down === 0) return null
+  const median = market.medianChange
+  return { up, flat, down, median: median !== null && Number.isFinite(median) ? median : null }
+}
+
 export function coveragePct(media: number, max: number): number {
   if (max <= 0) return 0
   return Math.round((media / max) * 100)
@@ -159,6 +177,10 @@ export function flowLabels(flow: HubFlow) {
     meta: `이슈 ${flow.count}개 · ${since}부터`,
     count: `이슈 ${flow.count}개`,
   }
+}
+
+export function stockFlowLabel(flow: HubFlow): string {
+  return `이 종목이 나온 이슈 ${flow.count}개 · ${monthDayWord(flow.since)}부터`
 }
 
 export interface HubIssueNode {
@@ -262,7 +284,6 @@ export interface HubIssueExtra {
 }
 
 export interface HubFixture {
-  stockFlow: (ticker: string) => HubFlow
   issueExtra: (index: number) => HubIssueExtra
 }
 
@@ -270,6 +291,22 @@ export interface HubIssueItem extends HubIssueNode {
   articles: number
   pct: number
   companies: readonly IssueCompanyRes[]
+  position: number
+}
+
+export function storyExtra(story: IssueTimelineRes, item: HubIssueItem): HubIssueExtra {
+  const nodes = story.nodes
+    .filter((node) => !node.current && String(node.issueId) !== item.id)
+    .map((node): HubIssueNode => ({
+      id: String(node.issueId),
+      title: node.title,
+      summary: node.summary,
+      day: node.date ?? kstDayTime(node.firstPublishedAt ?? '')?.day ?? '',
+      media: node.mediaCount,
+    }))
+  const past = nodes.filter((node) => node.day !== '' && node.day <= item.day)
+  const since = past.length > 0 ? past[past.length - 1].day : item.day
+  return { flow: { count: item.position, since }, past, inferred: 0 }
 }
 
 export function hubIssueItems(
@@ -290,6 +327,7 @@ export function hubIssueItems(
       articles: item.articleCount,
       pct: coveragePct(item.mediaCount, max),
       companies: item.companies,
+      position: item.timelinePosition ?? 1,
     }
   })
 }

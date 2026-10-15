@@ -141,26 +141,21 @@ describe('liveSubject', () => {
 
 describe('subjectHead', () => {
   it('실데이터 머리는 흐름 배지 없이 매체 수·보도 기간·탭 개수를 보여요', () => {
-    const head = subjectHead(liveSubject(detail(), null, '2026-10-05'))
+    const head = subjectHead(liveSubject(detail(), null, '2026-10-05'), { story: null, links: [] })
     expect(head.badge).toBeNull()
     expect(head.media).toBe('2개 매체')
     expect(head.when).toBe('9월 16일~9월 18일')
     expect(head.since).toBeNull()
-    expect(head.counts).toEqual({ timeline: 3, articles: 3, stocks: 2 })
+    expect(head.counts).toEqual({ timeline: null, articles: 3, stocks: 2 })
     expect(head.keywords).toEqual(['ls에코에너지', '가온전선', '미국'])
   })
 })
 
 describe('articlesByTicker', () => {
   it('종목마다 그 종목을 언급한 기사를 보도 순서대로 모아요', () => {
-    const items: IssueArticleItem[] = issueArticleItems(detail().articles)
-    const byTicker = articlesByTicker(
-      items,
-      new Map([
-        ['1', [{ ticker: '000500' }, { ticker: null }]],
-        ['2', [{ ticker: '000500' }, { ticker: '229640' }, { ticker: '000500' }]],
-      ]),
-    )
+    const tickers: Record<string, string[]> = { '1': ['000500', ''], '2': ['000500', '229640', '000500'] }
+    const items: IssueArticleItem[] = issueArticleItems(detail().articles).map((item) => ({ ...item, tickers: tickers[item.id] ?? [] }))
+    const byTicker = articlesByTicker(items)
     expect(byTicker.get('000500')?.map((a) => a.id)).toEqual(['1', '2'])
     expect(byTicker.get('229640')?.map((a) => a.id)).toEqual(['2'])
     expect(byTicker.has('')).toBe(false)

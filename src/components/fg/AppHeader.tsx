@@ -66,7 +66,7 @@ export function AppHeader() {
             <Link
               key={link.to}
               to={link.to}
-              className={cn('fg-gh__link', link.wideOnly && 'fg-gh__link--wide', link.narrowOnly && 'fg-gh__link--narrow')}
+              className={cn('fg-gh__link', link.narrowOnly && 'fg-gh__link--narrow')}
               aria-current={pathname === link.to ? 'page' : undefined}
             >
               {link.label}

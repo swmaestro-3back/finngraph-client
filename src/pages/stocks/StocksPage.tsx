@@ -1,11 +1,11 @@
-import { X } from 'lucide-react'
+import { ChevronDown, SlidersHorizontal, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip } from '@/components/fg/FilterChip'
 import { Pager } from '@/components/fg/Pager'
-import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
+import type { TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { RANGE_FIELDS, StockFilterSheet, type RangeFieldSpec } from '@/components/fg/StockFilterSheet'
@@ -496,45 +496,62 @@ export default function StocksPage() {
   return (
     <div className="fg-main fg-wrap fg-stocks">
       <header className="fg-pagehead">
-        <h1 className="fg-pagehead__title">종목</h1>
+        <h1 className="fg-pagehead__title">
+          종목
+          {all && <span className="fg-pagehead__count fg-num">{` ${all.length.toLocaleString('ko-KR')}`}</span>}
+        </h1>
         {basis && <span className="fg-pagehead__meta">{basis}</span>}
       </header>
       <div className="fg-grid">
         <div className="fg-col">
           <section className="fg-section" aria-labelledby="fg-stocks-main">
             <div className="fg-section__head">
-              <h2 id="fg-stocks-main" className="fg-section__title">
+              <h2 id="fg-stocks-main" className="fg-sr">
                 {title}
               </h2>
             </div>
             {all && (
               <>
                 <div className="fg-ttools">
-                  <div className="fg-ttools__l">
-                    <div className="fg-chiprow" role="group" aria-label="시장과 관심 종목">
-                      {MARKETS.map((option) => (
-                        <FilterChip
-                          key={option.value}
-                          pressed={!favOnly && query.market === option.value}
-                          onClick={() => setScope(option.value, false)}
-                        >
-                          {option.label}
-                        </FilterChip>
-                      ))}
-                      <FilterChip pressed={favOnly} onClick={() => setScope('ALL', true)}>
-                        관심 종목
+                  <div className="fg-ttools__l fg-chiprow" role="group" aria-label="시장과 관심 종목">
+                    {MARKETS.map((option) => (
+                      <FilterChip
+                        key={option.value}
+                        pressed={!favOnly && query.market === option.value}
+                        onClick={() => setScope(option.value, false)}
+                      >
+                        {option.label}
                       </FilterChip>
-                    </div>
-                    <Segment label="정렬" options={sortOptions(valueReady)} value={sort} onChange={setSort} />
-                    <FilterChip
-                      pressed={filterBadge > 0}
-                      count={filterBadge > 0 ? filterBadge : null}
+                    ))}
+                    <span className="fg-ttools__div" aria-hidden="true" />
+                    <FilterChip pressed={favOnly} onClick={() => setScope('ALL', true)}>
+                      관심 종목
+                    </FilterChip>
+                  </div>
+                  <div className="fg-ttools__r">
+                    <label className="fg-tsort">
+                      <span className="fg-sr">정렬</span>
+                      <select value={sort} onChange={(e) => setSort(e.target.value as StockSort)}>
+                        {sortOptions(valueReady).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
+                    </label>
+                    <button
+                      type="button"
+                      className="fg-tbtn"
+                      aria-pressed={filterBadge > 0}
                       aria-haspopup="dialog"
                       aria-expanded={filterOpen}
                       onClick={openFilter}
                     >
+                      <SlidersHorizontal size={16} strokeWidth={1.75} aria-hidden="true" />
                       필터
-                    </FilterChip>
+                      {filterBadge > 0 && <span className="fg-tbtn__count fg-num">{filterBadge}</span>}
+                    </button>
                   </div>
                   <span className="fg-ttools__cap">{caption}</span>
                 </div>

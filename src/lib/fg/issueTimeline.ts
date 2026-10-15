@@ -1,5 +1,14 @@
 import type { IssueStoryCompanyRes, IssueTimelineNodeRes, IssueTimelineRes } from '@/lib/apiTypes'
-import { chainRecords, mediaTrend, monthDay, SINGLE_FLOW, windowStart } from '@/lib/fg/issuePage'
+import {
+  buildFlow,
+  chainRecords,
+  mediaTrend,
+  monthDay,
+  SINGLE_FLOW,
+  windowStart,
+  type FlowItem,
+  type IssueFlowModel,
+} from '@/lib/fg/issuePage'
 import type { IssueArticleItem, IssueBook, IssueRecord, IssueStock } from '@/lib/fg/issueRecords'
 import type { IssueQuote, LiveIssue } from '@/lib/fg/issueSubject'
 import { shortDate } from '@/lib/fg/stockIssues'
@@ -34,7 +43,6 @@ export interface TimelineNode {
   cov: { media: number; pct: number } | null
   summary: string | null
   stocks: string | null
-  newsId: string | null
 }
 
 export interface GlanceStat {
@@ -64,10 +72,11 @@ export interface TimelineModel {
   footnote: string
 }
 
-export function stocksLine(names: readonly string[]): string | null {
+export function stocksLine(names: readonly string[], total = names.length): string | null {
   if (names.length === 0) return null
-  const shown = names.slice(0, STOCKS_SHOWN).join(' · ')
-  return names.length > STOCKS_SHOWN ? `${shown} 외 ${names.length - STOCKS_SHOWN}` : shown
+  const shown = names.slice(0, STOCKS_SHOWN)
+  const rest = Math.max(total, names.length) - shown.length
+  return rest > 0 ? `${shown.join(' · ')} 외 ${rest}` : shown.join(' · ')
 }
 
 export function leadSentences(text: string, count: number): string {
@@ -129,7 +138,6 @@ export function mockTimeline(record: IssueRecord, book: IssueBook, order: Timeli
       cov: { media: r.media, pct: Math.round((r.media / max) * 100) },
       summary: now ? leadSentences(r.detail, 2) : r.summary,
       stocks: stocksLine(r.stocks.map((s) => s.name)),
-      newsId: null,
     }
   })
   const first = chain[0]
@@ -196,6 +204,7 @@ function currentNode(subject: LiveIssue): IssueTimelineNodeRes {
     articleCount: subject.articleCount,
     mediaCount: subject.media,
     companies: subject.detail.companies,
+    companyCount: subject.detail.companies.length,
   }
 }
 
@@ -229,14 +238,46 @@ function storyFrequent(
   }))
 }
 
+interface StoryParts {
+  extra: IssueTimelineNodeRes | null
+  chain: IssueTimelineNodeRes[]
+}
+
+function storyParts(subject: LiveIssue, story: IssueTimelineRes): StoryParts {
+  const extra = story.nodes.some((node) => node.current) ? null : currentNode(subject)
+  return { extra, chain: [...(extra ? withCurrent(story.nodes, extra) : story.nodes)].reverse() }
+}
+
+export function storyChain(subject: LiveIssue, story: IssueTimelineRes): IssueTimelineNodeRes[] {
+  return storyParts(subject, story).chain
+}
+
+export function storySince(chain: readonly IssueTimelineNodeRes[]): string | null {
+  if (chain.length < 2) return null
+  const day = nodeDay(chain[0])
+  return day ? `${monthDay(day)}부터 이어진 흐름` : null
+}
+
+function nodeTitle(node: IssueTimelineNodeRes): string {
+  return node.title.trim() || '제목 없는 이슈'
+}
+
+export function storyFlow(subject: LiveIssue, story: IssueTimelineRes): IssueFlowModel {
+  const chain = storyChain(subject, story)
+  const items = chain.map(
+    (node): FlowItem => ({ id: String(node.issueId), day: nodeDay(node), title: nodeTitle(node), media: node.mediaCount }),
+  )
+  const current = chain.find((node) => node.current)
+  return buildFlow(items, String(current?.issueId ?? subject.detail.id), subject.today)
+}
+
 export function storyTimeline(
   subject: LiveIssue,
   story: IssueTimelineRes,
   quotes: ReadonlyMap<string, IssueQuote> | null,
   order: TimelineOrder,
 ): TimelineModel {
-  const extra = story.nodes.some((node) => node.current) ? null : currentNode(subject)
-  const chain = [...(extra ? withCurrent(story.nodes, extra) : story.nodes)].reverse()
+  const { extra, chain } = storyParts(subject, story)
   const max = Math.max(...chain.map((node) => node.mediaCount), 1)
   const single = chain.length === 1
   const nodes = chain.map((node): TimelineNode => {
@@ -248,13 +289,15 @@ export function storyTimeline(
       date: day ? (day === subject.today ? `오늘 · ${shortDate(day)}` : shortDate(day)) : '날짜 미상',
       badge,
       meta: `${node.mediaCount}개 매체 · 기사 ${node.articleCount}건`,
-      title: node.title.trim() || '제목 없는 이슈',
+      title: nodeTitle(node),
       now: node.current,
       target: node.current ? null : { kind: 'issue', id: String(node.issueId) },
       cov: { media: node.mediaCount, pct: Math.round((node.mediaCount / max) * 100) },
       summary: node.summary?.trim() || null,
-      stocks: stocksLine(node.companies.map((company) => company.name)),
-      newsId: null,
+      stocks: stocksLine(
+        node.companies.map((company) => company.name),
+        node.companyCount ?? node.companies.length,
+      ),
     }
   })
   const first = chain[0]

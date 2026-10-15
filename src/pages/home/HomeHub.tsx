@@ -5,7 +5,7 @@ import { HubStocks } from '@/components/fg/HubStocks'
 import { HubThemes } from '@/components/fg/HubThemes'
 import type { HubLayout, HubTabLink, HubTabProps } from '@/components/fg/TimelineHub'
 import type { ThemeMarketRes, ThemeRes } from '@/lib/apiTypes'
-import { HUB_TABS, hubSearch, parseHubQuery, type HubQuery } from '@/lib/fg/hub'
+import { HUB_TABS, hubSearch, marketBreadth, parseHubQuery, type HubQuery } from '@/lib/fg/hub'
 import { themeBasisLabel } from '@/lib/fg/themes'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import type { ApiState } from '@/lib/queries/useApi'
@@ -48,12 +48,14 @@ export function HomeHub({ market, hot, today, refreshKey }: HomeHubProps) {
     [pathname, search],
   )
   const basisShort = market?.baseDate ? priceBasisSuffix(market) : null
+  const breadth = useMemo(() => marketBreadth(market), [market])
   const props: HubTabProps = {
     layout,
     tabs,
     basis: themeBasisLabel(market),
     basisShort,
     market,
+    breadth,
     pick: pickOf(query),
     onPick,
     today,

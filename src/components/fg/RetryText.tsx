@@ -22,16 +22,20 @@ export function RetryText({ subject, onRetry, className }: RetryTextProps) {
   )
 }
 
+export function RetryNote({ subject, onRetry, className }: RetryTextProps) {
+  return (
+    <p className={cn('fg-qretry', className)} role="status">
+      <span>{`${subject}${josa(subject, '을/를')} 불러오지 못했어요`}</span>
+      <RetryText subject={subject} onRetry={onRetry} />
+    </p>
+  )
+}
+
 interface QuoteRetryNoteProps {
   onRetry: () => void
   className?: string
 }
 
 export function QuoteRetryNote({ onRetry, className }: QuoteRetryNoteProps) {
-  return (
-    <p className={cn('fg-qretry', className)} role="status">
-      <span>시세를 불러오지 못했어요</span>
-      <RetryText subject="시세" onRetry={onRetry} />
-    </p>
-  )
+  return <RetryNote subject="시세" onRetry={onRetry} className={className} />
 }

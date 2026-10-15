@@ -126,7 +126,11 @@ export function ThemeTable({
           })}
         </div>
       </div>
-      {total > themes.length && <Button onClick={onShowAll}>테마 {total}개 모두 보기</Button>}
+      {total > themes.length && (
+        <Button className="fg-tmore" onClick={onShowAll}>
+          테마 {total}개 모두 보기
+        </Button>
+      )}
     </>
   )
 }

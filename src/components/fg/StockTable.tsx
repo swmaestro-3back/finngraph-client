@@ -82,6 +82,9 @@ export function StockTable({
           </span>
           {head('change', '등락률')}
           <span role="columnheader" className="fg-trow__num" data-col="high">
+            52주 최고
+          </span>
+          <span role="columnheader" className="fg-trow__num" data-col="high">
             최고가 대비
           </span>
           {valueReady ? (
@@ -142,7 +145,14 @@ export function StockTable({
                   className="fg-trow__num fg-srow__sub"
                   data-col="high"
                   data-gap-cell={highReady ? undefined : 'true'}
-                  title={range ? `52주 최고 ${formatPriceWon(range.high)}` : undefined}
+                >
+                  {range ? formatPriceWon(range.high) : '—'}
+                </span>
+                <span
+                  role="cell"
+                  className="fg-trow__num fg-srow__sub"
+                  data-col="high"
+                  data-gap-cell={highReady ? undefined : 'true'}
                 >
                   {range && stock.price !== null ? formatGapPct(gapFromHigh(stock.price, range.high)) : '—'}
                 </span>

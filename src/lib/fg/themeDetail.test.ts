@@ -188,8 +188,8 @@ describe('capWeight / formatWeight', () => {
 
 describe('volumeRatioNote', () => {
   it('20일 평균 대비 배수를 소수 한 자리로 쓴다', () => {
-    expect(volumeRatioNote(1.0812)).toBe('20일 평균의 1.1배')
-    expect(volumeRatioNote(0.5662)).toBe('20일 평균의 0.6배')
+    expect(volumeRatioNote(1.0812)).toBe('평소의 1.1배')
+    expect(volumeRatioNote(0.5662)).toBe('평소의 0.6배')
   })
 
   it('배수가 없으면 줄을 만들지 않는다', () => {

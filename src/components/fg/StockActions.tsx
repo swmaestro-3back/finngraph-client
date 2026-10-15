@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react'
+import { ChevronRight, Star } from 'lucide-react'
 import { useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
@@ -29,10 +29,26 @@ export function StockWatchButton({ stock, className }: { stock: StockRef; classN
   )
 }
 
-export function StockGraphLink({ stock, className }: { stock: StockRef; className?: string }) {
+interface StockGraphLinkProps {
+  stock: StockRef
+  text?: boolean
+  className?: string
+}
+
+export function StockGraphLink({ stock, text = false, className }: StockGraphLinkProps) {
   const { pathname, search } = useLocation()
+  const to = `/graph/${encodeURIComponent(stock.ticker)}`
+  const state = fromState(`${pathname}${search}`)
+  if (text) {
+    return (
+      <Link to={to} state={state} className={className ? `fg-sdmore ${className}` : 'fg-sdmore'}>
+        관계 탐색에서 보기
+        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+      </Link>
+    )
+  }
   return (
-    <ButtonLink to={`/graph/${encodeURIComponent(stock.ticker)}`} state={fromState(`${pathname}${search}`)} className={className}>
+    <ButtonLink to={to} state={state} className={className}>
       관계 탐색에서 보기
     </ButtonLink>
   )

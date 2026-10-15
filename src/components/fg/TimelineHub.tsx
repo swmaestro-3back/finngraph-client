@@ -7,8 +7,9 @@ import { ChangeText } from '@/components/fg/PriceChange'
 import { HeadingTabs } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import type { GapId } from '@/lib/dataGaps'
-import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
-import { nodeDate, shortDay, type HubIssueNode, type HubQuoteExt, type HubTab } from '@/lib/fg/hub'
+import { formatGapPct, formatPriceWon, marketLabel, toneClass } from '@/lib/fg/format'
+import { nodeDate, shortDay, type HubIssueNode, type HubQuoteExt, type HubTab, type MarketBreadth } from '@/lib/fg/hub'
+import { formatChange } from '@/lib/format'
 import { issuePath } from '@/lib/fg/paths'
 import type { PriceBasis } from '@/lib/referenceDate'
 import { cn } from '@/lib/utils'
@@ -27,6 +28,7 @@ export interface HubTabProps {
   basis: string | null
   basisShort: string | null
   market: PriceBasis | null
+  breadth: MarketBreadth | null
   pick: string | null
   onPick: (key: string | null) => void
   today: string
@@ -41,28 +43,75 @@ interface HubFrameProps {
   basis: string | null
   caption: string
   layout: HubLayout
+  breadth?: MarketBreadth | null
   auto?: ReactNode
   children: ReactNode
 }
 
-export function HubFrame({ heading, tab, tabs, basis, caption, layout, auto = null, children }: HubFrameProps) {
+const HUB_LABEL = '지금 뜨는 이슈'
+
+const COUNT = new Intl.NumberFormat('ko-KR')
+
+function HubBreadth({ breadth }: { breadth: MarketBreadth }) {
+  return (
+    <span className="fg-hubc__breadth fg-num">
+      <span className="fg-sr">시장 폭</span>
+      <span>
+        상승 <b className="fg-up">{COUNT.format(breadth.up)}</b>
+      </span>
+      <span aria-hidden="true">·</span>
+      <span>
+        보합 <b>{COUNT.format(breadth.flat)}</b>
+      </span>
+      <span aria-hidden="true">·</span>
+      <span>
+        하락 <b className="fg-down">{COUNT.format(breadth.down)}</b>
+      </span>
+      {breadth.median !== null && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>
+            중앙값 <b className={toneClass(breadth.median)}>{formatChange(breadth.median)}</b>
+          </span>
+        </>
+      )}
+    </span>
+  )
+}
+
+export function HubFrame({ heading, tab, tabs, basis, caption, layout, breadth = null, auto = null, children }: HubFrameProps) {
   const mobile = layout === 'mobile'
   return (
     <section className={cn('fg-hubc', mobile && 'fg-hubc--mobile')} aria-labelledby="fg-hub-h">
       <div className="fg-hubc__head">
-        <h1 id="fg-hub-h" className="fg-sr">
-          {heading}
-        </h1>
         <div className="fg-hubc__bar">
-          <HeadingTabs label="허브 보기" options={tabs} current={tab} className="fg-hubc__tabs" />
-          {!mobile && (basis || auto) && (
+          <div className="fg-hubc__main">
+            {heading === HUB_LABEL ? (
+              <h1 id="fg-hub-h" className="fg-hubc__label">
+                {heading}
+              </h1>
+            ) : (
+              <>
+                <p className="fg-hubc__label">{HUB_LABEL}</p>
+                <h1 id="fg-hub-h" className="fg-sr">
+                  {heading}
+                </h1>
+              </>
+            )}
+            <HeadingTabs label="허브 보기" options={tabs} current={tab} className="fg-hubc__tabs" />
+          </div>
+          {!mobile && (basis || auto || breadth) && (
             <div className="fg-hubc__side">
+              {breadth && <HubBreadth breadth={breadth} />}
               {basis && <span className="fg-hubc__basis fg-num">{basis}</span>}
               {auto}
             </div>
           )}
         </div>
-        <p className="fg-hubc__cap">{caption}</p>
+        <p className="fg-hubc__cap">
+          {caption}
+          {mobile && breadth && <HubBreadth breadth={breadth} />}
+        </p>
       </div>
       {children}
     </section>
@@ -78,7 +127,7 @@ export function AutoButton({ running, onToggle }: AutoButtonProps) {
   const Icon = running ? Pause : Play
   return (
     <button type="button" className="fg-hubc__auto" onClick={onToggle}>
-      <Icon size={14} strokeWidth={1.75} aria-hidden="true" />
+      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
       {running ? '자동 넘김 멈추기' : '자동 넘김 켜기'}
     </button>
   )

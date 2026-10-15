@@ -13,11 +13,13 @@ import { StockKeyStats } from '@/components/fg/StockKeyStats'
 import { StockLinkedRail } from '@/components/fg/StockLinkedRail'
 import { StockThemePosition } from '@/components/fg/StockThemePosition'
 import type { CandleRes, StockDetailRes, StockThemeRes, ThemeStockRes } from '@/lib/apiTypes'
+import { MARKET_REACTION_BADGE } from '@/lib/fg/issueSubject'
 import { issuePath } from '@/lib/fg/paths'
 import { compareThemeId, marketCapRank, STREAK_FLOW_DAYS, streakLabels } from '@/lib/fg/stockDetail'
 import {
   dayMarkers,
   issueDayLabel,
+  issueRowMeta,
   RECENT_ISSUE_COUNT,
   STOCK_ISSUE_ORDER,
   tradingDayLabel,
@@ -53,7 +55,6 @@ interface StockOverviewProps {
   issueTotal: number
   issueRetry: (() => void) | null
   linked: LinkedCompaniesState
-  tradingRatio: number | null
   today: string
   refreshKey: number
   onOpenNews: (id: string) => void
@@ -89,7 +90,6 @@ export function StockOverview({
   issueTotal,
   issueRetry,
   linked,
-  tradingRatio,
   today,
   refreshKey,
   onOpenNews,
@@ -235,6 +235,7 @@ export function StockOverview({
         {chart}
         <StockEventList
           title={newsMode ? '이 종목이 나온 뉴스' : '이 종목이 나온 이슈'}
+          issue={!newsMode}
           sub={`왜 움직였는지 ${view.label}로 따라가요 · ${newsMode ? '최신순' : STOCK_ISSUE_ORDER}`}
           moreLabel={newsMode || issueTotal === 0 ? '뉴스·이슈 모두 보기' : `뉴스·이슈 ${issueTotal}건 모두 보기`}
           mock={false}
@@ -267,7 +268,7 @@ export function StockOverview({
           stock={stock}
           tradingValue={served ? (stock.tradeValue ?? null) : tradingValueOf(themeStocks.data, stock.ticker)}
           tradingLoading={!served && themeLoading}
-          tradingRatio={tradingRatio}
+          tradingRatio={stock.tradeValueRatio ?? null}
           capRank={capRank}
           compare={compare.data}
           streaks={streaks}
@@ -315,8 +316,8 @@ function issueView({ recent, picked, today, from, retry }: IssueViewInput): Even
     marker: days.markerOf.get(issue.key) ?? issue.key,
     dateLabel: issueDayLabel(issue.date, today),
     title: issue.title,
-    badge: null,
-    meta: `${issue.media}개 매체 · 기사 ${issue.articles}건`,
+    badge: issue.reaction ? <Badge>{MARKET_REACTION_BADGE}</Badge> : null,
+    meta: issueRowMeta(issue),
     dayLabel: issue.index === null ? null : tradingDayLabel(issue),
     change: issue.change,
     action: issueAction(issue, from),

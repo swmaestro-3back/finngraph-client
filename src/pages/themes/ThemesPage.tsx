@@ -1,3 +1,4 @@
+import { AlignJustify, LayoutGrid } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
@@ -47,8 +48,8 @@ import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 
 const VIEW_OPTIONS: readonly TabOption<ThemeView>[] = [
-  { value: 'map', label: '지도' },
-  { value: 'table', label: '표' },
+  { value: 'map', label: '지도', icon: <LayoutGrid size={16} strokeWidth={1.75} aria-hidden="true" /> },
+  { value: 'table', label: '표', icon: <AlignJustify size={16} strokeWidth={1.75} aria-hidden="true" /> },
 ]
 const SORT_OPTIONS: readonly TabOption<ThemeSort>[] = [
   { value: 'change', label: '등락률 순' },
@@ -321,12 +322,12 @@ export default function ThemesPage() {
 
   return (
     <div className="fg-main fg-wrap fg-themes" data-view={view}>
-      <header className="fg-pagehead">
-        <div>
+      <header className="fg-pagehead fg-thead">
+        <div className="fg-thead__row">
           <h1 className="fg-pagehead__title">테마</h1>
-          <p className="fg-pagehead__sub">{SUB}</p>
+          {basis && <span className="fg-pagehead__meta fg-num">{basis}</span>}
         </div>
-        {basis && <span className="fg-pagehead__meta">{basis}</span>}
+        <p className="fg-pagehead__sub">{SUB}</p>
       </header>
       <div className="fg-grid">
         <div className="fg-col">
