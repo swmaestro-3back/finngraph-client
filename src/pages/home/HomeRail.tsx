@@ -199,6 +199,7 @@ function MoverRow({ stock, line, ext, to, onClick }: MoverRowProps) {
           <span className="fg-hsr__id">
             <span className="fg-hsr__name">{stock.name}</span>
             {ext?.high && <Badge tone="high">52주 신고가</Badge>}
+            {ext?.low && <Badge tone="low">52주 신저가</Badge>}
           </span>
           {stock.change !== null && <ChangeText value={stock.change} className="fg-hsr__chg" />}
         </span>

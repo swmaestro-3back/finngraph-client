@@ -99,7 +99,7 @@ export function StockTable({
         {rows.map((stock) => {
           const selected = stock.ticker === selectedCode
           const range = week52Of(stock)
-          const newHigh = stock.price !== null && week52Mark(stock, baseDate) === 'high'
+          const mark = stock.price !== null ? week52Mark(stock, baseDate) : 'normal'
           const folding = !selected && closing?.key === stock.ticker ? closing.node : null
           return (
             <Fragment key={stock.ticker}>
@@ -120,7 +120,16 @@ export function StockTable({
                     <span className="fg-srow__id">
                       <span className="fg-srow__nm">
                         <b>{stock.name}</b>
-                        {newHigh && <Badge tone="high">52주 신고가</Badge>}
+                        {mark === 'high' && (
+                          <Badge tone="high" title="52주 신고가" className="fg-srow__mark">
+                            <span className="fg-sr">52주 </span>신고가
+                          </Badge>
+                        )}
+                        {mark === 'low' && (
+                          <Badge tone="low" title="52주 신저가" className="fg-srow__mark">
+                            <span className="fg-sr">52주 </span>신저가
+                          </Badge>
+                        )}
                       </span>
                       <small className="fg-num">
                         {marketLabel(stock.market)} · {stock.ticker}

@@ -70,9 +70,10 @@ interface StockHeadProps {
   line: HubIssueRef | null
   flow: ReactNode
   high: boolean
+  low: boolean
 }
 
-function StockHead({ stock, open, line, flow, high }: StockHeadProps) {
+function StockHead({ stock, open, line, flow, high, low }: StockHeadProps) {
   return (
     <>
       <span className="fg-hh">
@@ -83,6 +84,7 @@ function StockHead({ stock, open, line, flow, high }: StockHeadProps) {
           </span>
           <span className="fg-hh__sub">{subLabel(stock)}</span>
           {open && high && <Badge tone="high">52주 신고가</Badge>}
+          {open && low && <Badge tone="low">52주 신저가</Badge>}
         </span>
         {open
           ? flow && <span className="fg-hh__flow">{flow}</span>
@@ -388,6 +390,7 @@ export function HubStocks({ layout, tabs, basis, basisShort, market, breadth, pi
       />
     )
     const high = summary.week52?.state === 'high'
+    const low = summary.week52?.state === 'low'
     body = (
       <HubBody
         layout={layout}
@@ -406,6 +409,7 @@ export function HubStocks({ layout, tabs, basis, basisShort, market, breadth, pi
                   line={lineOf(lines, row.ticker)}
                   flow={open ? <StockFlowText ticker={row.ticker} /> : null}
                   high={open && high}
+                  low={open && low}
                 />
               }
               onPick={() => onPick(row.ticker)}

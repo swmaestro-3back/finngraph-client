@@ -76,7 +76,7 @@ const NO_COMPANIES: readonly IssueCompanyRes[] = []
 
 function linkExt(company: LinkedCompany): HubQuoteExt | null {
   if (company.gapFromHigh === null) return null
-  return { gapFromHigh: company.gapFromHigh, position: company.position, high: company.newHigh === true }
+  return { gapFromHigh: company.gapFromHigh, position: company.position, high: company.newHigh === true, low: false }
 }
 
 function topLinks(links: readonly IssueLink[]): LinkedCompany[] {
@@ -258,6 +258,7 @@ function IssuePane({ item, stocks, total, linked, lookup, basisShort, from, onRe
             price={rep.price ?? null}
             change={rep.change}
             high={repExt?.high ?? false}
+            low={repExt?.low ?? false}
           >
             <HubGapLine
               ext={repExt}
