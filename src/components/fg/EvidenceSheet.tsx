@@ -124,7 +124,6 @@ export function EvidenceSheet({
       meta={
         company && (
           <span className="fg-esheet__kicker">
-            <Badge tone="inferred">AI 추론</Badge>
             <span>{evidenceCountLabel(company)}</span>
           </span>
         )

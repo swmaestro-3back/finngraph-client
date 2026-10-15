@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { nextTabIndex } from '@/lib/fg/tabs'
 import { useSlidingMark } from '@/lib/fg/useSlidingMark'
@@ -8,6 +8,7 @@ export interface TabOption<T extends string> {
   value: T
   label: string
   count?: number | null
+  icon?: ReactNode
 }
 
 interface TabListProps<T extends string> {
@@ -49,6 +50,7 @@ function TabButtons<T extends string>({ options, value, onChange, tabClass }: Ta
             onClick={() => onChange(option.value)}
             onKeyDown={onKeyDown}
           >
+            {option.icon}
             {option.label}
             {option.count !== undefined && option.count !== null && (
               <span className="fg-tab__count fg-num">{option.count}</span>

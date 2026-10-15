@@ -4,7 +4,7 @@ import { AppHeader } from '@/components/fg/AppHeader'
 import { BottomTabBar } from '@/components/fg/BottomTabBar'
 import { SiteFooter } from '@/components/fg/SiteFooter'
 import { MOTION_BASE_MS, MOTION_EASE, ROUTE_ENTER, motionAllowed } from '@/lib/fg/motion'
-import { canvasFor, outletKey } from '@/lib/fg/nav'
+import { outletKey } from '@/lib/fg/nav'
 
 const noop = () => {}
 
@@ -27,7 +27,7 @@ export function AppShell() {
     return () => document.removeEventListener('touchstart', noop)
   }, [])
   return (
-    <div className="fg fg-app" data-canvas={canvasFor(pathname)}>
+    <div className="fg fg-app">
       <AppHeader />
       <main className="fg-app__main">
         <div ref={stage} className="fg-app__stage">

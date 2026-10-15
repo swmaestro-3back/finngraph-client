@@ -29,7 +29,7 @@ import { fromState } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
 export const STRENGTH_NOTE =
-  '근거 강도는 AI가 찾은 근거의 양과 출처를 보고 매긴 신뢰도예요. 높을수록 관계가 확실하다는 뜻이고, 주가가 오른다는 뜻은 아니에요.'
+  '근거 강도는 찾은 근거의 양과 출처를 보고 매긴 신뢰도예요. 높을수록 관계가 확실하다는 뜻이고, 주가가 오른다는 뜻은 아니에요.'
 
 export const LINK_LIST_PAGE = 20
 
@@ -169,9 +169,6 @@ export function HiddenLinkList({ stockName, companies, watchedOf, onToggleWatch,
         <FilterChipGroup label="관계 유형으로 거르기" options={linkChips(companies)} value={filter} onChange={pickFilter} className="fg-hlist__chips" />
         <Segment label="정렬" options={LINK_SORTS} value={sort} onChange={setSort} />
       </div>
-      <h2 id="fg-hlist-title" className="fg-sr">
-        이어진 기업 목록
-      </h2>
       <span className="fg-hlist__cap fg-num" aria-live="polite">
         {linkCaption(filter, rows.length, sort)}
       </span>
