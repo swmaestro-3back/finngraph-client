@@ -1,29 +1,26 @@
 import { ChevronDown } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { FilterChip } from '@/components/fg/FilterChip'
 import { GapValue } from '@/components/fg/Gap'
 import { QuoteRetryNote, RetryText } from '@/components/fg/RetryText'
-import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { StockChip } from '@/components/fg/StockChip'
-import type { IssueSort, IssueSummaryRes, ThemeRes } from '@/lib/apiTypes'
+import type { IssueSummaryRes, ThemeRes } from '@/lib/apiTypes'
 import { useFavorites } from '@/lib/favorites'
 import { formatRelativeTime } from '@/lib/format'
 import {
   ALL_FILTER,
   chipThemes,
-  FEED_SORTS,
+  FEED_SORT,
   FEED_STOCK_CHIPS,
   feedGroups,
-  feedSortSearch,
   filterGroups,
   moreLabel,
   nextFeedRequest,
-  parseFeedSort,
   resolveFilter,
   splitChips,
   timelineBadge,
@@ -142,9 +139,7 @@ interface HomeFeedProps {
 
 export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
   const { pathname, search } = useLocation()
-  const navigate = useNavigate()
-  const sort = parseFeedSort(search)
-  const feed = useIssueFeed(sort)
+  const feed = useIssueFeed(FEED_SORT)
   const { locked, pending: authPending } = useMemberGate()
   const member = !locked && !authPending
   const favorites = useFavorites()
@@ -169,14 +164,6 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
   const linked = useHubFixture('linked-companies')
   const skeleton = useDelayed(feed.chunks.length === 0 && feed.pending !== null)
   const from = `${pathname}${search}`
-
-  const onSort = useCallback(
-    (next: IssueSort) => {
-      const target = feedSortSearch(search, next)
-      if (target !== search) navigate({ pathname, search: target }, { replace: true })
-    },
-    [navigate, pathname, search],
-  )
 
   const loaded = feed.chunks.length > 0
   const primaryDate = feed.chunks[0]?.date ?? null
@@ -278,7 +265,6 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
           </h2>
           <span className="fg-hsec__cap">{CAPTION}</span>
         </div>
-        <Segment label="이슈 정렬" options={FEED_SORTS} value={sort} onChange={onSort} className="fg-hfeed__sort" />
       </div>
       {options.length > 1 && (
         <div className="fg-hfeed__chips" role="group" aria-label="이슈 거르기">

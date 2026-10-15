@@ -1,3 +1,6 @@
+.fg-section.fg-cal-banner {
+  border-top: 0;
+}
 .fg-cal-banner {
   flex-direction: row;
   flex-wrap: wrap;
