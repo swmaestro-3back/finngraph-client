@@ -29,6 +29,7 @@ import {
   type EvidenceDay,
 } from '@/lib/edgeEvidence'
 import { formatShortDate } from '@/lib/format'
+import { josa } from '@/lib/josa'
 import { formatPeriod } from '@/lib/linkCard'
 import { awaiting } from '@/lib/queries/useApi'
 import { useEdgeEvidence } from '@/lib/queries/useEdgeEvidence'
@@ -266,7 +267,7 @@ export function EdgeDetail({
                   </div>
                   {what && <p className="m-0 mt-0.5 truncate text-caption text-muted-foreground">{what}</p>}
                   <RowAction
-                    label={`${from.label}에서 ${to.label}로 ${PREDICATE_LABELS[s.type]} 관계 보기`}
+                    label={`${from.label}에서 ${to.label}${josa(to.label, '으로/로')} ${PREDICATE_LABELS[s.type]} 관계 보기`}
                     onClick={() => onLinkSelect(s)}
                   />
                 </li>

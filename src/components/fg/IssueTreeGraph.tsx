@@ -5,6 +5,7 @@ import { Button } from '@/components/fg/Button'
 import type { GraphEdge, GraphNode, GraphNodeKind, IssueGraphModel } from '@/lib/fg/issuePage'
 import type { IssueLink } from '@/lib/fg/issueRecords'
 import { stockPath } from '@/lib/fg/paths'
+import { josa } from '@/lib/josa'
 import { useMemberGate } from '@/lib/memberGate'
 import { fromState } from '@/lib/navigation'
 import { stockLogoUrl } from '@/lib/stockLogo'
@@ -66,7 +67,7 @@ function nodeTitle(node: GraphNode, link: IssueLink | null): string {
   if (node.kind === 'event') return name
   if (node.kind === 'news') return `${name} · 이 이슈 뉴스에 나온 종목`
   if (link) return `${name} · ${link.company.relation}`
-  if (node.from) return `${name} · ${node.from}와 이어진 기업`
+  if (node.from) return `${name} · ${node.from}${josa(node.from, '와/과')} 이어진 기업`
   return name
 }
 

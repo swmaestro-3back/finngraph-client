@@ -16,6 +16,7 @@ import {
   STARTER_PICKS,
   type GraphPick,
 } from '@/lib/graphStart'
+import { josa } from '@/lib/josa'
 import { loadStocks } from '@/lib/queries/useStocksCached'
 import { loadThemes } from '@/lib/queries/useThemesCached'
 import { cn } from '@/lib/utils'
@@ -124,7 +125,8 @@ export function GraphStart({ ready, guest, onSelect, onExample }: Props) {
               어떤 기업의 관계를 볼까요?
             </h2>
             <p className="m-0 text-body text-muted-foreground">
-              고른 기업을 가운데 두고 공급·투자·이벤트로 이어진 곳을 보여 드려요.
+              <span className="inline-block">고른 기업을 가운데 두고</span>{' '}
+              <span className="inline-block text-balance">공급·투자·이벤트로 이어진 곳을 보여 드려요.</span>
             </p>
             {guest && (
               <p className="m-0 mt-0.5 flex items-center gap-1.5 text-caption text-muted-foreground">
@@ -154,7 +156,7 @@ export function GraphStart({ ready, guest, onSelect, onExample }: Props) {
             </div>
           ))}
           <button type="button" onClick={dismiss} className="fg-sdmore self-start">
-            {guest ? '예시 그래프로 먼저 둘러보기' : `${fallback.label}로 바로 보기`}
+            {guest ? '예시 그래프로 먼저 둘러보기' : `${fallback.label}${josa(fallback.label, '으로/로')} 바로 보기`}
             <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
