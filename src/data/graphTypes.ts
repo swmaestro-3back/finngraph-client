@@ -1,30 +1,20 @@
-// 기업 지식그래프 도메인 타입
-// 엔티티(기업/국가/제품/원자재)와 트리플 관계(11개 서술어)를 표현한다.
+export type EntityType = "company" | "theme" | "event";
 
-/** 엔티티(노드) 종류 */
-export type EntityType = "company" | "country" | "product" | "commodity";
+export type Predicate = "SUPPLIES_TO" | "ACQUIRES" | "INVESTS_IN" | "BELONGS_TO" | "HAS_EVENT";
 
-/** 원본 데이터의 라벨(대문자) → 내부 EntityType 매핑 */
-export const LABEL_TO_TYPE: Record<string, EntityType> = {
-  COMPANY: "company",
-  COUNTRY: "country",
-  PRODUCT: "product",
-  COMMODITY: "commodity",
-};
+export type GraphFocus =
+  | { kind: "company"; ticker: string }
+  | { kind: "theme"; name: string };
 
-/** 관계(간선) 서술어 */
-export type Predicate =
-  | "DIVESTS_FROM"
-  | "INVESTS_IN"
-  | "PARTNERS_WITH"
-  | "ACQUIRES"
-  | "SUPPLIES_TO"
-  | "EXPORTS_TO"
-  | "LOCATED_IN"
-  | "PRODUCES"
-  | "COMPETES_WITH"
-  | "DEVELOPS"
-  | "SANCTIONS";
+/** 노드 시세 — kg-api가 그래프 응답에 실어 보낸다. 등락·수익률은 %. 테마는 가격이 없다 */
+export interface NodeQuote {
+  price: number | null;
+  change: number | null;
+  marketCap: number | null;
+  w1: number | null;
+  m1: number | null;
+  m3: number | null;
+}
 
 export interface GraphNode {
   id: string;
@@ -33,9 +23,27 @@ export interface GraphNode {
   data: {
     description?: string;
     aliases?: string[];
+    ticker?: string;
+    market?: string;
+    /** ISO 국가 코드 — 국내 상장사는 "KR", 해외 기업은 서버가 비워 보낸다 */
+    country?: string;
+    krx100?: boolean;
+    krx300?: boolean;
+    kosdaq150?: boolean;
+    /** 시세 — 시세가 없는 종목(해외·미적재)과 테마는 없다 */
+    quote?: NodeQuote;
+    /** 테마 전용 — Postgres themes.id. 테마 상세 링크를 만든다 */
+    themeId?: number;
+    /** 이벤트(뉴스 클러스터) 전용 — 제목은 label에 있다 */
+    clusterId?: number;
+    keywords?: string[];
+    /** 클러스터 전체 기사 수 */
+    newsCount?: number;
+    firstPublishedAt?: string;
+    lastPublishedAt?: string;
+    representativeNewsId?: number;
     [k: string]: unknown;
   };
-  // D3 simulation properties
   x?: number;
   y?: number;
   vx?: number;
@@ -44,10 +52,19 @@ export interface GraphNode {
   fy?: number | null;
 }
 
-/** 트리플의 중간 항목 (예: A가 B에게 '무엇을' 공급/수출) */
-export interface EdgeItem {
+interface EdgeItem {
   text: string;
   type: EntityType;
+}
+
+interface NewsMention {
+  news_id: string;
+  item: string | null;
+}
+
+interface DisclosureMention {
+  rcept_no: string;
+  item: string | null;
 }
 
 export interface GraphLink {
@@ -55,43 +72,39 @@ export interface GraphLink {
   source: string | GraphNode;
   target: string | GraphNode;
   type: Predicate;
-  /** 트리플 중간 항목 — 없을 수 있음 */
   item?: EdgeItem | null;
-  /** 언급 횟수 — 간선 가중치(굵기)에 사용 */
   mentioned_count: number;
-  /** 근거가 된 뉴스 식별자/제목 */
   news_id?: string;
   news_title?: string;
-  /** 뉴스 원문 링크 — 백엔드가 주면 상세 패널에 '원문 보기' 버튼이 뜬다 */
   news_url?: string;
-  /** 근거 문장 */
-  source_sentence: string;
-  timestamp: string;
-  is_negated: boolean;
-  tense: "past_or_present_fact" | "future_or_planned";
-  /** 시뮬레이션 힘 계산용 가중치 (mentioned_count 기반) */
+  source_sentence?: string;
+  timestamp?: string;
+  is_negated?: boolean;
+  tense?: "past_or_present_fact" | "future_or_planned";
+  news_mention_count?: number;
+  news?: NewsMention[];
+  disclosure_count?: number;
+  disclosures?: DisclosureMention[];
+  first_mentioned_at?: string | null;
+  last_mentioned_at?: string | null;
+  reason?: string | null;
   value: number;
 }
 
-/** 사용자가 선택한 대상 — 노드 하나 또는 간선 하나 */
 export type GraphSelection =
   | { kind: "node"; node: GraphNode }
   | { kind: "edge"; link: GraphLink; source: GraphNode; target: GraphNode };
 
-/**
- * 상세 패널의 강도 게이지 기준값 — 그래프 전체를 훑어야 나오므로 상위에서 계산해 내려준다.
- * 개별 노드/간선은 자기 값만 알기 때문에 "전체 대비 얼마나 센가"를 스스로 알 수 없다.
- */
-export interface GraphScale {
-  /** 이웃이 가장 많은 노드의 이웃 수 */
-  maxDegree: number;
-  /** 가장 많이 언급된 간선의 언급 횟수 */
-  maxMentionedCount: number;
-}
-
-/** 간선의 source/target은 시뮬레이션 전에는 id 문자열, 이후에는 노드 객체다 */
 export function endId(v: string | GraphNode): string {
   return typeof v === "string" ? v : v.id;
+}
+
+/**
+ * 이벤트 언급 간선인가. 근거가 쌓이는 관계가 아니라 "언급됐다"는 사실뿐이라
+ * 점선으로 물러나 그리고, 클릭해도 보여줄 상세가 없으므로 선택 대상이 아니다.
+ */
+export function isEventLink(link: Pick<GraphLink, "type">): boolean {
+  return link.type === "HAS_EVENT";
 }
 
 export interface GraphData {
@@ -99,6 +112,7 @@ export interface GraphData {
   links: GraphLink[];
   metadata: {
     center?: string;
+    centerId?: string;
     entity_types: EntityType[];
     predicate_types: Predicate[];
     stats: {
@@ -108,72 +122,68 @@ export interface GraphData {
   };
 }
 
-/**
- * 엔티티 종류별 색 (데이터 인코딩). 브랜드 블루를 중심 엔티티(기업)에 앵커링.
- * 캔버스 렌더라 var() 대신 리터럴 — 값은 index.css 토큰과 1:1로 동기화한다 (graphTheme.ts와 같은 계약).
- */
-export const NODE_COLORS: Record<EntityType, string> = {
-  /** --primary */
-  company: "#0052ff", // 브랜드 블루 — 기업
-  /** --chart-1 */
-  product: "#1f897d", // 틸 — 제품
-  /** --chart-5 */
-  commodity: "#f4b000", // 액센트 옐로 — 원자재
-  /** --chart-3 */
-  country: "#874ef5", // 바이올렛 — 국가
+export type NodeCategory = "kospi" | "kosdaq" | "nasdaq" | "nyse" | "theme" | "event";
+
+/** 시장 코드 → 노드 분류. 시장을 모르거나(null) 아직 분류가 없는 시장은 KOSPI로 둔다 */
+export function marketCategory(market: string | null | undefined): NodeCategory {
+  switch (market) {
+    case "KOSPI":
+      return "kospi";
+    case "KOSDAQ":
+      return "kosdaq";
+    case "NASDAQ":
+      return "nasdaq";
+    case "NYSE":
+      return "nyse";
+    default:
+      return "kospi";
+  }
+}
+
+export function nodeCategory(node: Pick<GraphNode, "type" | "data">): NodeCategory {
+  if (node.type === "event") return "event";
+  return node.type === "theme" ? "theme" : marketCategory(node.data.market);
+}
+
+// 이벤트는 중성 회색 — 기업(빨강·파랑)·테마(보라) 옆에서 정보성 부속물로 물러난다.
+// 해외 시장은 국내 두 색과 겹치지 않게 청록(NASDAQ)·황토(NYSE)로 구분한다.
+const PALETTES = {
+  redGreen: { kospi: "#d96868", kosdaq: "#689d4b", nasdaq: "#5aa9b8", nyse: "#d4a24c", theme: "#91ae6e", event: "#8a9099" },
+  redBlue: { kospi: "#e07a7a", kosdaq: "#6f9bd1", nasdaq: "#5fb8a8", nyse: "#d9a441", theme: "#b08bc9", event: "#8a9099" },
+} satisfies Record<string, Record<NodeCategory, string>>;
+
+const ACTIVE_PALETTE: keyof typeof PALETTES = "redBlue";
+
+export const CATEGORY_COLORS: Record<NodeCategory, string> = PALETTES[ACTIVE_PALETTE];
+
+export const CATEGORY_LABELS: Record<NodeCategory, string> = {
+  kospi: "KOSPI",
+  kosdaq: "KOSDAQ",
+  nasdaq: "NASDAQ",
+  nyse: "NYSE",
+  theme: "테마",
+  event: "이벤트",
 };
 
-/**
- * 노드 안에 얹는 라벨 색 — 채움색 위에서 읽히도록 대비를 맞춘다.
- * 옐로(원자재) 위 흰 글자는 대비가 2:1 수준이라 어두운 글자를 쓴다.
- */
-export const NODE_TEXT_COLORS: Record<EntityType, string> = {
-  company: "#ffffff",
-  product: "#ffffff",
-  commodity: "#0a0b0d",
-  country: "#ffffff",
-};
+export const ALL_CATEGORIES: NodeCategory[] = ["kospi", "kosdaq", "nasdaq", "nyse", "theme", "event"];
 
-/** 엔티티 종류 한글 라벨 */
-export const ENTITY_LABELS: Record<EntityType, string> = {
-  company: "기업",
-  country: "국가",
-  product: "제품",
-  commodity: "원자재",
-};
+export function nodeColor(node: Pick<GraphNode, "type" | "data">): string {
+  return CATEGORY_COLORS[nodeCategory(node)];
+}
 
-/** 서술어 한글 라벨 */
 export const PREDICATE_LABELS: Record<Predicate, string> = {
-  DIVESTS_FROM: "매각",
-  INVESTS_IN: "투자",
-  PARTNERS_WITH: "협력",
-  ACQUIRES: "인수",
   SUPPLIES_TO: "공급",
-  EXPORTS_TO: "수출",
-  LOCATED_IN: "위치",
-  PRODUCES: "생산",
-  COMPETES_WITH: "경쟁",
-  DEVELOPS: "개발",
-  SANCTIONS: "제재",
+  ACQUIRES: "인수",
+  INVESTS_IN: "투자",
+  BELONGS_TO: "테마 소속",
+  HAS_EVENT: "이벤트",
 };
 
-export const ALL_ENTITY_TYPES: EntityType[] = [
-  "company",
-  "product",
-  "commodity",
-  "country",
-];
+export const ALL_ENTITY_TYPES: EntityType[] = ["company", "theme", "event"];
 
-export const ALL_PREDICATES: Predicate[] = [
-  "PRODUCES",
-  "SUPPLIES_TO",
-  "DEVELOPS",
-  "PARTNERS_WITH",
-  "COMPETES_WITH",
-  "INVESTS_IN",
-  "ACQUIRES",
-  "DIVESTS_FROM",
-  "EXPORTS_TO",
-  "LOCATED_IN",
-  "SANCTIONS",
-];
+export const ALL_PREDICATES: Predicate[] = ["SUPPLIES_TO", "ACQUIRES", "INVESTS_IN", "BELONGS_TO", "HAS_EVENT"];
+
+/** 서버가 보낸 관계 타입 문자열이 클라이언트가 아는 다섯 가지인가 — 새 관계가 배포보다 먼저 나갈 수 있어 매핑 전에 거른다 */
+export function isPredicate(value: string): value is Predicate {
+  return (ALL_PREDICATES as string[]).includes(value);
+}

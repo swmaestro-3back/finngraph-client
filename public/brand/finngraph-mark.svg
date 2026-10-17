@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Finngraph">
+<style>
+  svg{--ink:#0a0b0d;--accent:#0052ff;--up:#cf202f}
+  @media (prefers-color-scheme:dark){svg{--ink:#f4f6fa;--accent:#3d78ff;--up:#ff5f6d}}
+</style>
+<path fill="var(--ink)" transform="translate(4 48) scale(0.62)" d="M5.37 0L21.97 0L21.97-28.61L50.20-28.61L50.20-42.19L21.97-42.19L21.97-57.13L53.32-57.13L53.32-70.70L5.37-70.70Z"/>
+<path d="M6,55 H28 C39,55 45,45 49,32 L55,15" stroke="var(--accent)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="55" cy="15" r="5.5" fill="var(--up)"/>
+</svg>

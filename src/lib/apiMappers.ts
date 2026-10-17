@@ -1,14 +1,18 @@
-import type { NewsItem } from '@/data/news'
-import type { Candle, CandleDate, CandlePeriod } from '@/data/candles'
-import { pressOf, type NewsDetail } from '@/data/newsDetail'
-import type { IssueDay, IssueNews, SupplyPoint } from '@/data/stockDetail'
-import type { AnnualFinancials } from '@/data/types'
-import { formatRelativeTime } from '@/lib/format'
-import type {
-  AnnualFinancialsRes,
-  CandleRes,
-  InvestorFlowRes,
-  NewsRes,
+import { formatRelativeTime, pressName } from '@/lib/format'
+import {
+  type AnnualFinancials,
+  type AnnualFinancialsRes,
+  type Candle,
+  type CandleDate,
+  type CandlePeriod,
+  type CandleRes,
+  type InvestorFlowRes,
+  type IssueDay,
+  type IssueNews,
+  type NewsDetail,
+  type NewsItem,
+  type NewsRes,
+  type SupplyPoint,
 } from '@/lib/apiTypes'
 
 export function toNewsDetail(raw: NewsRes): NewsDetail {
@@ -16,16 +20,25 @@ export function toNewsDetail(raw: NewsRes): NewsDetail {
     id: String(raw.id),
     title: raw.title ?? '(제목 없음)',
     summary: raw.summary ?? '',
-    url: raw.link ?? '',
-    collectedAt: raw.publishedAt ?? '',
+    url: raw.url ?? '',
+    originalUrl: raw.originalUrl || null,
+    collectedAt: raw.publishedAt ?? raw.collectedAt ?? '',
+    tripleExtracted: raw.tripleExtracted ?? null,
   }
 }
 
+export function sourceUrl(news: Pick<NewsDetail, 'url' | 'originalUrl'>): string {
+  return news.originalUrl || news.url
+}
+
 export function toNewsItem(news: NewsDetail): NewsItem {
+  const url = sourceUrl(news)
   return {
     id: news.id,
     title: news.title,
-    meta: `${pressOf(news.url)} · ${formatRelativeTime(news.collectedAt)}`,
+    meta: `${pressName(url)} · ${formatRelativeTime(news.collectedAt)}`,
+    url: url || null,
+    tripleExtracted: news.tripleExtracted,
   }
 }
 
@@ -45,11 +58,17 @@ export function buildIssueTimeline(
   const ends = dates.map((d) => slotEnd(d.date))
   const buckets: IssueNews[][] = dates.map(() => [])
 
+  // 슬롯 창은 "이전 거래일 종료 시각 초과 ~ 이 거래일 종료 시각 이하".
+  // 캔들 날짜는 거래일뿐이라 고정 폭(stepMs) 창을 쓰면 주말·공휴일 뉴스가 어느 슬롯에도 못 들어간다.
+  // 첫 슬롯만 이전 거래일이 없으므로 period 폭을 쓰고, 마지막 거래일 이후 뉴스는 마지막 슬롯이 받는다.
   for (const item of news) {
     if (!item.collectedAt) continue
     const t = new Date(item.collectedAt).getTime()
     if (Number.isNaN(t)) continue
-    const index = ends.findIndex((end) => t <= end && t > end - stepMs)
+    const index = ends.findIndex((end, i) => {
+      const start = i === 0 ? end - stepMs : ends[i - 1]
+      return t > start && (t <= end || i === ends.length - 1)
+    })
     if (index === -1) continue
     buckets[index].push({ ...toNewsItem(item), kind: '중립' })
   }
@@ -76,7 +95,7 @@ export function toCandleView(res: CandleRes, period: CandlePeriod): Candle {
   }
 }
 
-export function toCandleDates(candles: CandleRes[], period: CandlePeriod): CandleDate[] {
+export function toCandleDates(candles: Pick<CandleRes, 'date'>[], period: CandlePeriod): CandleDate[] {
   return candles.map((c) => {
     const [y, m, d] = c.date.split('-').map(Number)
     return {
@@ -99,8 +118,9 @@ export function toSupplyPoint(res: InvestorFlowRes): SupplyPoint {
 
 const TRILLION = 1e12
 
+/** 원 → 조. 1억(0.0001조) 자리까지 남겨 1조 미만은 억으로 표시할 수 있게 한다 */
 function toTrillion(won: number | null): number | null {
-  return won === null ? null : Math.round((won / TRILLION) * 100) / 100
+  return won === null ? null : Math.round((won / TRILLION) * 1e4) / 1e4
 }
 
 export function toAnnualFinancials(res: AnnualFinancialsRes): AnnualFinancials {

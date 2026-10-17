@@ -2,60 +2,95 @@ import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 
 import * as d3 from 'd3'
 import {
   endId,
-  ALL_ENTITY_TYPES,
-  NODE_COLORS,
-  NODE_TEXT_COLORS,
-  ENTITY_LABELS,
+  isEventLink,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  nodeCategory,
+  nodeColor,
   type GraphNode,
   type GraphLink,
   type GraphData,
-  type EntityType,
+  type NodeCategory,
   type Predicate,
-  PREDICATE_LABELS,
 } from '@/data/graphTypes'
 import {
   buildAdjacency,
   buildDegreeMap,
   computeFitView,
   createRadiusScale,
+  curvePath,
+  edgeCurve,
+  edgeOpacity,
   edgeWidth,
-  labelMaxWidth,
-  nodeFontSize,
+  eventNodeWidth,
+  filterVisibleGraph,
+  placeIncrementally,
   seedPositions,
+  taperedEdgePath,
+  trimToNodeEdges,
+  truncateEventLabel,
+  CENTER_RADIUS,
+  EVENT_NODE,
   NODE_RADIUS,
+  type Curve,
+  type Position,
 } from '@/lib/graphLayout'
+import { eventSubtitle } from '@/lib/graphEvent'
 import { bfsDistances } from '@/lib/graphTraversal'
 import { GraphTooltip } from '@/components/graph/GraphTooltip'
-import { hideTooltip, moveTooltip, showTooltip } from '@/lib/graphTooltip'
+import { hideTooltip, moveTooltip, showTooltip, type TooltipContent } from '@/lib/graphTooltip'
+import { buildLinkCard } from '@/lib/linkCard'
 import { useCanvasSize, type CanvasSize } from '@/lib/useCanvasSize'
 import { T } from '@/lib/graphTheme'
+import { nodeLogoUrl } from '@/lib/stockLogo'
 
 export interface GraphCanvasRef {
   zoomIn: () => void
   zoomOut: () => void
   resetZoom: () => void
+  nodeRects: (id: string) => { body: DOMRect; label: DOMRect | null } | null
+  linkMidpoint: (id: string) => { x: number; y: number } | null
 }
 
-/** 캔버스에서 강조할 대상 — 부모(선택 상태)가 유일한 출처다 */
 export type GraphHighlight =
-  /**
-   * hops: 대상에서 몇 단계까지 따라가 강조할지 (기본 1). 0이면 대상 노드와 그들 사이 관계만.
-   * camera: 강조 대상으로 카메라를 옮기고 그 노드들을 제자리에 고정할지 (기본 true).
-   *   상시 켜 두는 배경 강조에는 false를 준다 — 그렇지 않으면 화면이 계속 끌려다니고
-   *   레이아웃이 잦아든 뒤의 "전체 보기" 자동 맞춤도 일어나지 않는다.
-   */
   | { kind: 'nodes'; ids: string[]; hops?: number; camera?: boolean }
   | { kind: 'link'; id: string }
+
+/**
+ * 잠깐 켜 보기 — 선택(GraphHighlight)과 달리 카메라를 움직이지 않고, 끝나면 원래 선택 강조로 돌아간다.
+ * link는 패널의 이웃 행, nodes·links는 범례의 한 종류에 올렸을 때다.
+ */
+export type GraphPreview =
+  | { kind: 'link'; id: string }
+  | { kind: 'links'; ids: string[] }
+  | { kind: 'nodes'; ids: string[] }
 
 interface Props {
   data: GraphData
   onNodeClick: (node: GraphNode) => void
+  /** 노드 더블클릭 — 그 노드를 새 중심으로 다시 조회하는 단축 동작 */
+  onNodeDoubleClick?: (node: GraphNode) => void
   onLinkClick: (link: GraphLink) => void
   /** 빈 캔버스 클릭 — 선택 해제 */
   onBackgroundClick: () => void
   highlight: GraphHighlight | null
-  selectedTypes: Set<EntityType>
+  /** 잠깐 켜 볼 대상 — null로 돌아오면 원래 선택 강조로 복원한다. 참조가 바뀔 때만 다시 칠하므로 호출자가 메모이즈한다 */
+  preview?: GraphPreview | null
+  /** 지금 조회의 중심 노드 — 유일하게 크게 그리고 글로우를 두른다 */
+  centerId?: string | null
+  /**
+   * 중심처럼 크게·후광 있게 그릴 노드들 — 뉴스 모달의 "기사 관련 기업". 자리 고정은 하지 않는다(그건 centerId만).
+   * 참조가 바뀌면 다시 그리므로 호출자가 메모이즈해야 한다.
+   */
+  primaryIds?: Set<string>
+  /** 항상 켜진 색으로 그릴 간선 — 뉴스 모달의 "기사에서 추출된 관계". 나머지는 기본 슬레이트로 물러난다 */
+  seedLinkIds?: Set<string>
+  /** 간선 툴팁 부제 뒤에 붙일 꼬리표 (예: 기사에서 추출) — 없으면 부제만 보인다 */
+  linkTag?: (link: GraphLink) => string | null
+  selectedCategories: Set<NodeCategory>
   selectedPredicates: Set<Predicate>
+  /** 이벤트 기간 시작일('YYYY-MM-DD') — 그 전에 끝난 이벤트는 숨긴다. 없으면 전체 */
+  eventCutoff?: string | null
 }
 
 /** 하이라이트 한 번을 그리는 데 필요한 모든 것 — 노드/간선 강조가 이 한 형태로 수렴한다 */
@@ -65,19 +100,37 @@ interface HighlightSpec {
   /** 강조 대상의 이웃 (간선 강조 시에는 비어 있다) */
   neighbors: Set<string>
   isLinkOn: (link: GraphLink) => boolean
-  focusStrokeWidth: number
-  linkOnOpacity: number
-  linkOffOpacity: number
-  linkWidthBump: number
 }
 
 interface D3State {
   nodes: GraphNode[]
   applyHighlight: (highlight: GraphHighlight | null) => void
+  applyPreview: (preview: GraphPreview) => void
 }
 
+/**
+ * 지식그래프 캔버스.
+ *
+ * 시각 원칙: 대담함은 중심 노드 한 곳에만. 나머지 노드는 작은 점, 라벨은 점 아래 잉크 글자,
+ * 간선은 종이 위 연필선처럼 물러난 슬레이트 곡선이다. 색은 호버·선택 때만 켠다.
+ */
 export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanvas(
-  { data, onNodeClick, onLinkClick, onBackgroundClick, highlight, selectedTypes, selectedPredicates },
+  {
+    data,
+    onNodeClick,
+    onNodeDoubleClick,
+    onLinkClick,
+    onBackgroundClick,
+    highlight,
+    preview = null,
+    centerId = null,
+    primaryIds,
+    seedLinkIds,
+    linkTag,
+    selectedCategories,
+    selectedPredicates,
+    eventCutoff = null,
+  },
   ref,
 ) {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -93,6 +146,20 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
   const fitTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity)
   /** 사용자가 직접 확대/이동했는지 — 이후 자동 맞춤이 카메라를 뺏지 않도록 */
   const userMovedRef = useRef(false)
+  /**
+   * 지금까지 본 노드들의 좌표 — 홉·범위·필터가 바뀌어 다시 그릴 때 남아 있는 노드가 제자리를 지킨다.
+   * 사라졌다 돌아온 노드도 예전 자리로 가도록 지우지 않고 쌓는다.
+   */
+  const positionsRef = useRef(new Map<string, Position>())
+  /**
+   * 부모 콜백은 ref로 받아 d3 핸들러가 호출 시점의 최신 함수를 부른다.
+   * 메인 이펙트 의존성에 넣으면 부모가 콜백을 새로 만들 때마다(예: URL 쿼리 변경) 데이터가 같아도
+   * 그래프를 통째로 다시 그려 카메라와 레이아웃이 튄다.
+   */
+  const handlersRef = useRef({ onNodeClick, onNodeDoubleClick, onLinkClick, onBackgroundClick, linkTag })
+  useEffect(() => {
+    handlersRef.current = { onNodeClick, onNodeDoubleClick, onLinkClick, onBackgroundClick, linkTag }
+  })
 
   // 리사이즈 시에는 이미 배치된 그래프를 새 중심으로 평행이동한다 (약한 forceX/Y로는 못 따라옴)
   const handleResize = useCallback((next: CanvasSize, prev: CanvasSize) => {
@@ -132,29 +199,36 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         .duration(500)
         .call(zoomRef.current.transform, fitTransformRef.current)
     },
+    linkMidpoint: (id: string) => {
+      const path = svgRef.current?.querySelector<SVGPathElement>(`[data-link="${CSS.escape(id)}"]`)
+      const matrix = path?.getScreenCTM()
+      if (!path || !matrix) return null
+      const point = path.getPointAtLength(path.getTotalLength() / 2)
+      const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix)
+      return { x: screen.x, y: screen.y }
+    },
+    nodeRects: (id: string) => {
+      const svg = svgRef.current
+      if (!svg) return null
+      const key = CSS.escape(id)
+      const body = svg.querySelector(`[data-node-body="${key}"]`)
+      if (!body) return null
+      const label = svg.querySelector(`[data-node-label="${key}"]`)
+      return { body: body.getBoundingClientRect(), label: label?.getBoundingClientRect() ?? null }
+    },
   }))
 
-  const getFilteredData = useCallback(() => {
-    const typeOf = new Map(data.nodes.map((n) => [n.id, n.type]))
-    const links = data.links.filter((l) => {
-      if (!selectedPredicates.has(l.type)) return false
-      const s = typeOf.get(endId(l.source))
-      const t = typeOf.get(endId(l.target))
-      return !!s && !!t && selectedTypes.has(s) && selectedTypes.has(t)
-    })
-    const connected = new Set<string>()
-    links.forEach((l) => {
-      connected.add(endId(l.source))
-      connected.add(endId(l.target))
-    })
-    const nodes = data.nodes.filter((n) => selectedTypes.has(n.type) && connected.has(n.id))
-    return { nodes, links }
-  }, [data, selectedTypes, selectedPredicates])
+  // 중심은 연결이 없어도 남긴다 — 관계가 0개인 기업도 캔버스에 자기 노드는 보여야 한다
+  const getFilteredData = useCallback(
+    () => filterVisibleGraph(data, selectedCategories, selectedPredicates, centerId, eventCutoff),
+    [data, selectedCategories, selectedPredicates, centerId, eventCutoff],
+  )
 
   // ========== MAIN EFFECT ==========
   useEffect(() => {
     if (!svgRef.current || !data || !sized) return
     const tooltip = tooltipRef.current
+    hideTooltip(tooltip)
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
@@ -168,45 +242,67 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     const degree = buildDegreeMap(links)
     const adjacency = buildAdjacency(links)
-    // 크기는 지금 화면에 있는 노드들 사이의 상대 차수로 결정된다
-    const radius = createRadiusScale(nodes, degree)
-    const maxRadius = nodes.length ? Math.max(...nodes.map(radius)) : NODE_RADIUS.min
+    // 크기는 지금 화면에 있는 노드들 사이의 상대 차수로 결정된다. 중심만 예외로 항상 가장 크다.
+    // 이벤트 허브의 큰 차수가 기업 크기 척도를 눌러버리지 않도록 척도 계산에서는 이벤트 노드를 뺀다
+    const degreeRadius = createRadiusScale(
+      nodes.filter((n) => n.type !== 'event'),
+      degree,
+    )
+    // 중심과 메인 노드는 같은 크기 — 화면에서 "이 그래프의 주인공"이 여럿일 수 있다(뉴스 모달)
+    const isPrimary = (d: GraphNode) => d.id === centerId || (primaryIds?.has(d.id) ?? false)
+    // 로고 노드는 그림이 읽히도록 차수 척도를 한 단계 큰 범위로 옮긴다
+    const hasLogo = (d: GraphNode) => nodeLogoUrl(d) != null
+    const radius = (d: GraphNode) =>
+      isPrimary(d) ? CENTER_RADIUS : hasLogo(d) ? logoRadius(degreeRadius(d)) : degreeRadius(d)
+    const isEvent = (d: GraphNode) => d.type === 'event'
+    // 노드 본체의 폭·높이. 기업은 폭 == 높이(원), 이벤트는 가로로 긴 태그 — rx를 높이 절반으로 주면 둘 다 rect 하나로 그린다
+    const bodyW = (d: GraphNode) => (isEvent(d) ? eventNodeWidth(d.label) : radius(d) * 2)
+    const bodyH = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.height : radius(d) * 2)
+    /** 힘·충돌·카메라 여백에 쓰는 반폭 — 태그는 폭의 절반이라 이웃이 옆으로 겹치지 않는다 */
+    const reach = (d: GraphNode) => bodyW(d) / 2
+    /** 간선이 멈추는 테두리 거리 — 태그는 높이 절반. 가로로 들어오는 선의 끝은 태그 몸통 뒤에 숨는다 */
+    const rim = (d: GraphNode) => bodyH(d) / 2
+    const maxRadius = nodes.length ? Math.max(...nodes.map(reach)) : NODE_RADIUS.min
+    // 줌아웃 상태에서도 라벨을 남길 노드 — 중심과 허브
+    const isHub = (d: GraphNode) => isPrimary(d) || (degree.get(d.id) ?? 0) >= HUB_DEGREE
 
-    // arrow markers — 화살촉은 간선 색을 따라가야 하므로 출발 엔티티 종류별로 하나씩 만든다
+    // 배경 도트 그리드 — 줌·팬을 따라 움직여 공간감을 준다. 클릭은 통과시켜 배경 클릭(선택 해제)이 살아 있다.
     const defs = svg.append('defs')
-    const addArrowMarker = (id: string, fill: string) => {
-      defs
-        .append('marker')
-        .attr('id', id)
-        .attr('viewBox', `0 ${-ARROW_LENGTH / 2} ${ARROW_LENGTH} ${ARROW_LENGTH}`)
-        // userSpaceOnUse — 기본값(strokeWidth)은 화살촉이 선 굵기에 비례해 커져
-        // 굵은 간선에서 과하게 커지고 끝 위치도 굵기마다 달라진다.
-        .attr('markerUnits', 'userSpaceOnUse')
-        // 간선을 이미 노드 둘레에서 잘랐으므로 화살촉 끝을 선 끝에 정확히 맞춘다
-        .attr('refX', ARROW_LENGTH)
-        .attr('refY', 0)
-        .attr('markerWidth', ARROW_LENGTH)
-        .attr('markerHeight', ARROW_LENGTH)
-        .attr('orient', 'auto')
-        .append('path')
-        .attr('d', `M0,${-ARROW_HALF_WIDTH}L${ARROW_LENGTH},0L0,${ARROW_HALF_WIDTH}`)
-        .attr('fill', fill)
-        // 선의 stroke-opacity는 마커에 상속되지 않아 직접 맞춰준다
-        .attr('fill-opacity', EDGE_OPACITY)
-    }
-    ALL_ENTITY_TYPES.forEach((type) => addArrowMarker(arrowId(type), NODE_COLORS[type]))
-    addArrowMarker(ARROW_OFF_ID, T.hairlineSoft)
+    const dots = defs
+      .append('pattern')
+      .attr('id', DOT_PATTERN_ID)
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('width', DOT_GRID)
+      .attr('height', DOT_GRID)
+    dots
+      .append('circle')
+      .attr('cx', 1)
+      .attr('cy', 1)
+      .attr('r', 1)
+      .attr('fill', T.ink)
+      .attr('fill-opacity', DOT_OPACITY)
+    // 로고는 원으로 잘라 그린다 — 경계 상자 기준이라 크기가 달라도 clipPath 하나로 된다
+    defs
+      .append('clipPath')
+      .attr('id', LOGO_CLIP_ID)
+      .attr('clipPathUnits', 'objectBoundingBox')
+      .append('circle')
+      .attr('cx', 0.5)
+      .attr('cy', 0.5)
+      .attr('r', 0.5)
+    svg
+      .append('rect')
+      .attr('width', '100%')
+      .attr('height', '100%')
+      .attr('fill', `url(#${DOT_PATTERN_ID})`)
+      .attr('pointer-events', 'none')
 
-    // 간선의 색은 출발(부모) 엔티티를 따른다 — 어느 엔티티에서 뻗어 나온 관계인지 색으로 읽힌다
-    const typeOf = new Map(nodes.map((n) => [n.id, n.type]))
-    const sourceType = (l: GraphLink) => typeOf.get(endId(l.source))
-    const linkColor = (l: GraphLink) => {
-      const type = sourceType(l)
-      return type ? NODE_COLORS[type] : T.hairline
-    }
-    const linkArrow = (l: GraphLink) => {
-      const type = sourceType(l)
-      return `url(#${type ? arrowId(type) : ARROW_OFF_ID})`
+    // 간선을 켤 때의 색은 출발(공급자) 노드를 따른다 — 어느 시장의 기업에서 뻗어 나온 관계인지 읽힌다
+    const categoryOf = new Map(nodes.map((n) => [n.id, nodeCategory(n)]))
+    const labelOf = new Map(nodes.map((n) => [n.id, n.label]))
+    const sourceColor = (l: GraphLink) => {
+      const c = categoryOf.get(endId(l.source))
+      return c ? CATEGORY_COLORS[c] : T.edge
     }
 
     const g = svg.append('g')
@@ -216,12 +312,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .scaleExtent([0.1, 8])
       .on('zoom', (event) => {
         g.attr('transform', event.transform)
-        // 서술어 라벨은 가까이 봐야 읽히므로 줌 레벨로 켜고 끈다(LOD).
-        // 하이라이트 중엔 paint()가 관련 라벨만 남기므로 건드리지 않는다.
+        dots.attr('patternTransform', event.transform.toString())
+        // 라벨은 줌 레벨로 켜고 끈다(LOD). 하이라이트 중엔 paint()가 관련 라벨만 남기므로 건드리지 않는다.
         zoomK = event.transform.k
-        if (!highlightRef.current) {
-          linkLabel.attr('opacity', zoomK >= LINK_LABEL_MIN_ZOOM ? 1 : 0)
-        }
+        if (!highlightRef.current) label.attr('opacity', labelLod)
         // sourceEvent가 있으면 휠/드래그 등 사용자 제스처
         if (event.sourceEvent) userMovedRef.current = true
       })
@@ -230,113 +324,139 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     userMovedRef.current = false
     fitTransformRef.current = d3.zoomIdentity
 
-    // === LINKS (visible) ===
+    // === EDGES ===
+    // 테이퍼 곡선 — 공급자 쪽이 굵고 수요자 쪽으로 가늘어져 화살촉 없이 방향이 읽힌다.
+    // fill로 그리는 닫힌 도형이라 굵기는 tick에서 path로 정해지고, 강조는 색·불투명도로만 준다.
+    // 이벤트 간선만 예외 — 근거가 쌓이는 관계가 아니라 "언급됐다"는 사실이므로 가는 점선 stroke로 물러난다.
+    const isDashed = isEventLink
     const link = g
       .append('g')
-      .selectAll<SVGLineElement, GraphLink>('line')
+      .selectAll<SVGPathElement, GraphLink>('path')
       .data(links)
-      .join('line')
-      .attr('stroke', linkColor)
-      .attr('stroke-opacity', EDGE_OPACITY)
-      .attr('stroke-width', edgeWidth)
-      .attr('marker-end', linkArrow)
+      .join('path')
+      .attr('stroke-width', DASHED_WIDTH)
+      .attr('stroke-dasharray', (l) => (isDashed(l) ? '3 3' : null))
+      .attr('stroke-linecap', 'round')
       .attr('pointer-events', 'none')
 
-    // === LINK HIT AREAS (transparent, wide, clickable) ===
+    /** 간선 색·진하기 — 테이퍼(fill)와 점선(stroke)에 같은 값을 입힌다 */
+    const tintLinks = (color: (l: GraphLink) => string, opacity: (l: GraphLink) => number) => {
+      link
+        .attr('fill', (l) => (isDashed(l) ? 'none' : color(l)))
+        .attr('stroke', (l) => (isDashed(l) ? color(l) : 'none'))
+        .attr('fill-opacity', opacity)
+        .attr('stroke-opacity', opacity)
+    }
+    // 시드 간선은 강조가 없어도 켜져 있다 — 호버·선택에서 배운 "켜짐 = 관련 있음" 문법을 그대로 쓴다
+    const isSeed = (l: GraphLink) => seedLinkIds?.has(l.id) ?? false
+    const baseColor = (l: GraphLink) => (isSeed(l) ? sourceColor(l) : T.edge)
+    const baseOpacity = (l: GraphLink) => (isSeed(l) ? SEED_OPACITY : edgeOpacity(l))
+    tintLinks(baseColor, baseOpacity)
+
+    // === EDGE HIT AREAS === 곡선 중심선에 넓은 투명 stroke
     const linkHit = g
       .append('g')
-      .selectAll<SVGLineElement, GraphLink>('line')
+      .selectAll<SVGPathElement, GraphLink>('path')
       .data(links)
-      .join('line')
+      .join('path')
+      .attr('data-link', (l) => l.id)
+      .attr('fill', 'none')
       .attr('stroke', 'transparent')
-      .attr('stroke-width', (l) => Math.max(14, edgeWidth(l) + 12))
-      .attr('cursor', 'pointer')
+      .attr('stroke-width', 14)
+      // 이벤트 간선은 클릭해도 열리는 게 없으니 클릭 가능해 보이지 않게 한다 (hover 툴팁은 유지)
+      .attr('cursor', (l) => (isEventLink(l) ? 'default' : 'pointer'))
 
-    // === LINK LABELS (predicate) ===
-    // 간선 중간에 "끼워 넣는다" — 배경판이 선을 끊고 그 자리에 관계 타입이 들어간다.
-    // 각 라벨은 tick마다 간선 중점으로 옮기고 간선 방향으로 회전시킨다.
-    const linkLabel = g
-      .append('g')
-      .selectAll<SVGGElement, GraphLink>('g')
-      .data(links)
-      .join('g')
-      .attr('pointer-events', 'none')
-      // 초기(전체 보기) 배율에선 숨김 — 줌인 또는 하이라이트로 드러난다
-      .attr('opacity', 0)
-
-    const linkLabelPlate = linkLabel.append('rect').attr('fill', T.canvas).attr('rx', 2)
-
-    const linkLabelText = linkLabel
-      .append('text')
-      .text((d) => PREDICATE_LABELS[d.type] ?? d.type)
-      .attr('font-size', LINK_LABEL_FONT_SIZE)
-      .attr('font-weight', 500)
-      .attr('letter-spacing', 0.2)
-      .attr('fill', T.muted)
-      .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'central')
-
-    // 서술어마다 길이가 달라 배경판은 실제 렌더 폭을 재서 맞춘다
-    const plates = linkLabelPlate.nodes()
-    const plateWidth = new Map<string, number>()
-    linkLabelText.each(function (d, i) {
-      const box = this.getBBox()
-      const width = box.width + LINK_LABEL_PAD.x * 2
-      plateWidth.set(d.id, width)
-      d3.select(plates[i])
-        .attr('x', box.x - LINK_LABEL_PAD.x)
-        .attr('y', box.y - LINK_LABEL_PAD.y)
-        .attr('width', width)
-        .attr('height', box.height + LINK_LABEL_PAD.y * 2)
-    })
-
-    // === NODES ===
-    const node = g
+    // === CENTER GLOW === 중심만 같은 색의 옅은 후광을 두른다 — 화면에서 유일한 초점
+    const glow = g
       .append('g')
       .selectAll<SVGCircleElement, GraphNode>('circle')
-      .data(nodes)
+      .data(nodes.filter(isPrimary))
       .join('circle')
-      .attr('r', radius)
-      .attr('fill', (d) => NODE_COLORS[d.type] || T.muted)
-      .attr('stroke', T.canvas)
-      .attr('stroke-width', 1.5)
-      .attr('cursor', 'pointer')
+      .attr('r', (d) => radius(d) + CENTER_GLOW)
+      .attr('fill', (d) => nodeColor(d))
+      .attr('fill-opacity', 0.14)
+      .attr('pointer-events', 'none')
 
-    // === NODE LABELS (원 안쪽) ===
-    // 이름이 원에 안 들어가면 폰트를 9px까지 줄이고, 그래도 안 되면 두 줄로 감싼다.
-    // 넘치는 줄만 말줄임 — 라벨은 항상 원 안에 머문다 (전체 이름은 툴팁·상세 패널에서).
-    const labelFontSize = new Map<string, number>()
+    // === NODES === 작은 채움 점(기업) 또는 태그(이벤트). 흰 테두리로 간선과 떼어 놓는다
+    const node = g
+      .append('g')
+      .selectAll<SVGRectElement, GraphNode>('rect')
+      .data(nodes)
+      .join('rect')
+      .attr('data-node-body', (d) => d.id)
+      .attr('width', bodyW)
+      .attr('height', bodyH)
+      .attr('rx', (d) => bodyH(d) / 2)
+      .attr('fill', (d) => nodeColor(d))
+      .attr('stroke', T.paper)
+      .attr('stroke-width', 1.5)
+      .attr('pointer-events', 'none')
+
+    // === LOGOS === 시장색 원 위에 한 겹 안쪽으로 얹는다 — 바깥 띠에 시장색이 남고, 로드에 실패하면 원래 점으로 돌아간다
+    const logoSize = (d: GraphNode) => bodyW(d) - LOGO_RING * 2
+    const logo = g
+      .append('g')
+      .selectAll<SVGImageElement, GraphNode>('image')
+      .data(nodes.filter(hasLogo))
+      .join('image')
+      .attr('href', (d) => nodeLogoUrl(d)!)
+      .attr('width', logoSize)
+      .attr('height', logoSize)
+      .attr('clip-path', `url(#${LOGO_CLIP_ID})`)
+      .attr('preserveAspectRatio', 'xMidYMid slice')
+      .attr('pointer-events', 'none')
+      .on('error', function () {
+        d3.select(this).remove()
+      })
+
+    // === LABELS === 기업은 점 아래 지도 라벨(흰 외곽선으로 간선 위에서도 읽힌다), 이벤트는 태그 안 흰 글자
     const label = g
       .append('g')
       .selectAll<SVGTextElement, GraphNode>('text')
       .data(nodes)
       .join('text')
-      .attr('font-weight', 600)
-      .attr('fill', (d) => NODE_TEXT_COLORS[d.type])
+      .attr('data-node-label', (d) => d.id)
+      .text((d) => (isEvent(d) ? truncateEventLabel(d.label) : truncateLabel(d.label)))
+      .attr('font-size', (d) =>
+        isEvent(d) ? EVENT_LABEL_SIZE : isPrimary(d) ? CENTER_LABEL_SIZE : LABEL_SIZE,
+      )
+      .attr('font-weight', (d) => (isPrimary(d) ? 600 : 500))
+      .attr('fill', (d) => (isEvent(d) ? T.paper : T.ink))
       .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'central')
+      .attr('dominant-baseline', (d) => (isEvent(d) ? 'central' : 'hanging'))
+      .attr('stroke', (d) => (isEvent(d) ? 'none' : T.canvas))
+      .attr('stroke-width', 3)
+      .attr('stroke-linejoin', 'round')
+      .attr('paint-order', 'stroke')
       .attr('pointer-events', 'none')
-      .each(function (d) {
-        labelFontSize.set(
-          d.id,
-          layoutNodeLabel(this, d.label, labelMaxWidth(radius(d)), nodeFontSize(radius(d))),
-        )
-      })
-      .attr('font-size', (d) => labelFontSize.get(d.id)!)
+
+    /** 줌아웃 상태에서는 허브·중심 라벨만 남긴다 — 168개 라벨이 겹치면 아무것도 못 읽는다. 태그는 글자가 몸통이라 항상 보인다 */
+    const labelLod = (d: GraphNode) => (isEvent(d) || zoomK >= LABEL_MIN_ZOOM || isHub(d) ? 1 : 0)
+    label.attr('opacity', labelLod)
+
+    // === NODE HIT AREAS === 점이 작아 커서·손가락이 놓치지 않도록 넓힌다. 라벨 위에 올려 클릭을 가로채지 않게 한다
+    const hitW = (d: GraphNode) => (isEvent(d) ? bodyW(d) + 8 : Math.max(radius(d) + 6, HIT_RADIUS) * 2)
+    const hitH = (d: GraphNode) => (isEvent(d) ? bodyH(d) + 8 : hitW(d))
+    const nodeHit = g
+      .append('g')
+      .selectAll<SVGRectElement, GraphNode>('rect')
+      .data(nodes)
+      .join('rect')
+      .attr('width', hitW)
+      .attr('height', hitH)
+      .attr('rx', (d) => hitH(d) / 2)
+      .attr('fill', 'transparent')
+      .attr('cursor', 'pointer')
 
     // ===== 하이라이트 =====
     // 노드 강조·간선 강조·해제가 전부 이 한 경로를 지난다.
     function paint(spec: HighlightSpec | null) {
       if (!spec) {
-        node.attr('opacity', 1).attr('stroke', T.canvas).attr('stroke-width', 1.5)
-        link
-          .attr('stroke', linkColor)
-          .attr('stroke-opacity', EDGE_OPACITY)
-          .attr('stroke-width', edgeWidth)
-          .attr('marker-end', linkArrow)
-        label.attr('opacity', 0.85)
-        linkLabel.attr('opacity', zoomK >= LINK_LABEL_MIN_ZOOM ? 1 : 0)
-        linkLabelText.attr('fill', T.muted)
+        node.attr('opacity', 1).attr('stroke', T.paper).attr('stroke-width', 1.5)
+        logo.attr('opacity', 1)
+        glow.attr('opacity', 1)
+        tintLinks(baseColor, baseOpacity)
+        label.attr('opacity', labelLod)
         return
       }
 
@@ -344,24 +464,19 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       const isRelevant = (id: string) => focus.has(id) || neighbors.has(id)
 
       node
-        .attr('opacity', (d) => (isRelevant(d.id) ? 1 : 0.12))
-        .attr('stroke', (d) =>
-          focus.has(d.id) ? T.primary : neighbors.has(d.id) ? T.canvas : T.hairlineSoft,
-        )
-        .attr('stroke-width', (d) =>
-          focus.has(d.id) ? spec.focusStrokeWidth : neighbors.has(d.id) ? 2 : 0.5,
-        )
-      link
-        // 강조된 간선도 제 색(출발 엔티티 색)을 유지한다 — 강조는 굵기·투명도로 준다
-        .attr('stroke', (l) => (isLinkOn(l) ? linkColor(l) : T.hairlineSoft))
-        .attr('stroke-opacity', (l) => (isLinkOn(l) ? spec.linkOnOpacity : spec.linkOffOpacity))
-        .attr('stroke-width', (l) =>
-          isLinkOn(l) ? edgeWidth(l) + spec.linkWidthBump : edgeWidth(l) * 0.5,
-        )
-        .attr('marker-end', (l) => (isLinkOn(l) ? linkArrow(l) : `url(#${ARROW_OFF_ID})`))
-      label.attr('opacity', (d) => (isRelevant(d.id) ? 1 : 0.08))
-      linkLabel.attr('opacity', (l) => (isLinkOn(l) ? 1 : 0.1))
-      linkLabelText.attr('fill', (l) => (isLinkOn(l) ? T.ink : T.muted))
+        .attr('opacity', (d) => (isRelevant(d.id) ? 1 : DIM))
+        // 선택 노드는 잉크색 링 — 어떤 채움색 위에서도 "여기"로 읽힌다
+        .attr('stroke', (d) => (focus.has(d.id) ? T.ink : T.paper))
+        .attr('stroke-width', (d) => (focus.has(d.id) ? 2 : 1.5))
+      logo.attr('opacity', (d) => (isRelevant(d.id) ? 1 : DIM))
+      glow.attr('opacity', (d) => (isRelevant(d.id) ? 1 : DIM))
+      // 켜진 간선만 제 색(출발 노드 색)을 입는다 — 평소의 슬레이트와 대비되어 관계가 튀어나온다
+      tintLinks(
+        (l) => (isLinkOn(l) ? sourceColor(l) : T.edge),
+        (l) => (isLinkOn(l) ? 0.85 : 0.08),
+      )
+      // 관련 노드의 라벨은 줌과 무관하게 보인다 — 무엇을 골랐는지 이름으로 확인해야 한다
+      label.attr('opacity', (d) => (isRelevant(d.id) ? 1 : labelLod(d) * DIM_LABEL))
     }
 
     /** 노드 강조 — 대상에서 hops단계 안에 드는 노드·간선만 남기고 나머지를 흐린다 */
@@ -383,10 +498,6 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
           if (from == null || to == null) return false
           return Math.min(from, to) < hops || (from === 0 && to === 0)
         },
-        focusStrokeWidth: 4,
-        linkOnOpacity: 0.9,
-        linkOffOpacity: 0.3,
-        linkWidthBump: 1,
       }
     }
 
@@ -398,25 +509,50 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         focus: new Set([endId(target.source), endId(target.target)]),
         neighbors: new Set<string>(),
         isLinkOn: (l) => l.id === linkId,
-        focusStrokeWidth: 3,
-        linkOnOpacity: 0.95,
-        linkOffOpacity: 0.25,
-        linkWidthBump: 1.5,
       }
     }
 
     const applyHighlight = (h: GraphHighlight | null) =>
       paint(h == null ? null : h.kind === 'link' ? linkSpec(h.id) : nodesSpec(h.ids, h.hops ?? 1))
 
-    d3StateRef.current = { nodes, applyHighlight }
+    /**
+     * 한 종류 전체를 켜 볼 때의 강조 — 선택이 아니므로 잉크 링(focus)은 두르지 않고 밝기만 남긴다.
+     * 노드 묶음은 그 노드들과 서로를 잇는 간선을, 간선 묶음은 그 간선들과 양 끝을 켠다.
+     */
+    const groupSpec = (nodeIds: Set<string>, isLinkOn: (l: GraphLink) => boolean): HighlightSpec => ({
+      focus: new Set<string>(),
+      neighbors: nodeIds,
+      isLinkOn,
+    })
+    const applyPreview = (p: GraphPreview) => {
+      if (p.kind === 'link') return paint(linkSpec(p.id))
+      if (p.kind === 'nodes') {
+        const ids = new Set(p.ids)
+        return paint(groupSpec(ids, (l) => ids.has(endId(l.source)) && ids.has(endId(l.target))))
+      }
+      const linkIds = new Set(p.ids)
+      const ends = new Set<string>()
+      links.forEach((l) => {
+        if (!linkIds.has(l.id)) return
+        ends.add(endId(l.source))
+        ends.add(endId(l.target))
+      })
+      paint(groupSpec(ends, (l) => linkIds.has(l.id)))
+    }
+
+    d3StateRef.current = { nodes, applyHighlight, applyPreview }
     // 필터 변경 등으로 그래프를 다시 그렸을 때도 현재 선택 강조를 유지한다
     applyHighlight(highlightRef.current)
 
     // ===== node interactions =====
-    node
+    nodeHit
       .on('mouseover', (event: MouseEvent, d) => {
         if (!highlightRef.current) applyHighlight({ kind: 'nodes', ids: [d.id] })
-        showTooltip(tooltip, event, d.label, ENTITY_LABELS[d.type], NODE_COLORS[d.type] || T.muted)
+        showTooltip(tooltip, event, {
+          title: d.label,
+          color: nodeColor(d),
+          lines: [isEvent(d) ? eventSubtitle(d) : CATEGORY_LABELS[nodeCategory(d)]],
+        })
       })
       .on('mousemove', (event: MouseEvent) => moveTooltip(tooltip, event))
       .on('mouseout', () => {
@@ -425,20 +561,29 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       })
       .on('click', (event: MouseEvent, d) => {
         event.stopPropagation()
-        onNodeClick(d)
+        handlersRef.current.onNodeClick(d)
       })
+      .on('dblclick', (event: MouseEvent, d) => {
+        // svg의 줌(dblclick.zoom)까지 올라가면 재중심과 확대가 동시에 일어난다
+        event.stopPropagation()
+        handlersRef.current.onNodeDoubleClick?.(d)
+      })
+
+    /** 간선 카드 — 출발 [관계 →] 도착, 품목, 근거. 태그 색은 켜진 간선과 같은 출발 기업 색 */
+    const linkContent = (d: GraphLink): TooltipContent => {
+      const card = buildLinkCard(d, (id) => labelOf.get(id) ?? '', handlersRef.current.linkTag?.(d) ?? null)
+      return {
+        title: { from: card.from, relation: card.relation, to: card.to },
+        color: sourceColor(d),
+        lines: [card.items ?? '', card.evidence],
+      }
+    }
 
     // ===== edge interactions =====
     linkHit
       .on('mouseover', (event: MouseEvent, d) => {
         if (!highlightRef.current) applyHighlight({ kind: 'link', id: d.id })
-        showTooltip(
-          tooltip,
-          event,
-          `${endId(d.source).replace(/^n:/, '')} → ${endId(d.target).replace(/^n:/, '')}`,
-          d.type + (d.item ? ` · ${d.item.text}` : ''),
-          linkColor(d),
-        )
+        showTooltip(tooltip, event, linkContent(d))
       })
       .on('mousemove', (event: MouseEvent) => moveTooltip(tooltip, event))
       .on('mouseout', () => {
@@ -447,17 +592,17 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       })
       .on('click', (event: MouseEvent, d) => {
         event.stopPropagation()
-        onLinkClick(d)
+        handlersRef.current.onLinkClick(d)
       })
 
     svg.on('click', (event: MouseEvent) => {
-      if (event.target === svgRef.current) onBackgroundClick()
+      if (event.target === svgRef.current) handlersRef.current.onBackgroundClick()
     })
 
-    // drag
-    node.call(
+    // drag — 히트 영역을 잡아 끈다 (점 자체는 pointer-events가 없다)
+    nodeHit.call(
       d3
-        .drag<SVGCircleElement, GraphNode>()
+        .drag<SVGRectElement, GraphNode>()
         .on('start', (event, d) => {
           if (!event.active) simulation.alphaTarget(0.3).restart()
           d.fx = d.x
@@ -469,18 +614,32 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         })
         .on('end', (event, d) => {
           if (!event.active) simulation.alphaTarget(0)
+          // 중심은 놓은 자리에 그대로 못 박힌다 — 나머지는 다시 힘에 맡긴다
+          if (d.id === centerId) return
           d.fx = null
           d.fy = null
         }),
     )
 
     // ===== simulation (spread-out force layout) =====
-    seedPositions(nodes, width, height)
+    // 기억한 좌표가 하나라도 있으면 이어 그린다 — 홉을 바꿔도 오른쪽에 있던 기업이 왼쪽으로 가지 않는다
+    const remembered = positionsRef.current
+    const incremental = nodes.some((n) => remembered.has(n.id))
+    if (incremental) placeIncrementally(nodes, links, remembered, width, height)
+    else seedPositions(nodes, width, height)
 
-    /** 이번 레이아웃에서 자동 맞춤을 이미 수행했는지 */
-    let fitted = false
+    // 중심은 제자리에 못 박는다 — 처음엔 캔버스 가운데, 이어 그릴 땐 기억한 자리. 그래프가 통째로 떠다니지 않는다
+    const center = nodes.find((n) => n.id === centerId)
+    if (center) {
+      if (!incremental) {
+        center.x = width / 2
+        center.y = height / 2
+      }
+      center.fx = center.x
+      center.fy = center.y
+    }
 
-    // 힘은 노드 크기에 연동한다 — 큰 노드일수록 더 밀어내고, 간선도 두 반지름만큼 길어진다.
+    // 점이 작아진 만큼 반발력은 상수항으로 받치고, 충돌 반지름에 라벨 높이를 더해 이름이 겹치지 않게 한다.
     // distanceMax로 먼 노드끼리는 밀지 않게 해 전체가 화면 밖으로 번지는 것을 막는다.
     const simulation = d3
       .forceSimulation<GraphNode>(nodes)
@@ -489,67 +648,81 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         d3
           .forceLink<GraphNode, GraphLink>(links)
           .id((d) => d.id)
-          .distance((l) => radius(l.source as GraphNode) + radius(l.target as GraphNode) + 70)
-          .strength(0.18),
+          .distance((l) => reach(l.source as GraphNode) + reach(l.target as GraphNode) + LINK_LENGTH)
+          // 느슨하게 — 잎 노드가 한 고리에 몰리지 않고 반발력에 밀려 여러 겹으로 퍼진다
+          .strength(0.12),
       )
       .force(
         'charge',
         d3
           .forceManyBody()
-          .strength((d) => -22 * radius(d as GraphNode))
-          .distanceMax(maxRadius * 9),
+          .strength((d) => -(CHARGE_BASE + CHARGE_PER_PX * reach(d as GraphNode)))
+          .distanceMax(420),
       )
-      .force('x', d3.forceX(width / 2).strength(0.06))
-      .force('y', d3.forceY(height / 2).strength(0.06))
+      // 기억한 자리가 있는 노드는 그 자리로, 새 노드는 캔버스 중심으로 약하게 당긴다.
+      // 앵커가 없으면 잎 노드의 각도는 이웃끼리의 반발만으로 정해져 홉을 바꿀 때마다 자리가 뒤바뀐다.
+      .force(
+        'x',
+        d3
+          .forceX<GraphNode>((d) => remembered.get(d.id)?.x ?? width / 2)
+          .strength((d) => (remembered.has(d.id) ? ANCHOR_STRENGTH : 0.06)),
+      )
+      .force(
+        'y',
+        d3
+          .forceY<GraphNode>((d) => remembered.get(d.id)?.y ?? height / 2)
+          .strength((d) => (remembered.has(d.id) ? ANCHOR_STRENGTH : 0.06)),
+      )
       .force(
         'collide',
         d3
           .forceCollide()
-          .radius((d) => radius(d as GraphNode) + 10)
+          .radius((d) => reach(d as GraphNode) + COLLIDE_PAD)
           .strength(0.9),
       )
-      .alpha(0.9)
       .alphaMin(0.01)
       .alphaDecay(0.025)
       .velocityDecay(0.35)
-      .on('tick', () => {
-        // 간선은 노드 중심이 아니라 원 둘레에서 시작·끝난다 (화살촉이 큰 노드에 묻히지 않도록)
-        const segment = new Map<string, Segment>()
-        links.forEach((l) => segment.set(l.id, trimToNodeEdges(l, radius)))
-        const seg = (d: GraphLink) => segment.get(d.id)!
+      .stop()
 
-        link
-          .attr('x1', (d) => seg(d).x1)
-          .attr('y1', (d) => seg(d).y1)
-          .attr('x2', (d) => seg(d).x2)
-          .attr('y2', (d) => seg(d).y2)
-        linkHit
-          .attr('x1', (d) => seg(d).x1)
-          .attr('y1', (d) => seg(d).y1)
-          .attr('x2', (d) => seg(d).x2)
-          .attr('y2', (d) => seg(d).y2)
-        linkLabel
-          .attr('transform', (d) => labelTransform(seg(d)))
-          // 배경판이 간선보다 길면 양 끝 노드를 덮는다 — 그런 간선에서는 라벨을 접는다
-          // (관계 타입은 호버 툴팁·상세 패널에서 계속 확인할 수 있다)
-          .attr('display', (d) =>
-            segmentLength(seg(d)) >= (plateWidth.get(d.id) ?? 0) ? null : 'none',
-          )
-        node.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
-        // 두 줄 라벨의 tspan(x=0 기준)이 함께 움직이도록 좌표는 transform으로 옮긴다
-        label.attr('transform', (d) => `translate(${d.x!},${d.y!})`)
+    /** 현재 좌표를 화면에 옮긴다 — 예열 직후 한 번, 이후 tick마다 */
+    const render = () => {
+      // 간선은 노드 중심이 아니라 테두리에서 시작·끝나고, 살짝 휜 곡선을 따라 폭이 줄어든다
+      const curveOf = new Map<string, Curve>()
+      links.forEach((l) => curveOf.set(l.id, edgeCurve(trimToNodeEdges(l, rim))))
+      const curve = (d: GraphLink) => curveOf.get(d.id)!
 
-        // 레이아웃이 잦아들면 그래프 전체가 보이도록 카메라를 한 번 맞춘다.
-        // 사용자가 이미 확대/이동했거나 특정 요소를 선택한 상태면 건드리지 않는다.
-        if (fitted || simulation.alpha() > 0.05) return
-        fitted = true
-        if (userMovedRef.current || movesCamera(highlightRef.current)) return
-        fitToView(500)
-      })
+      link.attr('d', (d) =>
+        isDashed(d) ? curvePath(curve(d)) : taperedEdgePath(curve(d), edgeWidth(d), TAPER_TIP),
+      )
+      linkHit.attr('d', (d) => curvePath(curve(d)))
+      glow.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
+      node.attr('x', (d) => d.x! - bodyW(d) / 2).attr('y', (d) => d.y! - bodyH(d) / 2)
+      logo.attr('x', (d) => d.x! - logoSize(d) / 2).attr('y', (d) => d.y! - logoSize(d) / 2)
+      nodeHit.attr('x', (d) => d.x! - hitW(d) / 2).attr('y', (d) => d.y! - hitH(d) / 2)
+      label.attr('transform', (d) =>
+        isEvent(d)
+          ? `translate(${d.x!},${d.y!})`
+          : `translate(${d.x!},${d.y! + radius(d) + LABEL_GAP})`,
+      )
+      nodes.forEach((n) => remembered.set(n.id, { x: n.x!, y: n.y! }))
+    }
 
-    /** 노드 전체가 보이도록 카메라를 맞춘다 (바깥 원의 반지름까지 감안) */
+    // 동기 예열 — 첫 프레임부터 자리 잡힌 그래프를 보인다. "터지고 나서 모이는" 애니메이션이 없고,
+    // 카메라 맞춤도 안정화를 기다리지 않아 rAF가 멈추는 숨은 탭에서도 결정적으로 끝난다.
+    // 이어 그릴 땐 알파를 낮춰 기존 배치를 흔들지 않고 새 노드만 자리를 찾게 한다.
+    simulation.alpha(incremental ? INCREMENTAL_ALPHA : 1).tick(WARMUP_TICKS)
+    render()
+    // 특정 요소를 선택한 채 다시 그린 경우(필터 변경 등)에는 카메라를 건드리지 않는다.
+    // 이어 그릴 땐 카메라도 미끄러지듯 옮겨 홉 전환이 한 장면으로 이어진다.
+    if (!movesCamera(highlightRef.current)) fitToView(incremental ? 450 : 0)
+
+    // 이후에는 낮은 알파로 가볍게 이어 가며(드래그 시 다시 데워진다) 잔여 겹침을 푼다
+    simulation.on('tick', render).alpha(0.2).restart()
+
+    /** 노드와 그 아래 라벨까지 보이도록 카메라를 맞춘다 */
     function fitToView(duration: number) {
-      const view = computeFitView(nodes, width, height, { padding: 32 + maxRadius })
+      const view = computeFitView(nodes, width, height, { padding: 48 + maxRadius })
       if (!view || !svgRef.current) return
       const transform = d3.zoomIdentity
         .translate(width / 2, height / 2)
@@ -564,7 +737,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     return () => {
       simulation.stop()
     }
-  }, [data, sized, sizeRef, getFilteredData, onNodeClick, onLinkClick, onBackgroundClick])
+  }, [data, sized, sizeRef, getFilteredData, centerId, primaryIds, seedLinkIds])
 
   // ========== 외부 선택 반영 + 카메라 이동 ==========
   useEffect(() => {
@@ -575,11 +748,11 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     const byId = (id: string) => state.nodes.find((n) => n.id === id)
 
-    /** 이전에 중앙 고정했던 노드들을 해제 */
+    /** 이전에 중앙 고정했던 노드들을 해제 — 중심 노드는 원래 못 박혀 있으므로 그대로 둔다 */
     const releaseFixed = () => {
       fixedIdsRef.current.forEach((id) => {
         const n = byId(id)
-        if (n) {
+        if (n && n.id !== centerId) {
           n.fx = null
           n.fy = null
         }
@@ -638,147 +811,94 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       return
     }
     focusOn(highlight.ids, false)
-  }, [highlight, data, sizeRef])
+  }, [highlight, data, sizeRef, centerId])
+
+  // ========== 패널 행·범례 호버 → 잠깐 켜 보기 ==========
+  // 선택 반영 effect 뒤에 둔다 — 같은 렌더에서 둘 다 바뀌면 미리 보기가 마지막에 칠해진다
+  useEffect(() => {
+    const state = d3StateRef.current
+    if (!state) return
+    if (preview) state.applyPreview(preview)
+    else state.applyHighlight(highlightRef.current)
+  }, [preview])
 
   return (
-    <div ref={containerRef} className="relative size-full bg-background">
+    <div ref={containerRef} className="relative size-full" style={{ background: T.canvas }}>
       <svg ref={svgRef} className="size-full" />
       <GraphTooltip ref={tooltipRef} />
     </div>
   )
 })
 
-interface Segment {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
+/** 배경 도트 격자 — 간격과 진하기. 눈에 띄지 않되 팬할 때 움직임이 느껴질 만큼 */
+const DOT_PATTERN_ID = 'graph-dots'
+const DOT_GRID = 24
+const DOT_OPACITY = 0.07
+
+/** 종목 로고 — 원으로 자르는 clipPath id, 바깥에 남기는 시장색 띠 폭, 로고 노드의 반지름 범위 */
+const LOGO_CLIP_ID = 'graph-logo-clip'
+const LOGO_RING = 2
+const LOGO_RADIUS = { min: 10, max: 17 } as const
+
+/** 차수 반지름(NODE_RADIUS 범위)을 로고 반지름 범위로 옮긴다 — 상대 크기는 그대로 */
+function logoRadius(r: number): number {
+  const t = (r - NODE_RADIUS.min) / (NODE_RADIUS.max - NODE_RADIUS.min)
+  return LOGO_RADIUS.min + (LOGO_RADIUS.max - LOGO_RADIUS.min) * t
 }
 
-/** 화살촉이 노드에 닿지 않도록 두는 여유 */
-const ARROW_GAP = 3
+/** 중심 후광이 점 바깥으로 나오는 폭 */
+const CENTER_GLOW = 10
+/** 간선 도착(수요자) 쪽 끝 폭 — 거의 점으로 모인다 */
+const TAPER_TIP = 0.5
 
-/** 화살촉 크기 — 선 굵기와 무관한 고정 크기(userSpaceOnUse) */
-const ARROW_LENGTH = 6
-const ARROW_HALF_WIDTH = 2.5
+/** 라벨 크기와 점과의 간격 */
+const LABEL_SIZE = 11
+const CENTER_LABEL_SIZE = 13
+const LABEL_GAP = 4
+/** 태그 안 글자 크기 — EVENT_NODE.charWidth(10px)와 맞춘다 */
+const EVENT_LABEL_SIZE = 10
+/** 점선(HAS_EVENT) 간선 굵기 — 테이퍼 간선의 가장 가는 축보다 살짝 굵은 정도 */
+const DASHED_WIDTH = 1.2
+/** 시드(기사에서 온) 간선의 기본 불투명도 — 강조 시 켜진 간선과 같은 값 */
+const SEED_OPACITY = 0.85
+/** 라벨을 전부 보이기 시작하는 줌 배율. 개요(전체 보기)에서는 허브·중심만 남겨 구조가 먼저 읽히게 한다 */
+const LABEL_MIN_ZOOM = 1
+/** 줌아웃에서도 라벨을 남기는 차수 기준 */
+const HUB_DEGREE = 3
+/** 긴 이름은 잘라 라벨 폭을 제한한다 — 전체 이름은 툴팁·상세 패널에 있다 */
+const LABEL_MAX_CHARS = 12
 
-/** 간선(과 화살촉)의 기본 불투명도 */
-const EDGE_OPACITY = 0.85
-/** 서술어 라벨이 보이기 시작하는 줌 배율 — 초기 전체 보기(fit 상한 1.2)에선 숨긴다 */
-const LINK_LABEL_MIN_ZOOM = 1.25
+/** 노드 클릭 영역 최소 반지름 */
+const HIT_RADIUS = 12
 
-/** 출발 엔티티 종류별 화살촉 마커 id */
-const arrowId = (type: EntityType) => `arrow-${type}`
-/** 필터·강조로 흐려진 간선용 화살촉 */
-const ARROW_OFF_ID = 'arrow-off'
+/** 강조 밖 요소의 불투명도 — 완전히 죽이지 않고 맥락으로 남긴다 */
+const DIM = 0.25
+const DIM_LABEL = 0.2
 
-/** 간선 위 관계 타입 라벨 */
-const LINK_LABEL_FONT_SIZE = 9
-/** 라벨 배경판이 간선을 끊어 보이게 하는 여백 */
-const LINK_LABEL_PAD = { x: 4, y: 1.5 }
+/** 동기 예열 틱 수 — 알파가 1에서 0.01 근처까지 내려와 배치가 거의 끝나는 양 */
+const WARMUP_TICKS = 200
+/** 이어 그릴 때의 시작 알파 — 기존 배치를 흔들지 않을 만큼만 새 노드에 자리를 찾아 준다 */
+const INCREMENTAL_ALPHA = 0.4
+/** 기억한 자리로 당기는 힘 — 반발력에 밀려 조금 벌어질 순 있어도 각도가 뒤바뀌진 않는 세기 */
+const ANCHOR_STRENGTH = 0.3
+
+/**
+ * 힘 튜닝 — 점이 작아 상수항으로 반발을 받치고, 충돌 반지름에는 점 아래 라벨(폭 ~50px)이
+ * 이웃과 겹치지 않을 만큼의 여유를 더한다.
+ */
+const LINK_LENGTH = 84
+const CHARGE_BASE = 120
+const CHARGE_PER_PX = 12
+const COLLIDE_PAD = 22
+
+function truncateLabel(label: string): string {
+  return label.length > LABEL_MAX_CHARS ? `${label.slice(0, LABEL_MAX_CHARS - 1)}…` : label
+}
 
 /** 이 강조가 카메라를 가져가는가 — 배경 강조(camera:false)와 해제는 화면을 건드리지 않는다 */
 function movesCamera(highlight: GraphHighlight | null): highlight is GraphHighlight {
   if (!highlight) return false
   return highlight.kind === 'link' || highlight.camera !== false
-}
-
-function segmentLength(seg: Segment): number {
-  return Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1)
-}
-
-/**
- * 라벨을 간선 중점에 놓고 간선 방향으로 눕힌다.
- * 각도가 뒤집힌 구간(|angle| > 90°)에서는 글자가 거꾸로 서므로 180° 돌려 읽히게 한다.
- */
-function labelTransform(seg: Segment): string {
-  const mx = (seg.x1 + seg.x2) / 2
-  const my = (seg.y1 + seg.y2) / 2
-  let angle = (Math.atan2(seg.y2 - seg.y1, seg.x2 - seg.x1) * 180) / Math.PI
-  if (angle > 90) angle -= 180
-  else if (angle < -90) angle += 180
-  return `translate(${mx},${my}) rotate(${angle})`
-}
-
-/** 간선을 두 노드의 원 둘레 사이 구간으로 자른다 */
-function trimToNodeEdges(link: GraphLink, radius: (node: GraphNode) => number): Segment {
-  const s = link.source as GraphNode
-  const t = link.target as GraphNode
-  const dx = t.x! - s.x!
-  const dy = t.y! - s.y!
-  const len = Math.hypot(dx, dy) || 1
-  const ux = dx / len
-  const uy = dy / len
-  const from = radius(s)
-  const to = radius(t) + ARROW_GAP
-  // 두 원이 겹칠 만큼 가까우면 자르지 않는다 (선이 뒤집히는 것을 방지)
-  if (from + to >= len) {
-    return { x1: s.x!, y1: s.y!, x2: t.x!, y2: t.y! }
-  }
-  return {
-    x1: s.x! + ux * from,
-    y1: s.y! + uy * from,
-    x2: t.x! - ux * to,
-    y2: t.y! - uy * to,
-  }
-}
-
-/** 두 줄 분할점 — 공백이 있으면 중앙에서 가장 가까운 공백, 없으면 글자 수 절반 */
-function splitIndex(label: string): number {
-  const mid = label.length / 2
-  let best = -1
-  for (let i = 1; i < label.length - 1; i++) {
-    if (label[i] === ' ' && (best === -1 || Math.abs(i - mid) < Math.abs(best - mid))) best = i
-  }
-  return best === -1 ? Math.ceil(mid) : best
-}
-
-/**
- * 노드 이름을 원 안에 배치한다 — 한 줄(폰트 9px까지 축소) → 두 줄 → 말줄임 순서로 시도.
- * 한글·영문 폭이 달라 글자 수가 아니라 실제 렌더 폭으로 판정한다.
- * 좌표는 tick에서 transform으로 옮기므로 tspan은 x=0 기준. 사용한 폰트 크기를 돌려준다.
- */
-function layoutNodeLabel(
-  el: SVGTextElement,
-  label: string,
-  maxWidth: number,
-  startSize: number,
-): number {
-  const widthAt = (text: string, size: number) => {
-    el.setAttribute('font-size', String(size))
-    el.textContent = text
-    return el.getComputedTextLength()
-  }
-
-  // 1) 한 줄 — 폰트를 줄여 본다 (nodeFontSize 최소치가 9 미만일 수 있어 하한을 함께 낮춘다)
-  const minSize = Math.min(9, startSize)
-  for (let size = startSize; size >= minSize; size--) {
-    if (widthAt(label, size) <= maxWidth) return size
-  }
-
-  // 2) 두 줄 분할, 그래도 넘치는 줄만 말줄임
-  const fitLine = (line: string): string => {
-    if (widthAt(line, minSize) <= maxWidth) return line
-    let text = line
-    while (text.length > 1) {
-      text = text.slice(0, -1)
-      if (widthAt(`${text}…`, minSize) <= maxWidth) return `${text}…`
-    }
-    return line.slice(0, 1)
-  }
-  const at = splitIndex(label)
-  const lines = [fitLine(label.slice(0, at).trim()), fitLine(label.slice(at).trim())]
-
-  el.textContent = ''
-  const SVG_NS = 'http://www.w3.org/2000/svg'
-  lines.forEach((line, i) => {
-    const tspan = document.createElementNS(SVG_NS, 'tspan')
-    tspan.setAttribute('x', '0')
-    tspan.setAttribute('dy', i === 0 ? '-0.55em' : '1.1em')
-    tspan.textContent = line
-    el.append(tspan)
-  })
-  return minSize
 }
 
 /** 간선 id로 양 끝 노드 id를 찾는다 */

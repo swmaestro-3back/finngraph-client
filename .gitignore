@@ -38,6 +38,7 @@ tsconfig.*.tsbuildinfo
 .env
 .env.*
 !.env.example
+!.env.dev
 
 # ---------------------------------------------
 # Logs
@@ -113,3 +114,5 @@ repomix-output.*
 /data/
 design-specs/
 docs/
+.impeccable/
+.superpowers/

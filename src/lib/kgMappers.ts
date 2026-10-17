@@ -1,0 +1,264 @@
+import {
+  ALL_ENTITY_TYPES,
+  ALL_PREDICATES,
+  endId,
+  isPredicate,
+  type GraphData,
+  type GraphLink,
+  type GraphNode,
+  type NodeQuote,
+} from '@/data/graphTypes'
+import type {
+  KgBelongsToRelRes,
+  KgCompanyEventsRes,
+  KgCompanyNode,
+  KgCompanyRelRes,
+  KgCompanyRes,
+  KgCompanyThemesRes,
+  KgEventNode,
+  KgHasEventRelRes,
+  KgNewsGraphRes,
+  KgSupplyChainRes,
+  KgStockQuote,
+  KgSupplyRelRes,
+  KgThemeNode,
+  KgThemeQuote,
+  KgThemeRes,
+} from '@/lib/kgApiTypes'
+
+export interface NewsRelation {
+  link: GraphLink
+  source: GraphNode
+  target: GraphNode
+}
+
+/** 뉴스 그래프 응답을 모달이 쓰는 모양으로 — toNewsGraph의 결과 */
+export interface NewsGraphData {
+  graph: GraphData
+  relations: NewsRelation[]
+  expanded: NewsRelation[]
+  seedIds: string[]
+  /** 서버 노드 상한에 걸려 확장 일부가 잘렸는가 — 캔버스 아래 안내 문구용 */
+  truncated: boolean
+}
+
+/** 서버 시세 → 노드 시세. 테마 시세에는 가격이 없다 */
+export function toNodeQuote(q: KgStockQuote | KgThemeQuote | null | undefined): NodeQuote | undefined {
+  if (!q) return undefined
+  return {
+    price: 'price' in q ? q.price : null,
+    change: q.change,
+    marketCap: q.market_cap,
+    w1: q.r_1w,
+    m1: q.r_1m,
+    m3: q.r_3m,
+  }
+}
+
+/** 기업 노드 — 라벨은 이름, 없으면 티커, 그것도 없으면 element_id */
+function toCompanyNode(c: KgCompanyNode): GraphNode {
+  return {
+    id: c.id,
+    label: c.name ?? c.ticker ?? c.id,
+    type: 'company',
+    data: {
+      ticker: c.ticker ?? undefined,
+      market: c.market ?? undefined,
+      country: c.country ?? undefined,
+      krx100: c.krx100,
+      krx300: c.krx300,
+      kosdaq150: c.kosdaq150,
+      quote: toNodeQuote(c.quote),
+    },
+  }
+}
+
+function toThemeNode(t: KgThemeNode): GraphNode {
+  return {
+    id: t.id,
+    label: t.name ?? t.id,
+    type: 'theme',
+    data: {
+      description: t.description ?? undefined,
+      themeId: t.theme_id ?? undefined,
+      quote: toNodeQuote(t.quote),
+    },
+  }
+}
+
+/** 이벤트 노드 — 제목이 라벨. 제목이 없거나 빈 문자열이면 클러스터 번호로라도 부른다 */
+function toEventNode(e: KgEventNode): GraphNode {
+  return {
+    id: e.id,
+    label: e.title || (e.cluster_id != null ? `이벤트 #${e.cluster_id}` : e.id),
+    type: 'event',
+    data: {
+      clusterId: e.cluster_id ?? undefined,
+      keywords: e.keywords,
+      newsCount: e.news_count ?? undefined,
+      firstPublishedAt: e.first_published_at ?? undefined,
+      lastPublishedAt: e.last_published_at ?? undefined,
+      representativeNewsId: e.representative_news_id ?? undefined,
+    },
+  }
+}
+
+/** 기업→기업 간선. 굵기는 뉴스·공시 근거를 합쳐 잰다 — 상세 패널에서는 둘을 따로 보여준다 */
+function toSupplyLink(r: KgSupplyRelRes): GraphLink {
+  const weight = r.news_mention_count + r.disclosure_count
+  return {
+    id: r.id,
+    source: r.start,
+    target: r.end,
+    type: r.type,
+    mentioned_count: weight,
+    value: weight,
+    news_mention_count: r.news_mention_count,
+    news: r.news,
+    disclosure_count: r.disclosure_count,
+    disclosures: r.disclosures,
+    first_mentioned_at: r.first_mentioned_at,
+    last_mentioned_at: r.last_mentioned_at,
+  }
+}
+
+/** 테마 소속 — 큐레이션된 관계라 언급 횟수가 없다. 굵기 기준선 1 */
+function toBelongsLink(r: KgBelongsToRelRes): GraphLink {
+  return {
+    id: r.id,
+    source: r.start,
+    target: r.end,
+    type: 'BELONGS_TO',
+    mentioned_count: 1,
+    value: 1,
+    reason: r.reason,
+  }
+}
+
+/** 이벤트 언급 — 근거 필드가 없어 굵기는 고정 1 (캔버스가 점선으로 그린다) */
+function toEventLink(r: KgHasEventRelRes): GraphLink {
+  return {
+    id: r.id,
+    source: r.start,
+    target: r.end,
+    type: 'HAS_EVENT',
+    mentioned_count: 1,
+    value: 1,
+  }
+}
+
+function toCompanyLink(r: KgCompanyRelRes): GraphLink {
+  switch (r.type) {
+    case 'SUPPLIES_TO':
+    case 'ACQUIRES':
+    case 'INVESTS_IN':
+      return toSupplyLink(r)
+    case 'HAS_EVENT':
+      return toEventLink(r)
+  }
+}
+
+function toGraph(nodes: GraphNode[], links: GraphLink[], center: GraphNode | undefined): GraphData {
+  return {
+    nodes,
+    links,
+    metadata: {
+      center: center?.label,
+      centerId: center?.id,
+      entity_types: ALL_ENTITY_TYPES,
+      predicate_types: ALL_PREDICATES,
+      stats: { total_nodes: nodes.length, total_edges: links.length },
+    },
+  }
+}
+
+/** 양 끝이 모두 응답 노드에 있는 관계만 — 서버가 경로 단위로 모아 보내므로 보통 전부 통과한다 */
+function hasBothEnds(nodeIds: Set<string>) {
+  return (r: { start: string; end: string }) => nodeIds.has(r.start) && nodeIds.has(r.end)
+}
+
+/** 요청한 티커로 중심 기업을 찾는다 — 서버가 center를 주지 않는다 */
+function findCenter(nodes: GraphNode[], ticker: string): GraphNode | undefined {
+  return nodes.find((n) => n.type === 'company' && n.data.ticker === ticker)
+}
+
+/** 공급망 응답 → GraphData. 서버 Cypher가 SUPPLIES_TO만 따라가지만 타입은 응답을 믿고 그대로 옮긴다 */
+export function toSupplyChainGraph(res: KgSupplyChainRes, ticker: string): GraphData {
+  const nodes = res.companies.map(toCompanyNode)
+  const nodeIds = new Set(nodes.map((n) => n.id))
+  const links = res.relationships
+    .filter((r) => isPredicate(r.type))
+    .filter(hasBothEnds(nodeIds))
+    .map(toSupplyLink)
+  return toGraph(nodes, links, findCenter(nodes, ticker))
+}
+
+/** 테마 응답 → GraphData. 테마 노드 하나에 소속 기업들이 BELONGS_TO로 매달린다 */
+export function toThemeGraph(res: KgThemeRes): GraphData {
+  const theme = toThemeNode(res.theme)
+  const nodes = [theme, ...res.companies.map(toCompanyNode)]
+  const nodeIds = new Set(nodes.map((n) => n.id))
+  const links = res.relationships.filter(hasBothEnds(nodeIds)).map(toBelongsLink)
+  return toGraph(nodes, links, theme)
+}
+
+/** 개요 응답 → GraphData. 기업·이벤트를 담는다 — 테마는 서버가 테마 렌즈로 떼어 냈다 */
+export function toCompanyOverviewGraph(res: KgCompanyRes, ticker: string): GraphData {
+  const nodes = [...res.companies.map(toCompanyNode), ...res.events.map(toEventNode)]
+  const nodeIds = new Set(nodes.map((n) => n.id))
+  const links = res.relationships
+    .filter((r) => isPredicate(r.type))
+    .filter(hasBothEnds(nodeIds))
+    .map(toCompanyLink)
+  return toGraph(nodes, links, findCenter(nodes, ticker))
+}
+
+/** 이벤트 응답 → GraphData. 기업과 이벤트가 HAS_EVENT로 번갈아 이어진다 */
+export function toCompanyEventsGraph(res: KgCompanyEventsRes, ticker: string): GraphData {
+  const nodes = [...res.companies.map(toCompanyNode), ...res.events.map(toEventNode)]
+  const nodeIds = new Set(nodes.map((n) => n.id))
+  const links = res.relationships.filter(hasBothEnds(nodeIds)).map(toEventLink)
+  return toGraph(nodes, links, findCenter(nodes, ticker))
+}
+
+/** 소속 테마 응답 → GraphData. 중심 기업 하나에 테마들이 BELONGS_TO로 매달린다 — 테마 응답의 거울상 */
+export function toCompanyThemesGraph(res: KgCompanyThemesRes): GraphData {
+  const center = toCompanyNode(res.company)
+  const nodes = [center, ...res.themes.map(toThemeNode)]
+  const nodeIds = new Set(nodes.map((n) => n.id))
+  const links = res.relationships.filter(hasBothEnds(nodeIds)).map(toBelongsLink)
+  return toGraph(nodes, links, center)
+}
+
+/**
+ * 뉴스 그래프 응답 → 모달용 데이터. 중심은 없다 — 기사에는 원점 기업이 하나로 정해지지 않는다.
+ * 시드 관계는 relations, 확장으로 딸려온 관계는 expanded로 나눠 목록과 캔버스가 다르게 다룬다.
+ */
+export function toNewsGraph(res: KgNewsGraphRes): NewsGraphData {
+  const nodes = res.companies.map(toCompanyNode)
+  const nodeIds = new Set(nodes.map((n) => n.id))
+  const links = res.relationships
+    .filter((r) => isPredicate(r.type))
+    .filter(hasBothEnds(nodeIds))
+    .map(toSupplyLink)
+  const graph = toGraph(nodes, links, undefined)
+
+  const nodeById = new Map(nodes.map((n) => [n.id, n]))
+  const seedRelIds = new Set(res.seed_relationship_ids)
+  const relations: NewsRelation[] = []
+  const expanded: NewsRelation[] = []
+  for (const link of links) {
+    const source = nodeById.get(endId(link.source))
+    const target = nodeById.get(endId(link.target))
+    if (!source || !target) continue
+    ;(seedRelIds.has(link.id) ? relations : expanded).push({ link, source, target })
+  }
+
+  return {
+    graph,
+    relations,
+    expanded,
+    seedIds: res.seed_company_ids.filter((id) => nodeIds.has(id)),
+    truncated: res.truncated,
+  }
+}

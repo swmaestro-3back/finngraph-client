@@ -1,0 +1,155 @@
+name: ci-cd
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  verify:
+    if: github.event_name != 'release'
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 린트
+        run: npm run lint
+
+      - name: 테스트
+        run: npm test
+
+      # 카카오 클라이언트 ID는 공개 식별자라 번들에 그대로 들어간다. 레포에 두지 않고
+      # 저장소 Variables(Settings → Secrets and variables → Actions → Variables)에서 주입한다.
+      # 셸 환경변수가 .env.dev 보다 우선하므로 파일에는 넣지 않는다.
+      - name: 빌드 변수 확인
+        if: github.event_name == 'push'
+        run: |
+          : "${VITE_KAKAO_CLIENT_ID:?VITE_KAKAO_CLIENT_ID 저장소 변수가 비어 있음}"
+        env:
+          VITE_KAKAO_CLIENT_ID: ${{ vars.VITE_KAKAO_CLIENT_ID }}
+
+      - name: 빌드
+        run: npm run "${BUILD_SCRIPT}"
+        env:
+          BUILD_SCRIPT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && 'build' || 'build:dev' }}
+          VITE_KAKAO_CLIENT_ID: ${{ vars.VITE_KAKAO_CLIENT_ID }}
+
+      - name: 빌드 산출물 업로드
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-dist
+          path: dist
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/actions
+
+      - name: 빌드 산출물 내려받기
+        uses: actions/download-artifact@v8
+        with:
+          name: client-dist
+          path: dist
+
+      - name: AWS 자격 증명 설정
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}
+          aws-region: ap-northeast-2
+          mask-aws-account-id: true
+
+      - name: 배포
+        uses: ./.github/actions/deploy-static
+        with:
+          bucket: ${{ vars.CLIENT_S3_BUCKET }}
+          distribution_id: ${{ vars.CLIENT_CF_DISTRIBUTION_ID }}
+
+  release:
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    runs-on: ubuntu-24.04-arm
+    environment: prod
+    concurrency:
+      group: release-prod
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: main 포함 여부 확인
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...main" --jq .status)
+          case "$status" in
+            ahead|identical) ;;
+            *) echo "::error::릴리스 커밋이 main 에 없다 ($status)"; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: AWS 자격 증명 설정
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}
+          aws-region: ap-northeast-2
+          mask-aws-account-id: true
+
+      - name: 빌드 변수 불러오기
+        run: |
+          aws ssm get-parameters-by-path --path /finngraph/prod/client \
+            --query 'Parameters[].[Name,Value]' --output json \
+            | jq -r '.[] | "\(.[0] | split("/") | last)=\(.[1])"' >> "$GITHUB_ENV"
+
+      - name: 빌드 변수 확인
+        run: |
+          : "${VITE_API_BASE_URL:?VITE_API_BASE_URL 파라미터가 없음}"
+          : "${VITE_KG_API_BASE_URL:?VITE_KG_API_BASE_URL 파라미터가 없음}"
+          : "${VITE_KAKAO_CLIENT_ID:?VITE_KAKAO_CLIENT_ID 파라미터가 없음}"
+
+      - name: 빌드
+        run: npm run build
+
+      - name: 배포
+        uses: ./.github/actions/deploy-static
+        with:
+          bucket: ${{ vars.CLIENT_S3_BUCKET }}
+          distribution_id: ${{ vars.CLIENT_CF_DISTRIBUTION_ID }}

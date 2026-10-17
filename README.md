@@ -12,6 +12,7 @@ Finngraph web front-end application built with React 19, TypeScript, and shadcn/
 | Business charts | recharts — annual performance, supply & demand |
 | Custom rendering | d3 / d3-hierarchy — treemap layout, candle chart, graph canvas |
 | Lint | oxlint |
+| Deployment | Docker multi-stage build → nginx (static + reverse proxy) |
 
 Charts are split by intent: anything that is a conventional bar/line chart goes through recharts,
 while the treemap, candlesticks, and the graph canvas are drawn directly with d3 because their
@@ -30,6 +31,18 @@ brand voltage color, and a near-monochrome palette. Tokens and per-page specs li
 
 Tokens are materialized as CSS variables in `src/index.css` and consumed through Tailwind.
 
+## Routes
+
+| Path | Page |
+| --- | --- |
+| `/` | `ThemeDashboardPage` — theme treemap dashboard |
+| `/themes` | `ThemeListPage` — theme list with period returns |
+| `/theme/:themeId` | `ThemeDetailPage` — constituents, news, performance (`/themes/:themeId` redirects here) |
+| `/stocks` | `StockListPage` |
+| `/stock/:stockCode` | `StockDetailPage` — candles, financials, supply & demand, issue lane |
+| `/graph/:ticker?` | `CorpGraphPage` — knowledge graph, company-scoped |
+| `/graph/theme/:name` | `CorpGraphPage` — knowledge graph, theme-scoped |
+
 ## Directory Structure
 
 ```
@@ -46,72 +59,85 @@ finngraph-client/
 │   │   │                       #   SupplyDemandCharts
 │   │   ├── news/               # NewsDetailModal, NewsGraphSection, NewsRelationList, entity chips
 │   │   ├── graph/              # GraphView / GraphCanvas, Toolbar, SearchBar, FilterPanel,
-│   │   │                       #   HopSelector, Legend, Node / EdgeDetail, Tooltip
+│   │   │                       #   ScopeSelector, HopSelector, Legend, Node / EdgeDetail, Tooltip
 │   │   ├── chart/              # CandleChart
 │   │   ├── table/              # SortableHeaderRow, StockIdentity — shared list table parts
 │   │   └── ui/                 # shadcn/ui primitives
-│   ├── data/                   # Mock data layer (see below)
-│   ├── lib/                    # Pure utilities & hooks
+│   ├── data/                   # Graph domain types + the news-graph fixture
+│   ├── lib/                    # API layer, pure utilities & hooks
+│   │   └── queries/            # One hook per endpoint (useThemes, useStockDetail, useKgGraph, …)
 │   ├── hooks/                  # use-mobile
 │   └── assets/
 ├── data/                       # Raw source data (theme lists, extracted relations)
 ├── design-specs/               # Design system & per-page specs
 ├── docs/                       # Interim report, diagrams
-├── vite.config.ts              # Vite config + `@` → `src` alias
+├── Dockerfile                  # node build stage → nginx runtime stage
+├── docker-compose.yml          # Client service on the shared `finngraph-etl_default` network
+├── nginx.conf                  # SPA fallback, asset caching, /api + /kg reverse proxy
+├── vite.config.ts              # Vite config + `@` → `src` alias + dev proxy
 └── components.json             # shadcn/ui config
 ```
 
-### `src/data/` — mock data layer
+### `src/lib/` — API layer
 
-`themes.ts` holds the base themes and stocks; everything numeric is generated **deterministically**
-by hashing the theme or ticker, so the same code always renders the same chart and the UI stays
-stable across reloads without a backend.
+The app talks to two backends: the main Finngraph API (`/api`) and the knowledge-graph AI server
+(`/kg/api`). Both are reached through relative paths, so the proxy — nginx in Docker, Vite's dev
+server locally — decides where the requests actually land.
 
-| File | Contents |
+| File | Role |
 | --- | --- |
-| `themes.ts` | Base theme & stock data (price, change, trading value) |
-| `themePerformance.ts` | Period returns for the theme list |
-| `themeDetailStocks.ts` | Constituent stocks on the theme detail page |
-| `stockList.ts` / `stockMeta.ts` | Stock list rows and shared metadata (market cap, valuation) |
-| `stockDetail.ts` | Stat tiles, supply & demand, issue timeline |
-| `financials.ts` | Annual financial statements |
-| `candles.ts` | Candle / volume generator (daily, weekly, monthly) |
-| `news.ts` / `newsDetail.ts` | News table, per-news subgraph, similar news |
-| `graph.ts` / `graphTypes.ts` | Knowledge graph domain — entity types, predicates, node / link mapping |
-| `samsung-graph.json` | Triplets extracted from real news, used as the graph fixture |
+| `api.ts` | `fetch` wrapper for the main API — unwraps the server envelope, normalizes every failure into a single `ApiError` |
+| `apiTypes.ts` / `apiMappers.ts` | Server payload types and payload → UI-model mapping |
+| `kgApi.ts` / `kgApiTypes.ts` / `kgMappers.ts` | Same three layers for the knowledge-graph server |
+| `queries/` | One hook per endpoint; components consume hooks, never `fetch` directly |
 
-`graph.ts`, `newsDetail.ts`, and `lib/useNewsGraph.ts` each carry a note marking them as the
-swap point: when the API is ready, only their internals change to a `fetch`, and the shape returned
-to the components stays the same.
+Both clients read an optional override (`VITE_API_BASE_URL`, `VITE_KG_API_BASE_URL`) and otherwise
+default to the relative prefixes above.
 
-### `src/lib/` — utilities & hooks
+### `src/lib/` — utilities
 
 | File | Role |
 | --- | --- |
 | `format.ts` | Change rate, price, market cap, relative time formatting |
-| `navigation.ts` | Back-navigation based on the route the detail page was entered from |
-| `trend.ts` | Consecutive trend detection for financial metrics |
+| `navigation.ts` / `graphRoute.ts` | Back-navigation and graph route ↔ scope encoding |
+| `trend.ts` / `momentum.ts` | Consecutive trend detection and momentum scoring |
 | `useTableSort.ts` | Sorting state for list tables |
 | `useCanvasSize.ts` | Canvas resize observer |
-| `useGraphData.ts` / `useNewsGraph.ts` | Data entrypoints for the corporate graph and news subgraph |
 | `graphLayout.ts` | Pure graph layout math (no DOM) |
+| `graphTraversal.ts` | Hop-limited subgraph expansion |
 | `graphTheme.ts` | Color tokens for d3 / SVG rendering |
 | `graphTooltip.ts` | Imperative tooltip DOM updates for the graph canvas |
+| `chartAxis.ts` / `chartSync.tsx` | Axis math and cross-chart cursor sync |
 | `utils.ts` | `cn` (clsx + tailwind-merge) |
 
 ## How to Run
 
-Requires Node.js 20+.
+The client runs as a container: a multi-stage Docker build compiles the Vite bundle and serves it
+from nginx, which also reverse-proxies `/api` to the backend and `/kg` to the AI server.
+
+**Prerequisites**
+
+- Docker with Compose v2
+- The shared network `finngraph-etl_default` must already exist — it is created by the ETL stack's
+  compose project. The client joins it as an external network to reach `finngraph-backend:8080`
+  and `finngraph-ai-server:8000` by container name.
 
 ```bash
-npm install
-npm run dev        # http://localhost:5173
+docker network ls | grep finngraph-etl_default   # verify the network exists
+docker compose up -d --build                     # http://localhost:5173
 ```
-
-No environment variables are needed yet — the app ships with its own data.
 
 ```bash
-npm run build      # tsc -b && vite build
-npm run preview    # serve the production build
-npm run lint       # oxlint
+docker compose logs -f client   # follow nginx logs
+docker compose down             # stop and remove the container
 ```
+
+Rebuild after code changes — the image is a production build, not a dev server:
+
+```bash
+docker compose up -d --build
+```
+
+No environment variables are required. `VITE_API_BASE_URL` and `VITE_KG_API_BASE_URL` are only
+needed to point the bundle at absolute backend URLs instead of the nginx proxy prefixes; because
+Vite inlines them at build time, they must be set during `docker compose build`, not at runtime.

@@ -1,0 +1,69 @@
+import { describe, expect, it } from 'vitest'
+import {
+  DEFAULT_GRAPH_QUERY,
+  graphPath,
+  graphSearch,
+  lensControls,
+  lensDefaultCategories,
+  lensHasEvents,
+  parseGraphQuery,
+} from '@/lib/graphRoute'
+
+describe('graphRoute', () => {
+  it('빈 쿼리는 기본값(hop 1, 전체, 개요, 전체 기간)', () => {
+    expect(parseGraphQuery(new URLSearchParams(''))).toEqual(DEFAULT_GRAPH_QUERY)
+    expect(DEFAULT_GRAPH_QUERY).toEqual({ hop: 1, scope: 'all', lens: 'overview', period: 'all' })
+  })
+
+  it('이벤트 기간은 전체가 아닐 때만 적고 왕복한다 — 모르는 값은 전체로', () => {
+    const q = { ...DEFAULT_GRAPH_QUERY, period: '1w' as const }
+    expect(graphSearch(q)).toBe('?period=1w')
+    expect(parseGraphQuery(new URLSearchParams('period=1w'))).toEqual(q)
+    expect(parseGraphQuery(new URLSearchParams('period=2w')).period).toBe('all')
+    expect(graphSearch({ ...q, lens: 'events', hop: 2 })).toBe('?lens=events&hop=2&period=1w')
+  })
+
+  it('이벤트 기간 칩은 이벤트가 오는 렌즈에서만', () => {
+    expect(lensHasEvents('overview')).toBe(true)
+    expect(lensHasEvents('events')).toBe(true)
+    expect(lensHasEvents('supply')).toBe(false)
+    expect(lensHasEvents('themes')).toBe(false)
+  })
+
+  it('기본값은 직렬화에서 생략된다', () => {
+    expect(graphSearch(DEFAULT_GRAPH_QUERY)).toBe('')
+  })
+
+  it('렌즈는 개요가 아닐 때만 적고 왕복한다', () => {
+    const q = { hop: 2 as const, scope: 'KOSPI' as const, lens: 'supply' as const, period: 'all' as const }
+    const s = graphSearch(q)
+    expect(s).toBe('?lens=supply&hop=2&market=KOSPI')
+    expect(parseGraphQuery(new URLSearchParams(s))).toEqual(q)
+    expect(graphSearch({ ...DEFAULT_GRAPH_QUERY, lens: 'events' })).toBe('?lens=events')
+    expect(parseGraphQuery(new URLSearchParams(graphSearch({ ...DEFAULT_GRAPH_QUERY, lens: 'themes' }))).lens).toBe('themes')
+  })
+
+  it('모르는 렌즈 값은 개요로 떨어진다', () => {
+    expect(parseGraphQuery(new URLSearchParams('lens=banana')).lens).toBe('overview')
+  })
+
+  it('경로에도 렌즈가 실린다', () => {
+    expect(graphPath({ kind: 'company', ticker: '005930' }, { ...DEFAULT_GRAPH_QUERY, lens: 'events' })).toBe(
+      '/graph/005930?lens=events',
+    )
+    expect(graphPath({ kind: 'theme', name: '밸류업' })).toBe('/graph/theme/%EB%B0%B8%EB%A5%98%EC%97%85')
+  })
+
+  it('렌즈별 컨트롤 노출', () => {
+    expect(lensControls('overview')).toEqual({ hop: false, scope: false })
+    expect(lensControls('supply')).toEqual({ hop: true, scope: true })
+    expect(lensControls('events')).toEqual({ hop: true, scope: false })
+    expect(lensControls('themes')).toEqual({ hop: false, scope: false })
+  })
+
+  it('모든 렌즈에서 전체 종류를 기본으로 켠다', () => {
+    expect([...lensDefaultCategories('overview')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
+    expect([...lensDefaultCategories('supply')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
+    expect([...lensDefaultCategories('events')]).toEqual(['kospi', 'kosdaq', 'nasdaq', 'nyse', 'theme', 'event'])
+  })
+})
