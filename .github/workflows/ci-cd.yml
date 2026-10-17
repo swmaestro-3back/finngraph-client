@@ -2,9 +2,11 @@ name: ci-cd
 
 on:
   push:
-    branches: [develop]
+    branches: [main, develop]
   pull_request:
-    branches: [develop]
+    branches: [main, develop]
+  release:
+    types: [published]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,6 +16,7 @@ permissions: {}
 
 jobs:
   verify:
+    if: github.event_name != 'release'
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
@@ -45,12 +48,13 @@ jobs:
           VITE_KAKAO_CLIENT_ID: ${{ vars.VITE_KAKAO_CLIENT_ID }}
 
       - name: 빌드
-        run: npm run build:dev
+        run: npm run "${BUILD_SCRIPT}"
         env:
+          BUILD_SCRIPT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && 'build' || 'build:dev' }}
           VITE_KAKAO_CLIENT_ID: ${{ vars.VITE_KAKAO_CLIENT_ID }}
 
       - name: 빌드 산출물 업로드
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         uses: actions/upload-artifact@v7
         with:
           name: client-dist
@@ -65,14 +69,10 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      S3_BUCKET: ${{ vars.CLIENT_S3_BUCKET }}
-      CF_DISTRIBUTION_ID: ${{ vars.CLIENT_CF_DISTRIBUTION_ID }}
     steps:
-      - name: 배포 대상 변수 확인
-        run: |
-          : "${S3_BUCKET:?CLIENT_S3_BUCKET 변수가 비어 있음}"
-          : "${CF_DISTRIBUTION_ID:?CLIENT_CF_DISTRIBUTION_ID 변수가 비어 있음}"
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/actions
 
       - name: 빌드 산출물 내려받기
         uses: actions/download-artifact@v8
@@ -88,28 +88,68 @@ jobs:
           aws-region: ap-northeast-2
           mask-aws-account-id: true
 
-      - name: 에셋 업로드 (해시 파일명 · 영구 캐시)
-        run: |
-          aws s3 sync dist/ "s3://${S3_BUCKET}/" \
-            --exclude "*" --include "assets/*" \
-            --size-only \
-            --cache-control "public,max-age=31536000,immutable"
+      - name: 배포
+        uses: ./.github/actions/deploy-static
+        with:
+          bucket: ${{ vars.CLIENT_S3_BUCKET }}
+          distribution_id: ${{ vars.CLIENT_CF_DISTRIBUTION_ID }}
 
-      - name: 루트 파일 업로드 (index.html 제외)
+  release:
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    runs-on: ubuntu-24.04-arm
+    environment: prod
+    concurrency:
+      group: release-prod
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: main 포함 여부 확인
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          aws s3 sync dist/ "s3://${S3_BUCKET}/" \
-            --exclude "assets/*" --exclude "index.html" \
-            --cache-control "no-cache"
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...main" --jq .status)
+          case "$status" in
+            ahead|identical) ;;
+            *) echo "::error::릴리스 커밋이 main 에 없다 ($status)"; exit 1 ;;
+          esac
 
-      - name: index.html 업로드 (마지막)
-        run: |
-          aws s3 cp dist/index.html "s3://${S3_BUCKET}/index.html" \
-            --cache-control "no-cache,no-store,must-revalidate" \
-            --content-type "text/html; charset=utf-8"
+      - uses: actions/checkout@v7
 
-      - name: CloudFront 무효화
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: AWS 자격 증명 설정
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}
+          aws-region: ap-northeast-2
+          mask-aws-account-id: true
+
+      - name: 빌드 변수 불러오기
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "${CF_DISTRIBUTION_ID}" \
-            --paths / /index.html /favicon.svg \
-            --query 'Invalidation.Id' --output text
+          aws ssm get-parameters-by-path --path /finngraph/prod/client \
+            --query 'Parameters[].[Name,Value]' --output json \
+            | jq -r '.[] | "\(.[0] | split("/") | last)=\(.[1])"' >> "$GITHUB_ENV"
+
+      - name: 빌드 변수 확인
+        run: |
+          : "${VITE_API_BASE_URL:?VITE_API_BASE_URL 파라미터가 없음}"
+          : "${VITE_KG_API_BASE_URL:?VITE_KG_API_BASE_URL 파라미터가 없음}"
+          : "${VITE_KAKAO_CLIENT_ID:?VITE_KAKAO_CLIENT_ID 파라미터가 없음}"
+
+      - name: 빌드
+        run: npm run build
+
+      - name: 배포
+        uses: ./.github/actions/deploy-static
+        with:
+          bucket: ${{ vars.CLIENT_S3_BUCKET }}
+          distribution_id: ${{ vars.CLIENT_CF_DISTRIBUTION_ID }}
