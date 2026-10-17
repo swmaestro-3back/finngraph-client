@@ -1,0 +1,66 @@
+name: deploy-static
+description: 빌드 산출물을 S3 에 올리고 CloudFront 캐시를 무효화한다. AWS 자격 증명은 호출 전에 설정돼 있어야 한다.
+
+inputs:
+  dist:
+    description: "빌드 산출물 디렉터리"
+    default: "dist"
+  bucket:
+    description: "S3 버킷 이름"
+    required: true
+  distribution_id:
+    description: "CloudFront 배포 ID"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: 배포 대상 확인
+      shell: bash
+      env:
+        S3_BUCKET: ${{ inputs.bucket }}
+        CF_DISTRIBUTION_ID: ${{ inputs.distribution_id }}
+      run: |
+        : "${S3_BUCKET:?bucket 이 비어 있음}"
+        : "${CF_DISTRIBUTION_ID:?distribution_id 가 비어 있음}"
+
+    - name: 에셋 업로드 (해시 파일명 · 영구 캐시)
+      shell: bash
+      env:
+        DIST: ${{ inputs.dist }}
+        S3_BUCKET: ${{ inputs.bucket }}
+      run: |
+        aws s3 sync "${DIST}/" "s3://${S3_BUCKET}/" \
+          --exclude "*" --include "assets/*" \
+          --size-only \
+          --cache-control "public,max-age=31536000,immutable"
+
+    - name: 루트 파일 업로드 (index.html 제외)
+      shell: bash
+      env:
+        DIST: ${{ inputs.dist }}
+        S3_BUCKET: ${{ inputs.bucket }}
+      run: |
+        aws s3 sync "${DIST}/" "s3://${S3_BUCKET}/" \
+          --exclude "assets/*" --exclude "index.html" \
+          --cache-control "no-cache"
+
+    - name: index.html 업로드 (마지막)
+      shell: bash
+      env:
+        DIST: ${{ inputs.dist }}
+        S3_BUCKET: ${{ inputs.bucket }}
+      run: |
+        aws s3 cp "${DIST}/index.html" "s3://${S3_BUCKET}/index.html" \
+          --cache-control "no-cache,no-store,must-revalidate" \
+          --content-type "text/html; charset=utf-8"
+
+    - name: CloudFront 무효화
+      shell: bash
+      env:
+        CF_DISTRIBUTION_ID: ${{ inputs.distribution_id }}
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id "${CF_DISTRIBUTION_ID}" \
+          --paths / /index.html /favicon.svg \
+          --query 'Invalidation.Id' --output text
