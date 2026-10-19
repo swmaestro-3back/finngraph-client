@@ -30,6 +30,7 @@ function ScopeToggle({ value, onChange, wrap = false }: Props & { wrap?: boolean
   return (
     <ToggleGroup
       type="single"
+        slidingMark="rounded-md bg-primary"
       size="sm"
       spacing={0}
       value={value}

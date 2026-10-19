@@ -45,6 +45,7 @@ import {
   type LinkFilter,
   type LinkSort,
 } from '@/lib/fg/stockLinks'
+import { useContentSwap } from '@/lib/fg/useContentSwap'
 import { useFavoriteToggles } from '@/lib/fg/useFavoriteToggle'
 import { useMediaQuery } from '@/lib/fg/useMediaQuery'
 import { useMemberGate } from '@/lib/memberGate'
@@ -165,6 +166,8 @@ function LinkList({ lead, links, scope, narrow, watchedOf, onScope, onToggleWatc
   const [opened, setOpened] = useState<string | null>(null)
   const source = scope.source
   const scopeKey = `${source?.key ?? ''}|${scope.filter}`
+  const listRef = useRef<HTMLUListElement>(null)
+  useContentSwap(listRef, `${sort}|${scopeKey}`)
   const scoped = scopeLinks(links, source?.name ?? null)
   const rows = sortIssueLinks(
     scoped.filter((link) => scope.filter === 'all' || link.company.type === scope.filter),
@@ -218,7 +221,7 @@ function LinkList({ lead, links, scope, narrow, watchedOf, onScope, onToggleWatc
         </span>
         {narrow && segment}
       </div>
-      <ul className="fg-hlist fg-ilk__list" aria-label="이런 기업은 어때요? 목록">
+      <ul ref={listRef} className="fg-hlist fg-ilk__list" aria-label="이런 기업은 어때요? 목록">
         <HiddenLinkHead />
         {shown.map((link) => (
           <HiddenLinkRow
