@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
@@ -10,6 +10,7 @@ import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import type { CandleRes, StockIssueFlowRes } from '@/lib/apiTypes'
+import { useContentSwap } from '@/lib/fg/useContentSwap'
 import { formatChange } from '@/lib/format'
 import { formatPriceWon, toneClass } from '@/lib/fg/format'
 import { motionAllowed } from '@/lib/fg/motion'
@@ -104,6 +105,8 @@ interface FlowDetailProps {
 function FlowDetail({ flow, stockName, candles, today, onOpenIssue }: FlowDetailProps) {
   const { pathname, search } = useLocation()
   const [order, setOrder] = useState<FlowOrder>('time')
+  const listRef = useRef<HTMLOListElement>(null)
+  useContentSwap(listRef, order)
   const n = flow.items.length
   const span = flowChartWindow(flow, candles.length)
   const windowed = useMemo(() => candles.slice(span.from, span.to + 1), [candles, span.from, span.to])
@@ -141,7 +144,7 @@ function FlowDetail({ flow, stockName, candles, today, onOpenIssue }: FlowDetail
         <h3>{listTitle}</h3>
         {n > 1 && <Segment label="순서" options={FLOW_ORDERS} value={order} onChange={setOrder} />}
       </div>
-      <ol className="fg-vt" aria-label={listTitle}>
+      <ol ref={listRef} className="fg-vt" aria-label={listTitle}>
         {nodes.map((node) => {
           const { issue } = node
           return (
@@ -226,6 +229,8 @@ export function StockIssueFlows({ stockName, ticker, flows: found, candles, toda
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
   const [scroller, setScroller] = useState<HTMLDivElement | null>(null)
+  const stripRef = useRef<HTMLDivElement | null>(null)
+  useContentSwap(stripRef, `${sort}|${period}`)
   const [edges, setEdges] = useState({ start: true, end: true })
 
   const flows = useMemo(
@@ -326,7 +331,13 @@ export function StockIssueFlows({ stockName, ticker, flows: found, candles, toda
           )}
         </div>
         {list.length > 0 ? (
-          <div className="fg-sfl__scroll" ref={setScroller} onScroll={syncEdges} role="group" aria-label="이슈 흐름 목록">
+          <div
+            className="fg-sfl__scroll"
+            ref={(el) => {
+              stripRef.current = el
+              setScroller(el)
+            }}
+            onScroll={syncEdges} role="group" aria-label="이슈 흐름 목록">
             {list.map((flow) => (
               <FlowCard
                 key={flow.id}

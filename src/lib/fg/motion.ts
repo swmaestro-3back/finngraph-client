@@ -8,6 +8,11 @@ export const ROUTE_ENTER: Keyframe[] = [
   { opacity: 1, transform: 'none' },
 ]
 
+export const CONTENT_SWAP: Keyframe[] = [
+  { opacity: 0, transform: 'translateY(4px)' },
+  { opacity: 1, transform: 'none' },
+]
+
 export const STAR_POP: Keyframe[] = [{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }]
 
 export interface Span {

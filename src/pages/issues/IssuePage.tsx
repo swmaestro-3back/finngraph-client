@@ -155,7 +155,9 @@ function IssueView({ id, gap }: { id: string; gap: GapState<IssueBook> }) {
           mock={subject.kind === 'mock'}
           tabsRef={setTabsEl}
         />
-        <div className="fg-isp__panel">{panel}</div>
+        <div key={tab} className="fg-isp__panel fg-reveal">
+          {panel}
+        </div>
       </>
     )
   } else if (gap.status === 'loading' || (live && detail.loading)) {

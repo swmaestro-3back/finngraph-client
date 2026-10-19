@@ -933,7 +933,8 @@ a.fg-tnw__row:active::before,
     animation: fg-menu-in var(--fg-motion-base) var(--fg-ease);
   }
   .fg-gh__overlay,
-  .fg-reveal {
+  .fg-reveal,
+  .fg-hubc > :not(.fg-hubc__head) {
     animation: fg-fade-in var(--fg-motion-base) var(--fg-ease);
   }
   .fg-fold {
