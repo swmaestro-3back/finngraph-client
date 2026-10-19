@@ -14,6 +14,7 @@ import {
   type ArticleSort,
 } from '@/lib/fg/issueArticles'
 import type { IssueSubject } from '@/lib/fg/issueSubject'
+import { useContentSwap } from '@/lib/fg/useContentSwap'
 
 const SOURCE_NOTE = '기사 원문은 각 매체 사이트에서 열려요. Finngraph는 제목과 링크만 보여 주고 기사 전문은 싣지 않아요.'
 
@@ -69,6 +70,7 @@ export function IssueArticlesTab({ issue, onOpenNews }: IssueArticlesTabProps) {
   const [sort, setSort] = useState<ArticleSort>('time')
   const [all, setAll] = useState(false)
   const listRef = useRef<HTMLUListElement>(null)
+  useContentSwap(listRef, sort)
   const rows = articleRows(issue.articles, sort)
   const shown = all ? rows : rows.slice(0, ARTICLE_LIMIT)
   const rest = rows.length - shown.length

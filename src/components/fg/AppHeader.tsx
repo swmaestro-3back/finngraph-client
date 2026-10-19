@@ -6,6 +6,7 @@ import { SearchBox } from '@/components/fg/SearchBox'
 import { UserMenu } from '@/components/fg/UserMenu'
 import { activeMenu, MAIN_MENU, SIDE_LINKS } from '@/lib/fg/nav'
 import { isSearchShortcut } from '@/lib/fg/search'
+import { useSlidingMark } from '@/lib/fg/useSlidingMark'
 import { cn } from '@/lib/utils'
 
 const WIDE_SEARCH = '(min-width: 1024px)'
@@ -16,6 +17,9 @@ export function AppHeader() {
   const [overlayOpen, setOverlayOpen] = useState(false)
   const deskInput = useRef<HTMLInputElement>(null)
   const searchToggle = useRef<HTMLButtonElement>(null)
+  const nav = useRef<HTMLElement>(null)
+  const navMark = useRef<HTMLSpanElement>(null)
+  useSlidingMark(nav, navMark, MAIN_MENU.findIndex((item) => item.key === active), { items: 'a' })
 
   useEffect(() => {
     setOverlayOpen(false)
@@ -39,7 +43,8 @@ export function AppHeader() {
         <Link to="/" className="fg-gh__logo" aria-label="Finngraph 홈">
           <Logo height={24} />
         </Link>
-        <nav className="fg-gh__nav" aria-label="주 메뉴">
+        <nav ref={nav} className="fg-gh__nav" aria-label="주 메뉴">
+          <span ref={navMark} className="fg-gh__mark" aria-hidden="true" />
           {MAIN_MENU.map((item) => (
             <Link key={item.key} to={item.to} aria-current={active === item.key ? 'page' : undefined}>
               {item.label}

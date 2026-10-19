@@ -15,6 +15,7 @@ export function LensSelector({ value, onChange }: Props) {
     <div data-guide="lens" className="flex items-center rounded-lg border border-border bg-background/90 p-1.5 shadow-soft backdrop-blur">
       <ToggleGroup
         type="single"
+        slidingMark="rounded-md bg-primary"
         size="sm"
         spacing={0}
         value={value}

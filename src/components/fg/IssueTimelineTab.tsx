@@ -1,5 +1,5 @@
 import { ChevronRight, ExternalLink } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
@@ -23,6 +23,7 @@ import {
 } from '@/lib/fg/issueTimeline'
 import { issuePath, stockPath } from '@/lib/fg/paths'
 import { navState } from '@/lib/fg/stockDetail'
+import { useContentSwap } from '@/lib/fg/useContentSwap'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { useIssueTabTarget } from '@/lib/fg/useIssueTab'
 import { fromState } from '@/lib/navigation'
@@ -162,6 +163,8 @@ export function IssueTimelineTab({ issue, story, linked, quotes, onOpenNews, onR
   const tabTarget = useIssueTabTarget()
   const [order, setOrder] = useState<TimelineOrder>('new')
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set())
+  const listRef = useRef<HTMLOListElement>(null)
+  useContentSwap(listRef, order)
   const waiting = issue.kind === 'live' && story !== null && story.data === null && story.error === null
   const skeleton = useDelayed(waiting)
   if (waiting) return skeleton ? <TimelineSkeleton /> : null
@@ -206,7 +209,7 @@ export function IssueTimelineTab({ issue, story, linked, quotes, onOpenNews, onR
             )}
           </div>
           <p className="fg-isp__lead">{model.subtitle}</p>
-          <ol className="fg-itl__list" aria-label={model.listLabel}>
+          <ol ref={listRef} className="fg-itl__list" aria-label={model.listLabel}>
             {model.nodes.map((node) => (
               <TimelineItem
                 key={node.key}

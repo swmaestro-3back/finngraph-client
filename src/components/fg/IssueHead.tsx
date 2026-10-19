@@ -1,9 +1,10 @@
-import type { Ref } from 'react'
+import { useRef, type Ref } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { MockBadge } from '@/components/fg/Gap'
 import { ISSUE_TABS, issueTabSearch, type IssueHead as IssueHeadModel, type IssueTab } from '@/lib/fg/issuePage'
 import { navState } from '@/lib/fg/stockDetail'
+import { useSlidingMark } from '@/lib/fg/useSlidingMark'
 
 interface IssueTabsProps {
   current: IssueTab
@@ -13,9 +14,13 @@ interface IssueTabsProps {
 
 export function IssueTabs({ current, counts, ref }: IssueTabsProps) {
   const { pathname, search, state } = useLocation()
+  const list = useRef<HTMLUListElement>(null)
+  const mark = useRef<HTMLLIElement>(null)
+  useSlidingMark(list, mark, ISSUE_TABS.findIndex((tab) => tab.value === current), { items: '.fg-ptab' })
   return (
     <nav ref={ref} className="fg-sdtabs fg-ish__tabs" aria-label="이슈 보기">
-      <ul className="fg-ptabs">
+      <ul ref={list} className="fg-ptabs">
+        <li ref={mark} className="fg-ptabs__mark" aria-hidden="true" />
         {ISSUE_TABS.map((tab) => (
           <li key={tab.value}>
             <Link

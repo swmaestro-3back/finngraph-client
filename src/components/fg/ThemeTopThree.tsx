@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
@@ -7,6 +7,7 @@ import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
+import { useContentSwap } from '@/lib/fg/useContentSwap'
 import { formatChange, formatCompactKrw } from '@/lib/format'
 import { formatPriceWon, marketLabel, toneClass } from '@/lib/fg/format'
 import { stockPath } from '@/lib/fg/paths'
@@ -51,6 +52,8 @@ interface ThemeTopThreeProps {
 
 export function ThemeTopThree({ theme, stocks, from, refreshKey, className }: ThemeTopThreeProps) {
   const [period, setPeriod] = useState<ReturnPeriod>(DEFAULT_RETURN_PERIOD)
+  const listRef = useRef<HTMLOListElement>(null)
+  useContentSwap(listRef, period)
   const [hl, setHl] = useState<number | null>(null)
   const rows = useMemo(() => topThreeRows(theme, stocks), [theme, stocks])
   const first = useCandlesCached(rows[0]?.ticker ?? null, 'D', LEADER_CANDLE_LIMIT)
@@ -120,7 +123,7 @@ export function ThemeTopThree({ theme, stocks, from, refreshKey, className }: Th
         </div>
         <Segment label="수익률 기간" options={RETURN_PERIODS} value={period} onChange={setPeriod} />
       </div>
-      <ol className="fg-t3list" aria-label={`시가총액 상위 ${rows.length}종목`}>
+      <ol ref={listRef} className="fg-t3list" aria-label={`시가총액 상위 ${rows.length}종목`}>
         {rows.map((row, i) => (
           <li key={row.ticker}>
             <Link

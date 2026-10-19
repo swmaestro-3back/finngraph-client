@@ -1,5 +1,5 @@
 import { ChevronDown, Star } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
@@ -7,6 +7,7 @@ import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChipGroup } from '@/components/fg/FilterChip'
 import { IconButton } from '@/components/fg/IconButton'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { useContentSwap } from '@/lib/fg/useContentSwap'
 import { formatChange } from '@/lib/format'
 import { formatGapPct, formatPriceWon, marketLabel, toneClass } from '@/lib/fg/format'
 import { stockPath } from '@/lib/fg/paths'
@@ -156,6 +157,8 @@ export function HiddenLinkList({ stockName, companies, watchedOf, onToggleWatch,
   const [filter, setFilter] = useState<LinkFilter>('all')
   const [sort, setSort] = useState<LinkSort>('strength')
   const [limit, setLimit] = useState(LINK_LIST_PAGE)
+  const listRef = useRef<HTMLUListElement>(null)
+  useContentSwap(listRef, `${sort}|${filter}`)
   const rows = sortLinks(filterLinks(companies, filter), sort)
   const shown = rows.slice(0, limit)
   const more = rows.length - shown.length
@@ -172,7 +175,7 @@ export function HiddenLinkList({ stockName, companies, watchedOf, onToggleWatch,
       <span className="fg-hlist__cap fg-num" aria-live="polite">
         {linkCaption(filter, rows.length, sort)}
       </span>
-      <ul className="fg-hlist" aria-label="이어진 기업 목록">
+      <ul ref={listRef} className="fg-hlist" aria-label="이어진 기업 목록">
         <HiddenLinkHead />
         {shown.map((company) => (
           <HiddenLinkRow
