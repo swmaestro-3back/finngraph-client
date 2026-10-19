@@ -16,6 +16,7 @@ export function EventPeriodSelector({ value, onChange }: Props) {
       <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground md:text-xs">기간</span>
       <ToggleGroup
         type="single"
+        slidingMark="rounded-md bg-primary"
         size="sm"
         spacing={0}
         value={value}

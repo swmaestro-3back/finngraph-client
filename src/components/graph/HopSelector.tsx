@@ -30,6 +30,7 @@ export function HopSelector({ value, onChange, labels, lockedFrom, onLockedSelec
       </span>
       <ToggleGroup
         type="single"
+        slidingMark="rounded-md bg-primary"
         size="sm"
         spacing={0}
         value={String(value)}

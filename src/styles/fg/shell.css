@@ -565,7 +565,9 @@
   min-width: 40px;
 }
 .fg-seg__mark,
-.fg-tabs__mark {
+.fg-tabs__mark,
+.fg-ptabs__mark,
+.fg-htabs__mark {
   position: absolute;
   left: 0;
   display: none;
@@ -580,8 +582,75 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 .fg-seg[data-mark] > .fg-seg__mark,
-.fg-tabs[data-mark] > .fg-tabs__mark {
+.fg-tabs[data-mark] > .fg-tabs__mark,
+.fg-ptabs[data-mark] > .fg-ptabs__mark,
+.fg-htabs[data-mark] > .fg-htabs__mark {
   display: block;
+}
+.fg-ptabs,
+.fg-htabs {
+  position: relative;
+}
+.fg-ptabs__mark {
+  bottom: 0;
+  height: 2px;
+  background: var(--action-primary);
+}
+.fg-htabs__mark {
+  bottom: 0;
+  height: 3px;
+  background: var(--text-primary);
+}
+.fg-ptabs[data-mark] .fg-ptab[aria-current='page'],
+.fg-htabs[data-mark] .fg-htab[aria-current='page'] {
+  box-shadow: none;
+}
+.fg-gh__mark,
+.fg-btabs__mark,
+.fg-tgmark {
+  position: absolute;
+  left: 0;
+  display: none;
+  transform-origin: left center;
+  pointer-events: none;
+}
+.fg-gh__nav[data-mark] > .fg-gh__mark,
+.fg-btabs[data-mark] > .fg-btabs__mark,
+[data-slot='toggle-group'][data-mark] > .fg-tgmark {
+  display: block;
+}
+.fg-gh__nav {
+  position: relative;
+}
+.fg-gh__mark {
+  bottom: 0;
+  height: 2px;
+  background: var(--text-primary);
+}
+.fg-gh__nav[data-mark] a[aria-current='page'] {
+  box-shadow: none;
+}
+.fg-btabs__mark {
+  top: 0;
+  height: 3px;
+}
+.fg-btabs__mark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 24px;
+  height: 3px;
+  margin-left: -12px;
+  border-radius: 0 0 3px 3px;
+  background: var(--text-primary);
+}
+.fg-tgmark {
+  top: 0;
+}
+[data-slot='toggle-group'][data-mark] [data-slot='toggle-group-item'] {
+  position: relative;
+  z-index: 1;
 }
 .fg-seg[data-mark] button[aria-selected='true'] {
   background: none;

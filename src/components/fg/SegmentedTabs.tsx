@@ -100,8 +100,15 @@ interface HeadingTabsProps {
 }
 
 export function HeadingTabs({ label, options, current, className }: HeadingTabsProps) {
+  const list = useRef<HTMLElement>(null)
+  const mark = useRef<HTMLSpanElement>(null)
+  useSlidingMark(list, mark, options.findIndex((option) => option.key === current), {
+    items: '.fg-htab',
+    memory: `htabs:${label}`,
+  })
   return (
-    <nav className={cn('fg-htabs', className)} aria-label={label}>
+    <nav ref={list} className={cn('fg-htabs', className)} aria-label={label}>
+      <span ref={mark} className="fg-htabs__mark" aria-hidden="true" />
       {options.map((option) => (
         <Link
           key={option.key}
