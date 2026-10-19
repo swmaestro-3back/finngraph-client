@@ -849,6 +849,31 @@
     opacity: 1;
   }
 }
+@keyframes fg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fg-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fg-pop {
+  50% {
+    transform: scale(1.12);
+  }
+}
 @keyframes fg-menu-in {
   from {
     opacity: 0;
@@ -1153,5 +1178,56 @@ a.fg-tnw__row:active::before,
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   .fg-sidesheet--modal[data-state='open'] {
     animation-name: fg-modal-in;
+  }
+}
+@property --fg-stagger {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(
+    .fg-col, .fg-rail, .fg-home__col, .fg-home__rail
+  ) > *,
+  :is(
+    .fg-dl, .fg-hlist, .fg-mlist, .fg-iar__list, .fg-itl__list, .fg-itl__slist, .fg-isum__list,
+    .fg-sic__list, .fg-sev__list, .fg-t3list, .fg-tnw__list, .fg-htt__list, .fg-hsr__list,
+    .fg-hubm__list, .fg-acc, .fg-cal-agenda, .fg-cal-ipo__list, .fg-cal-day-list__list,
+    .fg-cal-ctr__list, .fg-cal-intro__list, .fg-tcm__list, .fg-stp__list, .fg-sth__list, .fg-vt,
+    .fg-ics__grid, .fg-iflow__mtl, .fg-hfeed__rail, .fg-isheet__steps
+  ) > li:nth-child(-n + 12),
+  .card-surface {
+    animation: fg-rise var(--fg-motion-base) var(--fg-ease) backwards;
+    animation-delay: calc(var(--fg-stagger) * 40ms);
+  }
+  :nth-child(2) {
+    --fg-stagger: 1;
+  }
+  :nth-child(3) {
+    --fg-stagger: 2;
+  }
+  :nth-child(4) {
+    --fg-stagger: 3;
+  }
+  :nth-child(5) {
+    --fg-stagger: 4;
+  }
+  :nth-child(6) {
+    --fg-stagger: 5;
+  }
+  :nth-child(7) {
+    --fg-stagger: 6;
+  }
+  :nth-child(8) {
+    --fg-stagger: 7;
+  }
+  :nth-child(n + 9) {
+    --fg-stagger: 8;
+  }
+  :is(.fg-col, .fg-rail, .fg-home__col, .fg-home__rail, .fg-hubc) :is(.fg-chip, .fg-badge) {
+    animation: fg-pop-in var(--fg-motion-fast) var(--fg-ease) backwards;
+  }
+  .fg-btabs a[aria-current='page'] svg {
+    animation: fg-pop var(--fg-motion-base) var(--fg-ease);
   }
 }
