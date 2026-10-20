@@ -431,6 +431,7 @@ export interface FavoriteItemRes {
   resolved: boolean
   stock: FavoriteStockRes | null
   theme: FavoriteThemeRes | null
+  folderIds: number[]
 }
 
 interface FavoriteStockRes {
@@ -456,6 +457,66 @@ export interface FavoriteListRes {
   count: number
   limit: number
   items: FavoriteItemRes[]
+  folders: FolderSummaryRes[]
+  folderLimit: number
+}
+
+export interface FolderSummaryRes {
+  id: number
+  name: string
+  position: number
+  count: number
+  change: number | null
+  return1m: number | null
+  spark: number[]
+}
+
+export interface FavoriteFolderRes {
+  id: number
+  name: string
+  position: number
+  count: number
+}
+
+export interface FolderSuggestRes {
+  theme: { id: number; name: string } | null
+  folders: {
+    id: number
+    name: string
+    count: number
+    included: boolean
+    theme: { id: number; name: string } | null
+    matched: string[]
+    recommended: boolean
+  }[]
+  newName: string | null
+}
+
+export type FolderReturnPeriod = '1W' | '1M' | '3M'
+
+export interface FavoriteReturnsRes {
+  period: FolderReturnPeriod
+  from: string | null
+  total: number | null
+  stockCount: number
+  points: ReturnPointRes[]
+  stocks: MemberReturnRes[]
+}
+
+export interface ReturnPointRes {
+  date: string
+  value: number
+}
+
+export interface MemberReturnRes {
+  ticker: string
+  name: string
+  total: number | null
+  points: ReturnPointRes[]
+}
+
+export interface FolderReturnsRes extends FavoriteReturnsRes {
+  folderId: number
 }
 
 type ContractRole = 'FILER' | 'COUNTERPARTY'

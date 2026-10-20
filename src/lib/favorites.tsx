@@ -5,25 +5,50 @@
 // 다른 곳에 반영되지 않는다. react-query가 없는 저장소라 auth.tsx와 같은 Context 패턴을 쓴다.
 //
 // 목록 한 벌이 두 가지 용도를 겸한다 — 별표는 키 집합만 보면 되고(파생 Set),
-// 마이페이지는 보강 필드까지 쓴다. 등록은 상세·목록에서만 일어나고 마이페이지는
-// 해제만 하므로, 등록 직후 보강이 비어 있는 항목이 화면에 노출되는 경로가 없다.
+// 마이페이지는 보강 필드까지 쓴다.
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { toast } from 'sonner'
-import { ApiError, deleteData, getData, putData } from '@/lib/api'
+import { ApiError, deleteData, getData, patchData, postData, putData } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
-import type { FavoriteItemRes, FavoriteKind, FavoriteListRes } from '@/lib/apiTypes'
+import type {
+  FavoriteFolderRes,
+  FavoriteItemRes,
+  FavoriteKind,
+  FavoriteListRes,
+  FolderSummaryRes,
+} from '@/lib/apiTypes'
 
 /** 키 집합의 원소 형식 — 유형이 달라도 키가 겹칠 수 있어 유형을 접두로 붙인다 */
 function favoriteKey(type: FavoriteKind, key: string): string {
   return `${type}:${key}`
+}
+
+export interface SaveOrigin {
+  label?: string | null
+  anchor?: HTMLElement | null
+}
+
+export interface FolderTarget {
+  type: FavoriteKind
+  key: string
+}
+
+export interface SavePrompt {
+  id: number
+  type: FavoriteKind
+  key: string
+  label: string | null
+  anchor: HTMLElement | null
+  fresh: boolean
 }
 
 interface FavoriteState {
@@ -34,40 +59,76 @@ interface FavoriteState {
   count: number
   limit: number
   isFull: boolean
+  folders: FolderSummaryRes[]
+  folderLimit: number
+  prompt: SavePrompt | null
   has: (type: FavoriteKind, key: string) => boolean
-  toggle: (type: FavoriteKind, key: string) => Promise<void>
+  toggle: (type: FavoriteKind, key: string, origin?: SaveOrigin) => Promise<void>
   remove: (type: FavoriteKind, key: string) => Promise<void>
   refresh: () => Promise<void>
+  openPrompt: (type: FavoriteKind, key: string, origin?: SaveOrigin, fresh?: boolean) => void
+  closePrompt: () => void
+  createFolder: (name: string) => Promise<FavoriteFolderRes | null>
+  renameFolder: (id: number, name: string) => Promise<boolean>
+  deleteFolder: (id: number) => Promise<boolean>
+  reorderFolders: (ids: number[]) => Promise<boolean>
+  addToFolder: (folderId: number, type: FavoriteKind, key: string) => Promise<boolean>
+  fillFolder: (folderId: number, targets: readonly FolderTarget[]) => Promise<boolean>
+  removeFromFolder: (folderId: number, type: FavoriteKind, key: string) => Promise<boolean>
 }
 
 const FavoriteContext = createContext<FavoriteState | null>(null)
 
 const LIMIT_FALLBACK = 50
+const FOLDER_LIMIT_FALLBACK = 20
+
+function normalize(items: FavoriteItemRes[]): FavoriteItemRes[] {
+  return items.map((item) => ({ ...item, folderIds: item.folderIds ?? [] }))
+}
+
+function itemPath(type: FavoriteKind, key: string): string {
+  return `${type}/${encodeURIComponent(key)}`
+}
+
+function emptyItem(type: FavoriteKind, key: string, folderIds: number[]): FavoriteItemRes {
+  return { type, key, createdAt: new Date().toISOString(), resolved: false, stock: null, theme: null, folderIds }
+}
 
 export function FavoriteProvider({ children }: { children: ReactNode }) {
   const { status } = useAuth()
   const [items, setItems] = useState<FavoriteItemRes[]>([])
   const [limit, setLimit] = useState(LIMIT_FALLBACK)
+  const [folders, setFolders] = useState<FolderSummaryRes[]>([])
+  const [folderLimit, setFolderLimit] = useState(FOLDER_LIMIT_FALLBACK)
+  const [prompt, setPrompt] = useState<SavePrompt | null>(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState(false)
+  const promptSeq = useRef(0)
+
+  const apply = useCallback((list: FavoriteListRes) => {
+    setItems(normalize(list.items))
+    setLimit(list.limit)
+    setFolders(list.folders ?? [])
+    setFolderLimit(list.folderLimit ?? FOLDER_LIMIT_FALLBACK)
+    setReady(true)
+    setError(false)
+  }, [])
 
   const refresh = useCallback(async () => {
     try {
-      const list = await getData<FavoriteListRes>('/v1/me/favorites')
-      setItems(list.items)
-      setLimit(list.limit)
-      setReady(true)
-      setError(false)
+      apply(await getData<FavoriteListRes>('/v1/me/favorites'))
     } catch (e) {
       setError(true)
       throw e
     }
-  }, [])
+  }, [apply])
 
   // 로그인 상태가 확정될 때만 움직인다 — loading 중 호출은 401을 유발한다
   useEffect(() => {
     if (status !== 'authenticated') {
       setItems([])
+      setFolders([])
+      setPrompt(null)
       setReady(false)
       setError(false)
       return
@@ -76,10 +137,7 @@ export function FavoriteProvider({ children }: { children: ReactNode }) {
     getData<FavoriteListRes>('/v1/me/favorites').then(
       (list) => {
         if (cancelled) return
-        setItems(list.items)
-        setLimit(list.limit)
-        setReady(true)
-        setError(false)
+        apply(list)
       },
       () => {
         // 목록을 못 받아도 화면은 살아 있어야 한다 — 별표만 비활성처럼 보인다
@@ -91,7 +149,7 @@ export function FavoriteProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [status])
+  }, [status, apply])
 
   const keys = useMemo(
     () => new Set(items.map((it) => favoriteKey(it.type, it.key))),
@@ -117,35 +175,52 @@ export function FavoriteProvider({ children }: { children: ReactNode }) {
       toast.error('존재하지 않는 종목 또는 테마예요')
       return
     }
+    if (err.code === 'FAVORITE_FOLDER_LIMIT_EXCEEDED') {
+      toast.error(`나만의 테마는 ${folderLimit}개까지 만들 수 있어요`)
+      return
+    }
+    if (err.code === 'FAVORITE_FOLDER_NAME_DUPLICATE') {
+      toast.error('같은 이름의 테마가 이미 있어요')
+      return
+    }
+    if (err.code === 'FAVORITE_FOLDER_NOT_FOUND') {
+      toast.error('이미 지워진 테마예요')
+      return
+    }
+    if (err.code === 'INVALID_PARAMETER') {
+      toast.error('테마 이름은 1~20자로 지어 주세요')
+      return
+    }
     if (err.status === 401) {
       toast.error('로그인이 필요해요')
       return
     }
     toast.error('요청을 처리하지 못했어요')
-  }, [limit])
+  }, [limit, folderLimit])
+
+  const openPrompt = useCallback((type: FavoriteKind, key: string, origin?: SaveOrigin, fresh = false) => {
+    promptSeq.current += 1
+    setPrompt({ id: promptSeq.current, type, key, label: origin?.label ?? null, anchor: origin?.anchor ?? null, fresh })
+  }, [])
+
+  const closePrompt = useCallback(() => setPrompt(null), [])
 
   const add = useCallback(
-    async (type: FavoriteKind, key: string) => {
+    async (type: FavoriteKind, key: string, origin?: SaveOrigin) => {
       // 낙관적 반영 — 서버 응답을 기다리면 별표가 굼뜨게 느껴진다.
-      // createdAt은 임시값이고 보강 필드는 비운다(마이페이지에서 등록하는 경로가 없어 노출되지 않는다)
-      const optimistic: FavoriteItemRes = {
-        type,
-        key,
-        createdAt: new Date().toISOString(),
-        resolved: false,
-        stock: null,
-        theme: null,
-      }
-      setItems((prev) => [optimistic, ...prev])
+      setItems((prev) => [emptyItem(type, key, []), ...prev])
+      if (type === 'STOCK') openPrompt(type, key, origin, true)
       try {
-        await putData<unknown>(`/v1/me/favorites/${type}/${encodeURIComponent(key)}`)
+        await putData<unknown>(`/v1/me/favorites/${itemPath(type, key)}`)
+        if (type === 'THEME') toast.success('관심 테마에 담았어요', { description: '나만의 테마에서 모아 볼 수 있어요' })
         await refresh()
       } catch (err) {
         setItems((prev) => prev.filter((it) => !(it.type === type && it.key === key)))
+        setPrompt((current) => (current && current.type === type && current.key === key ? null : current))
         notifyFailure(err)
       }
     },
-    [notifyFailure, refresh],
+    [notifyFailure, openPrompt, refresh],
   )
 
   const remove = useCallback(
@@ -153,21 +228,151 @@ export function FavoriteProvider({ children }: { children: ReactNode }) {
       const snapshot = items
       setItems((prev) => prev.filter((it) => !(it.type === type && it.key === key)))
       try {
-        await deleteData(`/v1/me/favorites/${type}/${encodeURIComponent(key)}`)
+        await deleteData(`/v1/me/favorites/${itemPath(type, key)}`)
+        if (folders.length > 0) await refresh().catch(() => {})
       } catch (err) {
         setItems(snapshot)
         notifyFailure(err)
       }
     },
-    [items, notifyFailure],
+    [items, folders.length, notifyFailure, refresh],
   )
 
   const toggle = useCallback(
-    async (type: FavoriteKind, key: string) => {
+    async (type: FavoriteKind, key: string, origin?: SaveOrigin) => {
       if (has(type, key)) return remove(type, key)
-      return add(type, key)
+      return add(type, key, origin)
     },
     [add, has, remove],
+  )
+
+  const mutate = useCallback(
+    async (request: () => Promise<unknown>, rollback?: () => void): Promise<boolean> => {
+      try {
+        await request()
+        await refresh().catch(() => {})
+        return true
+      } catch (err) {
+        rollback?.()
+        notifyFailure(err)
+        if (err instanceof ApiError && err.code === 'FAVORITE_FOLDER_NOT_FOUND') await refresh().catch(() => {})
+        return false
+      }
+    },
+    [notifyFailure, refresh],
+  )
+
+  const createFolder = useCallback(
+    async (name: string): Promise<FavoriteFolderRes | null> => {
+      try {
+        const folder = await postData<FavoriteFolderRes>('/v1/me/favorite-folders', { name })
+        setFolders((prev) => [
+          ...prev,
+          { id: folder.id, name: folder.name, position: folder.position, count: 0, change: null, return1m: null, spark: [] },
+        ])
+        return folder
+      } catch (err) {
+        notifyFailure(err)
+        return null
+      }
+    },
+    [notifyFailure],
+  )
+
+  const renameFolder = useCallback(
+    (id: number, name: string) => {
+      const snapshot = folders
+      setFolders((prev) => prev.map((folder) => (folder.id === id ? { ...folder, name } : folder)))
+      return mutate(() => patchData<FavoriteFolderRes>(`/v1/me/favorite-folders/${id}`, { name }), () => setFolders(snapshot))
+    },
+    [folders, mutate],
+  )
+
+  const deleteFolder = useCallback(
+    (id: number) => {
+      const snapshot = { folders, items }
+      setFolders((prev) => prev.filter((folder) => folder.id !== id))
+      setItems((prev) => prev.map((item) => ({ ...item, folderIds: item.folderIds.filter((value) => value !== id) })))
+      return mutate(
+        () => deleteData(`/v1/me/favorite-folders/${id}`),
+        () => {
+          setFolders(snapshot.folders)
+          setItems(snapshot.items)
+        },
+      )
+    },
+    [folders, items, mutate],
+  )
+
+  const reorderFolders = useCallback(
+    (ids: number[]) => {
+      const snapshot = folders
+      const byId = new Map(folders.map((folder) => [folder.id, folder]))
+      setFolders(
+        ids.flatMap((id, position) => {
+          const folder = byId.get(id)
+          return folder ? [{ ...folder, position }] : []
+        }),
+      )
+      return mutate(() => putData<unknown>('/v1/me/favorite-folders/order', { ids }), () => setFolders(snapshot))
+    },
+    [folders, mutate],
+  )
+
+  const addToFolder = useCallback(
+    (folderId: number, type: FavoriteKind, key: string) => {
+      const snapshot = items
+      setItems((prev) => {
+        const held = prev.some((it) => it.type === type && it.key === key)
+        if (!held) return [emptyItem(type, key, [folderId]), ...prev]
+        return prev.map((it) =>
+          it.type === type && it.key === key && !it.folderIds.includes(folderId)
+            ? { ...it, folderIds: [...it.folderIds, folderId] }
+            : it,
+        )
+      })
+      return mutate(
+        () => putData<unknown>(`/v1/me/favorite-folders/${folderId}/items/${itemPath(type, key)}`),
+        () => setItems(snapshot),
+      )
+    },
+    [items, mutate],
+  )
+
+  const fillFolder = useCallback(
+    (folderId: number, targets: readonly FolderTarget[]) => {
+      if (targets.length === 0) return Promise.resolve(true)
+      const wanted = new Set(targets.map((target) => favoriteKey(target.type, target.key)))
+      setItems((prev) =>
+        prev.map((it) =>
+          wanted.has(favoriteKey(it.type, it.key)) && !it.folderIds.includes(folderId)
+            ? { ...it, folderIds: [...it.folderIds, folderId] }
+            : it,
+        ),
+      )
+      return mutate(async () => {
+        for (const target of targets) {
+          await putData<unknown>(`/v1/me/favorite-folders/${folderId}/items/${itemPath(target.type, target.key)}`)
+        }
+      })
+    },
+    [mutate],
+  )
+
+  const removeFromFolder = useCallback(
+    (folderId: number, type: FavoriteKind, key: string) => {
+      const snapshot = items
+      setItems((prev) =>
+        prev.map((it) =>
+          it.type === type && it.key === key ? { ...it, folderIds: it.folderIds.filter((value) => value !== folderId) } : it,
+        ),
+      )
+      return mutate(
+        () => deleteData(`/v1/me/favorite-folders/${folderId}/items/${itemPath(type, key)}`),
+        () => setItems(snapshot),
+      )
+    },
+    [items, mutate],
   )
 
   const value = useMemo(
@@ -178,12 +383,45 @@ export function FavoriteProvider({ children }: { children: ReactNode }) {
       count: items.length,
       limit,
       isFull: items.length >= limit,
+      folders,
+      folderLimit,
+      prompt,
       has,
       toggle,
       remove,
       refresh,
+      openPrompt,
+      closePrompt,
+      createFolder,
+      renameFolder,
+      deleteFolder,
+      reorderFolders,
+      addToFolder,
+      fillFolder,
+      removeFromFolder,
     }),
-    [ready, error, items, limit, has, toggle, remove, refresh],
+    [
+      ready,
+      error,
+      items,
+      limit,
+      folders,
+      folderLimit,
+      prompt,
+      has,
+      toggle,
+      remove,
+      refresh,
+      openPrompt,
+      closePrompt,
+      createFolder,
+      renameFolder,
+      deleteFolder,
+      reorderFolders,
+      addToFolder,
+      fillFolder,
+      removeFromFolder,
+    ],
   )
 
   return <FavoriteContext.Provider value={value}>{children}</FavoriteContext.Provider>
