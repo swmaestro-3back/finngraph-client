@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import type { IssueSummaryRes, StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import {
   autoFlags,
-  coveragePct,
   flowLabels,
   hubCaption,
   hubIssueItems,
@@ -135,14 +134,6 @@ describe('themeMovers', () => {
   })
 })
 
-describe('coveragePct', () => {
-  it('목록에서 매체가 가장 많은 이슈를 100으로 둬요', () => {
-    expect(coveragePct(23, 23)).toBe(100)
-    expect(coveragePct(15, 23)).toBe(65)
-    expect(coveragePct(1, 0)).toBe(0)
-  })
-})
-
 describe('nextAuto', () => {
   it('다음 항목으로 넘기고, 한 바퀴를 돌면 1위에서 멈춰요', () => {
     expect(nextAuto(0, 5, false)).toEqual({ sel: 1, stop: false })
@@ -244,11 +235,11 @@ function issue(id: number, mediaCount: number, title: string | null = `이슈 ${
 }
 
 describe('hubIssueItems', () => {
-  it('화제성 막대는 목록 최댓값 기준이고 보도일은 목록 날짜를 따라요', () => {
+  it('보도일은 목록 날짜를 따라요', () => {
     const items = hubIssueItems([issue(1, 4), issue(2, 1, null)], '2026-09-30')
-    expect(items.map((i) => [i.id, i.pct, i.day])).toEqual([
-      ['1', 100, '2026-09-30'],
-      ['2', 25, '2026-09-30'],
+    expect(items.map((i) => [i.id, i.media, i.day])).toEqual([
+      ['1', 4, '2026-09-30'],
+      ['2', 1, '2026-09-30'],
     ])
     expect(items[1].title).toBe('제목 없는 이슈')
     expect(items[0].summary).toBe('요약')
@@ -261,9 +252,9 @@ describe('hubIssueItems', () => {
   it('목록에 없는 이슈로 들어오면 맨 뒤에 붙이고 그 이슈의 보도일을 써요', () => {
     const extra = { ...issue(9, 8), lastPublishedAt: '2026-09-27T10:00:00+09:00' }
     const items = hubIssueItems([issue(1, 4)], '2026-09-30', extra)
-    expect(items.map((i) => [i.id, i.pct, i.day])).toEqual([
-      ['1', 50, '2026-09-30'],
-      ['9', 100, '2026-09-27'],
+    expect(items.map((i) => [i.id, i.media, i.day])).toEqual([
+      ['1', 4, '2026-09-30'],
+      ['9', 8, '2026-09-27'],
     ])
     expect(hubIssueItems([issue(1, 4)], '2026-09-30', issue(1, 4))).toHaveLength(1)
   })
