@@ -1,12 +1,8 @@
-import { Link } from 'react-router-dom'
 import { LEGAL_DOCS, type LegalSlug } from '@/data/legal'
-import { cn } from '@/lib/utils'
 
 interface LegalPageProps {
   doc: LegalSlug
 }
-
-const TABS: readonly LegalSlug[] = ['terms', 'privacy']
 
 export default function LegalPage({ doc }: LegalPageProps) {
   const current = LEGAL_DOCS[doc]
@@ -14,25 +10,7 @@ export default function LegalPage({ doc }: LegalPageProps) {
   return (
     <div className="page-container pt-7 pb-16">
       <div className="mx-auto w-full max-w-2xl">
-        <nav aria-label="법적 고지 문서" className="flex gap-5 border-b border-border">
-          {TABS.map((slug) => (
-            <Link
-              key={slug}
-              to={`/${slug}`}
-              aria-current={slug === doc ? 'page' : undefined}
-              className={cn(
-                '-mb-px border-b-2 pb-2.5 text-sm font-medium transition-colors',
-                slug === doc
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {LEGAL_DOCS[slug].title}
-            </Link>
-          ))}
-        </nav>
-
-        <h1 className="mt-7 text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">
+        <h1 className="text-display font-medium leading-[1.1] tracking-[-0.8px] text-foreground">
           {current.title}
         </h1>
         <p className="mt-3 text-body leading-relaxed text-foreground-secondary break-keep">

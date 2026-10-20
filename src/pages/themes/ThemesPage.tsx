@@ -2,7 +2,6 @@ import { AlignJustify, LayoutGrid } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
-import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip } from '@/components/fg/FilterChip'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -387,7 +386,6 @@ export default function ThemesPage() {
         </div>
         <aside className="fg-rail" aria-label="고른 테마">
           {panel}
-          <Disclaimer />
         </aside>
       </div>
       <p className="fg-sr" aria-live="polite">

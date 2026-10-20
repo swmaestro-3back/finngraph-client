@@ -54,8 +54,9 @@ function LegacyIssueRedirect() {
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
+  const { pathname, search } = useLocation()
   if (status === 'loading') return null
-  if (status === 'anonymous') return <Navigate to="/login" replace />
+  if (status === 'anonymous') return <Navigate to="/login" replace state={{ next: `${pathname}${search}` }} />
   return children
 }
 
@@ -77,7 +78,6 @@ function App() {
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="/briefing/*" element={<Navigate to="/" replace />} />
         <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/terms" element={<LegalPage doc="terms" />} />
         <Route path="/privacy" element={<LegalPage doc="privacy" />} />
         <Route
           path="/me"

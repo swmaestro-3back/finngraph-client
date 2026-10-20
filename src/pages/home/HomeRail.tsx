@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react'
-import { useCallback, useMemo, type MouseEvent, type ReactNode } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useMemo, type ReactNode } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button, ButtonLink } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
@@ -10,11 +10,10 @@ import { ChangeText } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
-import type { StockRowRes } from '@/lib/apiTypes'
 import { useFavorites } from '@/lib/favorites'
-import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
-import { RAIL_MOVERS, WATCH_ROWS, watchRows, type WatchRow } from '@/lib/fg/home'
-import { hubSearch, MOVER_UNIVERSE, pickMovers, quoteExtOf, type HubIssueRef, type HubQuoteExt } from '@/lib/fg/hub'
+import { formatGapPct, formatPriceWon } from '@/lib/fg/format'
+import { WATCH_ROWS, watchRows, type WatchRow } from '@/lib/fg/home'
+import { quoteExtOf, type HubIssueRef, type HubQuoteExt } from '@/lib/fg/hub'
 import { stockPath } from '@/lib/fg/paths'
 import { useDelayed } from '@/lib/fg/useDelayed'
 import { useMemberGate } from '@/lib/memberGate'
@@ -25,8 +24,6 @@ import type { PriceBasis } from '@/lib/referenceDate'
 import { cn } from '@/lib/utils'
 
 const HOME_NOTE = '이슈 요약과 연결 정보는 인용된 기사·공시로 만든 참고 자료이며 투자 권유가 아니에요.'
-
-const REDUCED = '(prefers-reduced-motion: reduce)'
 
 type Lines = HubSlot<ReadonlyMap<string, HubIssueRef | null>>
 
@@ -61,151 +58,6 @@ function RowSkeleton({ count, height }: { count: number; height: number }) {
         <Skeleton key={i} height={height} />
       ))}
     </div>
-  )
-}
-
-const FOCUS_FRAMES = 90
-
-function openHead(ticker: string | null): HTMLElement | null {
-  const item = ticker === null ? '.fg-acc__item:first-child.is-open' : '.fg-acc__item.is-open'
-  const head = document.querySelector<HTMLElement>(`.fg-hubc ${item} > .fg-acc__head`)
-  const target = head?.getAttribute('aria-controls') ?? ''
-  if (!target.startsWith('fg-hub-stock-')) return null
-  return ticker === null || target === `fg-hub-stock-${ticker}` ? head : null
-}
-
-function focusHub(ticker: string | null) {
-  const reduced = window.matchMedia(REDUCED).matches
-  let frames = 0
-  const step = () => {
-    const head = openHead(ticker)
-    frames += 1
-    if (!head && frames < FOCUS_FRAMES) {
-      window.requestAnimationFrame(step)
-      return
-    }
-    const hub = document.querySelector<HTMLElement>('.fg-hubc')
-    if (!hub) return
-    const top = (head ?? hub).getBoundingClientRect().top
-    const header = document.querySelector<HTMLElement>('.fg-gh')?.offsetHeight ?? 0
-    if (top < header || top > window.innerHeight * 0.6) hub.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' })
-    head?.focus({ preventScroll: true })
-  }
-  window.requestAnimationFrame(step)
-}
-
-interface HomeMoversProps {
-  market: PriceBasis | null
-}
-
-export function HomeMovers({ market }: HomeMoversProps) {
-  const { pathname, search } = useLocation()
-  const navigate = useNavigate()
-  const stocks = useStocksCached()
-  const movers = useMemo(() => (stocks.data ? pickMovers(stocks.data, MOVER_UNIVERSE, RAIL_MOVERS) : null), [stocks.data])
-  const keys = useMemo(() => (movers ?? []).map((stock) => stock.ticker), [movers])
-  const lines = useStockIssueLines(keys)
-  const skeleton = useDelayed(movers === null && !stocks.error)
-  const baseDate = market?.baseDate ?? null
-
-  const go = useCallback(
-    (event: MouseEvent<HTMLAnchorElement>, ticker: string | null) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-      event.preventDefault()
-      navigate({ pathname, search: hubSearch(search, 'stocks', ticker) }, { replace: true })
-      focusHub(ticker)
-    },
-    [navigate, pathname, search],
-  )
-
-  let body: ReactNode
-  if (stocks.error && movers === null) {
-    body = (
-      <StateBlock
-        kind="error"
-        title="데이터를 불러오지 못했어요"
-        description="잠시 후 다시 시도해 주세요"
-        action={
-          <Button size="sm" onClick={stocks.refetch}>
-            다시 시도
-          </Button>
-        }
-      />
-    )
-  } else if (movers === null) {
-    body = skeleton ? <RowSkeleton count={RAIL_MOVERS} height={44} /> : <div className="fg-hsr__skel" />
-  } else if (movers.length === 0) {
-    body = <StateBlock kind="empty" title="오늘 움직인 종목이 아직 없어요" description="시세가 들어오면 여기에 보여 드려요" />
-  } else {
-    body = (
-      <>
-        <ul className="fg-hsr__list">
-          {movers.map((stock) => (
-            <li key={stock.ticker}>
-              <MoverRow
-                stock={stock}
-                line={lineOf(lines, stock.ticker)}
-                ext={quoteExtOf(stock, baseDate)}
-                to={`${pathname}${hubSearch(search, 'stocks', stock.ticker)}`}
-                onClick={(event) => go(event, stock.ticker)}
-              />
-            </li>
-          ))}
-        </ul>
-        <LinesFailed lines={lines} />
-      </>
-    )
-  }
-
-  return (
-    <section className="fg-section fg-hsec fg-hrail" aria-labelledby="fg-movers-h">
-      <div className="fg-hsec__head">
-        <div className="fg-hsec__titles">
-          <h2 id="fg-movers-h" className="fg-hsec__title">
-            많이 움직인 종목
-          </h2>
-          <span className="fg-hsec__cap">주요 이슈 타임라인으로 이어져요</span>
-        </div>
-        <Link
-          to={`${pathname}${hubSearch(search, 'stocks', null)}`}
-          replace
-          className="fg-hsec__link"
-          aria-label="많이 움직인 종목 전체 보기"
-          onClick={(event) => go(event, null)}
-        >
-          전체
-        </Link>
-      </div>
-      {body}
-    </section>
-  )
-}
-
-interface MoverRowProps {
-  stock: StockRowRes
-  line: HubIssueRef | null
-  ext: HubQuoteExt | null
-  to: string
-  onClick: (event: MouseEvent<HTMLAnchorElement>) => void
-}
-
-function MoverRow({ stock, line, ext, to, onClick }: MoverRowProps) {
-  const sub = [marketLabel(stock.market), stock.themeName].filter(Boolean).join(' · ')
-  return (
-    <Link to={to} replace className="fg-hsr" onClick={onClick}>
-      <CompanyLogo name={stock.name} ticker={stock.ticker} size={32} />
-      <span className="fg-hsr__body">
-        <span className="fg-hsr__top">
-          <span className="fg-hsr__id">
-            <span className="fg-hsr__name">{stock.name}</span>
-            {ext?.high && <Badge tone="high">52주 신고가</Badge>}
-            {ext?.low && <Badge tone="low">52주 신저가</Badge>}
-          </span>
-          {stock.change !== null && <ChangeText value={stock.change} className="fg-hsr__chg" />}
-        </span>
-        {line ? <IssueLine line={line} /> : <span className="fg-hsr__sub">{sub}</span>}
-      </span>
-    </Link>
   )
 }
 

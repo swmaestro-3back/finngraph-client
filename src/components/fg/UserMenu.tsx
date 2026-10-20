@@ -38,9 +38,6 @@ export function UserMenu() {
         <DropdownMenu.Content className="fg fg-umenu" align="end" sideOffset={8}>
           <DropdownMenu.Label className="fg-umenu__name">{user?.nickname}</DropdownMenu.Label>
           <DropdownMenu.Item asChild className="fg-umenu__item">
-            <Link to="/me">마이페이지</Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild className="fg-umenu__item">
             <Link to="/me/account">계정 설정</Link>
           </DropdownMenu.Item>
           <DropdownMenu.Item

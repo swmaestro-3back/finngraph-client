@@ -57,7 +57,7 @@ export function FavoriteStar({
       return
     }
     if (!active && motionAllowed()) icon.current?.animate(STAR_POP, { duration: MOTION_BASE_MS, easing: MOTION_EASE })
-    void toggle(type, targetKey)
+    void toggle(type, targetKey, { label, anchor: event.currentTarget as HTMLElement })
   }
 
   return (

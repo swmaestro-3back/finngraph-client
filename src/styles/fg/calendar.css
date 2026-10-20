@@ -561,7 +561,8 @@ button.fg-cal-ipo__row {
   color: var(--text-primary);
 }
 .fg-cal-ipo__more,
-.fg-cal-ctr__more {
+.fg-cal-ctr__more,
+.fg-cal-day-list__more {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
@@ -696,6 +697,7 @@ button.fg-cal-ipo__row {
   }
   .fg-cal-ipo__more:hover,
   .fg-cal-ctr__more:hover,
+  .fg-cal-day-list__more:hover,
   .fg-cal-ctr__date:hover {
     color: var(--text-primary);
   }
@@ -707,17 +709,11 @@ button.fg-cal-ipo__row {
 @media (prefers-reduced-motion: no-preference) {
   .fg-cal-day,
   .fg-cal-ipo__more,
-  .fg-cal-ctr__more {
+  .fg-cal-ctr__more,
+  .fg-cal-day-list__more {
     transition-property: color, background-color, box-shadow;
     transition-duration: var(--fg-motion-fast);
     transition-timing-function: var(--fg-ease);
-  }
-}
-@media (min-width: 1024px) {
-  .fg-cal-day-list__list {
-    max-height: min(70vh, 640px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
   }
 }
 @media (max-width: 1023px) {
@@ -760,7 +756,8 @@ button.fg-cal-ipo__row {
     justify-content: center;
   }
   .fg-cal-ipo__more,
-  .fg-cal-ctr__more {
+  .fg-cal-ctr__more,
+  .fg-cal-day-list__more {
     min-height: 44px;
   }
 }

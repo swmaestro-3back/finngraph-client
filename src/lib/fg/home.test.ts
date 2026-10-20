@@ -83,6 +83,7 @@ function fav(type: 'STOCK' | 'THEME', key: string, price: number | null = 100, c
     resolved: true,
     stock: type === 'STOCK' ? { ticker: key, name: `관심${key}`, market: 'KOSPI', price, change, marketCap: 1 } : null,
     theme: null,
+    folderIds: [],
   }
 }
 

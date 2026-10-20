@@ -18,8 +18,8 @@ export function StockStar({ stock, className }: { stock: StockRef; className?: s
 export function StockWatchButton({ stock, className }: { stock: StockRef; className?: string }) {
   const { active, press } = useFavoriteToggle('STOCK', stock.ticker)
   const icon = useRef<SVGSVGElement>(null)
-  const onClick = () => {
-    if (press() && motionAllowed()) icon.current?.animate(STAR_POP, { duration: MOTION_BASE_MS, easing: MOTION_EASE })
+  const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (press({ label: stock.name, anchor: event.currentTarget }) && motionAllowed()) icon.current?.animate(STAR_POP, { duration: MOTION_BASE_MS, easing: MOTION_EASE })
   }
   return (
     <Button aria-pressed={active} onClick={onClick} className={className}>

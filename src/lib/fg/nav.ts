@@ -1,6 +1,6 @@
 import type { AuthStatus } from '@/lib/auth'
 
-export type MenuKey = 'home' | 'themes' | 'stocks' | 'graph' | 'calendar'
+export type MenuKey = 'home' | 'themes' | 'stocks' | 'graph' | 'calendar' | 'favorites'
 
 interface MenuItem {
   key: MenuKey
@@ -13,10 +13,11 @@ const THEMES: MenuItem = { key: 'themes', label: '테마', to: '/themes' }
 const STOCKS: MenuItem = { key: 'stocks', label: '종목', to: '/stocks' }
 const GRAPH: MenuItem = { key: 'graph', label: '관계 탐색', to: '/graph' }
 const CALENDAR: MenuItem = { key: 'calendar', label: '캘린더', to: '/calendar' }
+const FAVORITES: MenuItem = { key: 'favorites', label: '나만의 테마', to: '/me' }
 
-export const MAIN_MENU: readonly MenuItem[] = [HOME, THEMES, STOCKS, GRAPH, CALENDAR]
+export const MAIN_MENU: readonly MenuItem[] = [HOME, THEMES, STOCKS, CALENDAR, GRAPH, FAVORITES]
 
-export const BOTTOM_TABS: readonly MenuItem[] = [HOME, THEMES, STOCKS, GRAPH]
+export const BOTTOM_TABS: readonly MenuItem[] = [HOME, THEMES, STOCKS, GRAPH, FAVORITES]
 
 interface SideLink {
   label: string
@@ -36,6 +37,7 @@ export function activeMenu(pathname: string): MenuKey | null {
   if (under(pathname, '/stocks') || under(pathname, '/stock')) return 'stocks'
   if (under(pathname, '/graph')) return 'graph'
   if (under(pathname, '/calendar')) return 'calendar'
+  if (pathname === '/me') return 'favorites'
   return null
 }
 

@@ -9,7 +9,6 @@ export function SiteFooter() {
         <span>{DATA_SOURCE_NOTICE}</span>
       </div>
       <nav aria-label="약관">
-        <Link to="/terms">이용약관</Link>
         <Link to="/privacy" className="fg-foot__strong">
           개인정보처리방침
         </Link>

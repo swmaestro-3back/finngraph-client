@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { FolderSavePrompt } from '@/components/favorite/FolderSavePrompt'
 import { AppHeader } from '@/components/fg/AppHeader'
 import { BottomTabBar } from '@/components/fg/BottomTabBar'
 import { SiteFooter } from '@/components/fg/SiteFooter'
@@ -38,6 +39,7 @@ export function AppShell() {
       </main>
       <SiteFooter />
       <BottomTabBar />
+      <FolderSavePrompt />
     </div>
   )
 }

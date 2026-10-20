@@ -9,24 +9,26 @@ import {
 } from '@/lib/fg/nav'
 
 describe('MAIN_MENU', () => {
-  it('뉴스 메뉴 없이 다섯 메뉴를 이 순서로 두고 캘린더는 관계 탐색 옆에 둔다', () => {
+  it('뉴스 메뉴 없이 여섯 메뉴를 이 순서로 두고 캘린더는 종목 옆, 나만의 테마는 맨 끝에 둔다', () => {
     expect(MAIN_MENU.map((item) => [item.label, item.to])).toEqual([
       ['홈', '/'],
       ['테마', '/themes'],
       ['종목', '/stocks'],
-      ['관계 탐색', '/graph'],
       ['캘린더', '/calendar'],
+      ['관계 탐색', '/graph'],
+      ['나만의 테마', '/me'],
     ])
   })
 })
 
 describe('BOTTOM_TABS', () => {
-  it('하단 탭 네 칸은 홈·테마·종목·관계 탐색이다', () => {
+  it('하단 탭 다섯 칸은 홈·테마·종목·관계 탐색·나만의 테마이다', () => {
     expect(BOTTOM_TABS.map((item) => [item.key, item.label, item.to])).toEqual([
       ['home', '홈', '/'],
       ['themes', '테마', '/themes'],
       ['stocks', '종목', '/stocks'],
       ['graph', '관계 탐색', '/graph'],
+      ['favorites', '나만의 테마', '/me'],
     ])
   })
 })
@@ -54,6 +56,7 @@ describe('activeMenu', () => {
     ['/graph/005930', 'graph'],
     ['/graph/theme/반도체', 'graph'],
     ['/calendar', 'calendar'],
+    ['/me', 'favorites'],
   ])('%s → %s', (path, key) => {
     expect(activeMenu(path)).toBe(key)
   })

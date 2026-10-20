@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
@@ -20,6 +20,7 @@ import { FLOW_DAYS, formatManShares, formatRatio, formatTimes, WEEK52_BASIS, typ
 import { monthDayLabel } from '@/lib/fg/themeCharts'
 import { fromState } from '@/lib/navigation'
 import type { HubSlot } from '@/lib/queries/useHubSlots'
+import { useStickyRail } from '@/lib/useStickyRail'
 
 interface StatProps {
   label: string
@@ -156,7 +157,7 @@ interface StockPanelProps {
   issue: IssueLineSlot
   today: string
   retry: PanelRetry
-  ref?: Ref<HTMLElement>
+  ref?: RefObject<HTMLElement | null>
 }
 
 function PanelPrice({ stock, summary }: { stock: StockRowRes; summary: StockSummary }) {
@@ -173,8 +174,11 @@ function PanelPrice({ stock, summary }: { stock: StockRowRes; summary: StockSumm
 
 export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPanelProps) {
   const week52 = summary.week52
+  const own = useRef<HTMLElement>(null)
+  const panel = ref ?? own
+  useStickyRail(panel)
   return (
-    <section ref={ref} className="fg-section fg-sdet fg-rail__wide fg-reveal" aria-labelledby="fg-sdet-name">
+    <section ref={panel} className="fg-section fg-sdet fg-rail__wide fg-reveal" aria-labelledby="fg-sdet-name">
       <div className="fg-sdet__body">
         <div className="fg-sdet__id">
           <CompanyLogo name={stock.name} ticker={stock.ticker} size={40} />
@@ -198,12 +202,15 @@ export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPa
         ) : (
           <StockSpark spark={summary.spark} loading={summary.loading} />
         )}
+        <StockThemeChips stock={stock} className="fg-tdet__sec fg-sdet__theme" />
+        <StockIssue line={issue} />
         {summary.loading && week52 === null ? (
-          <Skeleton height={97} />
+          <Skeleton height={45} />
         ) : (
           week52 &&
           stock.price !== null && (
             <Week52Range
+              variant="compact"
               className="fg-sdet__w52"
               name={stock.name}
               price={stock.price}
@@ -221,14 +228,12 @@ export function StockPanel({ stock, summary, issue, today, retry, ref }: StockPa
         <dl className="fg-tdet__stats">
           <Stat label="시가총액">{formatCompactKrw(stock.marketCap)}</Stat>
           <TradingStat summary={summary} retry={retry} />
+          <ForeignStat summary={summary} retry={retry} />
           <Stat label="PER">{formatTimes(stock.per)}</Stat>
           <Stat label="PBR">{formatTimes(stock.pbr)}</Stat>
           <Stat label="배당수익률">{formatRatio(stock.dividendYield)}</Stat>
-          <ForeignStat summary={summary} retry={retry} />
         </dl>
         <StockFlows summary={summary} retry={retry} />
-        <StockThemeChips stock={stock} />
-        <StockIssue line={issue} />
       </div>
     </section>
   )

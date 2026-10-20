@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -12,13 +12,14 @@ import { monthDayWord } from '@/lib/fg/hub'
 import { issuePath, themePath } from '@/lib/fg/paths'
 import type { ChangeOf, ThemeIssueView } from '@/lib/fg/themes'
 import { fromState } from '@/lib/navigation'
+import { useStickyRail } from '@/lib/useStickyRail'
 
 interface ThemePanelProps {
   theme: ThemeRes
   changeOf: ChangeOf
   issue: ThemeIssueView
   members: ReactNode
-  ref?: Ref<HTMLElement>
+  ref?: RefObject<HTMLElement | null>
 }
 
 function ThemeIssue({ view, state }: { view: ThemeIssueView; state: unknown }) {
@@ -49,8 +50,11 @@ export function ThemePanel({ theme, changeOf, issue, members, ref }: ThemePanelP
   const state = fromState(`${pathname}${search}`)
   const up = theme.upCount ?? 0
   const down = theme.downCount ?? 0
+  const own = useRef<HTMLElement>(null)
+  const panel = ref ?? own
+  useStickyRail(panel)
   return (
-    <section ref={ref} className="fg-section fg-tdet fg-rail__wide fg-reveal" aria-labelledby="fg-tdet-name">
+    <section ref={panel} className="fg-section fg-tdet fg-rail__wide fg-reveal" aria-labelledby="fg-tdet-name">
       <div className="fg-tdet__kick">
         <span className="fg-section__title">고른 테마</span>
         <span className="fg-tdet__count fg-num">{theme.stockCount}종목</span>

@@ -1,180 +1,522 @@
-import { useMemo, useState } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-import { NewsDetailModal } from '@/components/news/NewsDetailModal'
-import { TableSkeleton } from '@/components/table/TableSkeleton'
-import { NewsSection } from '@/components/theme/NewsSection'
-import { FavoriteStar } from '@/components/favorite/FavoriteStar'
-import { FilterChip } from '@/components/ui/filter-chip'
-import { Button } from '@/components/ui/button'
-import { toNewsItem } from '@/lib/apiMappers'
-import type { FavoriteItemRes } from '@/lib/apiTypes'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, ChevronLeft, CircleHelp } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { FavoriteRow } from '@/components/favorite/FavoriteRow'
+import { FolderCards } from '@/components/favorite/FolderCards'
+import { FolderMenu } from '@/components/favorite/FolderMenu'
+import { FolderNameDialog } from '@/components/favorite/FolderNameDialog'
+import { FolderRail } from '@/components/favorite/FolderRail'
+import { FolderReturnsChart } from '@/components/favorite/FolderReturnsChart'
+import { MineGuide } from '@/components/favorite/MineGuide'
+import { ThemeCards } from '@/components/favorite/ThemeCards'
+import { Button, ButtonLink } from '@/components/fg/Button'
+import { FilterChip } from '@/components/fg/FilterChip'
+import { IconButton } from '@/components/fg/IconButton'
+import { Skeleton } from '@/components/fg/Skeleton'
+import { StateBlock } from '@/components/fg/StateBlock'
+import { getData } from '@/lib/api'
+import type { CalendarEventRes, CalendarRes, FavoriteItemRes } from '@/lib/apiTypes'
+import { kstToday } from '@/lib/calendar'
 import { useFavorites } from '@/lib/favorites'
-import { themePath } from '@/lib/fg/paths'
-import { changeColorClass, formatChangeOrDash, formatPriceOrDash } from '@/lib/format'
-import { useFavoriteNews } from '@/lib/queries/useFavoriteNews'
+import {
+  ALL_VIEW,
+  ITEM_SORTS,
+  SMART_HINT,
+  SMART_KEYS,
+  SMART_LABEL,
+  SMART_TONE,
+  averageChange,
+  eventWindow,
+  memberStocks,
+  moveCount,
+  parseView,
+  signalOf,
+  smartMatches,
+  sortItems,
+  viewParam,
+  type FavoriteView,
+  type ItemSort,
+  type SmartKey,
+  type StockSignal,
+} from '@/lib/fg/folders'
+import { toneClass } from '@/lib/fg/format'
+import {
+  closeMineGuide,
+  folderViewed,
+  guideState,
+  markFolderViewed,
+  mineGuideClosed,
+  reopenMineGuide,
+} from '@/lib/fg/mineGuide'
+import { motionAllowed } from '@/lib/fg/motion'
+import { themeBasisLabel } from '@/lib/fg/themes'
+import { useContentSwap } from '@/lib/fg/useContentSwap'
+import { formatChange } from '@/lib/format'
+import { useKeyed } from '@/lib/queries/useKeyed'
+import { loadLatestIssues } from '@/lib/queries/useStockIssues'
+import { stockIndexOf, useStocksCached } from '@/lib/queries/useStocksCached'
+import { useThemeMarket } from '@/lib/queries/useThemeMarket'
 import { cn } from '@/lib/utils'
 
-const ROW =
-  'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-surface-inset px-4 py-2.5 last:border-b-0 sm:grid-cols-[auto_minmax(0,1fr)_88px_76px]'
+type Dialog = { mode: 'create' } | { mode: 'rename'; id: number; name: string } | null
 
-const KIND_LABEL: Record<FavoriteItemRes['type'], string> = {
-  STOCK: '종목',
-  THEME: '테마',
+function loadIssues(joined: string) {
+  return loadLatestIssues(joined.split(','))
 }
 
-type FavoriteTab = 'list' | 'news'
+function loadEvents(joined: string): Promise<CalendarEventRes[]> {
+  const [from, to] = joined.split('|')
+  return getData<CalendarRes>('/v1/me/calendar', { from, to }).then((res) => res.events)
+}
+
+function TodayLine({ items }: { items: readonly FavoriteItemRes[] }) {
+  const move = moveCount(items)
+  if (move.total === 0) return <>오늘 시세가 있는 관심 종목이 없어요</>
+  return (
+    <>
+      {`관심 종목 ${move.total}개 중 오늘 `}
+      <b className="fg-up">{`${move.up}개 상승`}</b>
+      {' · '}
+      <b className="fg-down">{`${move.down}개 하락`}</b>
+      {move.flat > 0 && ` · ${move.flat}개 보합`}
+    </>
+  )
+}
+
+function PanelSummary({ items }: { items: readonly FavoriteItemRes[] }) {
+  const average = averageChange(items)
+  const move = moveCount(items)
+  if (average === null) return <>오늘 시세가 있는 종목이 없어요</>
+  return (
+    <>
+      {'오늘 '}
+      <b className={toneClass(average)}>{formatChange(average)}</b>
+      {` · ${move.up}개 상승 · ${move.down}개 하락 · 담은 종목 평균`}
+    </>
+  )
+}
 
 export default function MyFavoritesPage() {
-  const navigate = useNavigate()
-  const [tab, setTab] = useState<FavoriteTab>('list')
-  const [openNewsId, setOpenNewsId] = useState<string | null>(null)
+  const favorites = useFavorites()
+  const { items, folders, count, limit, ready, error, folderLimit, refresh, openPrompt, removeFromFolder } = favorites
+  const [params, setParams] = useSearchParams()
+  const [today] = useState(() => kstToday(new Date()))
+  const [sort, setSort] = useState<ItemSort>('change')
+  const [editingView, setEditingView] = useState<string | null>(null)
+  const [dialog, setDialog] = useState<Dialog>(null)
+  const [guideOpen, setGuideOpen] = useState(() => !mineGuideClosed())
+  const [guideAsked, setGuideAsked] = useState(false)
+  const [guidePinned, setGuidePinned] = useState(false)
+  const [viewed, setViewed] = useState(() => folderViewed())
+  const market = useThemeMarket()
+  const basis = themeBasisLabel(market.data)
 
-  const { items, count, limit, ready, error: listError, refresh } = useFavorites()
-  // 뉴스 탭을 열기 전에는 호출하지 않는다 — 관심 종목이 많으면 IN 절이 커진다
-  const {
-    data: newsDetails,
-    loading: newsLoading,
-    error: newsError,
-    refetch: refetchNews,
-  } = useFavoriteNews(tab === 'news')
-  const news = useMemo(() => (newsDetails ?? []).map(toNewsItem), [newsDetails])
+  const folderIds = useMemo(() => folders.map((folder) => folder.id), [folders])
+  const viewRaw = params.get('view')
+  const view = useMemo(() => parseView(viewRaw, folderIds), [viewRaw, folderIds])
+  const viewKey = viewParam(view) ?? 'all'
+  const folder = view.kind === 'folder' ? (folders.find((entry) => entry.id === view.id) ?? null) : null
+  const editing = editingView === viewKey
+  const panelRef = useRef<HTMLElement>(null)
+  const railRef = useRef<HTMLElement>(null)
 
-  const retryList = () => {
-    void refresh().catch(() => {})
-  }
-
-  const listSkeleton = <TableSkeleton rows={5} />
-
-  const failure = (message: string, retry: () => void) => (
-    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-      <CircleAlert className="size-8 text-muted-foreground" />
-      <p className="text-body text-muted-foreground">{message}</p>
-      <Button variant="outline" size="sm" onClick={retry}>
-        <RotateCw data-icon="inline-start" />
-        다시 시도
-      </Button>
-    </div>
+  const select = useCallback(
+    (next: FavoriteView) => {
+      setParams(
+        (prev) => {
+          const draft = new URLSearchParams(prev)
+          const param = viewParam(next)
+          if (param) draft.set('view', param)
+          else draft.delete('view')
+          return draft
+        },
+        { replace: true },
+      )
+    },
+    [setParams],
   )
 
-  const renderRow = (item: FavoriteItemRes) => {
-    const to = item.type === 'STOCK' ? `/stock/${item.key}` : themePath(item.key)
-    const name = item.stock?.name ?? item.theme?.name ?? item.key
-    const change = item.stock?.change ?? item.theme?.weightedChange ?? null
-    const open = () => navigate(to)
+  const stockTickers = useMemo(
+    () => [...new Set(items.filter((item) => item.type === 'STOCK').map((item) => item.key))].sort(),
+    [items],
+  )
+  const stockItems = useMemo(() => items.filter((item) => item.type === 'STOCK'), [items])
+  const themeItems = useMemo(() => items.filter((item) => item.type === 'THEME'), [items])
 
-    return (
-      <div
-        key={`${item.type}:${item.key}`}
-        {...(item.resolved && {
-          role: 'link',
-          tabIndex: 0,
-          onClick: open,
-          onKeyDown: (event: React.KeyboardEvent) => {
-            if (event.target !== event.currentTarget) return
-            if (event.key !== 'Enter' && event.key !== ' ') return
-            event.preventDefault()
-            open()
-          },
-        })}
-        className={cn(
-          ROW,
-          item.resolved &&
-            'cursor-pointer hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2',
-        )}
-      >
-        <FavoriteStar type={item.type} targetKey={item.key} label={name} size="sm" />
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 rounded bg-surface-inset px-1.5 py-0.5 text-micro tracking-[0.4px] text-foreground-secondary">
-            {KIND_LABEL[item.type]}
-          </span>
-          {item.resolved ? (
-            <span className="truncate text-sm font-semibold text-foreground">{name}</span>
-          ) : (
-            <span className="truncate text-sm text-muted-foreground">
-              {item.key} · 더 이상 제공되지 않는 대상이에요
-            </span>
-          )}
-        </span>
-        {item.resolved && (
-          <span className="flex flex-col items-end gap-0.5 sm:contents">
-            {item.stock ? (
-              <span className="text-right font-mono text-sm font-medium text-foreground">
-                {formatPriceOrDash(item.stock.price)}
-              </span>
-            ) : (
-              <span className="text-right text-caption text-muted-foreground">
-                종목 {item.theme?.stockCount ?? 0}개
-              </span>
-            )}
-            <span
-              className={cn(
-                'text-right font-mono text-sm font-medium',
-                changeColorClass(change ?? 0),
-              )}
-            >
-              {formatChangeOrDash(change)}
-            </span>
-          </span>
-        )}
+  const viewing = folder !== null && folder.count > 0
+  if (viewing && !viewed) setViewed(true)
+  useEffect(() => {
+    if (viewing) markFolderViewed()
+  }, [viewing])
+
+  const guide = guideState({
+    stocks: stockItems.length,
+    folders: folders.length,
+    filled: folders.some((entry) => entry.count > 0),
+    viewed,
+  })
+  const guideDone = guide.every((step) => step.done)
+  const showGuide = ready && !error && guideOpen && (guideAsked || guidePinned || !guideDone)
+  if (showGuide && !guideDone && !guidePinned) setGuidePinned(true)
+
+  const closeGuide = () => {
+    closeMineGuide()
+    setGuideOpen(false)
+    setGuideAsked(false)
+    setGuidePinned(false)
+  }
+
+  const askGuide = () => {
+    reopenMineGuide()
+    setGuideOpen(true)
+    setGuideAsked(true)
+  }
+
+  const toPanel = () => {
+    window.requestAnimationFrame(() =>
+      panelRef.current?.scrollIntoView({ behavior: motionAllowed() ? 'smooth' : 'auto', block: 'start' }),
+    )
+  }
+
+  const guideFill = () => {
+    select(ALL_VIEW)
+    setEditingView('all')
+    toPanel()
+  }
+
+  const guideOpenFolder = () => {
+    const target = folders.find((entry) => entry.count > 0)
+    if (target) select({ kind: 'folder', id: target.id })
+    toPanel()
+  }
+  const tickerKey = stockTickers.join(',')
+  const span = eventWindow(today)
+  const issues = useKeyed(tickerKey === '' ? null : tickerKey, loadIssues)
+  const events = useKeyed(tickerKey === '' ? null : `${span.from}|${span.to}|${tickerKey}`, loadEvents)
+  const stocks = useStocksCached(stockTickers.length > 0)
+  const quotes = stockIndexOf(stocks.data)
+
+  const signals = useMemo(() => {
+    const context = { issues: issues.data, events: events.data, quotes, today }
+    return new Map<string, StockSignal>(stockTickers.map((ticker) => [ticker, signalOf(ticker, context)]))
+  }, [issues.data, events.data, quotes, today, stockTickers])
+
+  const smartReady: Record<SmartKey, boolean> = {
+    issue: issues.data !== null,
+    event: events.data !== null,
+    high: quotes !== null,
+    drop: true,
+  }
+
+  const smartCounts = useMemo(() => {
+    const counts = {} as Record<SmartKey, number>
+    for (const key of SMART_KEYS) {
+      counts[key] = stockItems.filter((item) => smartMatches(item, key, signals.get(item.key) ?? null)).length
+    }
+    return counts
+  }, [stockItems, signals])
+
+  const viewItems = useMemo(() => {
+    if (view.kind === 'folder') return stockItems.filter((item) => item.folderIds.includes(view.id))
+    if (view.kind === 'smart') return stockItems.filter((item) => smartMatches(item, view.key, signals.get(item.key) ?? null))
+    return stockItems
+  }, [stockItems, view, signals])
+  const sorted = useMemo(() => sortItems(viewItems, sort), [viewItems, sort])
+  const members = useMemo(() => memberStocks(viewItems), [viewItems])
+  const memberKey = useMemo(() => members.map((member) => member.ticker).sort().join(','), [members])
+
+  useContentSwap(panelRef, viewKey)
+  useContentSwap(railRef, viewKey)
+
+  const organize = useCallback(
+    (item: FavoriteItemRes, anchor: HTMLElement) => {
+      openPrompt(item.type, item.key, { label: item.stock?.name ?? item.theme?.name ?? item.key, anchor })
+    },
+    [openPrompt],
+  )
+
+  const takeOut = useCallback(
+    (item: FavoriteItemRes) => {
+      if (folder) void removeFromFolder(folder.id, item.type, item.key)
+    },
+    [folder, removeFromFolder],
+  )
+
+  const title = folder ? folder.name : view.kind === 'smart' ? SMART_LABEL[view.key] : '전체 관심'
+
+  let body
+  if (error && !ready) {
+    body = (
+      <section className="fg-section">
+        <StateBlock
+          kind="error"
+          title="관심 목록을 불러오지 못했어요"
+          action={
+            <Button size="sm" onClick={() => void refresh().catch(() => {})}>
+              다시 시도
+            </Button>
+          }
+        />
+      </section>
+    )
+  } else if (!ready) {
+    body = (
+      <div className="fg-mine__skel" aria-hidden="true">
+        <Skeleton height={160} shape="card" />
+        <Skeleton height={68} shape="card" />
+        <Skeleton height={420} shape="card" />
       </div>
+    )
+  } else if (items.length === 0 && folders.length === 0) {
+    body = showGuide ? null : (
+      <section className="fg-section">
+        <StateBlock
+          kind="empty"
+          title="아직 담은 관심이 없어요"
+          description="종목이나 테마의 별표를 누르면 여기에 모이고, 나만의 테마로 묶을 수 있어요"
+          action={
+            <ButtonLink size="sm" to="/stocks">
+              종목 목록에서 찾아보기
+            </ButtonLink>
+          }
+        />
+      </section>
+    )
+  } else {
+    body = (
+      <>
+        <section className="fg-section fg-mine__folders" aria-labelledby="fg-mine-folders">
+          <div className="fg-section__head">
+            <h2 id="fg-mine-folders" className="fg-section__title">
+              내가 만든 테마
+              <span className="fg-mine__count fg-num">{`${folders.length} / ${folderLimit}`}</span>
+            </h2>
+            <FilterChip pressed={view.kind === 'all'} count={stockItems.length} onClick={() => select(ALL_VIEW)}>
+              전체 관심
+            </FilterChip>
+          </div>
+          <FolderCards
+            folders={folders}
+            items={items}
+            view={view}
+            signals={signals}
+            today={today}
+            canCreate={folders.length < folderLimit}
+            folderLimit={folderLimit}
+            onCreate={() => setDialog({ mode: 'create' })}
+          />
+        </section>
+
+        {themeItems.length > 0 && (
+          <section className="fg-section" aria-labelledby="fg-mine-themes">
+            <div className="fg-section__head">
+              <h2 id="fg-mine-themes" className="fg-section__title">
+                관심 테마
+                <span className="fg-mine__count fg-num">{themeItems.length}</span>
+              </h2>
+              <span className="fg-mine__smartnote">테마 페이지에서 별을 누르면 여기에 모여요</span>
+            </div>
+            <ThemeCards items={themeItems} />
+          </section>
+        )}
+
+        <section className="fg-section fg-mine__smart" aria-labelledby="fg-mine-smart">
+          <div className="fg-section__head">
+            <h2 id="fg-mine-smart" className="fg-section__title">
+              저절로 모이는 관심
+            </h2>
+            <span className="fg-mine__smartnote">{`관심 종목 ${stockItems.length}개 안에서 조건에 맞는 종목이 매일 바뀌어요`}</span>
+          </div>
+          <div className="fg-chiprow fg-mine__chips" role="group" aria-label="저절로 모이는 관심">
+            {SMART_KEYS.map((key) => {
+              const pressed = view.kind === 'smart' && view.key === key
+              const counted = smartReady[key]
+              return (
+                <FilterChip
+                  key={key}
+                  className="fg-mine__chip"
+                  pressed={pressed}
+                  count={counted ? smartCounts[key] : null}
+                  disabled={counted && smartCounts[key] === 0 && !pressed}
+                  onClick={() => select(pressed ? ALL_VIEW : { kind: 'smart', key })}
+                >
+                  <i className={cn('fg-mine__dot', `fg-mine__dot--${SMART_TONE[key]}`)} aria-hidden="true" />
+                  {SMART_LABEL[key]}
+                </FilterChip>
+              )
+            })}
+          </div>
+        </section>
+
+        <div className="fg-grid fg-mine__grid">
+          <section ref={panelRef} className="fg-section fg-mine__panel" aria-labelledby="fg-mine-panel">
+            <div className="fg-section__head fg-mine__kick">
+              {view.kind !== 'all' ? (
+                <button type="button" className="fg-mine__back" onClick={() => select(ALL_VIEW)}>
+                  <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />
+                  전체 관심
+                  <span className="fg-num">{stockItems.length}</span>
+                </button>
+              ) : (
+                <span className="fg-section__title">관심 목록</span>
+              )}
+              <div className="fg-mine__panelacts">
+                {viewItems.length > 0 && (
+                  <Button
+                    size="sm"
+                    className="fg-mine__edit"
+                    aria-pressed={editing}
+                    onClick={() => setEditingView(editing ? null : viewKey)}
+                  >
+                    {editing ? '완료' : '편집'}
+                  </Button>
+                )}
+                {folder && (
+                  <FolderMenu
+                    folder={folder}
+                    onRename={() => setDialog({ mode: 'rename', id: folder.id, name: folder.name })}
+                    onDeleted={() => select(ALL_VIEW)}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="fg-mine__paneltitles">
+              <h2 id="fg-mine-panel" className="fg-mine__h2">
+                {title}
+              </h2>
+              <p className="fg-mine__panelsub fg-num">
+                {view.kind === 'smart' ? SMART_HINT[view.key] : <PanelSummary items={viewItems} />}
+              </p>
+            </div>
+
+            {folder ? (
+              <FolderReturnsChart folderId={folder.id} name={folder.name} memberKey={memberKey} />
+            ) : (
+              view.kind === 'all' &&
+              members.length > 0 && <FolderReturnsChart folderId={null} name="전체 관심" memberKey={memberKey} />
+            )}
+
+            <div className="fg-mine__toolbar">
+              <span className="fg-mine__listcount fg-num">
+                {view.kind === 'smart' ? `조건에 맞는 종목 ${viewItems.length}개` : `담은 종목 ${viewItems.length}`}
+              </span>
+              <label className="fg-tsort">
+                <span className="fg-sr">정렬</span>
+                <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
+                  {ITEM_SORTS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
+              </label>
+            </div>
+
+            {editing && (
+              <p className="fg-mine__edithint">
+                {folder
+                  ? '폴더 단추로 다른 테마에도 담고, X로 이 테마에서 뺄 수 있어요. 관심은 그대로 남아요'
+                  : '폴더 단추를 눌러 나만의 테마에 담을 수 있어요'}
+              </p>
+            )}
+
+            {sorted.length === 0 ? (
+              <StateBlock
+                kind="empty"
+                title={
+                  folder
+                    ? '아직 담은 종목이 없어요'
+                    : view.kind === 'all'
+                      ? '아직 담은 관심 종목이 없어요'
+                      : '조건에 맞는 관심 종목이 없어요'
+                }
+                description={
+                  folder
+                    ? '전체 관심에서 편집을 눌러 폴더 단추로 담거나, 종목의 별표를 눌러 담아 보세요'
+                    : view.kind === 'all'
+                      ? '종목의 별표를 누르면 여기에 모이고, 나만의 테마로 묶을 수 있어요'
+                      : undefined
+                }
+                action={
+                  folder ? (
+                    <Button size="sm" onClick={() => select(ALL_VIEW)}>
+                      전체 관심 보기
+                    </Button>
+                  ) : undefined
+                }
+              />
+            ) : (
+              <ul className="fg-mine__list">
+                {sorted.map((item) => (
+                  <FavoriteRow
+                    key={`${item.type}:${item.key}`}
+                    item={item}
+                    signal={item.type === 'STOCK' ? (signals.get(item.key) ?? null) : null}
+                    today={today}
+                    folder={folder}
+                    editing={editing}
+                    onOrganize={organize}
+                    onTakeOut={takeOut}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+          <aside ref={railRef} className="fg-rail fg-mine__rail" aria-label={`${title}과 이어진 기업`}>
+            <FolderRail members={members} folder={folder} />
+          </aside>
+        </div>
+      </>
     )
   }
 
   return (
-    <div>
-      <div className="mb-[9px] flex items-center justify-between gap-2">
-        <h2 className="text-lg font-medium tracking-[-0.4px] text-foreground">관심</h2>
-        <div className="flex gap-1.5">
-          <FilterChip active={tab === 'list'} onClick={() => setTab('list')}>
-            목록{ready && ` ${count}/${limit}`}
-          </FilterChip>
-          <FilterChip active={tab === 'news'} onClick={() => setTab('news')}>
-            뉴스
-          </FilterChip>
-        </div>
-      </div>
-
-      {tab === 'list' &&
-        (listError ? (
-          failure('관심 목록을 불러오지 못했습니다.', retryList)
-        ) : !ready ? (
-          listSkeleton
-        ) : items.length === 0 ? (
-          <div className="card-surface flex flex-col items-center justify-center gap-3 py-12">
-            <p className="text-body text-foreground">아직 담은 관심이 없어요</p>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/stocks">종목 목록에서 찾아보기</Link>
-            </Button>
+    <div className="fg-main fg-wrap fg-mine">
+      <header className="fg-pagehead">
+        <div>
+          <div className="fg-mine__titlerow">
+            <h1 className="fg-pagehead__title">나만의 테마</h1>
+            {ready && !showGuide && (
+              <IconButton label="시작 안내 보기" title="시작 안내 보기" className="fg-mine__help" onClick={askGuide}>
+                <CircleHelp size={18} strokeWidth={1.75} aria-hidden="true" />
+              </IconButton>
+            )}
           </div>
-        ) : (
-          <div className="card-surface overflow-hidden">{items.map(renderRow)}</div>
-        ))}
-
-      {tab === 'news' &&
-        (newsError ? (
-          failure('관심종목 뉴스를 불러오지 못했습니다.', refetchNews)
-        ) : newsLoading ? (
-          <TableSkeleton rows={6} rowClassName="h-10" />
-        ) : news.length === 0 ? (
-          <div className="card-surface flex flex-col items-center justify-center gap-1 py-12">
-            <p className="text-body text-foreground">관심종목 뉴스가 아직 없어요</p>
-            <p className="text-caption text-muted-foreground">
-              관심 종목을 담으면 관련 기사가 모입니다
+          {ready && (
+            <p className="fg-pagehead__sub fg-mine__summary fg-num">
+              <TodayLine items={stockItems} />
             </p>
-          </div>
-        ) : (
-          <NewsSection
-            title="관심종목 뉴스"
-            items={news}
-            onItemClick={(item) => setOpenNewsId(item.id)}
-          />
-        ))}
+          )}
+        </div>
+        {ready && (
+          <span className="fg-pagehead__meta fg-num">
+            {`관심 ${count} / ${limit}`}
+            {basis && ` · ${basis}`}
+          </span>
+        )}
+      </header>
 
-      <NewsDetailModal
-        newsId={openNewsId}
-        onOpenChange={(open) => !open && setOpenNewsId(null)}
-      />
+      {showGuide && (
+        <MineGuide
+          steps={guide}
+          onClose={closeGuide}
+          onCreate={() => setDialog({ mode: 'create' })}
+          onFill={guideFill}
+          onOpen={guideOpenFolder}
+        />
+      )}
+
+      {body}
+
+      {dialog && (
+        <FolderNameDialog
+          mode={dialog.mode}
+          folder={dialog.mode === 'rename' ? { id: dialog.id, name: dialog.name } : null}
+          onClose={() => setDialog(null)}
+          onCreated={(id) => select({ kind: 'folder', id })}
+        />
+      )}
     </div>
   )
 }

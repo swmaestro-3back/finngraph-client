@@ -16,6 +16,7 @@
 @import "./styles/fg/issue.css" layer(components);
 @import "./styles/fg/home.css" layer(components);
 @import "./styles/fg/calendar.css" layer(components);
+@import "./styles/fg/favorites.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 

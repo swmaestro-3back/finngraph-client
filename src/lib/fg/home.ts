@@ -5,9 +5,7 @@ import { dayWord } from '@/lib/fg/issueSubject'
 export const FEED_PAGE_SIZE = 5
 export const FEED_STOCK_CHIPS = 3
 export const FEED_THEME_CHIPS = 5
-export const RAIL_MOVERS = 4
 export const WATCH_ROWS = 5
-export const HOME_STOCK_ROWS = 10
 export const FEED_SORT: IssueSort = 'recent'
 
 export interface FeedChunk {
