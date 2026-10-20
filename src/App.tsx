@@ -78,7 +78,6 @@ function App() {
         <Route path="/graph/:ticker?" element={<CorpGraphPage />} />
         <Route path="/briefing/*" element={<Navigate to="/" replace />} />
         <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/terms" element={<LegalPage doc="terms" />} />
         <Route path="/privacy" element={<LegalPage doc="privacy" />} />
         <Route
           path="/me"

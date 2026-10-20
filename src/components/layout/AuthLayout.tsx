@@ -36,9 +36,6 @@ export function AuthLayout() {
         </main>
 
         <footer className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 px-6 py-6 text-caption text-muted-foreground">
-          <Link to="/terms" className="transition-colors hover:text-foreground">
-            이용약관
-          </Link>
           <Link to="/privacy" className="font-medium transition-colors hover:text-foreground">
             개인정보처리방침
           </Link>
