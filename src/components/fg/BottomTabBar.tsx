@@ -1,4 +1,4 @@
-import { CalendarDays, ChartLine, House, LayoutGrid, Share2, type LucideIcon } from 'lucide-react'
+import { CalendarDays, ChartLine, House, LayoutGrid, Share2, Star, type LucideIcon } from 'lucide-react'
 import { useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { activeMenu, BOTTOM_TABS, type MenuKey } from '@/lib/fg/nav'
@@ -10,6 +10,7 @@ const ICONS: Record<MenuKey, LucideIcon> = {
   stocks: ChartLine,
   graph: Share2,
   calendar: CalendarDays,
+  favorites: Star,
 }
 
 export function BottomTabBar() {

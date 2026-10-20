@@ -54,8 +54,9 @@ function LegacyIssueRedirect() {
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
+  const { pathname, search } = useLocation()
   if (status === 'loading') return null
-  if (status === 'anonymous') return <Navigate to="/login" replace />
+  if (status === 'anonymous') return <Navigate to="/login" replace state={{ next: `${pathname}${search}` }} />
   return children
 }
 
