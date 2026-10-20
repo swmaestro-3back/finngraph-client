@@ -1,12 +1,13 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useMatch } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { to: '/me', label: '관심', end: true },
   { to: '/me/account', label: '계정 설정', end: false },
 ] as const
 
 export function MyPageLayout() {
+  const favorites = useMatch({ path: '/me', end: true })
+  if (favorites) return <Outlet />
   return (
     <div className="page-container pt-7 pb-12">
       <div className="mx-auto w-full max-w-5xl">
