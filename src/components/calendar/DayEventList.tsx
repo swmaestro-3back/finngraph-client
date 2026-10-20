@@ -1,9 +1,13 @@
-import { ChevronRight, CircleAlert, Inbox, Star } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronDown, ChevronRight, ChevronUp, CircleAlert, Inbox, Star } from 'lucide-react'
 import { EstimateBadge, EventMarker } from '@/components/calendar/EventMarker'
 import { Skeleton } from '@/components/fg/Skeleton'
 import type { CalendarEventRes } from '@/lib/apiTypes'
 import { KIND_LABELS, agendaCountLabel, eventDetails, formatDayTitle, kindFamily } from '@/lib/calendar'
 import { cn } from '@/lib/utils'
+
+const PREVIEW = 8
+const LIST_ID = 'calendar-day-events'
 
 interface DayEventListProps {
   id?: string
@@ -70,6 +74,10 @@ function Placeholder({ kind, title, description }: { kind: 'empty' | 'error'; ti
 
 export function DayEventList({ id, date, events, holiday, loading, failed, onOpen, className }: DayEventListProps) {
   const count = events.length
+  const [openDate, setOpenDate] = useState<string | null>(null)
+  const expanded = openDate === date
+  const shown = expanded ? events : events.slice(0, PREVIEW)
+  const collapsible = count > PREVIEW
 
   return (
     <section id={id} aria-labelledby="calendar-day-title" className={cn('fg-section fg-cal-day-list', className)}>
@@ -108,11 +116,29 @@ export function DayEventList({ id, date, events, holiday, loading, failed, onOpe
       )}
 
       {!loading && !failed && count > 0 && (
-        <ul className="fg-cal-day-list__list">
-          {events.map((item, index) => (
-            <EventRow key={`${index}-${item.kind}-${item.ticker}`} item={item} onOpen={onOpen} />
-          ))}
-        </ul>
+        <>
+          <ul id={LIST_ID} className="fg-cal-day-list__list">
+            {shown.map((item, index) => (
+              <EventRow key={`${index}-${item.kind}-${item.ticker}`} item={item} onOpen={onOpen} />
+            ))}
+          </ul>
+          {collapsible && (
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls={LIST_ID}
+              onClick={() => setOpenDate(expanded ? null : date)}
+              className="fg-cal-day-list__more"
+            >
+              {expanded ? '접기' : `일정 ${count}건 모두 보기`}
+              {expanded ? (
+                <ChevronUp size={16} strokeWidth={1.75} aria-hidden="true" />
+              ) : (
+                <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
+              )}
+            </button>
+          )}
+        </>
       )}
     </section>
   )
