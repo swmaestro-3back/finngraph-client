@@ -119,11 +119,6 @@ export function marketBreadth(
   return { up, flat, down, median: median !== null && Number.isFinite(median) ? median : null }
 }
 
-export function coveragePct(media: number, max: number): number {
-  if (max <= 0) return 0
-  return Math.round((media / max) * 100)
-}
-
 export function nextAuto(sel: number, count: number, loop: boolean): { sel: number; stop: boolean } {
   const next = count > 0 ? (sel + 1) % count : 0
   if (next === 0 && !loop) return { sel: 0, stop: true }
@@ -292,7 +287,6 @@ export interface HubFixture {
 
 export interface HubIssueItem extends HubIssueNode {
   articles: number
-  pct: number
   companies: readonly IssueCompanyRes[]
   position: number
 }
@@ -318,7 +312,6 @@ export function hubIssueItems(
   extra: IssueSummaryRes | null = null,
 ): HubIssueItem[] {
   const all = extra && !items.some((item) => item.id === extra.id) ? [...items, extra] : [...items]
-  const max = all.reduce((top, item) => Math.max(top, item.mediaCount), 0)
   return all.map((item) => {
     const own = kstDayTime(item.lastPublishedAt ?? item.firstPublishedAt ?? '')?.day ?? ''
     return {
@@ -328,7 +321,6 @@ export function hubIssueItems(
       day: item === extra ? own : (listDay ?? own),
       media: item.mediaCount,
       articles: item.articleCount,
-      pct: coveragePct(item.mediaCount, max),
       companies: item.companies,
       position: item.timelinePosition ?? 1,
     }

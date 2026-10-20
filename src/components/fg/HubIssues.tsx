@@ -114,9 +114,6 @@ function IssueHead({ item, extra, quotes }: { item: HubIssueItem; extra: HubIssu
         </span>
       </span>
       <span className="fg-cov fg-hh__cov">
-        <span className="fg-cov__bar" aria-hidden="true">
-          <span className="fg-cov__fill" style={{ width: `${item.pct}%` }} />
-        </span>
         <span className="fg-cov__txt fg-num">{`${item.media}개 매체`}</span>
       </span>
     </>
@@ -331,9 +328,6 @@ function IssuesMobile({ items, index, stocks, total, linked, extra, quotes, look
         <div className="fg-hubm__top">
           {extra && extra.flow.count > 1 && <FlowRow extra={extra} />}
           <span className="fg-cov fg-hubm__cov">
-            <span className="fg-cov__bar" aria-hidden="true">
-              <span className="fg-cov__fill" style={{ width: `${item.pct}%` }} />
-            </span>
             <span className="fg-cov__txt fg-num">{`${dayWord(item.day, today)} ${item.media}개 매체`}</span>
           </span>
         </div>
