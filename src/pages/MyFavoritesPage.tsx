@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronLeft, CircleHelp } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, CircleHelp, Pencil } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { FavoriteRow } from '@/components/favorite/FavoriteRow'
 import { FolderCards } from '@/components/favorite/FolderCards'
@@ -361,16 +361,6 @@ export default function MyFavoritesPage() {
                 <span className="fg-section__title">관심 목록</span>
               )}
               <div className="fg-mine__panelacts">
-                {viewItems.length > 0 && (
-                  <Button
-                    size="sm"
-                    className="fg-mine__edit"
-                    aria-pressed={editing}
-                    onClick={() => setEditingView(editing ? null : viewKey)}
-                  >
-                    {editing ? '완료' : '편집'}
-                  </Button>
-                )}
                 {folder && (
                   <FolderMenu
                     folder={folder}
@@ -400,17 +390,34 @@ export default function MyFavoritesPage() {
               <span className="fg-mine__listcount fg-num">
                 {view.kind === 'smart' ? `조건에 맞는 종목 ${viewItems.length}개` : `담은 종목 ${viewItems.length}`}
               </span>
-              <label className="fg-tsort">
-                <span className="fg-sr">정렬</span>
-                <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
-                  {ITEM_SORTS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
-              </label>
+              <div className="fg-mine__tools">
+                {viewItems.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant={editing ? 'primary' : 'secondary'}
+                    aria-pressed={editing}
+                    onClick={() => setEditingView(editing ? null : viewKey)}
+                  >
+                    {editing ? (
+                      <Check size={16} strokeWidth={2} aria-hidden="true" />
+                    ) : (
+                      <Pencil size={16} strokeWidth={1.75} aria-hidden="true" />
+                    )}
+                    {editing ? '완료' : '편집'}
+                  </Button>
+                )}
+                <label className="fg-tsort">
+                  <span className="fg-sr">정렬</span>
+                  <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
+                    {ITEM_SORTS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
+                </label>
+              </div>
             </div>
 
             {editing && (

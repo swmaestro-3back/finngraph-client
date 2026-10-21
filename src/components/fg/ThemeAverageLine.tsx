@@ -16,7 +16,7 @@ export function ThemeAverageLine({ theme, className }: ThemeAverageLineProps) {
     <small className={cn('fg-tavg', className)} title={AVERAGE_BREADTH_HELP}>
       {'평균 '}
       <ChangeText value={fact.change} />
-      {hasCounts && ` · 상승 ${fact.up} · 하락 ${fact.down}`}
+      {hasCounts && <span className="fg-tavg__counts">{` · 상승 ${fact.up} · 하락 ${fact.down}`}</span>}
     </small>
   )
 }

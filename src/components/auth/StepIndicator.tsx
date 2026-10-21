@@ -33,7 +33,7 @@ export function StepIndicator({ steps, current }: StepIndicatorProps) {
             <span
               className={cn(
                 'text-caption font-medium whitespace-nowrap transition-colors duration-300',
-                state === 'current' ? 'text-foreground' : 'text-muted-foreground',
+                state === 'current' ? 'text-foreground' : 'text-muted-foreground max-sm:sr-only',
               )}
             >
               {label}

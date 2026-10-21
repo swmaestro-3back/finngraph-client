@@ -1,17 +1,19 @@
 import type { ThemeLeaderRes, ThemeMarketRes, ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
+import { matchesThemeFilter, readThemeName, readThemeRanges, writeThemeRanges, type ThemeRanges } from '@/lib/fg/themeFilter'
+import { readPage, writePage } from '@/lib/listParams'
 import { priceBasisSuffix } from '@/lib/referenceDate'
 import { compareNullLast, tileDetail } from '@/lib/themeMetrics'
 import { normalizeSizes, tileSize } from '@/lib/treemapColor'
 
 export type ThemeView = 'map' | 'table'
 export type ThemeSort = 'change' | 'value'
+export type ThemeMove = 'up' | 'down'
 
-export const THEME_MAP_COUNTS = [10, 20, 30] as const
-export type ThemeMapCount = (typeof THEME_MAP_COUNTS)[number]
-export const DEFAULT_MAP_COUNT: ThemeMapCount = 20
-export const THEME_ROW_LIMIT = 10
+export const THEME_MAP_COUNT = 30
+export const THEME_PAGE_SIZE = 20
 export const MEMBER_LIMIT = 10
+export const WIDE_THEME_MIN = 5
 
 export type ChangeOf = (theme: ThemeRes) => number | null
 
@@ -33,25 +35,29 @@ export type ThemeIssueView =
 export interface ThemeQuery {
   view: ThemeView | null
   sort: ThemeSort | null
-  count: ThemeMapCount
   fav: boolean
+  move: ThemeMove | null
+  wide: boolean
+  ranges: ThemeRanges
+  nameQ: string | null
+  page: number | null
   id: number | null
-}
-
-export function toMapCount(value: string | null): ThemeMapCount {
-  const count = Number(value)
-  return THEME_MAP_COUNTS.find((option) => option === count) ?? DEFAULT_MAP_COUNT
 }
 
 export function parseThemeQuery(search: string): ThemeQuery {
   const params = new URLSearchParams(search)
   const view = params.get('view')
   const sort = params.get('sort')
+  const move = params.get('move')
   return {
     view: view === 'map' || view === 'table' ? view : null,
     sort: sort === 'change' || sort === 'value' ? sort : null,
-    count: toMapCount(params.get('count')),
     fav: params.get('fav') === '1',
+    move: move === 'up' || move === 'down' ? move : null,
+    wide: params.get('wide') === '1',
+    ranges: readThemeRanges(params),
+    nameQ: readThemeName(params),
+    page: params.has('page') ? readPage(params) : null,
     id: parseThemeId(params.get('id')),
   }
 }
@@ -60,8 +66,12 @@ export function themeQueryString(query: ThemeQuery): string {
   const params = new URLSearchParams()
   if (query.view) params.set('view', query.view)
   if (query.sort) params.set('sort', query.sort)
-  if (query.count !== DEFAULT_MAP_COUNT) params.set('count', String(query.count))
   if (query.fav) params.set('fav', '1')
+  if (query.move) params.set('move', query.move)
+  if (query.wide) params.set('wide', '1')
+  writeThemeRanges(params, query.ranges)
+  if (query.nameQ !== null) params.set('name', query.nameQ)
+  if (query.page !== null) writePage(params, query.page)
   if (query.id !== null) params.set('id', String(query.id))
   const text = params.toString()
   return text ? `?${text}` : ''
@@ -88,9 +98,43 @@ export function sortThemes(themes: readonly ThemeRes[], sort: ThemeSort, changeO
   )
 }
 
-export function visibleThemes(sorted: readonly ThemeRes[], showAll: boolean, selectedId: number | null): ThemeRes[] {
-  if (showAll) return [...sorted]
-  return sorted.filter((theme, index) => index < THEME_ROW_LIMIT || theme.id === selectedId)
+export interface ThemeFilter {
+  move: ThemeMove | null
+  wide: boolean
+  ranges: ThemeRanges
+  nameQ: string | null
+  keep: ((theme: ThemeRes) => boolean) | null
+}
+
+export function filterThemes(
+  sorted: readonly ThemeRes[],
+  sort: ThemeSort,
+  filter: ThemeFilter,
+  changeOf: ChangeOf,
+): ThemeRes[] {
+  const rows = sorted.filter((theme) => {
+    const change = changeOf(theme)
+    if (filter.move === 'up' && !(change !== null && change > 0)) return false
+    if (filter.move === 'down' && !(change !== null && change < 0)) return false
+    if (filter.wide && theme.stockCount < WIDE_THEME_MIN) return false
+    if (!matchesThemeFilter(theme, filter.ranges, filter.nameQ)) return false
+    return filter.keep === null || filter.keep(theme)
+  })
+  return filter.move === 'down' && sort === 'change' ? rows.reverse() : rows
+}
+
+export function themePageCount(total: number): number {
+  return Math.max(1, Math.ceil(total / THEME_PAGE_SIZE))
+}
+
+export function themePageRows(rows: readonly ThemeRes[], page: number): ThemeRes[] {
+  return rows.slice((page - 1) * THEME_PAGE_SIZE, page * THEME_PAGE_SIZE)
+}
+
+export function resolveThemePage(rows: readonly ThemeRes[], requested: number | null, id: number | null): number {
+  if (requested !== null) return Math.min(requested, themePageCount(rows.length))
+  const index = id === null ? -1 : rows.findIndex((theme) => theme.id === id)
+  return index < 0 ? 1 : Math.floor(index / THEME_PAGE_SIZE) + 1
 }
 
 export function largestMove(themes: readonly ThemeRes[], changeOf: ChangeOf): ThemeRes | null {

@@ -34,7 +34,15 @@ function parseBound(raw: string): number | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
-function RangeField({ field, value, onChange }: { field: RangeFieldSpec; value: Range; onChange: (next: Range) => void }) {
+export function RangeField({
+  field,
+  value,
+  onChange,
+}: {
+  field: Pick<RangeFieldSpec, 'label' | 'unit' | 'minOnly'>
+  value: Range
+  onChange: (next: Range) => void
+}) {
   const { label, unit, minOnly } = field
   return (
     <div className="fg-sfilter__field">
