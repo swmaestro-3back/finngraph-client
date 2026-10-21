@@ -1,19 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { ALL_CATEGORIES, ALL_PREDICATES, type GraphData, type GraphLink, type GraphNode, type NodeCategory, type Predicate } from '@/data/graphTypes'
-import { EVENT_NODE, eventNodeWidth, filterVisibleGraph, truncateEventLabel } from '@/lib/graphLayout'
+import { filterVisibleGraph, wrapEventLabel } from '@/lib/graphLayout'
 
-describe('이벤트 태그 기하', () => {
-  it('12자를 넘는 제목은 11자 + 말줄임', () => {
-    expect(truncateEventLabel('로봇 액추에이터 수주 협의 확대')).toBe('로봇 액추에이터 수주…')
-    expect(truncateEventLabel('로봇 액추에이터 수주 협의 확대')).toHaveLength(EVENT_NODE.maxChars)
-    expect(truncateEventLabel('짧은 제목')).toBe('짧은 제목')
+describe('이벤트 라벨 줄바꿈', () => {
+  it('한 줄 12자 안에서 단어 단위로 두 줄까지 나눈다', () => {
+    expect(wrapEventLabel('로봇 액추에이터 수주 협의 확대')).toEqual(['로봇 액추에이터 수주', '협의 확대'])
+    expect(wrapEventLabel('짧은 제목')).toEqual(['짧은 제목'])
   })
 
-  it('폭은 잘린 라벨 글자 수에 비례하고 좌우 여백을 더한다', () => {
-    expect(eventNodeWidth('짧은 제목')).toBe(5 * EVENT_NODE.charWidth + EVENT_NODE.padX * 2)
-    expect(eventNodeWidth('로봇 액추에이터 수주 협의 확대')).toBe(
-      EVENT_NODE.maxChars * EVENT_NODE.charWidth + EVENT_NODE.padX * 2,
-    )
+  it('두 줄을 넘으면 둘째 줄 끝을 말줄임하고 긴 단어는 글자로 끊는다', () => {
+    expect(wrapEventLabel('가나다라마바사아자차카타파하 공장 증설 계약 체결')).toEqual([
+      '가나다라마바사아자차카타',
+      '파하 공장 증설 계약…',
+    ])
   })
 })
 
