@@ -444,6 +444,16 @@
   .fg-tdh__row {
     gap: var(--space-4);
   }
+  .fg-tdh__main {
+    padding-right: 0;
+  }
+  .fg-tdh__id,
+  .fg-tdh__price {
+    padding-right: 56px;
+  }
+  .fg-tdh__ratio {
+    max-width: none;
+  }
   .fg-tdh__sum {
     margin-top: var(--space-1);
   }

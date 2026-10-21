@@ -1159,6 +1159,9 @@ a.fg-tnw__row:active::before,
   .fg-fullview {
     height: calc(100dvh - 57px - 56px - env(safe-area-inset-bottom));
   }
+  .fg-app:has(.fg-fullview) > .fg-foot {
+    display: none;
+  }
 }
 @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
   .fg-sidesheet[data-state='open'] {

@@ -199,6 +199,9 @@
   width: 100%;
   /* 1440px → 120px (본문 폭 1200px, 83.33vw) */
   padding-inline: 8.333vw;
+  @media (max-width: 767px) {
+    padding-inline: var(--layout-gutter-mobile);
+  }
 }
 
 /* 최상위 섹션 카드 공통 껍데기 — 패딩은 콘텐츠 밀도에 따라 사용처에서 지정한다 */
