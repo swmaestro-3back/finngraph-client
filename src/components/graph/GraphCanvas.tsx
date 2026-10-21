@@ -247,8 +247,20 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     const adjacency = buildAdjacency(links)
     const distance = centerId ? bfsDistances([centerId], adjacency, RING_HOPS) : new Map<string, number>()
     const eventIds = new Set(nodes.filter((n) => n.type === 'event').map((n) => n.id))
-    const radii = ringRadii(distance, (id) => (eventIds.has(id) ? EVENT_SPAN : RING.spacing))
-    const ringed = radii.size > 0
+    const companyHops = new Set<number>()
+    distance.forEach((hop, id) => {
+      if (hop > 0 && !eventIds.has(id)) companyHops.add(hop)
+    })
+    const maxHop = Math.max(0, ...distance.values())
+    const ringOf = new Map<string, number>()
+    distance.forEach((hop, id) => {
+      if (hop > 0) ringOf.set(id, eventIds.has(id) && companyHops.has(hop) ? maxHop + 1 : hop)
+    })
+    const ringCounts = new Map<number, number>()
+    ringOf.forEach((ring) => ringCounts.set(ring, (ringCounts.get(ring) ?? 0) + 1))
+    const outerHop = ringCounts.size > 0 ? Math.max(...ringCounts.keys()) : 0
+    const radialHop = (ringCounts.get(outerHop) ?? 0) > RADIAL_MIN ? outerHop : null
+    const isRadial = (d: GraphNode) => radialHop !== null && ringOf.get(d.id) === radialHop
     const depth = (d: GraphNode) => distance.get(d.id) ?? 1
     const parentOf = new Map<string, string>()
     nodes.forEach((n) => {
@@ -281,6 +293,17 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     const reach = (d: GraphNode) => bodyW(d) / 2
     const rim = (d: GraphNode) => bodyH(d) / 2
     const maxRadius = nodes.length ? Math.max(...nodes.map(reach)) : NODE_RADIUS.min
+    const nodeById = new Map(nodes.map((n) => [n.id, n]))
+    const radialSpan = (id: string) => {
+      const n = nodeById.get(id)
+      return Math.max(RADIAL_SPAN, n ? (reach(n) + RADIAL_COLLIDE) * 2 + 2 : RADIAL_SPAN)
+    }
+    const radii = ringRadii(
+      ringOf,
+      (id) => (radialHop !== null && ringOf.get(id) === radialHop ? radialSpan(id) : eventIds.has(id) ? EVENT_SPAN : RING.spacing),
+      radialHop,
+    )
+    const ringed = radii.size > 0
 
     // 배경 도트 그리드 — 줌·팬을 따라 움직여 공간감을 준다. 클릭은 통과시켜 배경 클릭(선택 해제)이 살아 있다.
     const defs = svg.append('defs')
@@ -341,18 +364,20 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     userMovedRef.current = false
     fitTransformRef.current = d3.zoomIdentity
 
-    const seats = ringSeats(nodes, distance, adjacency, radii, (a, b) =>
+    const seats = ringSeats(nodes, ringOf, adjacency, radii, (a, b) =>
       CATEGORY_ORDER.indexOf(nodeCategory(a)) - CATEGORY_ORDER.indexOf(nodeCategory(b)) ||
       (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) ||
       a.label.localeCompare(b.label, 'ko'),
       isEvent,
+      radialHop,
     )
     const guideRadius = new Map<number, number>()
     radii.forEach((_, hop) => {
-      const ring = nodes.filter((n) => distance.get(n.id) === hop).map((n) => seats.get(n.id)?.radius ?? 0)
+      if (hop > maxHop) return
+      const ring = nodes.filter((n) => ringOf.get(n.id) === hop).map((n) => seats.get(n.id)?.radius ?? 0)
       guideRadius.set(hop, ring.reduce((sum, r) => sum + r, 0) / Math.max(ring.length, 1))
     })
-    const guides = radii.size >= 2 ? [...guideRadius.entries()] : []
+    const guides = maxHop >= 2 ? [...guideRadius.entries()] : []
     const ringGroup = g.append('g').attr('pointer-events', 'none')
     const ringCircle = ringGroup
       .selectAll<SVGCircleElement, [number, number]>('circle')
@@ -363,9 +388,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('stroke', T.muted)
       .attr('stroke-opacity', 0.35)
       .attr('stroke-dasharray', '2 6')
+    const guideLabels = guides.filter(([hop]) => hop !== radialHop)
     const ringText = ringGroup
       .selectAll<SVGTextElement, [number, number]>('text')
-      .data(guides)
+      .data(guideLabels)
       .join('text')
       .text(([hop]) => `${hop}단계`)
       .attr('text-anchor', 'middle')
@@ -467,7 +493,13 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         d3.select(this).remove()
       })
 
-    const linesOf = (d: GraphNode) => (isEvent(d) ? wrapEventLabel(d.label) : [truncateLabel(d.label)])
+    const radialChars = width < NARROW_CANVAS ? RADIAL_CHARS_NARROW : RADIAL_CHARS
+    const linesOf = (d: GraphNode) =>
+      isRadial(d)
+        ? [clipLabel(d.label, isEvent(d) ? radialChars : Math.min(radialChars, LABEL_MAX_CHARS))]
+        : isEvent(d)
+          ? wrapEventLabel(d.label)
+          : [truncateLabel(d.label)]
     const labelSize = (d: GraphNode) => (isPrimary(d) ? CENTER_LABEL_SIZE : isEvent(d) ? EVENT_LABEL_SIZE : LABEL_SIZE)
     const label = g
       .append('g')
@@ -479,7 +511,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('font-weight', (d) => (isPrimary(d) || isEvent(d) ? 600 : 500))
       .attr('fill', T.ink)
       .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'hanging')
+      .attr('dominant-baseline', (d) => (isRadial(d) ? 'central' : 'hanging'))
       .attr('stroke', T.canvas)
       .attr('stroke-width', 3)
       .attr('stroke-linejoin', 'round')
@@ -503,12 +535,28 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       ringWidth.set(hop, this.getBBox().width)
     })
     const labelOffset = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.size * 0.75 : radius(d)) + LABEL_GAP / zoomK
+    const radialAngle = (d: GraphNode) => (center ? (Math.atan2(d.y! - center.y!, d.x! - center.x!) * 180) / Math.PI : 0)
+    const placeLabels = () => {
+      label
+        .attr('text-anchor', (d) => (!isRadial(d) ? 'middle' : Math.abs(radialAngle(d)) <= 90 ? 'start' : 'end'))
+        .attr('transform', (d) => {
+          if (!isRadial(d)) return `translate(${d.x!},${d.y! + labelOffset(d)})`
+          const angle = radialAngle(d)
+          return Math.abs(angle) <= 90
+            ? `translate(${d.x!},${d.y!}) rotate(${angle}) translate(${labelOffset(d)},0)`
+            : `translate(${d.x!},${d.y!}) rotate(${angle + 180}) translate(${-labelOffset(d)},0)`
+        })
+    }
     const scaleLabels = () => {
       const s = 1 / zoomK
       label.attr('font-size', (d) => labelSize(d) * s).attr('stroke-width', 3 * s)
       ringText.attr('font-size', RING_LABEL_SIZE * s).attr('stroke-width', 3 * s)
-      label.attr('transform', (d) => `translate(${d.x!},${d.y! + labelOffset(d)})`)
+      placeLabels()
     }
+    const radialReach = Math.max(
+      0,
+      ...nodes.filter(isRadial).map((d) => (labelWidth.get(d.id) ?? 0) + LABEL_GAP + reach(d)),
+    )
 
     const priority = (d: GraphNode) => {
       if (isPrimary(d)) return 0
@@ -518,7 +566,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     let shown = new Set<string>()
     const declutter = () => {
       const s = 1 / zoomK
-      const boxes = nodes.map((d) => {
+      const boxes = nodes.filter((d) => !isRadial(d)).map((d) => {
         const width = ((labelWidth.get(d.id) ?? 0) + LABEL_PAD) * s
         const height = linesOf(d).length * labelSize(d) * LINE_HEIGHT * s
         return { id: d.id, left: d.x! - width / 2, top: d.y! + labelOffset(d), width, height, priority: priority(d) }
@@ -528,13 +576,29 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         return { id: d.id, left: d.x! - half, top: d.y! - half, width: half * 2, height: half * 2 }
       })
       const ringBoxes = center
-        ? guides.map(([hop, r]) => {
+        ? guideLabels.map(([hop, r]) => {
             const width = ((ringWidth.get(hop) ?? 0) + LABEL_PAD) * s
             const height = RING_LABEL_SIZE * LINE_HEIGHT * s
             return { id: `ring-${hop}`, left: center.x! - width / 2, top: center.y! - r - 4 * s - height, width, height, priority: -1 }
           })
         : []
       shown = declutterLabels([...ringBoxes, ...boxes], obstacles, EVENT_TIER * 1000)
+      if (center && radialHop !== null) {
+        const ring = nodes
+          .filter(isRadial)
+          .map((d) => ({ d, angle: Math.atan2(d.y! - center.y!, d.x! - center.x!), r: Math.hypot(d.x! - center.x!, d.y! - center.y!) }))
+          .sort((a, b) => a.angle - b.angle)
+        const minGap = LABEL_SIZE * LINE_HEIGHT * s
+        let last: { angle: number; r: number } | null = null
+        const first = ring[0]
+        ring.forEach((item) => {
+          const roomBefore = last ? (item.angle - last.angle) * Math.min(item.r, last.r) : Infinity
+          const roomAfter = first && item !== first && last ? (first.angle + 2 * Math.PI - item.angle) * Math.min(item.r, first.r) : Infinity
+          if (roomBefore < minGap || roomAfter < minGap) return
+          shown.add(item.d.id)
+          last = item
+        })
+      }
     }
     const labelLod = (d: GraphNode) => (shown.has(d.id) ? 1 : 0)
     let declutterFrame = 0
@@ -803,7 +867,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         'collide',
         d3
           .forceCollide()
-          .radius((d) => reach(d as GraphNode) + COLLIDE_PAD)
+          .radius((d) => reach(d as GraphNode) + (isRadial(d as GraphNode) ? RADIAL_COLLIDE : COLLIDE_PAD))
           .strength(0.9),
       )
       .alphaMin(0.01)
@@ -842,7 +906,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         .attr('transform', (d) => (isEvent(d) ? `rotate(45 ${d.x!} ${d.y!})` : null))
       logo.attr('x', (d) => d.x! - logoSize(d) / 2).attr('y', (d) => d.y! - logoSize(d) / 2)
       nodeHit.attr('x', (d) => d.x! - hitW(d) / 2).attr('y', (d) => d.y! - hitH(d) / 2)
-      label.attr('transform', (d) => `translate(${d.x!},${d.y! + labelOffset(d)})`)
+      placeLabels()
       if (center) {
         ringCircle.attr('cx', center.x!).attr('cy', center.y!)
         ringText.attr('x', center.x!).attr('y', ([, r]) => center.y! - r - 4 / zoomK)
@@ -868,7 +932,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     /** 노드와 그 아래 라벨까지 보이도록 카메라를 맞춘다 */
     function fitToView(duration: number) {
-      const view = computeFitView(nodes, width, height, { padding: 48 + maxRadius })
+      const view = computeFitView(nodes, width, height, {
+        padding: Math.min(48 + maxRadius + radialReach, Math.min(width, height) * FIT_PAD_SHARE),
+        min: radialHop !== null ? RADIAL_FIT_MIN : undefined,
+      })
       if (!view || !svgRef.current) return
       const transform = d3.zoomIdentity
         .translate(width / 2, height / 2)
@@ -1009,6 +1076,14 @@ const RING_LABEL_SIZE = 11
 const RING_HOPS = 3
 const EVENT_TIER = 1
 const EVENT_SPAN = 84
+const RADIAL_MIN = 20
+const RADIAL_SPAN = 28
+const RADIAL_COLLIDE = 3
+const RADIAL_CHARS = 20
+const RADIAL_CHARS_NARROW = 12
+const NARROW_CANVAS = 600
+const FIT_PAD_SHARE = 0.3
+const RADIAL_FIT_MIN = 0.15
 const RING_STRENGTH = 0.85
 const CROSS_LINK_STRENGTH = 0.02
 const RING_LINK_STRENGTH = 0.05
@@ -1049,7 +1124,11 @@ const CHARGE_PER_PX = 12
 const COLLIDE_PAD = 22
 
 function truncateLabel(label: string): string {
-  return label.length > LABEL_MAX_CHARS ? `${label.slice(0, LABEL_MAX_CHARS - 1)}…` : label
+  return clipLabel(label, LABEL_MAX_CHARS)
+}
+
+function clipLabel(label: string, max: number): string {
+  return label.length > max ? `${label.slice(0, max - 1)}…` : label
 }
 
 /** 이 강조가 카메라를 가져가는가 — 배경 강조(camera:false)와 해제는 화면을 건드리지 않는다 */

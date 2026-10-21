@@ -356,6 +356,7 @@ export const RING = { step: 150, gap: 110, spacing: 40, stagger: 44, crowded: 16
 export function ringRadii(
   distance: Map<string, number>,
   span: (id: string) => number = () => RING.spacing,
+  flatHop: number | null = null,
 ): Map<number, number> {
   const counts = new Map<number, number>()
   const arcs = new Map<number, number>()
@@ -372,7 +373,7 @@ export function ringRadii(
     const fit = (arcs.get(hop) ?? 0) / (2 * Math.PI)
     const radius = Math.max(hop * RING.step, previous + RING.gap, fit)
     radii.set(hop, radius)
-    previous = radius + (count > RING.crowded ? RING.stagger : 0)
+    previous = radius + (count > RING.crowded && hop !== flatHop ? RING.stagger : 0)
   }
   return radii
 }
@@ -389,6 +390,7 @@ export function ringSeats(
   radii: Map<number, number>,
   order: (a: GraphNode, b: GraphNode) => number,
   spread: (node: GraphNode) => boolean = () => false,
+  flatHop: number | null = null,
 ): Map<string, RingSeat> {
   const seats = new Map<string, RingSeat>()
   const byHop = new Map<number, GraphNode[]>()
@@ -401,7 +403,7 @@ export function ringSeats(
   for (const hop of hops) {
     const ring = byHop.get(hop) ?? []
     const base = radii.get(hop) ?? hop * RING.step
-    const crowded = ring.length > RING.crowded
+    const crowded = ring.length > RING.crowded && hop !== flatHop
     const radiusAt = (index: number) => base + (crowded && index % 2 === 1 ? RING.stagger : 0)
     if (hop === 1) {
       const sorted = spreadEvenly([...ring].sort(order), spread)
