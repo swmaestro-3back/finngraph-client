@@ -10,9 +10,7 @@ export type ThemeView = 'map' | 'table'
 export type ThemeSort = 'change' | 'value'
 export type ThemeMove = 'up' | 'down'
 
-export const THEME_MAP_COUNTS = [10, 20, 30] as const
-export type ThemeMapCount = (typeof THEME_MAP_COUNTS)[number]
-export const DEFAULT_MAP_COUNT: ThemeMapCount = 20
+export const THEME_MAP_COUNT = 30
 export const THEME_PAGE_SIZE = 20
 export const MEMBER_LIMIT = 10
 export const WIDE_THEME_MIN = 5
@@ -37,7 +35,6 @@ export type ThemeIssueView =
 export interface ThemeQuery {
   view: ThemeView | null
   sort: ThemeSort | null
-  count: ThemeMapCount
   fav: boolean
   move: ThemeMove | null
   wide: boolean
@@ -45,11 +42,6 @@ export interface ThemeQuery {
   nameQ: string | null
   page: number | null
   id: number | null
-}
-
-export function toMapCount(value: string | null): ThemeMapCount {
-  const count = Number(value)
-  return THEME_MAP_COUNTS.find((option) => option === count) ?? DEFAULT_MAP_COUNT
 }
 
 export function parseThemeQuery(search: string): ThemeQuery {
@@ -60,7 +52,6 @@ export function parseThemeQuery(search: string): ThemeQuery {
   return {
     view: view === 'map' || view === 'table' ? view : null,
     sort: sort === 'change' || sort === 'value' ? sort : null,
-    count: toMapCount(params.get('count')),
     fav: params.get('fav') === '1',
     move: move === 'up' || move === 'down' ? move : null,
     wide: params.get('wide') === '1',
@@ -75,7 +66,6 @@ export function themeQueryString(query: ThemeQuery): string {
   const params = new URLSearchParams()
   if (query.view) params.set('view', query.view)
   if (query.sort) params.set('sort', query.sort)
-  if (query.count !== DEFAULT_MAP_COUNT) params.set('count', String(query.count))
   if (query.fav) params.set('fav', '1')
   if (query.move) params.set('move', query.move)
   if (query.wide) params.set('wide', '1')

@@ -36,7 +36,7 @@ import {
   themePageRows,
   themeQueryString,
   themeTiles,
-  toMapCount,
+  THEME_MAP_COUNT,
   weightedChangeOf,
   WIDE_THEME_MIN,
   type HeldDefault,
@@ -68,11 +68,6 @@ const MOVE_OPTIONS: readonly { value: ThemeMove | null; label: string }[] = [
   { value: 'up', label: '상승' },
   { value: 'down', label: '하락' },
 ]
-const COUNT_OPTIONS: readonly TabOption<string>[] = [
-  { value: '10', label: '10개' },
-  { value: '20', label: '20개' },
-  { value: '30', label: '30개' },
-]
 const SUB = '같은 이슈로 묶인 종목 그룹이에요 · 테마 등락률은 테마 종목의 시가총액 가중 평균이에요'
 const FOOTNOTE =
   '등락률은 테마 지수 기준 · 시가총액 가중(종목당 최대 25%) · 거래대금은 테마 종목 합 · 주도주는 테마가 움직인 방향으로 오늘 가장 크게 움직인 종목이에요(추천이 아니에요)'
@@ -87,7 +82,7 @@ export default function ThemesPage() {
   const { pathname, search } = useLocation()
   const navigate = useNavigate()
   const { status } = useAuth()
-  const { has } = useFavorites()
+  const { has, ready: favoritesReady } = useFavorites()
   const narrow = useMediaQuery('(max-width: 767px)')
   const inline = useMediaQuery('(max-width: 1023px)')
   const query = useMemo(() => parseThemeQuery(search), [search])
@@ -97,7 +92,7 @@ export default function ThemesPage() {
 
   const themes = useThemesCached()
   const market = useThemeMarket()
-  const hot = useHotThemes(query.count, view === 'map')
+  const hot = useHotThemes(THEME_MAP_COUNT, view === 'map')
   const list = themes.data
   const sorted = useMemo(() => sortThemes(list ?? [], sort, weightedChangeOf), [list, sort])
   const keep = useMemo(() => (favOn ? (theme: ThemeRes) => has('THEME', String(theme.id)) : null), [favOn, has])
@@ -123,16 +118,14 @@ export default function ThemesPage() {
   const page = resolveThemePage(filtered, query.page, query.id)
   const pageCount = themePageCount(filtered.length)
   const tableThemes = useMemo(() => themePageRows(filtered, page), [filtered, page])
-  const mapThemes = useMemo(() => {
-    const items = hot.data ?? []
-    return favOn ? items.filter((theme) => has('THEME', String(theme.id))) : items
-  }, [hot.data, favOn, has])
+  const mapThemes = useMemo(() => (keep ? (list ?? []).filter(keep) : (hot.data ?? [])), [keep, list, hot.data])
   const tiles = useMemo(() => themeTiles(mapThemes, weightedChangeOf), [mapThemes])
 
   const requestedId = query.id
   const heldDefault = useRef<HeldDefault | null>(null)
   const defaultId = stableDefaultId(heldDefault.current, view, sort, tableThemes, mapThemes, weightedChangeOf)
-  const defaultReady = view === 'map' ? hot.data !== null : list !== null
+  const mapReady = favOn ? favoritesReady && list !== null : hot.data !== null
+  const defaultReady = view === 'map' ? mapReady : list !== null
   useEffect(() => {
     if (requestedId !== null || !defaultReady) return
     heldDefault.current = defaultId === null ? null : { view, sort, id: defaultId }
@@ -263,7 +256,7 @@ export default function ThemesPage() {
   ) : null
 
   let mapBody: ReactNode = null
-  if (hot.error && hot.data === null) {
+  if (!favOn && hot.error && hot.data === null) {
     mapBody = (
       <StateBlock
         kind="error"
@@ -276,18 +269,21 @@ export default function ThemesPage() {
         }
       />
     )
-  } else if (hot.data === null) {
-    mapBody = mapSkeleton ? <Skeleton height="var(--fg-tmap-h)" shape="card" /> : null
+  } else if (!mapReady) {
+    mapBody = !favOn && mapSkeleton ? <Skeleton height="var(--fg-tmap-h)" shape="card" /> : null
   } else if (tiles.length === 0) {
-    mapBody = favOn ? (
-      <StateBlock
-        kind="empty"
-        title={`오늘 상위 ${hot.data.length}개 테마 안에 관심 테마가 없어요`}
-        description="표시 개수를 늘리거나 관심 테마를 더 담아 보세요"
-      />
-    ) : (
-      <StateBlock kind="empty" title="핫 테마를 집계하고 있어요" description="시세가 들어오면 자동으로 보여 줘요" />
-    )
+    if (favOn) {
+      mapBody =
+        mapThemes.length === 0 ? (
+          <StateBlock kind="empty" title="관심 테마가 없어요" description="테마 옆 별을 눌러 담아 보세요" />
+        ) : (
+          <StateBlock kind="empty" title="관심 테마의 오늘 시세가 아직 없어요" description="시세가 들어오면 자동으로 보여 줘요" />
+        )
+    } else {
+      mapBody = (
+        <StateBlock kind="empty" title="핫 테마를 집계하고 있어요" description="시세가 들어오면 자동으로 보여 줘요" />
+      )
+    }
   } else {
     mapBody = (
       <>
@@ -296,7 +292,7 @@ export default function ThemesPage() {
           selectedId={selectedId}
           onSelect={select}
           label={MAP_LABEL}
-          layoutKey={`${query.count}:${favOn ? 'fav' : 'all'}`}
+          layoutKey={favOn ? 'fav' : 'all'}
         />
         <ThemeLegend />
       </>
@@ -413,17 +409,9 @@ export default function ThemesPage() {
                     onChange={(next) => setQuery({ view: next, page: null })}
                   />
                   {view === 'map' && (
-                    <>
-                      <Segment
-                        label="표시 개수"
-                        options={COUNT_OPTIONS}
-                        value={String(query.count)}
-                        onChange={(next) => setQuery({ count: toMapCount(next) })}
-                      />
-                      <FilterChip pressed={favOn} onClick={toggleFavorites}>
-                        관심 테마
-                      </FilterChip>
-                    </>
+                    <FilterChip pressed={favOn} onClick={toggleFavorites}>
+                      관심 테마
+                    </FilterChip>
                   )}
                   {view === 'table' && (
                     <Segment
