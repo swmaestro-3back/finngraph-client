@@ -1,7 +1,7 @@
 // 이벤트(뉴스 클러스터) 노드의 기간 필터 — 마지막 보도가 오늘로부터 얼마 안에 있는 이벤트만 남긴다.
 // 서버에 다시 묻지 않고 받아 온 그래프에서 숨긴다 (범례 필터와 같은 층).
 
-import type { GraphNode } from '@/data/graphTypes'
+import { isEventLink, type GraphLink, type GraphNode } from '@/data/graphTypes'
 
 export type EventPeriod = 'all' | '1w' | '1m' | '3m' | '6m'
 
@@ -62,5 +62,12 @@ export function eventInPeriod(node: GraphNode, cutoff: string | null): boolean {
   if (cutoff === null || node.type !== 'event') return true
   const last = node.data.lastPublishedAt
   if (!last) return false
+  return last.slice(0, 10) >= cutoff
+}
+
+export function linkInPeriod(link: Pick<GraphLink, 'type' | 'last_mentioned_at'>, cutoff: string | null): boolean {
+  if (cutoff === null || isEventLink(link)) return true
+  const last = link.last_mentioned_at
+  if (!last) return true
   return last.slice(0, 10) >= cutoff
 }

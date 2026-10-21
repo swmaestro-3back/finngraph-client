@@ -81,10 +81,10 @@ export interface GraphQuery {
   hop: Hop
   scope: Scope
   lens: Lens
-  period: EventPeriod
+  period: EventPeriod | null
 }
 
-export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: 'all', lens: 'overview', period: 'all' }
+export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: 'all', lens: 'overview', period: null }
 
 export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   const hopRaw = Number(params.get('hop'))
@@ -96,7 +96,7 @@ export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   const lensRaw = params.get('lens')
   const lens: Lens = isLens(lensRaw) ? lensRaw : 'overview'
   const periodRaw = params.get('period')
-  const period: EventPeriod = isEventPeriod(periodRaw) ? periodRaw : 'all'
+  const period: EventPeriod | null = isEventPeriod(periodRaw) ? periodRaw : null
   return { hop, scope, lens, period }
 }
 
@@ -107,7 +107,7 @@ export function graphSearch(query: GraphQuery): string {
   if (query.hop !== 1) params.set('hop', String(query.hop))
   if (isMarket(query.scope)) params.set('market', query.scope)
   else if (isIndex(query.scope)) params.set('index', query.scope)
-  if (query.period !== 'all') params.set('period', query.period)
+  if (query.period !== null) params.set('period', query.period)
   const s = params.toString()
   return s ? `?${s}` : ''
 }

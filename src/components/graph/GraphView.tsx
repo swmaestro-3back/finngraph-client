@@ -23,6 +23,7 @@ import { LensSelector } from '@/components/graph/LensSelector'
 import { Button } from '@/components/ui/button'
 import {
   endId,
+  ALL_CATEGORIES,
   ALL_PREDICATES,
   isEventLink,
   nodeCategory,
@@ -43,8 +44,9 @@ import {
   useGraphQuery,
 } from '@/lib/graphRoute'
 import { kstToday } from '@/lib/calendar'
-import { eventInPeriod, eventPeriodCutoff } from '@/lib/eventPeriod'
+import { eventInPeriod, eventPeriodCutoff, type EventPeriod } from '@/lib/eventPeriod'
 import { indexCompanies } from '@/lib/graphEvent'
+import { autoEventPeriod, filterVisibleGraph } from '@/lib/graphLayout'
 import { useMemberGate } from '@/lib/memberGate'
 import { useKgGraph } from '@/lib/queries/useKgGraph'
 import { useExampleGraph } from '@/lib/queries/useExampleGraph'
@@ -93,15 +95,11 @@ export function GraphView({ focus, example = false }: Props) {
   const noun = isTheme ? '테마' : '종목'
   // hop·범위는 URL 쿼리가 원본이다 — 새로고침·공유가 유지되고 재중심 이력이 뒤로가기로 이어진다
   const [query, updateQuery] = useGraphQuery()
-  const { hop, scope, lens, period } = query
+  const { hop, scope, lens } = query
   // 테마 원점은 렌즈가 없다 — 컨트롤을 전부 숨기고 필터도 전체 켜짐으로 둔다
   const controls = isTheme ? { hop: false, scope: false } : lensControls(lens)
   // 이벤트 기간 칩 — 이벤트가 오는 렌즈에서만. URL에 남긴 period도 그 렌즈에서만 효력이 있다
   const showPeriod = !isTheme && lensHasEvents(lens)
-  const eventCutoff = useMemo(
-    () => (showPeriod ? eventPeriodCutoff(period, kstToday(new Date())) : null),
-    [showPeriod, period],
-  )
   const { locked, pending, promptLogin } = useMemberGate()
   const gatedHop = locked && hop > 1 ? 1 : hop
   const gatedQuery = gatedHop === hop ? query : { ...query, hop: gatedHop }
@@ -195,6 +193,16 @@ export function GraphView({ focus, example = false }: Props) {
   const [openNewsId, setOpenNewsId] = useState<string | null>(null)
 
   const centerId = data?.metadata.centerId ?? null
+  const today = kstToday(new Date())
+  const autoPeriod = useMemo(
+    () => (showPeriod && query.period === null && data ? autoEventPeriod(data, centerId, today) : null),
+    [showPeriod, query.period, data, centerId, today],
+  )
+  const period: EventPeriod = query.period ?? autoPeriod ?? 'all'
+  const eventCutoff = useMemo(
+    () => (showPeriod ? eventPeriodCutoff(period, today) : null),
+    [showPeriod, period, today],
+  )
 
   useEffect(() => {
     if (example || !data || !centerId || locked) return
@@ -510,23 +518,31 @@ export function GraphView({ focus, example = false }: Props) {
       ? () => updateQuery({ lens: 'events', hop: 2 })
       : undefined
 
+  const periodGraph = useMemo(
+    () =>
+      data
+        ? filterVisibleGraph(data, new Set(ALL_CATEGORIES), new Set(ALL_PREDICATES), centerId, eventCutoff)
+        : null,
+    [data, centerId, eventCutoff],
+  )
+
   // 필터 카운트
   const categoryCounts = useMemo(() => {
     const counts: Partial<Record<NodeCategory, number>> = {}
-    data?.nodes.forEach((n) => {
+    periodGraph?.nodes.forEach((n) => {
       const c = nodeCategory(n)
       counts[c] = (counts[c] ?? 0) + 1
     })
     return counts
-  }, [data])
+  }, [periodGraph])
 
   const predicateCounts = useMemo(() => {
     const counts: Partial<Record<Predicate, number>> = {}
-    data?.links.forEach((l) => {
+    periodGraph?.links.forEach((l) => {
       counts[l.type] = (counts[l.type] ?? 0) + 1
     })
     return counts
-  }, [data])
+  }, [periodGraph])
 
   const guideLinkId = guide && guideIndex !== null ? (guideSteps[guideIndex]?.linkId?.() ?? null) : null
 
