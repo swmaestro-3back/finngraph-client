@@ -23,10 +23,10 @@ import {
   tileGrade,
   tileText,
   toMapCount,
-  visibleThemes,
   weightedChangeOf,
   type ChangeOf,
   type MeasureText,
+  type ThemeQuery,
 } from '@/lib/fg/themes'
 
 function theme(id: number, patch: Partial<ThemeRes> = {}): ThemeRes {
@@ -69,6 +69,11 @@ describe('parseThemeQuery / themeQueryString', () => {
       sort: null,
       count: 20,
       fav: false,
+      move: null,
+      wide: false,
+      ranges: {},
+      nameQ: null,
+      page: null,
       id: null,
     })
   })
@@ -79,20 +84,38 @@ describe('parseThemeQuery / themeQueryString', () => {
       sort: 'value',
       count: 30,
       fav: true,
+      move: null,
+      wide: false,
+      ranges: {},
+      nameQ: null,
+      page: null,
       id: 59,
     })
   })
 
+  const base: ThemeQuery = {
+    view: null,
+    sort: null,
+    count: 20,
+    fav: false,
+    move: null,
+    wide: false,
+    ranges: {},
+    nameQ: null,
+    page: null,
+    id: null,
+  }
+
   it('기본값은 URL에 남기지 않는다', () => {
-    expect(themeQueryString({ view: null, sort: null, count: 20, fav: false, id: null })).toBe('')
-    expect(themeQueryString({ view: 'table', sort: 'change', count: 10, fav: true, id: null })).toBe(
+    expect(themeQueryString(base)).toBe('')
+    expect(themeQueryString({ ...base, view: 'table', sort: 'change', count: 10, fav: true })).toBe(
       '?view=table&sort=change&count=10&fav=1',
     )
   })
 
   it('목록에서 고른 테마는 id 쿼리로 남긴다', () => {
-    expect(themeQueryString({ view: null, sort: null, count: 20, fav: false, id: 1016 })).toBe('?id=1016')
-    expect(themeQueryString({ view: 'table', sort: null, count: 20, fav: false, id: 7 })).toBe('?view=table&id=7')
+    expect(themeQueryString({ ...base, id: 1016 })).toBe('?id=1016')
+    expect(themeQueryString({ ...base, view: 'table', id: 7 })).toBe('?view=table&id=7')
   })
 
   it('표시 개수는 10·20·30만 받는다', () => {
@@ -168,22 +191,6 @@ describe('sortThemes', () => {
       theme(4, { name: '라', change: 0, weightedChange: 0.5 }),
     ]
     expect(sortThemes(weighted, 'change', weightedChangeOf).map((t) => t.id)).toEqual([2, 4, 1, 3])
-  })
-})
-
-describe('visibleThemes', () => {
-  const sorted = Array.from({ length: 13 }, (_, i) => theme(i + 1))
-
-  it('기본은 상위 10행', () => {
-    expect(visibleThemes(sorted, false, null)).toHaveLength(10)
-  })
-
-  it('고른 테마가 10행 밖이면 그 행을 덧붙인다', () => {
-    expect(visibleThemes(sorted, false, 12).map((t) => t.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12])
-  })
-
-  it('모두 보기면 전부', () => {
-    expect(visibleThemes(sorted, true, null)).toHaveLength(13)
   })
 })
 
