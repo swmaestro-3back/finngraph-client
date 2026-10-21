@@ -22,7 +22,6 @@ import {
   tileEnterDelay,
   tileGrade,
   tileText,
-  toMapCount,
   weightedChangeOf,
   type ChangeOf,
   type MeasureText,
@@ -67,7 +66,6 @@ describe('parseThemeQuery / themeQueryString', () => {
     expect(parseThemeQuery('?view=grid&sort=cap&count=15&fav=yes&id=abc')).toEqual({
       view: null,
       sort: null,
-      count: 20,
       fav: false,
       move: null,
       wide: false,
@@ -82,7 +80,6 @@ describe('parseThemeQuery / themeQueryString', () => {
     expect(parseThemeQuery('?view=map&sort=value&count=30&fav=1&id=59')).toEqual({
       view: 'map',
       sort: 'value',
-      count: 30,
       fav: true,
       move: null,
       wide: false,
@@ -96,7 +93,6 @@ describe('parseThemeQuery / themeQueryString', () => {
   const base: ThemeQuery = {
     view: null,
     sort: null,
-    count: 20,
     fav: false,
     move: null,
     wide: false,
@@ -108,9 +104,7 @@ describe('parseThemeQuery / themeQueryString', () => {
 
   it('기본값은 URL에 남기지 않는다', () => {
     expect(themeQueryString(base)).toBe('')
-    expect(themeQueryString({ ...base, view: 'table', sort: 'change', count: 10, fav: true })).toBe(
-      '?view=table&sort=change&count=10&fav=1',
-    )
+    expect(themeQueryString({ ...base, view: 'table', sort: 'change', fav: true })).toBe('?view=table&sort=change&fav=1')
   })
 
   it('목록에서 고른 테마는 id 쿼리로 남긴다', () => {
@@ -118,11 +112,6 @@ describe('parseThemeQuery / themeQueryString', () => {
     expect(themeQueryString({ ...base, view: 'table', id: 7 })).toBe('?view=table&id=7')
   })
 
-  it('표시 개수는 10·20·30만 받는다', () => {
-    expect(toMapCount('10')).toBe(10)
-    expect(toMapCount('25')).toBe(20)
-    expect(toMapCount(null)).toBe(20)
-  })
 })
 
 describe('parseThemeId', () => {
