@@ -34,6 +34,8 @@ const TABULAR_SLACK = 1.04
 const FIT_SLACK = 1
 const TILE_FONTS: readonly TileFont[] = Object.values(TILE_TYPE).flatMap((type) => Object.values(type))
 const REFLOW_ARM_MS = 10000
+const SQUARE_MAP_WIDTH = 600
+const NARROW_TILE_AREA = 10000
 const REFLOW_VARS = {
   '--fg-tmap-reflow': `${TILE_REFLOW_MS}ms`,
   '--fg-tmap-enter': `${TILE_ENTER_MS}ms`,
@@ -182,13 +184,16 @@ export function ThemeTreemap({ tiles, selectedId, onSelect, label, layoutKey }: 
     return () => observer.disconnect()
   }, [])
 
+  const narrow = size !== null && size.width > 0 && size.width < SQUARE_MAP_WIDTH
+  const fitHeight = narrow ? Math.ceil((tiles.length * NARROW_TILE_AREA) / size.width) : null
+
   const nodes = useMemo(() => {
     if (!size || size.width === 0 || size.height === 0 || tiles.length === 0) return []
     const root = hierarchy<Datum>({ children: tiles })
       .sum((d) => d.size ?? 0)
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
     return treemap<Datum>()
-      .tile(treemapSquarify)
+      .tile(size.width < SQUARE_MAP_WIDTH ? treemapSquarify.ratio(1) : treemapSquarify)
       .size([size.width, size.height])(root)
       .leaves()
       .map((leaf) => {
@@ -210,7 +215,7 @@ export function ThemeTreemap({ tiles, selectedId, onSelect, label, layoutKey }: 
       role="group"
       aria-label={label}
       data-reflow={reflow ? '' : undefined}
-      style={REFLOW_VARS}
+      style={fitHeight === null ? REFLOW_VARS : { ...REFLOW_VARS, height: `max(var(--fg-tmap-h), ${fitHeight}px)` }}
     >
       {nodes.map(({ tile, left, top, width, height, change, text }, index) => {
         const colors = paint(tile.change, stops)
