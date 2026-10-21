@@ -704,7 +704,8 @@ export function PriceChart({
             {markerLabel === '이슈' ? '이슈가 처음 보도된 날' : '뉴스가 나온 날'}
           </span>
         )}
-        <span>휠로 확대 · 끌어서 이동 · 키보드 ← → 와 + −</span>
+        <span className="fg-pc__how fg-pc__how--fine">휠로 확대 · 끌어서 이동 · 키보드 ← → 와 + −</span>
+        <span className="fg-pc__how fg-pc__how--coarse">두 손가락으로 확대 · 끌어서 이동</span>
       </p>
     </section>
   )

@@ -309,6 +309,11 @@
 .fg-pc__callout a { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-1); font: 600 14px/20px var(--font-sans); color: var(--text-secondary); text-decoration: none; }
 .fg-pc__hint { margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--space-4); font: 500 12px/17px var(--font-sans); color: var(--text-secondary); }
 .fg-pc__hint span { display: inline-flex; align-items: center; gap: var(--space-2); }
+.fg-pc__hint .fg-pc__how--coarse { display: none; }
+@media (pointer: coarse) {
+  .fg-pc__hint .fg-pc__how--fine { display: none; }
+  .fg-pc__hint .fg-pc__how--coarse { display: inline-flex; }
+}
 
 .fg-ks { display: flex; flex-direction: column; margin: 0; }
 .fg-ks > div { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(88px, auto); align-items: center; column-gap: var(--space-3); min-height: 48px; padding: var(--space-2) 0; border-bottom: 1px solid var(--border-default); font-variant-numeric: tabular-nums; }

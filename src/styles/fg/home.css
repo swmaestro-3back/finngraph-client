@@ -1612,6 +1612,9 @@ a.fg-hq:hover .fg-hq__name {
   .fg-hubmore::before {
     inset: -12px -8px;
   }
+  .fg-hh__ratio > .fg-num {
+    display: none;
+  }
   .fg-hubc .fg-hubc__tabs {
     gap: var(--space-1) 20px;
   }
