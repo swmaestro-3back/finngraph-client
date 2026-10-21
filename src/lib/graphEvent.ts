@@ -1,6 +1,6 @@
 // 이벤트(뉴스 클러스터) 노드의 data를 읽고 사람이 읽는 문자열로 바꾼다 — 캔버스 툴팁과 상세 패널이 함께 쓴다.
 
-import type { GraphNode } from '@/data/graphTypes'
+import { endId, isEventLink, type GraphData, type GraphLink, type GraphNode } from '@/data/graphTypes'
 import { issuePath } from '@/lib/fg/paths'
 import type { KgEventDetailRes } from '@/lib/kgApiTypes'
 
@@ -104,3 +104,57 @@ export function findCompanyNode(
 ): GraphNode | undefined {
   return (company.ticker ? index.byTicker.get(company.ticker) : undefined) ?? index.byName.get(company.name)
 }
+
+export function mergeSameEvents(data: GraphData, leads: ReadonlyMap<number, number>): GraphData {
+  const groups = new Map<number, GraphNode[]>()
+  data.nodes.forEach((n) => {
+    const cluster = n.type === 'event' ? n.data.clusterId : undefined
+    if (cluster == null) return
+    const lead = leads.get(cluster) ?? cluster
+    groups.set(lead, [...(groups.get(lead) ?? []), n])
+  })
+  const replaced = new Map<string, string>()
+  const keepers = new Map<string, GraphNode>()
+  groups.forEach((members, lead) => {
+    if (members.length < 2) return
+    const keeper =
+      members.find((n) => n.data.clusterId === lead) ??
+      [...members].sort((a, b) => (b.data.newsCount ?? 0) - (a.data.newsCount ?? 0))[0]
+    const firsts = members.flatMap((n) => (n.data.firstPublishedAt ? [n.data.firstPublishedAt] : [])).sort()
+    const lasts = members.flatMap((n) => (n.data.lastPublishedAt ? [n.data.lastPublishedAt] : [])).sort()
+    const counts = members.flatMap((n) => (n.data.newsCount != null ? [n.data.newsCount] : []))
+    keepers.set(keeper.id, {
+      ...keeper,
+      data: {
+        ...keeper.data,
+        firstPublishedAt: firsts[0] ?? keeper.data.firstPublishedAt,
+        lastPublishedAt: lasts[lasts.length - 1] ?? keeper.data.lastPublishedAt,
+        newsCount: counts.length > 0 ? counts.reduce((sum, c) => sum + c, 0) : keeper.data.newsCount,
+      },
+    })
+    members.forEach((n) => {
+      if (n.id !== keeper.id) replaced.set(n.id, keeper.id)
+    })
+  })
+  if (replaced.size === 0) return data
+  const seen = new Set<string>()
+  const links = data.links.flatMap((l): GraphLink[] => {
+    const source = endId(l.source)
+    const target = endId(l.target)
+    const from = replaced.get(source) ?? source
+    const to = replaced.get(target) ?? target
+    if (!isEventLink(l)) return [from === source && to === target ? l : { ...l, source: from, target: to }]
+    const key = `${from}|${to}`
+    if (seen.has(key)) return []
+    seen.add(key)
+    return [{ ...l, source: from, target: to }]
+  })
+  const nodes = data.nodes.filter((n) => !replaced.has(n.id)).map((n) => keepers.get(n.id) ?? n)
+  return {
+    ...data,
+    nodes,
+    links,
+    metadata: { ...data.metadata, stats: { ...data.metadata.stats, total_nodes: nodes.length, total_edges: links.length } },
+  }
+}
+

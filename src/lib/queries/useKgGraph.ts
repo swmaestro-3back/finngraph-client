@@ -1,7 +1,9 @@
 import type { GraphData, GraphFocus } from '@/data/graphTypes'
-import { qs } from '@/lib/api'
+import { getData, qs } from '@/lib/api'
+import type { IssueLeadRes } from '@/lib/apiTypes'
 import { AUTO_REFRESH_MS } from '@/lib/autoRefresh'
 import { scopeToKgOptions, type GraphQuery } from '@/lib/graphRoute'
+import { mergeSameEvents } from '@/lib/graphEvent'
 import { getKgData } from '@/lib/kgApi'
 import type {
   KgCompanyEventsRes,
@@ -50,7 +52,31 @@ export function kgGraphKey(req: KgGraphRequest): string {
 // 응답에 시세가 실리지만 종목 목록 캐시와 같은 주기라 오래된 정도는 전과 같다.
 const responses = createTtlCache<unknown>(AUTO_REFRESH_MS)
 
+const LEAD_CHUNK = 200
+
+async function withEventLeads(graph: GraphData): Promise<GraphData> {
+  const ids = [
+    ...new Set(graph.nodes.flatMap((n) => (n.type === 'event' && n.data.clusterId != null ? [n.data.clusterId] : []))),
+  ]
+  if (ids.length < 2) return graph
+  try {
+    const chunks = Array.from({ length: Math.ceil(ids.length / LEAD_CHUNK) }, (_, i) =>
+      ids.slice(i * LEAD_CHUNK, (i + 1) * LEAD_CHUNK),
+    )
+    const rows = await Promise.all(
+      chunks.map((chunk) => getData<IssueLeadRes[]>('/v1/issues/leads', { ids: chunk.join(',') })),
+    )
+    return mergeSameEvents(graph, new Map(rows.flat().map((row) => [row.id, row.leadId])))
+  } catch {
+    return graph
+  }
+}
+
 function fetchGraph(focus: GraphFocus, query: GraphQuery): Promise<GraphData> {
+  return loadGraph(focus, query).then(withEventLeads)
+}
+
+function loadGraph(focus: GraphFocus, query: GraphQuery): Promise<GraphData> {
   const req = kgGraphRequest(focus, query)
   const load = <T,>() => responses(kgGraphKey(req), () => getKgData<T>(req.path, req.params)) as Promise<T>
   if (focus.kind === 'theme') return load<KgThemeRes>().then(toThemeGraph)
