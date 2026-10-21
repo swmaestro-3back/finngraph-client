@@ -271,12 +271,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     // 중심과 메인 노드는 같은 크기 — 화면에서 "이 그래프의 주인공"이 여럿일 수 있다(뉴스 모달)
     const isPrimary = (d: GraphNode) => d.id === centerId || (primaryIds?.has(d.id) ?? false)
     // 로고 노드는 그림이 읽히도록 차수 척도를 한 단계 큰 범위로 옮긴다
-    const hasLogo = (d: GraphNode) => depth(d) < 2 && nodeLogoUrl(d) != null
+    const hasLogo = (d: GraphNode) => nodeLogoUrl(d) != null
     const depthScale = (d: GraphNode) => (depth(d) >= 2 ? DEEP_SCALE : 1)
     const radius = (d: GraphNode) =>
-      isPrimary(d)
-        ? CENTER_RADIUS
-        : (hasLogo(d) ? logoRadius(degreeRadius(d)) : degreeRadius(d)) * depthScale(d)
+      isPrimary(d) ? CENTER_RADIUS : hasLogo(d) ? logoRadius(degreeRadius(d)) : degreeRadius(d) * depthScale(d)
     const isEvent = (d: GraphNode) => d.type === 'event'
     const bodyW = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.size : radius(d) * 2)
     const bodyH = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.size : radius(d) * 2)
