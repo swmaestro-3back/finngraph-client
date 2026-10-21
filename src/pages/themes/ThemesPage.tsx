@@ -1,39 +1,48 @@
-import { AlignJustify, LayoutGrid } from 'lucide-react'
+import { AlignJustify, LayoutGrid, SlidersHorizontal, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { FilterChip } from '@/components/fg/FilterChip'
+import { Pager } from '@/components/fg/Pager'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { ThemeActions } from '@/components/fg/ThemeActions'
+import { ThemeFilterSheet } from '@/components/fg/ThemeFilterSheet'
 import { ThemeLegend } from '@/components/fg/ThemeLegend'
 import { ThemeMembers } from '@/components/fg/ThemeMembers'
 import { ThemePanel } from '@/components/fg/ThemePanel'
 import { ThemeTable } from '@/components/fg/ThemeTable'
 import { ThemeTreemap } from '@/components/fg/ThemeTreemap'
+import type { ThemeRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
 import { useAutoRefresh } from '@/lib/autoRefresh'
 import { useFavorites } from '@/lib/favorites'
 import { formatChange } from '@/lib/format'
 import { issueTitle } from '@/lib/fg/hub'
+import { activeThemeRanges, themeFilterCount, type ThemeRangeKey, type ThemeRanges } from '@/lib/fg/themeFilter'
 import {
+  filterThemes,
   parseThemeQuery,
   resolveSort,
+  resolveThemePage,
   resolveView,
   sortThemes,
   stableDefaultId,
   themeBasisLabel,
   themeLead,
   themeLeader,
+  themePageCount,
+  themePageRows,
   themeQueryString,
   themeTiles,
   toMapCount,
-  visibleThemes,
   weightedChangeOf,
+  WIDE_THEME_MIN,
   type HeldDefault,
   type IssueOf,
   type ThemeIssueView,
+  type ThemeMove,
   type ThemeQuery,
   type ThemeSort,
   type ThemeView,
@@ -53,6 +62,11 @@ const VIEW_OPTIONS: readonly TabOption<ThemeView>[] = [
 const SORT_OPTIONS: readonly TabOption<ThemeSort>[] = [
   { value: 'change', label: '등락률 순' },
   { value: 'value', label: '거래대금 순' },
+]
+const MOVE_OPTIONS: readonly { value: ThemeMove | null; label: string }[] = [
+  { value: null, label: '전체' },
+  { value: 'up', label: '상승' },
+  { value: 'down', label: '하락' },
 ]
 const COUNT_OPTIONS: readonly TabOption<string>[] = [
   { value: '10', label: '10개' },
@@ -80,13 +94,35 @@ export default function ThemesPage() {
   const view = resolveView(query.view, narrow)
   const sort = resolveSort(query.sort)
   const favOn = query.fav && status === 'authenticated'
-  const [showAll, setShowAll] = useState(false)
 
   const themes = useThemesCached()
   const market = useThemeMarket()
   const hot = useHotThemes(query.count, view === 'map')
   const list = themes.data
   const sorted = useMemo(() => sortThemes(list ?? [], sort, weightedChangeOf), [list, sort])
+  const keep = useMemo(() => (favOn ? (theme: ThemeRes) => has('THEME', String(theme.id)) : null), [favOn, has])
+  const filtered = useMemo(
+    () =>
+      filterThemes(
+        sorted,
+        sort,
+        { move: query.move, wide: query.wide, ranges: query.ranges, nameQ: query.nameQ, keep },
+        weightedChangeOf,
+      ),
+    [sorted, sort, query.move, query.wide, query.ranges, query.nameQ, keep],
+  )
+  const filterBadge = themeFilterCount(query.ranges, query.nameQ)
+  const filtering = query.move !== null || query.wide || favOn || filterBadge > 0
+  const countOf = useCallback(
+    (ranges: ThemeRanges, nameQ: string | null) =>
+      filterThemes(sorted, sort, { move: query.move, wide: query.wide, ranges, nameQ, keep }, weightedChangeOf).length,
+    [sorted, sort, query.move, query.wide, keep],
+  )
+  const [filterOpen, setFilterOpen] = useState(false)
+  const filterTrigger = useRef<HTMLElement | null>(null)
+  const page = resolveThemePage(filtered, query.page, query.id)
+  const pageCount = themePageCount(filtered.length)
+  const tableThemes = useMemo(() => themePageRows(filtered, page), [filtered, page])
   const mapThemes = useMemo(() => {
     const items = hot.data ?? []
     return favOn ? items.filter((theme) => has('THEME', String(theme.id))) : items
@@ -95,7 +131,7 @@ export default function ThemesPage() {
 
   const requestedId = query.id
   const heldDefault = useRef<HeldDefault | null>(null)
-  const defaultId = stableDefaultId(heldDefault.current, view, sort, sorted, mapThemes, weightedChangeOf)
+  const defaultId = stableDefaultId(heldDefault.current, view, sort, tableThemes, mapThemes, weightedChangeOf)
   const defaultReady = view === 'map' ? hot.data !== null : list !== null
   useEffect(() => {
     if (requestedId !== null || !defaultReady) return
@@ -107,7 +143,6 @@ export default function ThemesPage() {
       ? null
       : (list?.find((theme) => theme.id === selectedId) ?? hot.data?.find((theme) => theme.id === selectedId) ?? null)
   const stocks = useThemeStocks(selected?.id ?? null)
-  const tableThemes = useMemo(() => visibleThemes(sorted, showAll, selectedId), [sorted, showAll, selectedId])
   const issueIds = useMemo(() => {
     const ids = view === 'table' ? tableThemes.map((theme) => theme.id) : []
     return selected ? [...ids, selected.id] : ids
@@ -167,12 +202,22 @@ export default function ThemesPage() {
   )
   const setQuery = (patch: Partial<ThemeQuery>) =>
     navigate({ pathname, search: themeQueryString({ ...query, ...patch }) }, { replace: true })
+  const openFilter = () => {
+    filterTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setFilterOpen(true)
+  }
+  const clearRange = (key: ThemeRangeKey) => {
+    const ranges = { ...query.ranges }
+    delete ranges[key]
+    setQuery({ ranges, page: null })
+  }
+  const clearAll = () => setQuery({ move: null, wide: false, fav: false, ranges: {}, nameQ: null, page: null })
   const toggleFavorites = () => {
     if (status !== 'authenticated') {
       navigate('/login', { state: { next: from } })
       return
     }
-    setQuery({ fav: !query.fav })
+    setQuery({ fav: !query.fav, page: null })
   }
 
   const { refresh: refreshThemes } = themes
@@ -192,10 +237,11 @@ export default function ThemesPage() {
   const basis = themeBasisLabel(market.data)
   const lead = list ? themeLead(list, weightedChangeOf) : null
   const leader = selected ? themeLeader(selected) : null
+  const order = sort === 'value' ? '거래대금 많은 순' : query.move === 'down' ? '등락률 낮은 순' : '등락률 높은 순'
   const caption =
     view === 'map'
       ? '칸을 누르면 테마 종목을 보여 줘요'
-      : `${sort === 'change' ? '등락률 높은 순' : '거래대금 많은 순'} · 행을 누르면 테마 종목을 보여 줘요`
+      : `${filtering ? `테마 ${filtered.length}개 · ` : ''}${order} · 행을 누르면 테마 종목을 보여 줘요`
 
   const members = selected ? (
     <ThemeMembers
@@ -277,12 +323,23 @@ export default function ThemesPage() {
     body = <StateBlock kind="empty" title="테마 데이터가 아직 없어요" description="잠시 후 다시 확인해 주세요" />
   } else if (view === 'map') {
     body = mapBody
+  } else if (filtered.length === 0) {
+    body = (
+      <StateBlock
+        kind="empty"
+        title="조건에 맞는 테마가 없어요"
+        description={favOn ? '관심 테마를 더 담거나 거르기 조건을 바꿔 보세요' : '거르기 조건을 바꿔 보세요'}
+        action={
+          <Button size="sm" onClick={clearAll}>
+            조건 지우기
+          </Button>
+        }
+      />
+    )
   } else {
     body = (
       <ThemeTable
         themes={tableThemes}
-        total={sorted.length}
-        onShowAll={() => setShowAll(true)}
         selectedId={selectedId}
         onSelect={select}
         changeOf={weightedChangeOf}
@@ -353,7 +410,7 @@ export default function ThemesPage() {
                     label="보기"
                     options={VIEW_OPTIONS}
                     value={view}
-                    onChange={(next) => setQuery({ view: next })}
+                    onChange={(next) => setQuery({ view: next, page: null })}
                   />
                   {view === 'map' && (
                     <>
@@ -373,14 +430,89 @@ export default function ThemesPage() {
                       label="정렬"
                       options={SORT_OPTIONS}
                       value={sort}
-                      onChange={(next) => setQuery({ sort: next === 'change' ? null : next })}
+                      onChange={(next) => setQuery({ sort: next === 'change' ? null : next, page: null })}
                     />
                   )}
                 </div>
                 <span className="fg-ttools__cap">{caption}</span>
+                {view === 'table' && (
+                  <div className="fg-ttools__chips fg-chiprow" role="group" aria-label="테마 거르기">
+                    <button
+                      type="button"
+                      className="fg-tbtn"
+                      aria-pressed={filterBadge > 0}
+                      aria-haspopup="dialog"
+                      aria-expanded={filterOpen}
+                      onClick={openFilter}
+                    >
+                      <SlidersHorizontal size={16} strokeWidth={1.75} aria-hidden="true" />
+                      필터
+                      {filterBadge > 0 && <span className="fg-tbtn__count fg-num">{filterBadge}</span>}
+                    </button>
+                    {MOVE_OPTIONS.map((option) => (
+                      <FilterChip
+                        key={option.label}
+                        pressed={query.move === option.value}
+                        onClick={() => setQuery({ move: option.value, page: null })}
+                      >
+                        {option.label}
+                      </FilterChip>
+                    ))}
+                    <span className="fg-ttools__div" aria-hidden="true" />
+                    <FilterChip pressed={favOn} onClick={toggleFavorites}>
+                      관심 테마
+                    </FilterChip>
+                    <FilterChip pressed={query.wide} onClick={() => setQuery({ wide: !query.wide, page: null })}>
+                      {`${WIDE_THEME_MIN}종목 이상`}
+                    </FilterChip>
+                  </div>
+                )}
+                {view === 'table' && filterBadge > 0 && (
+                  <div className="fg-cflt__active fg-ttools__active">
+                    {activeThemeRanges(query.ranges).map((chip) => (
+                      <FilterChip
+                        key={chip.key}
+                        pressed
+                        className="fg-cflt__rm"
+                        aria-label={`${chip.label} 필터 해제`}
+                        onClick={() => clearRange(chip.key)}
+                      >
+                        {chip.label}
+                        <X size={14} strokeWidth={2} aria-hidden="true" />
+                      </FilterChip>
+                    ))}
+                    {query.nameQ !== null && (
+                      <FilterChip
+                        pressed
+                        className="fg-cflt__rm"
+                        aria-label={`이름 ‘${query.nameQ}’ 포함 필터 해제`}
+                        onClick={() => setQuery({ nameQ: null, page: null })}
+                      >
+                        {`이름 ‘${query.nameQ}’ 포함`}
+                        <X size={14} strokeWidth={2} aria-hidden="true" />
+                      </FilterChip>
+                    )}
+                    <Button
+                      variant="text"
+                      className="fg-cflt__clear"
+                      onClick={() => setQuery({ ranges: {}, nameQ: null, page: null })}
+                    >
+                      전체 해제
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
             {body}
+            {view === 'table' && filtered.length > 0 && (
+              <Pager
+                page={page}
+                total={pageCount}
+                searchOf={(target) => themeQueryString({ ...query, page: target, id: null })}
+                compact={narrow}
+                onGo={() => window.scrollTo(0, 0)}
+              />
+            )}
             <p className="fg-tfoot">{FOOTNOTE}</p>
           </section>
         </div>
@@ -391,6 +523,15 @@ export default function ThemesPage() {
       <p className="fg-sr" aria-live="polite">
         {pick && selected?.id === pick.id ? `${selected.name} 골랐어요` : ''}
       </p>
+      <ThemeFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        returnFocusRef={filterTrigger}
+        ranges={query.ranges}
+        nameQ={query.nameQ}
+        countOf={countOf}
+        onApply={(ranges, nameQ) => setQuery({ ranges, nameQ, page: null })}
+      />
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode, type Ref } from 'react'
-import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { RowExpansion } from '@/components/fg/RowExpansion'
@@ -13,8 +12,6 @@ import { useRowFold } from '@/lib/fg/useRowFold'
 
 interface ThemeTableProps {
   themes: readonly ThemeRes[]
-  total: number
-  onShowAll: () => void
   selectedId: number | null
   onSelect: (id: number) => void
   changeOf: ChangeOf
@@ -25,8 +22,6 @@ interface ThemeTableProps {
 
 export function ThemeTable({
   themes,
-  total,
-  onShowAll,
   selectedId,
   onSelect,
   changeOf,
@@ -110,7 +105,7 @@ export function ThemeTable({
                       <>
                         <i className="fg-dia" aria-hidden="true" />
                         <span>
-                          <b>{issue.title}</b>
+                          <b title={issue.title}>{issue.title}</b>
                           <small>{issue.mediaCount}개 매체</small>
                         </span>
                       </>
@@ -126,11 +121,6 @@ export function ThemeTable({
           })}
         </div>
       </div>
-      {total > themes.length && (
-        <Button className="fg-tmore" onClick={onShowAll}>
-          테마 {total}개 모두 보기
-        </Button>
-      )}
     </>
   )
 }
