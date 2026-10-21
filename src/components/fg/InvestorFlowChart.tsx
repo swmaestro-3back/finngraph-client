@@ -44,6 +44,7 @@ import { formatManShares } from '@/lib/fg/stockQuote'
 import { dayLabel } from '@/lib/fg/themeCharts'
 import type { SupplyStreaks } from '@/lib/supplyStreak'
 import { cn } from '@/lib/utils'
+import { useColorScheme } from '@/lib/fg/colorTheme'
 
 export const FLOW_TITLE_ID = 'fg-sf-flow'
 
@@ -110,6 +111,7 @@ export function InvestorFlowChart({ days, streaks }: InvestorFlowChartProps) {
     latest.current = { count, refYear }
   })
 
+  const scheme = useColorScheme()
   useEffect(() => {
     const host = hostRef.current
     if (!host) return
@@ -201,7 +203,7 @@ export function InvestorFlowChart({ days, streaks }: InvestorFlowChartProps) {
       chart.remove()
       mounted.current = null
     }
-  }, [])
+  }, [scheme])
 
   useEffect(() => {
     const view = mounted.current
@@ -225,7 +227,7 @@ export function InvestorFlowChart({ days, streaks }: InvestorFlowChartProps) {
     pointing.current = true
     view.chart.clearCrosshairPosition()
     pointing.current = false
-  }, [rows, totals, mode])
+  }, [rows, totals, mode, scheme])
 
   const point = (index: number) => {
     const view = mounted.current

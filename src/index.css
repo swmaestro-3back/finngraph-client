@@ -85,6 +85,33 @@
   --chart-cursor: rgba(32, 29, 29, 0.04);
 }
 
+:root.dark {
+  --chart-1: #2fb3a3;
+  --chart-2: #8f9cb2;
+  --chart-3: #9d7bff;
+  --chart-3-soft: #b39bff;
+  --chart-4: #ff7a8c;
+  --chart-5: #f4b000;
+  --chart-5-ink: #f4c04a;
+  --series-1: #2fc79a;
+  --series-2: #8f7cf2;
+  --series-3: #ff8a4c;
+  --chart-grid: #262a2f;
+  --surface-dark: #0b0c0e;
+  --surface-dark-elevated: #1b1d21;
+  --border-strong: #8d96a1;
+  --accent-warm: #ff9a52;
+  --accent-warm-bg: #3a2a0c;
+  --trend-positive: #34c38f;
+  --trend-negative: #ff6b6b;
+  --market-open: #ff8a95;
+  --market-open-soft: #3a1a1e;
+  --market-open-ink: #ff9aa3;
+  --graph-canvas: #101214;
+  --graph-edge: #5b626b;
+  --chart-cursor: rgba(255, 255, 255, 0.06);
+}
+
 @theme inline {
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   --font-heading: var(--font-sans);

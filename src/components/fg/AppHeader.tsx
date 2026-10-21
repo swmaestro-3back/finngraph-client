@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
+import { ColorThemeToggle } from '@/components/fg/ColorThemeToggle'
 import { SearchBox } from '@/components/fg/SearchBox'
 import { UserMenu } from '@/components/fg/UserMenu'
 import { activeMenu, MAIN_MENU, SIDE_LINKS } from '@/lib/fg/nav'
@@ -77,6 +78,7 @@ export function AppHeader() {
               {link.label}
             </Link>
           ))}
+          <ColorThemeToggle />
           <UserMenu />
         </div>
       </div>

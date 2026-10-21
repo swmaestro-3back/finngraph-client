@@ -54,7 +54,7 @@
 .fg-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--text-primary); }
 .fg-seg { display: inline-flex; padding: var(--space-1); border-radius: var(--radius-control); background: var(--bg-page); }
 .fg-seg button { height: 32px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-control); background: none; font: 600 14px/1 var(--font-sans); color: var(--text-secondary); cursor: pointer; }
-.fg-seg button[aria-selected="true"] { background: var(--bg-surface); color: var(--text-primary); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.fg-seg button[aria-selected="true"] { background: var(--bg-raised); color: var(--text-primary); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
 
 .fg-news { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-5) 0; border-bottom: 1px solid var(--border-divider); text-decoration: none; color: inherit; }
 .fg-news:last-child { border-bottom: 0; }

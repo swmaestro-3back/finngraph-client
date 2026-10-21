@@ -32,6 +32,7 @@ import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import type { CandlePeriod, CandleRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
+import { useColorScheme } from '@/lib/fg/colorTheme'
 import { toneClass } from '@/lib/fg/format'
 import {
   CANDLE_KIND_OPTIONS,
@@ -381,6 +382,34 @@ export function PriceChart({
       mounted.current = null
     }
   }, [])
+
+  const scheme = useColorScheme()
+  const paintedScheme = useRef(scheme)
+  useEffect(() => {
+    const view = mounted.current
+    if (!view || paintedScheme.current === scheme) return
+    paintedScheme.current = scheme
+    const t = tokens()
+    view.chart.applyOptions({
+      layout: { background: { type: ColorType.Solid, color: t.surface }, textColor: t.text2 },
+      grid: { horzLines: { color: t.grid } },
+      crosshair: {
+        vertLine: { color: t.text3, labelBackgroundColor: t.text1 },
+        horzLine: { color: t.text3, labelBackgroundColor: t.text1 },
+      },
+    })
+    view.candle.applyOptions({ upColor: t.up, downColor: t.down, wickUpColor: t.up, wickDownColor: t.down })
+    view.averages.forEach((series, i) => series.applyOptions({ color: t.averages[i] }))
+    view.layer.recolor({ event: t.event, surface: t.surface })
+    view.colors = { up: t.up, down: t.down }
+    view.volume.setData(
+      latest.current.candles.map((c) => ({
+        time: c.date,
+        value: c.volume,
+        color: withAlpha(c.close >= c.open ? t.up : t.down, 0.32),
+      })),
+    )
+  }, [scheme])
 
   const drawn = useRef<{ kind: CandlePeriod; count: number } | null>(null)
   useEffect(() => {
