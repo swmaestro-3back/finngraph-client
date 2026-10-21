@@ -43,7 +43,7 @@ export class IssueMarkerLayer implements ISeriesPrimitive<Time> {
   private series: ISeriesApi<SeriesType, Time> | null = null
   private request: (() => void) | null = null
   private points: Point[] = []
-  private readonly colors: MarkerColors
+  private colors: MarkerColors
   private readonly views: readonly IPrimitivePaneView[]
 
   constructor(colors: MarkerColors) {
@@ -53,6 +53,11 @@ export class IssueMarkerLayer implements ISeriesPrimitive<Time> {
       drawBackground: (target) => this.paint(target, true),
     }
     this.views = [{ zOrder: () => 'top', renderer: () => renderer }]
+  }
+
+  recolor(colors: MarkerColors): void {
+    this.colors = colors
+    this.request?.()
   }
 
   attached({ chart, series, requestUpdate }: SeriesAttachedParameter<Time, SeriesType>): void {

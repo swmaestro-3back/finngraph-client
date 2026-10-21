@@ -16,6 +16,7 @@ import {
   type TileText,
 } from '@/lib/fg/themes'
 import { changeStrength, mixColor, mixRgb, parseHexColor, rgbText, tileInk, type Rgb } from '@/lib/treemapColor'
+import { useColorScheme } from '@/lib/fg/colorTheme'
 
 interface TileStops {
   up: readonly [Rgb, Rgb]
@@ -135,9 +136,9 @@ function readStops(): TileStops | null {
   const style = getComputedStyle(document.documentElement)
   const read = (name: string) => parseHexColor(style.getPropertyValue(name))
   const upFrom = read('--market-up-subtle')
-  const upTo = read('--market-up-strong')
+  const upTo = read('--tile-up')
   const downFrom = read('--market-down-subtle')
-  const downTo = read('--market-down')
+  const downTo = read('--tile-down')
   if (!upFrom || !upTo || !downFrom || !downTo) return null
   return { up: [upFrom, upTo], down: [downFrom, downTo] }
 }
@@ -161,7 +162,8 @@ interface ThemeTreemapProps {
 export function ThemeTreemap({ tiles, selectedId, onSelect, label, layoutKey }: ThemeTreemapProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<Size | null>(null)
-  const [stops] = useState(readStops)
+  useColorScheme()
+  const stops = readStops()
   const glyphs = useMemo(
     () =>
       [...new Set(tiles.map((tile) => `${tile.name}${formatChange(tile.change)}${tile.detail ?? ''}…`).join(''))]

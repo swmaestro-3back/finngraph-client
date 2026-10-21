@@ -14,6 +14,7 @@ import { IssueMarkerLayer } from '@/components/fg/IssueMarkerLayer'
 import type { CandleRes } from '@/lib/apiTypes'
 import { formatChartPrice, isoOfTime, withAlpha } from '@/lib/fg/priceChart'
 import { dayLabel } from '@/lib/fg/themeCharts'
+import { useColorScheme } from '@/lib/fg/colorTheme'
 
 export interface FlowMark {
   key: string
@@ -65,6 +66,7 @@ export function FlowMiniChart({ candles, marks, change, label }: FlowMiniChartPr
     refYear.current = candles.length > 0 ? Number(candles[candles.length - 1].date.slice(0, 4)) : 0
   })
 
+  const scheme = useColorScheme()
   useEffect(() => {
     const host = hostRef.current
     if (!host) return
@@ -112,7 +114,7 @@ export function FlowMiniChart({ candles, marks, change, label }: FlowMiniChartPr
       chart.remove()
       mounted.current = null
     }
-  }, [])
+  }, [scheme])
 
   useEffect(() => {
     const view = mounted.current
@@ -129,7 +131,7 @@ export function FlowMiniChart({ candles, marks, change, label }: FlowMiniChartPr
     })
     view.layer.set({ spots })
     view.chart.timeScale().fitContent()
-  }, [candles, marks, change])
+  }, [candles, marks, change, scheme])
 
   return (
     <div className="fg-sfd__chart" role="img" aria-label={label}>
