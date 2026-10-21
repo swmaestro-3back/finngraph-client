@@ -10,16 +10,18 @@ import {
 } from '@/lib/graphRoute'
 
 describe('graphRoute', () => {
-  it('빈 쿼리는 기본값(hop 1, 전체, 개요, 전체 기간)', () => {
+  it('빈 쿼리는 기본값(hop 1, 전체, 개요, 자동 기간)', () => {
     expect(parseGraphQuery(new URLSearchParams(''))).toEqual(DEFAULT_GRAPH_QUERY)
-    expect(DEFAULT_GRAPH_QUERY).toEqual({ hop: 1, scope: 'all', lens: 'overview', period: 'all' })
+    expect(DEFAULT_GRAPH_QUERY).toEqual({ hop: 1, scope: 'all', lens: 'overview', period: null })
   })
 
-  it('이벤트 기간은 전체가 아닐 때만 적고 왕복한다 — 모르는 값은 전체로', () => {
+  it('이벤트 기간은 직접 고른 값만 적고 왕복한다 — 전체도 적고, 모르는 값은 자동으로', () => {
     const q = { ...DEFAULT_GRAPH_QUERY, period: '1w' as const }
     expect(graphSearch(q)).toBe('?period=1w')
     expect(parseGraphQuery(new URLSearchParams('period=1w'))).toEqual(q)
-    expect(parseGraphQuery(new URLSearchParams('period=2w')).period).toBe('all')
+    expect(graphSearch({ ...q, period: 'all' })).toBe('?period=all')
+    expect(parseGraphQuery(new URLSearchParams('period=all')).period).toBe('all')
+    expect(parseGraphQuery(new URLSearchParams('period=2w')).period).toBeNull()
     expect(graphSearch({ ...q, lens: 'events', hop: 2 })).toBe('?lens=events&hop=2&period=1w')
   })
 
@@ -35,7 +37,7 @@ describe('graphRoute', () => {
   })
 
   it('렌즈는 개요가 아닐 때만 적고 왕복한다', () => {
-    const q = { hop: 2 as const, scope: 'KOSPI' as const, lens: 'supply' as const, period: 'all' as const }
+    const q = { hop: 2 as const, scope: 'KOSPI' as const, lens: 'supply' as const, period: null }
     const s = graphSearch(q)
     expect(s).toBe('?lens=supply&hop=2&market=KOSPI')
     expect(parseGraphQuery(new URLSearchParams(s))).toEqual(q)

@@ -1,6 +1,8 @@
 // 그래프 캔버스의 순수 계산 — d3 셀렉션이나 DOM에 의존하지 않아 단독으로 검증 가능하다.
 
 import {
+  ALL_CATEGORIES,
+  ALL_PREDICATES,
   endId,
   nodeCategory,
   type GraphData,
@@ -9,7 +11,7 @@ import {
   type NodeCategory,
   type Predicate,
 } from '@/data/graphTypes'
-import { eventInPeriod } from '@/lib/eventPeriod'
+import { eventInPeriod, eventPeriodCutoff, linkInPeriod, type EventPeriod } from '@/lib/eventPeriod'
 
 /**
  * 일반 노드 반지름 범위. 라벨을 원 밖에 두므로 점은 작게 — 차수 차이는 면적으로만 읽힌다.
@@ -107,7 +109,7 @@ export function filterVisibleGraph(
   const inPeriod = data.nodes.filter((n) => eventInPeriod(n, eventCutoff))
   const categoryOf = new Map(inPeriod.map((n) => [n.id, nodeCategory(n)]))
   const links = data.links.filter((l) => {
-    if (!selectedPredicates.has(l.type)) return false
+    if (!selectedPredicates.has(l.type) || !linkInPeriod(l, eventCutoff)) return false
     const s = categoryOf.get(endId(l.source))
     const t = categoryOf.get(endId(l.target))
     return !!s && !!t && selectedCategories.has(s) && selectedCategories.has(t)
@@ -121,6 +123,23 @@ export function filterVisibleGraph(
     (n) => selectedCategories.has(nodeCategory(n)) && (connected.has(n.id) || n.id === centerId),
   )
   return { nodes, links }
+}
+
+export const AUTO_EVENT_PERIODS: readonly EventPeriod[] = ['1m', '3m', '6m']
+export const AUTO_MIN_NEIGHBORS = 8
+
+export function autoEventPeriod(
+  data: Pick<GraphData, 'nodes' | 'links'>,
+  centerId: string | null,
+  today: string,
+): EventPeriod {
+  const categories = new Set(ALL_CATEGORIES)
+  const predicates = new Set(ALL_PREDICATES)
+  for (const period of AUTO_EVENT_PERIODS) {
+    const visible = filterVisibleGraph(data, categories, predicates, centerId, eventPeriodCutoff(period, today))
+    if (visible.nodes.filter((n) => n.id !== centerId).length >= AUTO_MIN_NEIGHBORS) return period
+  }
+  return 'all'
 }
 
 /** 노드별 연결 차수 */

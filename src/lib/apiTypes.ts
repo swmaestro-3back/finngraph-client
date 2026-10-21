@@ -867,6 +867,11 @@ export interface IssueStoryCompanyRes {
   issueCount: number
 }
 
+export interface IssueLeadRes {
+  id: number
+  leadId: number
+}
+
 export interface IssueTimelineRes {
   issueId: number
   nodes: IssueTimelineNodeRes[]
