@@ -19,20 +19,30 @@ export const NODE_RADIUS = { min: 5, max: 14 } as const
 /** 중심 노드 반지름 — 차수 스케일과 무관하게 항상 가장 크다 (화면의 유일한 초점) */
 export const CENTER_RADIUS = 22
 
-/**
- * 이벤트 태그(pill) 기하. 원형 기업 노드와 한눈에 구분되도록 가로로 길고, 크기는 차수와 무관하게 고정이다.
- * 글자 폭 10px은 한글 10px 폰트 기준 — 라벨이 태그 안에 들어가야 하므로 글자 수로 폭을 정한다.
- */
-export const EVENT_NODE = { height: 22, charWidth: 10, padX: 8, maxChars: 12 } as const
+export const EVENT_NODE = { size: 12, lineChars: 12, maxLines: 2 } as const
 
-/** 태그 안에 들어갈 만큼만 — 전체 제목은 툴팁·상세 패널에 있다 */
-export function truncateEventLabel(title: string): string {
-  return title.length > EVENT_NODE.maxChars ? `${title.slice(0, EVENT_NODE.maxChars - 1)}…` : title
-}
-
-/** 잘린 라벨이 꼭 맞는 태그 폭 */
-export function eventNodeWidth(title: string): number {
-  return truncateEventLabel(title).length * EVENT_NODE.charWidth + EVENT_NODE.padX * 2
+export function wrapEventLabel(title: string): string[] {
+  const { lineChars, maxLines } = EVENT_NODE
+  const lines: string[] = []
+  let current = ''
+  for (const word of title.split(' ').filter(Boolean)) {
+    const pieces = word.length > lineChars ? (word.match(new RegExp(`.{1,${lineChars}}`, 'gu')) ?? [word]) : [word]
+    for (const piece of pieces) {
+      const next = current ? `${current} ${piece}` : piece
+      if (next.length <= lineChars) {
+        current = next
+      } else {
+        if (current) lines.push(current)
+        current = piece
+      }
+    }
+  }
+  if (current) lines.push(current)
+  if (lines.length <= maxLines) return lines
+  const kept = lines.slice(0, maxLines)
+  const last = kept[maxLines - 1]
+  kept[maxLines - 1] = `${last.slice(0, lineChars - 1)}…`
+  return kept
 }
 
 /**
@@ -300,11 +310,11 @@ export function trimToNodeEdges(
  * 살짝 휜 곡선의 제어점 — 중점에서 진행 방향의 왼쪽으로 길이의 12%(최대 40px).
  * 모든 간선이 같은 회전 방향으로 휘어 방사형 그래프가 한 방향으로 흐르는 인상을 준다.
  */
-export function edgeCurve(seg: Segment): Curve {
+export function edgeCurve(seg: Segment, ratio = 0.07): Curve {
   const dx = seg.x2 - seg.x1
   const dy = seg.y2 - seg.y1
   const len = Math.hypot(dx, dy) || 1
-  const bend = Math.min(len * 0.12, 40)
+  const bend = Math.min(len * ratio, 22)
   return {
     ...seg,
     cx: (seg.x1 + seg.x2) / 2 + (-dy / len) * bend,
@@ -339,4 +349,141 @@ export function taperedEdgePath(c: Curve, w0: number, w1: number, steps = 12): s
     right.push(`${(x - nx * h).toFixed(1)},${(y - ny * h).toFixed(1)}`)
   }
   return `M${left.join('L')}L${right.reverse().join('L')}Z`
+}
+
+export const RING = { step: 150, gap: 110, spacing: 40, stagger: 44, crowded: 16 } as const
+
+export function ringRadii(
+  distance: Map<string, number>,
+  span: (id: string) => number = () => RING.spacing,
+): Map<number, number> {
+  const counts = new Map<number, number>()
+  const arcs = new Map<number, number>()
+  distance.forEach((hop, id) => {
+    if (hop <= 0) return
+    counts.set(hop, (counts.get(hop) ?? 0) + 1)
+    arcs.set(hop, (arcs.get(hop) ?? 0) + span(id))
+  })
+  const radii = new Map<number, number>()
+  let previous = 0
+  const hops = [...counts.keys()].sort((a, b) => a - b)
+  for (const hop of hops) {
+    const count = counts.get(hop) ?? 0
+    const fit = (arcs.get(hop) ?? 0) / (2 * Math.PI)
+    const radius = Math.max(hop * RING.step, previous + RING.gap, fit)
+    radii.set(hop, radius)
+    previous = radius + (count > RING.crowded ? RING.stagger : 0)
+  }
+  return radii
+}
+
+export interface RingSeat {
+  angle: number
+  radius: number
+}
+
+export function ringSeats(
+  nodes: GraphNode[],
+  distance: Map<string, number>,
+  adjacency: Map<string, Set<string>>,
+  radii: Map<number, number>,
+  order: (a: GraphNode, b: GraphNode) => number,
+  spread: (node: GraphNode) => boolean = () => false,
+): Map<string, RingSeat> {
+  const seats = new Map<string, RingSeat>()
+  const byHop = new Map<number, GraphNode[]>()
+  nodes.forEach((n) => {
+    const hop = distance.get(n.id)
+    if (hop === undefined || hop === 0) return
+    byHop.set(hop, [...(byHop.get(hop) ?? []), n])
+  })
+  const hops = [...byHop.keys()].sort((a, b) => a - b)
+  for (const hop of hops) {
+    const ring = byHop.get(hop) ?? []
+    const base = radii.get(hop) ?? hop * RING.step
+    const crowded = ring.length > RING.crowded
+    const radiusAt = (index: number) => base + (crowded && index % 2 === 1 ? RING.stagger : 0)
+    if (hop === 1) {
+      const sorted = spreadEvenly([...ring].sort(order), spread)
+      sorted.forEach((n, i) => seats.set(n.id, { angle: (i / sorted.length) * 2 * Math.PI - Math.PI / 2, radius: radiusAt(i) }))
+      continue
+    }
+    const parents = byHop.get(hop - 1) ?? []
+    const slot = (2 * Math.PI) / Math.max(parents.length, 1)
+    const children = new Map<string, GraphNode[]>()
+    const orphans: GraphNode[] = []
+    ring.forEach((n) => {
+      const parent = [...(adjacency.get(n.id) ?? [])].find((id) => distance.get(id) === hop - 1 && seats.has(id))
+      if (!parent) {
+        orphans.push(n)
+        return
+      }
+      children.set(parent, [...(children.get(parent) ?? []), n])
+    })
+    let index = 0
+    children.forEach((list, parent) => {
+      const center = seats.get(parent)!.angle
+      const sorted = [...list].sort(order)
+      sorted.forEach((n, j) => {
+        const offset = sorted.length === 1 ? 0 : (j / (sorted.length - 1) - 0.5) * slot * 0.9
+        seats.set(n.id, { angle: center + offset, radius: radiusAt(index) })
+        index += 1
+      })
+    })
+    orphans.forEach((n, j) => {
+      seats.set(n.id, { angle: (j / orphans.length) * 2 * Math.PI, radius: radiusAt(index) })
+      index += 1
+    })
+  }
+  return seats
+}
+
+function spreadEvenly(sorted: GraphNode[], spread: (node: GraphNode) => boolean): GraphNode[] {
+  const spaced = sorted.filter(spread)
+  if (spaced.length === 0) return sorted
+  const rest = sorted.filter((n) => !spread(n))
+  const slots = new Map<number, GraphNode>()
+  spaced.forEach((n, k) => slots.set(Math.floor(((k + 0.5) * sorted.length) / spaced.length), n))
+  const result: GraphNode[] = []
+  for (let i = 0; i < sorted.length; i++) {
+    const slotted = slots.get(i)
+    result.push(slotted ?? rest.shift()!)
+  }
+  return result
+}
+
+export interface LabelBox {
+  id: string
+  left: number
+  top: number
+  width: number
+  height: number
+  priority: number
+}
+
+export interface Obstacle {
+  id: string
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+function overlaps(a: Obstacle, b: Obstacle): boolean {
+  return a.left < b.left + b.width && b.left < a.left + a.width && a.top < b.top + b.height && b.top < a.top + a.height
+}
+
+export function declutterLabels(boxes: LabelBox[], obstacles: Obstacle[] = [], solid = 0): Set<string> {
+  const shown = new Set<string>()
+  const placed: LabelBox[] = []
+  const sorted = [...boxes].sort((a, b) => a.priority - b.priority)
+  for (const box of sorted) {
+    const blocked =
+      placed.some((other) => overlaps(box, other)) ||
+      (box.priority > solid && obstacles.some((o) => o.id !== box.id && overlaps(box, o)))
+    if (blocked) continue
+    placed.push(box)
+    shown.add(box.id)
+  }
+  return shown
 }

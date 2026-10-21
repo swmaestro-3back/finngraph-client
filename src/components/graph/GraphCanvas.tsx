@@ -19,19 +19,22 @@ import {
   computeFitView,
   createRadiusScale,
   curvePath,
+  declutterLabels,
   edgeCurve,
   edgeOpacity,
   edgeWidth,
-  eventNodeWidth,
   filterVisibleGraph,
   placeIncrementally,
+  ringRadii,
+  ringSeats,
   seedPositions,
   taperedEdgePath,
   trimToNodeEdges,
-  truncateEventLabel,
+  wrapEventLabel,
   CENTER_RADIUS,
   EVENT_NODE,
   NODE_RADIUS,
+  RING,
   type Curve,
   type Position,
 } from '@/lib/graphLayout'
@@ -242,6 +245,23 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     const degree = buildDegreeMap(links)
     const adjacency = buildAdjacency(links)
+    const distance = centerId ? bfsDistances([centerId], adjacency, RING_HOPS) : new Map<string, number>()
+    const eventIds = new Set(nodes.filter((n) => n.type === 'event').map((n) => n.id))
+    const radii = ringRadii(distance, (id) => (eventIds.has(id) ? EVENT_SPAN : RING.spacing))
+    const ringed = radii.size > 0
+    const depth = (d: GraphNode) => distance.get(d.id) ?? 1
+    const parentOf = new Map<string, string>()
+    nodes.forEach((n) => {
+      const hop = distance.get(n.id)
+      if (!hop) return
+      const parent = [...(adjacency.get(n.id) ?? [])].find((id) => distance.get(id) === hop - 1)
+      if (parent) parentOf.set(n.id, parent)
+    })
+    const isTreeLink = (l: GraphLink) => {
+      const s = endId(l.source)
+      const t = endId(l.target)
+      return parentOf.get(s) === t || parentOf.get(t) === s
+    }
     // 크기는 지금 화면에 있는 노드들 사이의 상대 차수로 결정된다. 중심만 예외로 항상 가장 크다.
     // 이벤트 허브의 큰 차수가 기업 크기 척도를 눌러버리지 않도록 척도 계산에서는 이벤트 노드를 뺀다
     const degreeRadius = createRadiusScale(
@@ -251,20 +271,18 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     // 중심과 메인 노드는 같은 크기 — 화면에서 "이 그래프의 주인공"이 여럿일 수 있다(뉴스 모달)
     const isPrimary = (d: GraphNode) => d.id === centerId || (primaryIds?.has(d.id) ?? false)
     // 로고 노드는 그림이 읽히도록 차수 척도를 한 단계 큰 범위로 옮긴다
-    const hasLogo = (d: GraphNode) => nodeLogoUrl(d) != null
+    const hasLogo = (d: GraphNode) => depth(d) < 2 && nodeLogoUrl(d) != null
+    const depthScale = (d: GraphNode) => (depth(d) >= 2 ? DEEP_SCALE : 1)
     const radius = (d: GraphNode) =>
-      isPrimary(d) ? CENTER_RADIUS : hasLogo(d) ? logoRadius(degreeRadius(d)) : degreeRadius(d)
+      isPrimary(d)
+        ? CENTER_RADIUS
+        : (hasLogo(d) ? logoRadius(degreeRadius(d)) : degreeRadius(d)) * depthScale(d)
     const isEvent = (d: GraphNode) => d.type === 'event'
-    // 노드 본체의 폭·높이. 기업은 폭 == 높이(원), 이벤트는 가로로 긴 태그 — rx를 높이 절반으로 주면 둘 다 rect 하나로 그린다
-    const bodyW = (d: GraphNode) => (isEvent(d) ? eventNodeWidth(d.label) : radius(d) * 2)
-    const bodyH = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.height : radius(d) * 2)
-    /** 힘·충돌·카메라 여백에 쓰는 반폭 — 태그는 폭의 절반이라 이웃이 옆으로 겹치지 않는다 */
+    const bodyW = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.size : radius(d) * 2)
+    const bodyH = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.size : radius(d) * 2)
     const reach = (d: GraphNode) => bodyW(d) / 2
-    /** 간선이 멈추는 테두리 거리 — 태그는 높이 절반. 가로로 들어오는 선의 끝은 태그 몸통 뒤에 숨는다 */
     const rim = (d: GraphNode) => bodyH(d) / 2
     const maxRadius = nodes.length ? Math.max(...nodes.map(reach)) : NODE_RADIUS.min
-    // 줌아웃 상태에서도 라벨을 남길 노드 — 중심과 허브
-    const isHub = (d: GraphNode) => isPrimary(d) || (degree.get(d.id) ?? 0) >= HUB_DEGREE
 
     // 배경 도트 그리드 — 줌·팬을 따라 움직여 공간감을 준다. 클릭은 통과시켜 배경 클릭(선택 해제)이 살아 있다.
     const defs = svg.append('defs')
@@ -315,7 +333,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         dots.attr('patternTransform', event.transform.toString())
         // 라벨은 줌 레벨로 켜고 끈다(LOD). 하이라이트 중엔 paint()가 관련 라벨만 남기므로 건드리지 않는다.
         zoomK = event.transform.k
-        if (!highlightRef.current) label.attr('opacity', labelLod)
+        scaleLabels()
+        scheduleDeclutter()
         // sourceEvent가 있으면 휠/드래그 등 사용자 제스처
         if (event.sourceEvent) userMovedRef.current = true
       })
@@ -323,6 +342,40 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     zoomRef.current = zoom
     userMovedRef.current = false
     fitTransformRef.current = d3.zoomIdentity
+
+    const seats = ringSeats(nodes, distance, adjacency, radii, (a, b) =>
+      CATEGORY_ORDER.indexOf(nodeCategory(a)) - CATEGORY_ORDER.indexOf(nodeCategory(b)) ||
+      (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) ||
+      a.label.localeCompare(b.label, 'ko'),
+      isEvent,
+    )
+    const guideRadius = new Map<number, number>()
+    radii.forEach((_, hop) => {
+      const ring = nodes.filter((n) => distance.get(n.id) === hop).map((n) => seats.get(n.id)?.radius ?? 0)
+      guideRadius.set(hop, ring.reduce((sum, r) => sum + r, 0) / Math.max(ring.length, 1))
+    })
+    const guides = radii.size >= 2 ? [...guideRadius.entries()] : []
+    const ringGroup = g.append('g').attr('pointer-events', 'none')
+    const ringCircle = ringGroup
+      .selectAll<SVGCircleElement, [number, number]>('circle')
+      .data(guides)
+      .join('circle')
+      .attr('r', ([, r]) => r)
+      .attr('fill', 'none')
+      .attr('stroke', T.muted)
+      .attr('stroke-opacity', 0.35)
+      .attr('stroke-dasharray', '2 6')
+    const ringText = ringGroup
+      .selectAll<SVGTextElement, [number, number]>('text')
+      .data(guides)
+      .join('text')
+      .text(([hop]) => `${hop}단계`)
+      .attr('text-anchor', 'middle')
+      .attr('fill', T.muted)
+      .attr('font-weight', 600)
+      .attr('stroke', T.canvas)
+      .attr('stroke-linejoin', 'round')
+      .attr('paint-order', 'stroke')
 
     // === EDGES ===
     // 테이퍼 곡선 — 공급자 쪽이 굵고 수요자 쪽으로 가늘어져 화살촉 없이 방향이 읽힌다.
@@ -350,7 +403,15 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     // 시드 간선은 강조가 없어도 켜져 있다 — 호버·선택에서 배운 "켜짐 = 관련 있음" 문법을 그대로 쓴다
     const isSeed = (l: GraphLink) => seedLinkIds?.has(l.id) ?? false
     const baseColor = (l: GraphLink) => (isSeed(l) ? sourceColor(l) : T.edge)
-    const baseOpacity = (l: GraphLink) => (isSeed(l) ? SEED_OPACITY : edgeOpacity(l))
+    const depthFade = (l: GraphLink) => {
+      if (!ringed) return 1
+      const from = distance.get(endId(l.source))
+      const to = distance.get(endId(l.target))
+      if (from === undefined || to === undefined) return 1
+      if (!isTreeLink(l)) return GHOST_FADE
+      return Math.max(from, to) >= 3 ? FAR_FADE : Math.max(from, to) === 2 ? NEAR_FADE : 1
+    }
+    const baseOpacity = (l: GraphLink) => (isSeed(l) ? SEED_OPACITY : edgeOpacity(l) * depthFade(l))
     tintLinks(baseColor, baseOpacity)
 
     // === EDGE HIT AREAS === 곡선 중심선에 넓은 투명 stroke
@@ -377,7 +438,6 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('fill-opacity', 0.14)
       .attr('pointer-events', 'none')
 
-    // === NODES === 작은 채움 점(기업) 또는 태그(이벤트). 흰 테두리로 간선과 떼어 놓는다
     const node = g
       .append('g')
       .selectAll<SVGRectElement, GraphNode>('rect')
@@ -386,7 +446,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .attr('data-node-body', (d) => d.id)
       .attr('width', bodyW)
       .attr('height', bodyH)
-      .attr('rx', (d) => bodyH(d) / 2)
+      .attr('rx', (d) => (isEvent(d) ? 2 : bodyH(d) / 2))
       .attr('fill', (d) => nodeColor(d))
       .attr('stroke', T.paper)
       .attr('stroke-width', 1.5)
@@ -409,34 +469,89 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         d3.select(this).remove()
       })
 
-    // === LABELS === 기업은 점 아래 지도 라벨(흰 외곽선으로 간선 위에서도 읽힌다), 이벤트는 태그 안 흰 글자
+    const linesOf = (d: GraphNode) => (isEvent(d) ? wrapEventLabel(d.label) : [truncateLabel(d.label)])
+    const labelSize = (d: GraphNode) => (isPrimary(d) ? CENTER_LABEL_SIZE : isEvent(d) ? EVENT_LABEL_SIZE : LABEL_SIZE)
     const label = g
       .append('g')
       .selectAll<SVGTextElement, GraphNode>('text')
       .data(nodes)
       .join('text')
       .attr('data-node-label', (d) => d.id)
-      .text((d) => (isEvent(d) ? truncateEventLabel(d.label) : truncateLabel(d.label)))
-      .attr('font-size', (d) =>
-        isEvent(d) ? EVENT_LABEL_SIZE : isPrimary(d) ? CENTER_LABEL_SIZE : LABEL_SIZE,
-      )
-      .attr('font-weight', (d) => (isPrimary(d) ? 600 : 500))
-      .attr('fill', (d) => (isEvent(d) ? T.paper : T.ink))
+      .attr('font-size', labelSize)
+      .attr('font-weight', (d) => (isPrimary(d) || isEvent(d) ? 600 : 500))
+      .attr('fill', T.ink)
       .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', (d) => (isEvent(d) ? 'central' : 'hanging'))
-      .attr('stroke', (d) => (isEvent(d) ? 'none' : T.canvas))
+      .attr('dominant-baseline', 'hanging')
+      .attr('stroke', T.canvas)
       .attr('stroke-width', 3)
       .attr('stroke-linejoin', 'round')
       .attr('paint-order', 'stroke')
       .attr('pointer-events', 'none')
+    label
+      .selectAll<SVGTSpanElement, string>('tspan')
+      .data((d) => linesOf(d))
+      .join('tspan')
+      .attr('x', 0)
+      .attr('dy', (_, i) => (i === 0 ? 0 : `${LINE_HEIGHT}em`))
+      .text((line) => line)
 
-    /** 줌아웃 상태에서는 허브·중심 라벨만 남긴다 — 168개 라벨이 겹치면 아무것도 못 읽는다. 태그는 글자가 몸통이라 항상 보인다 */
-    const labelLod = (d: GraphNode) => (isEvent(d) || zoomK >= LABEL_MIN_ZOOM || isHub(d) ? 1 : 0)
-    label.attr('opacity', labelLod)
+    const labelWidth = new Map<string, number>()
+    label.each(function (d) {
+      labelWidth.set(d.id, this.getBBox().width)
+    })
+    ringText.attr('font-size', RING_LABEL_SIZE)
+    const ringWidth = new Map<number, number>()
+    ringText.each(function ([hop]) {
+      ringWidth.set(hop, this.getBBox().width)
+    })
+    const labelOffset = (d: GraphNode) => (isEvent(d) ? EVENT_NODE.size * 0.75 : radius(d)) + LABEL_GAP / zoomK
+    const scaleLabels = () => {
+      const s = 1 / zoomK
+      label.attr('font-size', (d) => labelSize(d) * s).attr('stroke-width', 3 * s)
+      ringText.attr('font-size', RING_LABEL_SIZE * s).attr('stroke-width', 3 * s)
+      label.attr('transform', (d) => `translate(${d.x!},${d.y! + labelOffset(d)})`)
+    }
+
+    const priority = (d: GraphNode) => {
+      if (isPrimary(d)) return 0
+      const tier = isEvent(d) ? EVENT_TIER : EVENT_TIER + depth(d)
+      return tier * 1000 - (degree.get(d.id) ?? 0)
+    }
+    let shown = new Set<string>()
+    const declutter = () => {
+      const s = 1 / zoomK
+      const boxes = nodes.map((d) => {
+        const width = ((labelWidth.get(d.id) ?? 0) + LABEL_PAD) * s
+        const height = linesOf(d).length * labelSize(d) * LINE_HEIGHT * s
+        return { id: d.id, left: d.x! - width / 2, top: d.y! + labelOffset(d), width, height, priority: priority(d) }
+      })
+      const obstacles = nodes.map((d) => {
+        const half = reach(d)
+        return { id: d.id, left: d.x! - half, top: d.y! - half, width: half * 2, height: half * 2 }
+      })
+      const ringBoxes = center
+        ? guides.map(([hop, r]) => {
+            const width = ((ringWidth.get(hop) ?? 0) + LABEL_PAD) * s
+            const height = RING_LABEL_SIZE * LINE_HEIGHT * s
+            return { id: `ring-${hop}`, left: center.x! - width / 2, top: center.y! - r - 4 * s - height, width, height, priority: -1 }
+          })
+        : []
+      shown = declutterLabels([...ringBoxes, ...boxes], obstacles, EVENT_TIER * 1000)
+    }
+    const labelLod = (d: GraphNode) => (shown.has(d.id) ? 1 : 0)
+    let declutterFrame = 0
+    const scheduleDeclutter = () => {
+      if (declutterFrame) return
+      declutterFrame = requestAnimationFrame(() => {
+        declutterFrame = 0
+        declutter()
+        paint(painted)
+      })
+    }
 
     // === NODE HIT AREAS === 점이 작아 커서·손가락이 놓치지 않도록 넓힌다. 라벨 위에 올려 클릭을 가로채지 않게 한다
-    const hitW = (d: GraphNode) => (isEvent(d) ? bodyW(d) + 8 : Math.max(radius(d) + 6, HIT_RADIUS) * 2)
-    const hitH = (d: GraphNode) => (isEvent(d) ? bodyH(d) + 8 : hitW(d))
+    const hitW = (d: GraphNode) => (isEvent(d) ? HIT_RADIUS * 2 : Math.max(radius(d) + 6, HIT_RADIUS) * 2)
+    const hitH = (d: GraphNode) => hitW(d)
     const nodeHit = g
       .append('g')
       .selectAll<SVGRectElement, GraphNode>('rect')
@@ -450,7 +565,9 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     // ===== 하이라이트 =====
     // 노드 강조·간선 강조·해제가 전부 이 한 경로를 지난다.
+    let painted: HighlightSpec | null = null
     function paint(spec: HighlightSpec | null) {
+      painted = spec
       if (!spec) {
         node.attr('opacity', 1).attr('stroke', T.paper).attr('stroke-width', 1.5)
         logo.attr('opacity', 1)
@@ -615,7 +732,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         .on('end', (event, d) => {
           if (!event.active) simulation.alphaTarget(0)
           // 중심은 놓은 자리에 그대로 못 박힌다 — 나머지는 다시 힘에 맡긴다
-          if (d.id === centerId) return
+          if (d.id === centerId) {
+            ringForce?.x(d.x!).y(d.y!)
+            return
+          }
           d.fx = null
           d.fy = null
         }),
@@ -626,7 +746,15 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     const remembered = positionsRef.current
     const incremental = nodes.some((n) => remembered.has(n.id))
     if (incremental) placeIncrementally(nodes, links, remembered, width, height)
-    else seedPositions(nodes, width, height)
+    else if (ringed) {
+      seedPositions(nodes, width, height)
+      nodes.forEach((n) => {
+        const seat = seats.get(n.id)
+        if (!seat) return
+        n.x = width / 2 + seat.radius * Math.cos(seat.angle)
+        n.y = height / 2 + seat.radius * Math.sin(seat.angle)
+      })
+    } else seedPositions(nodes, width, height)
 
     // 중심은 제자리에 못 박는다 — 처음엔 캔버스 가운데, 이어 그릴 땐 기억한 자리. 그래프가 통째로 떠다니지 않는다
     const center = nodes.find((n) => n.id === centerId)
@@ -650,7 +778,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
           .id((d) => d.id)
           .distance((l) => reach(l.source as GraphNode) + reach(l.target as GraphNode) + LINK_LENGTH)
           // 느슨하게 — 잎 노드가 한 고리에 몰리지 않고 반발력에 밀려 여러 겹으로 퍼진다
-          .strength(0.12),
+          .strength((l) => (!ringed ? 0.12 : depthGap(l) === 1 ? RING_LINK_STRENGTH : CROSS_LINK_STRENGTH)),
       )
       .force(
         'charge',
@@ -665,13 +793,13 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
         'x',
         d3
           .forceX<GraphNode>((d) => remembered.get(d.id)?.x ?? width / 2)
-          .strength((d) => (remembered.has(d.id) ? ANCHOR_STRENGTH : 0.06)),
+          .strength((d) => (remembered.has(d.id) ? (ringed ? RING_ANCHOR_STRENGTH : ANCHOR_STRENGTH) : ringed ? 0 : 0.06)),
       )
       .force(
         'y',
         d3
           .forceY<GraphNode>((d) => remembered.get(d.id)?.y ?? height / 2)
-          .strength((d) => (remembered.has(d.id) ? ANCHOR_STRENGTH : 0.06)),
+          .strength((d) => (remembered.has(d.id) ? (ringed ? RING_ANCHOR_STRENGTH : ANCHOR_STRENGTH) : ringed ? 0 : 0.06)),
       )
       .force(
         'collide',
@@ -684,12 +812,25 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       .alphaDecay(0.025)
       .velocityDecay(0.35)
       .stop()
+    const ringForce =
+      ringed && center
+        ? d3
+            .forceRadial<GraphNode>((d) => seats.get(d.id)?.radius ?? 0, center.x!, center.y!)
+            .strength((d) => (seats.has(d.id) ? RING_STRENGTH : 0))
+        : null
+    if (ringForce) simulation.force('ring', ringForce)
+
+    function depthGap(l: GraphLink): number {
+      const from = distance.get(endId(l.source))
+      const to = distance.get(endId(l.target))
+      return from === undefined || to === undefined ? 1 : Math.abs(from - to)
+    }
 
     /** 현재 좌표를 화면에 옮긴다 — 예열 직후 한 번, 이후 tick마다 */
     const render = () => {
       // 간선은 노드 중심이 아니라 테두리에서 시작·끝나고, 살짝 휜 곡선을 따라 폭이 줄어든다
       const curveOf = new Map<string, Curve>()
-      links.forEach((l) => curveOf.set(l.id, edgeCurve(trimToNodeEdges(l, rim))))
+      links.forEach((l) => curveOf.set(l.id, edgeCurve(trimToNodeEdges(l, rim), ringed && isTreeLink(l) ? 0 : undefined)))
       const curve = (d: GraphLink) => curveOf.get(d.id)!
 
       link.attr('d', (d) =>
@@ -697,15 +838,19 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
       )
       linkHit.attr('d', (d) => curvePath(curve(d)))
       glow.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!)
-      node.attr('x', (d) => d.x! - bodyW(d) / 2).attr('y', (d) => d.y! - bodyH(d) / 2)
+      node
+        .attr('x', (d) => d.x! - bodyW(d) / 2)
+        .attr('y', (d) => d.y! - bodyH(d) / 2)
+        .attr('transform', (d) => (isEvent(d) ? `rotate(45 ${d.x!} ${d.y!})` : null))
       logo.attr('x', (d) => d.x! - logoSize(d) / 2).attr('y', (d) => d.y! - logoSize(d) / 2)
       nodeHit.attr('x', (d) => d.x! - hitW(d) / 2).attr('y', (d) => d.y! - hitH(d) / 2)
-      label.attr('transform', (d) =>
-        isEvent(d)
-          ? `translate(${d.x!},${d.y!})`
-          : `translate(${d.x!},${d.y! + radius(d) + LABEL_GAP})`,
-      )
+      label.attr('transform', (d) => `translate(${d.x!},${d.y! + labelOffset(d)})`)
+      if (center) {
+        ringCircle.attr('cx', center.x!).attr('cy', center.y!)
+        ringText.attr('x', center.x!).attr('y', ([, r]) => center.y! - r - 4 / zoomK)
+      }
       nodes.forEach((n) => remembered.set(n.id, { x: n.x!, y: n.y! }))
+      scheduleDeclutter()
     }
 
     // 동기 예열 — 첫 프레임부터 자리 잡힌 그래프를 보인다. "터지고 나서 모이는" 애니메이션이 없고,
@@ -713,6 +858,9 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
     // 이어 그릴 땐 알파를 낮춰 기존 배치를 흔들지 않고 새 노드만 자리를 찾게 한다.
     simulation.alpha(incremental ? INCREMENTAL_ALPHA : 1).tick(WARMUP_TICKS)
     render()
+    scaleLabels()
+    declutter()
+    paint(painted)
     // 특정 요소를 선택한 채 다시 그린 경우(필터 변경 등)에는 카메라를 건드리지 않는다.
     // 이어 그릴 땐 카메라도 미끄러지듯 옮겨 홉 전환이 한 장면으로 이어진다.
     if (!movesCamera(highlightRef.current)) fitToView(incremental ? 450 : 0)
@@ -736,6 +884,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
 
     return () => {
       simulation.stop()
+      cancelAnimationFrame(declutterFrame)
     }
   }, [data, sized, sizeRef, getFilteredData, centerId, primaryIds, seedLinkIds])
 
@@ -855,18 +1004,28 @@ const TAPER_TIP = 0.5
 const LABEL_SIZE = 11
 const CENTER_LABEL_SIZE = 13
 const LABEL_GAP = 4
-/** 태그 안 글자 크기 — EVENT_NODE.charWidth(10px)와 맞춘다 */
-const EVENT_LABEL_SIZE = 10
+const EVENT_LABEL_SIZE = 11
+const LINE_HEIGHT = 1.2
+const LABEL_PAD = 6
+const RING_LABEL_SIZE = 11
+const RING_HOPS = 3
+const EVENT_TIER = 1
+const EVENT_SPAN = 84
+const RING_STRENGTH = 0.85
+const CROSS_LINK_STRENGTH = 0.02
+const RING_LINK_STRENGTH = 0.05
+const RING_ANCHOR_STRENGTH = 0.08
+const DEEP_SCALE = 0.85
+const GHOST_FADE = 0.16
+const NEAR_FADE = 0.75
+const FAR_FADE = 0.5
+const CATEGORY_ORDER: NodeCategory[] = ['event', 'theme', 'kospi', 'kosdaq', 'nasdaq', 'nyse']
 /** 점선(HAS_EVENT) 간선 굵기 — 테이퍼 간선의 가장 가는 축보다 살짝 굵은 정도 */
 const DASHED_WIDTH = 1.2
 /** 시드(기사에서 온) 간선의 기본 불투명도 — 강조 시 켜진 간선과 같은 값 */
 const SEED_OPACITY = 0.85
-/** 라벨을 전부 보이기 시작하는 줌 배율. 개요(전체 보기)에서는 허브·중심만 남겨 구조가 먼저 읽히게 한다 */
-const LABEL_MIN_ZOOM = 1
-/** 줌아웃에서도 라벨을 남기는 차수 기준 */
-const HUB_DEGREE = 3
 /** 긴 이름은 잘라 라벨 폭을 제한한다 — 전체 이름은 툴팁·상세 패널에 있다 */
-const LABEL_MAX_CHARS = 12
+const LABEL_MAX_CHARS = 14
 
 /** 노드 클릭 영역 최소 반지름 */
 const HIT_RADIUS = 12

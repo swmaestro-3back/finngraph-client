@@ -148,8 +148,8 @@ export function nodeCategory(node: Pick<GraphNode, "type" | "data">): NodeCatego
 // 이벤트는 중성 회색 — 기업(빨강·파랑)·테마(보라) 옆에서 정보성 부속물로 물러난다.
 // 해외 시장은 국내 두 색과 겹치지 않게 청록(NASDAQ)·황토(NYSE)로 구분한다.
 const PALETTES = {
-  redGreen: { kospi: "#d96868", kosdaq: "#689d4b", nasdaq: "#5aa9b8", nyse: "#d4a24c", theme: "#91ae6e", event: "#8a9099" },
-  redBlue: { kospi: "#e07a7a", kosdaq: "#6f9bd1", nasdaq: "#5fb8a8", nyse: "#d9a441", theme: "#b08bc9", event: "#8a9099" },
+  redGreen: { kospi: "#d96868", kosdaq: "#689d4b", nasdaq: "#5aa9b8", nyse: "#d4a24c", theme: "#91ae6e", event: "#b45309" },
+  redBlue: { kospi: "#e07a7a", kosdaq: "#6f9bd1", nasdaq: "#5fb8a8", nyse: "#d9a441", theme: "#b08bc9", event: "#b45309" },
 } satisfies Record<string, Record<NodeCategory, string>>;
 
 const ACTIVE_PALETTE: keyof typeof PALETTES = "redBlue";

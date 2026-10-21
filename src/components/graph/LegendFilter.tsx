@@ -93,11 +93,10 @@ export function LegendFilter({
                 onToggle={() => onCategoriesChange(toggled(selectedCategories, category))}
                 onHover={onPreview && ((over) => onPreview(over && on ? { kind: 'category', category } : null))}
               >
-                {/* 이벤트는 캔버스에서 알약 꼬리표로 그린다 — 견본도 같은 모양 */}
                 <span
                   className={cn(
                     'shrink-0 border-[1.5px]',
-                    category === 'event' ? 'h-2 w-3.5 rounded-full' : 'size-2.5 rounded-full',
+                    category === 'event' ? 'size-2 rotate-45 rounded-[1px]' : 'size-2.5 rounded-full',
                   )}
                   style={{
                     borderColor: CATEGORY_COLORS[category],
