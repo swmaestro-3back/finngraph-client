@@ -13,6 +13,7 @@ import type { NodeNeighbors } from '@/lib/graphNeighbors'
 import { NodeDetail, type CenterShortcuts } from '@/components/graph/NodeDetail'
 import { EdgeDetail } from '@/components/graph/EdgeDetail'
 import { EventDetail } from '@/components/graph/EventDetail'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
@@ -131,7 +132,7 @@ export function DetailPanel({
   if (isMobile) {
     return (
       <Sheet open onOpenChange={(open) => !open && onClose()}>
-        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl p-5">
+        <SheetContent side="bottom" className="fg-gstagger max-h-[80vh] overflow-y-auto rounded-t-[28px] p-5">
           <SheetHeader className="sr-only">
             <SheetTitle>{selectionTitle(selection)}</SheetTitle>
           </SheetHeader>
@@ -146,7 +147,7 @@ export function DetailPanel({
   return (
     <div
       ref={scrollRef}
-      className="h-full w-90 shrink-0 overflow-y-auto border-l border-border bg-background p-5"
+      className="fg-gpanel fg-gstagger h-full w-90 shrink-0 overflow-y-auto border-l border-border bg-background p-5"
     >
       <div className="mb-3 flex h-7 items-center justify-between gap-2">
         {topLine}
@@ -155,7 +156,7 @@ export function DetailPanel({
           size="icon-sm"
           onClick={onClose}
           aria-label="닫기"
-          className="-mr-1.5 shrink-0 text-muted-foreground"
+          className={cn('-mr-1.5 shrink-0 rounded-full bg-muted text-muted-foreground hover:text-foreground', 'fg-gclose')}
         >
           <X strokeWidth={2} />
         </Button>

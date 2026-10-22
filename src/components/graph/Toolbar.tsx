@@ -1,6 +1,7 @@
 import { CircleHelp, Plus, Minus, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { GLASS_BUTTON } from '@/components/graph/glass'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -57,8 +58,9 @@ export function Toolbar({
                   onClick={onClick}
                   aria-label={label}
                   className={cn(
-                    'relative bg-background/90 shadow-soft backdrop-blur hover:border-primary hover:text-primary',
-                    hinted && 'border-primary text-primary',
+                    GLASS_BUTTON,
+                    'relative',
+                    hinted && 'text-primary shadow-[0_0_0_2px_var(--primary),0_14px_26px_-18px_var(--shadow-strong-color)]',
                     buttonClassName,
                   )}
                 >
@@ -66,7 +68,7 @@ export function Toolbar({
                   {hinted && (
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 animate-ping rounded-[inherit] border-2 border-primary motion-reduce:animate-none"
+                      className="fg-gping pointer-events-none absolute inset-0 rounded-[inherit] border-2 border-primary"
                     />
                   )}
                 </Button>

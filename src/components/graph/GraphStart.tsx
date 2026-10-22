@@ -102,8 +102,8 @@ export function GraphStart({ ready, guest, onSelect, onExample }: Props) {
           className={cn(
             'absolute z-10 flex flex-col gap-5 bg-background text-foreground',
             isMobile
-              ? 'inset-x-0 bottom-0 rounded-t-2xl px-4 pt-3 pb-5 shadow-[0_-12px_28px_-8px_rgb(0_0_0/0.25)] animate-in fade-in-0 slide-in-from-bottom-6 duration-300 motion-reduce:animate-none'
-              : 'top-1/2 left-1/2 w-[min(26rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-[0_24px_48px_-12px_rgb(0_0_0/0.3)] animate-in fade-in-0 zoom-in-95 duration-200 motion-reduce:animate-none',
+              ? 'inset-x-0 bottom-0 rounded-t-[28px] px-4 pt-3 pb-5 shadow-[0_-12px_28px_-8px_rgb(0_0_0/0.25)] animate-in fade-in-0 slide-in-from-bottom-6 duration-300 motion-reduce:animate-none'
+              : 'fg-gcard top-1/2 left-1/2 w-[min(26rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] p-6 shadow-[0_0_0_1px_var(--border-divider),0_30px_60px_-30px_var(--shadow-strong-color)]',
           )}
         >
           {isMobile && <span aria-hidden className="mx-auto -mb-2 h-1 w-9 rounded-full bg-border" />}
@@ -112,7 +112,7 @@ export function GraphStart({ ready, guest, onSelect, onExample }: Props) {
             onClick={dismiss}
             aria-label={guest ? '닫고 예시 그래프 보기' : `닫고 ${fallback.label} 보기`}
             className={cn(
-              'absolute right-3 grid size-8 cursor-pointer place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground',
+              'fg-gclose absolute right-3 grid size-8 cursor-pointer place-items-center rounded-full bg-muted text-muted-foreground hover:text-foreground',
               isMobile ? 'top-4' : 'top-3',
             )}
           >
@@ -168,7 +168,7 @@ function PickChip({ pick, onSelect }: { pick: GraphPick; onSelect: (focus: Graph
     <button
       type="button"
       onClick={() => onSelect(pick.focus)}
-      className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-background px-3 text-body font-medium text-foreground hover:border-border-strong hover:bg-muted"
+      className="fg-gpick inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-background px-3 text-body font-medium text-foreground hover:border-border-strong hover:bg-muted"
     >
       {pick.focus.kind === 'theme' && <span className="text-micro text-muted-foreground">테마</span>}
       {pick.label}

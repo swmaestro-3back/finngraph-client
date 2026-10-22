@@ -76,7 +76,7 @@ export function OriginBar({ center, onSelect }: Props) {
       data-guide="origin"
       onClick={() => setSearching(true)}
       aria-label={`중심 ${center.label} — 다른 종목이나 테마로 바꾸기`}
-      className="flex h-10.5 max-w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-background/90 pr-3 pl-2 shadow-soft backdrop-blur hover:border-border-strong md:h-11.5 md:gap-2.5 md:pr-3.5 md:pl-2.5"
+      className="fg-glass fg-gorigin flex h-10.5 max-w-full cursor-pointer items-center gap-2 pr-3.5 pl-1.5 md:h-11.5 md:gap-2.5 md:pr-4 md:pl-2"
     >
       <NodeMark node={center} size={24} />
       <span className="min-w-0 truncate text-body font-semibold text-foreground md:text-[15px]">{center.label}</span>
