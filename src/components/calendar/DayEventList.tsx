@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, ChevronUp, CircleAlert, Inbox, Star } from 'lucide-react'
+import { ChevronDown, ChevronRight, ChevronUp, Star } from 'lucide-react'
 import { EstimateBadge, EventMarker } from '@/components/calendar/EventMarker'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { Skeleton } from '@/components/fg/Skeleton'
 import type { CalendarEventRes } from '@/lib/apiTypes'
 import { KIND_LABELS, agendaCountLabel, eventDetails, formatDayTitle, kindFamily } from '@/lib/calendar'
@@ -60,11 +61,10 @@ function EventRow({ item, onOpen }: { item: CalendarEventRes; onOpen: (item: Cal
 }
 
 function Placeholder({ kind, title, description }: { kind: 'empty' | 'error'; title: string; description?: string }) {
-  const Icon = kind === 'error' ? CircleAlert : Inbox
   return (
     <div className="fg-state fg-cal-day-list__state">
       <div className="fg-state__icon" aria-hidden="true">
-        <Icon size={20} strokeWidth={1.75} />
+        <LucianIcon name={kind === 'error' ? 'alert' : 'inbox'} size={20} />
       </div>
       <p className="fg-state__title">{title}</p>
       {description && <p className="fg-state__desc">{description}</p>}
@@ -117,7 +117,7 @@ export function DayEventList({ id, date, events, holiday, loading, failed, onOpe
 
       {!loading && !failed && count > 0 && (
         <>
-          <ul id={LIST_ID} className="fg-cal-day-list__list">
+          <ul key={date} id={LIST_ID} className="fg-cal-day-list__list">
             {shown.map((item, index) => (
               <EventRow key={`${index}-${item.kind}-${item.ticker}`} item={item} onOpen={onOpen} />
             ))}

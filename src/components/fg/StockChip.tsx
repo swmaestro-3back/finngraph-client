@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom'
+import { Link, type LinkProps } from 'react-router-dom'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { stockPath } from '@/lib/fg/paths'
 import { cn } from '@/lib/utils'
 
-interface StockChipProps {
+interface StockChipProps extends Pick<LinkProps, 'onMouseEnter' | 'onMouseLeave' | 'onFocus' | 'onBlur'> {
   ticker: string
   name: string
   change?: number | null
@@ -14,9 +14,23 @@ interface StockChipProps {
   state?: unknown
 }
 
-export function StockChip({ ticker, name, change = null, kind = 'direct', withLogo = false, className, state }: StockChipProps) {
+export function StockChip({
+  ticker,
+  name,
+  change = null,
+  kind = 'direct',
+  withLogo = false,
+  className,
+  state,
+  ...handlers
+}: StockChipProps) {
   return (
-    <Link to={stockPath(ticker)} state={state} className={cn('fg-chip', kind === 'inferred' && 'fg-chip--inferred', className)}>
+    <Link
+      to={stockPath(ticker)}
+      state={state}
+      className={cn('fg-chip', kind === 'inferred' && 'fg-chip--inferred', className)}
+      {...handlers}
+    >
       {withLogo && <CompanyLogo name={name} ticker={ticker} size={24} />}
       {name}
       {change !== null && <ChangeText value={change} className="fg-chg" />}

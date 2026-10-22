@@ -1,3 +1,4 @@
+// Lucian UX/UI Prompt #299 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#299
 import { useRef, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
@@ -5,6 +6,7 @@ import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { GapValue } from '@/components/fg/Gap'
 import { PriceChange } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
+import { ShareBar } from '@/components/fg/ShareBar'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { PriceStatus } from '@/components/fg/StatusTag'
 import { StockDetailLink, StockStar, StockThemeChips } from '@/components/fg/StockActions'
@@ -82,6 +84,7 @@ function StockFlows({ summary, retry }: { summary: StockSummary; retry: PanelRet
         ['개인', flows.individual],
       ]
     : []
+  const peak = Math.max(0, ...items.map(([, value]) => Math.abs(value ?? 0)))
   return (
     <div className="fg-tdet__sec">
       <span className="fg-tdet__label fg-sdet__row">
@@ -102,6 +105,13 @@ function StockFlows({ summary, retry }: { summary: StockSummary; retry: PanelRet
               <dt>{label}</dt>
               <dd className={value === null ? undefined : toneClass(value)}>
                 {value === null ? '—' : formatManShares(value)}
+                {value !== null && peak > 0 && (
+                  <ShareBar
+                    value={Math.abs(value) / peak}
+                    tone={value < 0 ? 'down' : 'up'}
+                    className="fg-sdet__flowbar"
+                  />
+                )}
               </dd>
             </div>
           ))}

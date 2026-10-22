@@ -1,3 +1,4 @@
+// Lucian UX/UI Prompt #017 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#017
 import { ChevronRight } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
@@ -10,6 +11,7 @@ import { ChangeText } from '@/components/fg/PriceChange'
 import { RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
+import { Week52Gauge } from '@/components/fg/Week52Range'
 import { useFavorites } from '@/lib/favorites'
 import { formatGapPct, formatPriceWon } from '@/lib/fg/format'
 import { WATCH_ROWS, watchRows, type WatchRow } from '@/lib/fg/home'
@@ -21,7 +23,6 @@ import { fromState } from '@/lib/navigation'
 import { useStockIssueLines, type HubSlot } from '@/lib/queries/useHubSlots'
 import { stockIndexOf, useStocksCached } from '@/lib/queries/useStocksCached'
 import type { PriceBasis } from '@/lib/referenceDate'
-import { cn } from '@/lib/utils'
 
 const HOME_NOTE = '이슈 요약과 연결 정보는 인용된 기사·공시로 만든 참고 자료이며 투자 권유가 아니에요.'
 
@@ -71,11 +72,7 @@ function WeekLine({ ext }: { ext: HubQuoteExt | null }) {
           52주 최고 대비 {ext ? <b>{formatGapPct(ext.gapFromHigh)}</b> : '—'}
         </span>
       )}
-      {ext && ext.position !== null && (
-        <span className="fg-hsr__bar" aria-hidden="true">
-          <i className={cn(ext.high && 'is-high')} style={{ left: `${(ext.position * 100).toFixed(1)}%` }} />
-        </span>
-      )}
+      {ext && ext.position !== null && <Week52Gauge position={ext.position} high={ext.high} barClassName="fg-hsr__bar" />}
     </span>
   )
 }

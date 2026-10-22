@@ -1037,7 +1037,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, Props>(function GraphCanva
   }, [preview])
 
   return (
-    <div ref={containerRef} className="relative size-full" style={{ background: T.canvas }}>
+    <div ref={containerRef} className="fg-gcanvas relative size-full" style={{ background: T.canvas }}>
       <svg ref={svgRef} className="size-full" />
       <GraphTooltip ref={tooltipRef} />
     </div>

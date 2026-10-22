@@ -4,6 +4,7 @@ import { isFirstHop } from '@/lib/fg/linkedCompanies'
 import type { LinkedCompany } from '@/lib/fg/stockLinks'
 import { dateTicks, type DateTick } from '@/lib/fg/themeCharts'
 import { gapFromHigh } from '@/lib/fg/week52'
+import { josa } from '@/lib/josa'
 
 export type SmartKey = 'issue' | 'event' | 'high' | 'drop'
 
@@ -67,6 +68,7 @@ export interface InnerLink {
   key: string
   company: LinkedCompany
   from: string
+  fromTicker: string
 }
 
 export interface FitCompany {
@@ -179,22 +181,29 @@ export function innerLinks(
       if (!isFirstHop(company) || company.code === null || company.code === member.ticker) continue
       if (!tickers.has(company.code) || !INNER_LINK_TYPES.has(company.type)) continue
       const key = [member.ticker, company.code].sort().join('-')
-      if (!picked.has(key)) picked.set(key, { key, company, from: member.name })
+      if (!picked.has(key)) picked.set(key, { key, company, from: member.name, fromTicker: member.ticker })
     }
   }
   return [...picked.values()]
 }
 
+export interface LinkEnd {
+  name: string
+  ticker: string | null
+}
+
 export interface LinkArrow {
-  from: string
-  to: string
+  from: LinkEnd
+  to: LinkEnd
   label: string
 }
 
 export function linkArrow(link: InnerLink): LinkArrow | null {
   const { company } = link
-  if (company.type === 'supply') return { from: company.name, to: link.from, label: company.tag }
-  if (company.type === 'customer') return { from: link.from, to: company.name, label: company.tag.replace(/구매$/, '공급') }
+  const member = { name: link.from, ticker: link.fromTicker }
+  const other = { name: company.name, ticker: company.code }
+  if (company.type === 'supply') return { from: other, to: member, label: company.tag }
+  if (company.type === 'customer') return { from: member, to: other, label: company.tag.replace(/구매$/, '공급') }
   return null
 }
 
@@ -211,10 +220,64 @@ export function folderEvent(
   return best
 }
 
-export function fitCompanies(links: readonly FitCompany[], limit: number): FitCompany[] {
-  return links
-    .filter((link) => isFirstHop(link.company) && link.company.code !== null && INNER_LINK_TYPES.has(link.company.type))
-    .slice(0, limit)
+const FIT_POOL = 12
+const FIT_MIN_PER_SOURCE = 4
+
+function shuffleKey(seed: number, id: string): number {
+  let hash = 2166136261 ^ seed
+  for (const char of id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+  hash = Math.imul(hash ^ (hash >>> 16), 0x85ebca6b)
+  hash = Math.imul(hash ^ (hash >>> 13), 0xc2b2ae35)
+  return (hash ^ (hash >>> 16)) >>> 0
+}
+
+export function fitCandidates(links: readonly FitCompany[]): FitCompany[] {
+  return links.filter(
+    (link) => isFirstHop(link.company) && link.company.code !== null && INNER_LINK_TYPES.has(link.company.type),
+  )
+}
+
+export function fitQuote(company: Pick<LinkedCompany, 'evidence'>): LinkedCompany['evidence'][number] | null {
+  return company.evidence.reduce<LinkedCompany['evidence'][number] | null>(
+    (latest, item) => (item.quote.trim() && (!latest || item.date > latest.date) ? item : latest),
+    null,
+  )
+}
+
+function fitBuckets(eligible: readonly FitCompany[]): FitCompany[][] {
+  const groups = new Map<string, FitCompany[]>()
+  for (const link of eligible) {
+    const group = groups.get(link.from)
+    if (group) group.push(link)
+    else groups.set(link.from, [link])
+  }
+  const perSource = Math.max(FIT_MIN_PER_SOURCE, Math.ceil(FIT_POOL / Math.max(1, groups.size)))
+  return [...groups.values()].map((group) => group.slice(0, perSource))
+}
+
+export function fitPoolSize(links: readonly FitCompany[]): number {
+  return fitBuckets(fitCandidates(links)).reduce((sum, group) => sum + group.length, 0)
+}
+
+export function fitCompanies(links: readonly FitCompany[], limit: number, seed: number | null = null): FitCompany[] {
+  const eligible = fitCandidates(links)
+  if (seed === null) return eligible.slice(0, limit)
+  const byKey = (a: string, b: string) => shuffleKey(seed, a) - shuffleKey(seed, b)
+  const buckets = fitBuckets(eligible)
+    .map((group) => [...group].sort((a, b) => byKey(a.company.id, b.company.id)))
+    .sort((a, b) => byKey(a[0].from, b[0].from))
+  const picked: FitCompany[] = []
+  for (let round = 0; picked.length < limit; round++) {
+    const layer = buckets.filter((group) => round < group.length)
+    if (layer.length === 0) break
+    for (const group of layer) if (picked.length < limit) picked.push(group[round])
+  }
+  return picked
+}
+
+export function fitReason(company: Pick<LinkedCompany, 'name' | 'title'>): string {
+  const subject = `${company.name}${josa(company.name, '은/는')} `
+  return company.title.startsWith(subject) ? company.title.slice(subject.length) : company.title
 }
 
 export interface ReturnPath {

@@ -1,9 +1,11 @@
+// Lucian UX/UI Prompt #037 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#037
 import { startTransition } from 'react'
-import { User } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/fg/Button'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { useAuth } from '@/lib/auth'
 import { authSlot } from '@/lib/fg/nav'
 import { logoutLanding } from '@/lib/memberGate'
@@ -31,17 +33,20 @@ export function UserMenu() {
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <button type="button" className="fg-gh__icon" aria-label="내 정보">
-          <User size={20} strokeWidth={1.75} aria-hidden="true" />
+          <LucianIcon name="user" size={20} />
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content className="fg fg-umenu" align="end" sideOffset={8}>
           <DropdownMenu.Label className="fg-umenu__name">{user?.nickname}</DropdownMenu.Label>
           <DropdownMenu.Item asChild className="fg-umenu__item">
-            <Link to="/me/account">계정 설정</Link>
+            <Link to="/me/account">
+              <LucianIcon name="settings" size={17} weight={1.9} className="fg-umenu__ico" />
+              계정 설정
+            </Link>
           </DropdownMenu.Item>
           <DropdownMenu.Item
-            className="fg-umenu__item"
+            className="fg-umenu__item fg-umenu__item--out"
             onSelect={() => {
               const landing = logoutLanding(location.pathname)
               startTransition(() => {
@@ -51,6 +56,7 @@ export function UserMenu() {
               toast.success('로그아웃했어요')
             }}
           >
+            <LogOut className="fg-umenu__ico" size={17} strokeWidth={1.9} aria-hidden="true" />
             로그아웃
           </DropdownMenu.Item>
         </DropdownMenu.Content>

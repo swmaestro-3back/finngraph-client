@@ -9,6 +9,7 @@ import {
 } from '@/components/graph/GraphCanvas'
 import { DetailPanel } from '@/components/graph/DetailPanel'
 import { NodeMark } from '@/components/graph/DetailParts'
+import { CALM_OUTLINE, CALM_PRIMARY } from '@/components/graph/glass'
 import { GraphGuide, type GuideHole, type GuideStep } from '@/components/graph/GraphGuide'
 import { LegendFilter, type LegendPreview } from '@/components/graph/LegendFilter'
 import { OriginBar } from '@/components/graph/OriginBar'
@@ -665,7 +666,7 @@ export function GraphView({ focus, example = false }: Props) {
     <>
       <div className="flex size-full bg-background">
         {/* @container — 상단 컨트롤이 뷰포트가 아니라 캔버스 폭(상세 패널을 뺀 나머지)에 맞춰 접히도록 */}
-        <div ref={canvasAreaRef} className="@container relative min-w-0 flex-1 overflow-hidden">
+        <div ref={canvasAreaRef} className="fg-gstage @container relative min-w-0 flex-1 overflow-hidden">
           {/* 렌즈·홉을 바꾸는 동안 이전 그래프를 그대로 두고 상단에 얇은 진행 표시만 — 화면이 비었다 채워지는 깜빡임을 피한다 */}
           {loading && (
             <div
@@ -726,7 +727,7 @@ export function GraphView({ focus, example = false }: Props) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="pointer-events-auto mt-2"
+                  className={cn(CALM_OUTLINE, 'pointer-events-auto mt-2')}
                   onClick={() => updateQuery({ lens: 'supply' })}
                 >
                   공급망 보기
@@ -736,7 +737,7 @@ export function GraphView({ focus, example = false }: Props) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="pointer-events-auto mt-2"
+                  className={cn(CALM_OUTLINE, 'pointer-events-auto mt-2')}
                   onClick={() => updateQuery({ scope: 'all' })}
                 >
                   범위를 전체로
@@ -749,6 +750,7 @@ export function GraphView({ focus, example = false }: Props) {
                       key={pickKey(pick.focus)}
                       variant="outline"
                       size="sm"
+                      className={CALM_OUTLINE}
                       onClick={() => navigate(graphPath(pick.focus, query))}
                     >
                       {pick.label}
@@ -869,22 +871,22 @@ function ExampleBar({ center, compact, onLogin }: { center?: GraphNode; compact:
     <>
       <span
         data-guide="origin"
-        className="flex h-10.5 max-w-full items-center gap-2 rounded-lg border border-border bg-background/90 pr-3 pl-2 shadow-soft backdrop-blur md:h-11.5 md:gap-2.5 md:pl-2.5"
+        className="fg-glass flex h-10.5 max-w-full items-center gap-2 pr-3.5 pl-1.5 md:h-11.5 md:gap-2.5 md:pl-2"
       >
         {center && <NodeMark node={center} size={24} />}
         <span className="min-w-0 truncate text-body font-semibold text-foreground md:text-[15px]">{center?.label}</span>
-        <span className="shrink-0 rounded bg-accent-warm-bg px-1.5 text-micro leading-4 font-semibold text-accent-warm">
+        <span className="fg-badge fg-badge--event fg-gtag shrink-0">
           예시
         </span>
       </span>
       <div
         data-guide="example"
-        className="flex h-10.5 max-w-full items-center gap-2.5 rounded-lg border border-accent-warm/20 bg-accent-warm-bg/60 pr-1.5 pl-3 text-caption text-accent-warm shadow-soft backdrop-blur md:h-11.5 md:text-xs"
+        className="fg-glass fg-glass--warm flex h-10.5 max-w-full items-center gap-2.5 pr-1.5 pl-4 text-caption text-accent-warm md:h-11.5 md:text-xs"
       >
         <span className="whitespace-nowrap">
           <strong className="font-semibold">예시 그래프</strong> · {EXAMPLE_BASIS}
         </span>
-        <Button size="sm" onClick={onLogin} className="whitespace-nowrap">
+        <Button size="sm" onClick={onLogin} className={cn(CALM_PRIMARY, 'whitespace-nowrap')}>
           {compact ? '로그인하고 보기' : '로그인하고 실제로 보기'}
         </Button>
       </div>

@@ -1,4 +1,5 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react'
+// Lucian UX/UI Prompt #030 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#030
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { DayCell } from '@/components/calendar/DayCell'
 import type { CalendarEventRes } from '@/lib/apiTypes'
 import { WEEKDAY_LABELS, keyboardTarget, type GridCell } from '@/lib/calendar'
@@ -20,6 +21,9 @@ interface MonthGridProps {
 export function MonthGrid({ label, cells, eventsByDate, holidays, today, selected, loading, onSelect }: MonthGridProps) {
   const buttons = useRef(new Map<string, HTMLButtonElement>())
   const pendingFocus = useRef<string | null>(null)
+  const first = cells[0]?.date ?? ''
+  const [slide, setSlide] = useState({ first, dir: 0 })
+  if (slide.first !== first) setSlide({ first, dir: first > slide.first ? 1 : -1 })
 
   useEffect(() => {
     if (pendingFocus.current !== selected) return
@@ -52,7 +56,14 @@ export function MonthGrid({ label, cells, eventsByDate, holidays, today, selecte
           </span>
         ))}
       </div>
-      <div className="fg-cal-grid__body">
+      <div
+        key={first}
+        className={cn(
+          'fg-cal-grid__body',
+          slide.dir > 0 && 'fg-cal-grid__body--next',
+          slide.dir < 0 && 'fg-cal-grid__body--prev',
+        )}
+      >
         {rows.map((week) => (
           <div key={week[0].date} role="row" className="fg-cal-grid__week">
             {week.map((cell) => (

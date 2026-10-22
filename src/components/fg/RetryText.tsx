@@ -1,4 +1,4 @@
-import { CircleAlert } from 'lucide-react'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { josa } from '@/lib/josa'
 import { cn } from '@/lib/utils'
 
@@ -16,7 +16,7 @@ export function RetryText({ subject, onRetry, className }: RetryTextProps) {
       aria-label={`${subject}${josa(subject, '을/를')} 불러오지 못했어요. 다시 시도`}
       onClick={onRetry}
     >
-      <CircleAlert size={14} strokeWidth={1.75} aria-hidden="true" />
+      <LucianIcon name="alert" size={14} />
       다시 시도
     </button>
   )

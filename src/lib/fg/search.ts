@@ -22,6 +22,7 @@ export interface SearchOption {
   group: SearchGroup
   label: string
   alias?: string | null
+  ticker?: string
   meta: string
   to: string
 }
@@ -32,6 +33,7 @@ function stockOption(stock: SearchStock, alias: string | null = null): SearchOpt
     key: `stock:${stock.ticker}`,
     group: 'stock',
     label: stock.name,
+    ticker: stock.ticker,
     alias: shown && shown.toLowerCase() !== stock.name.toLowerCase() ? shown : null,
     meta: [stock.ticker, marketLabel(stock.market)].filter(Boolean).join(' · '),
     to: stockPath(stock.ticker),

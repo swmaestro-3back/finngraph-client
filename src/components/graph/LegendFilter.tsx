@@ -9,6 +9,7 @@ import {
   type NodeCategory,
   type Predicate,
 } from '@/data/graphTypes'
+import { GLASS_BUTTON } from '@/components/graph/glass'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
@@ -40,7 +41,7 @@ const PREDICATE_LEGEND_LABELS: Record<Predicate, string> = {
   HAS_EVENT: '이벤트 언급',
 }
 
-const PANEL = 'rounded-lg border border-border bg-background/95 p-1.5 shadow-soft backdrop-blur'
+const PANEL = 'fg-glass fg-glass--panel p-1.5'
 
 /** Set에서 항목 하나를 토글한 새 Set */
 function toggled<T>(set: Set<T>, value: T): Set<T> {
@@ -141,7 +142,7 @@ export function LegendFilter({
             <button
               type="button"
               onClick={showAll}
-              className="ml-auto cursor-pointer rounded-md px-2 py-1 text-caption font-medium text-primary hover:bg-muted"
+              className="fg-gall ml-auto cursor-pointer rounded-full bg-foreground px-3 py-1 text-caption font-semibold text-background hover:bg-foreground/85"
             >
               모두 보기
             </button>
@@ -164,7 +165,7 @@ export function LegendFilter({
         onClick={() => setExpanded((v) => !v)}
         aria-label={expanded ? '범례 닫기' : '범례·필터 보기'}
         aria-expanded={expanded}
-        className="relative bg-background/95 shadow-soft backdrop-blur"
+        className={cn(GLASS_BUTTON, 'relative')}
       >
         {expanded ? <X strokeWidth={2} /> : <List strokeWidth={2} />}
         {/* 접혀 있어도 무언가 숨겨 둔 상태임을 알린다 */}
@@ -204,7 +205,7 @@ function LegendItem({
       }}
       onMouseEnter={onHover && (() => onHover(true))}
       onMouseLeave={onHover && (() => onHover(false))}
-      className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-caption hover:bg-muted"
+      className="fg-gli flex cursor-pointer items-center gap-1.5 rounded-full px-2 py-1 text-caption hover:bg-background"
     >
       {children}
       <span

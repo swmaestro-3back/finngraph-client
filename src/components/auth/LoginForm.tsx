@@ -1,11 +1,10 @@
+// Lucian UX/UI Prompt #062 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#062
 import { useState, type FormEvent } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import { AuthField } from '@/components/auth/AuthField'
 import { FormNotice } from '@/components/auth/FormNotice'
 import { KakaoSignIn } from '@/components/auth/KakaoSignIn'
+import { LockNotice } from '@/components/auth/LockNotice'
 import { PasswordField } from '@/components/auth/PasswordField'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ApiError, postData } from '@/lib/api'
 import type { AuthTokenRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
@@ -82,16 +81,21 @@ export function LoginForm({ next, initialEmail = '', notice = null }: LoginFormP
       <form
         onSubmit={submit}
         noValidate
-        className={cn('flex flex-col gap-5', shaking && 'motion-safe:auth-shake')}
+        className={cn('flex flex-col gap-5', shaking && 'fg-au-shake')}
         onAnimationEnd={(event) => {
           if (event.target === event.currentTarget) setShaking(false)
         }}
       >
-        <AuthField id="login-email" label="이메일" error={fieldErrors.email}>
-          <Input
+        <AuthField
+          id="login-email"
+          label="이메일"
+          error={fieldErrors.email}
+          ok={isEmailValid(email)}
+        >
+          <input
             id="login-email"
             type="email"
-            className="h-10"
+            className="fg-af__in"
             placeholder="you@example.com"
             autoComplete="email"
             autoFocus={initialEmail.length === 0}
@@ -107,7 +111,6 @@ export function LoginForm({ next, initialEmail = '', notice = null }: LoginFormP
         <AuthField id="login-password" label="비밀번호" error={fieldErrors.password}>
           <PasswordField
             id="login-password"
-            className="h-10"
             autoComplete="current-password"
             autoFocus={initialEmail.length > 0}
             value={password}
@@ -122,22 +125,32 @@ export function LoginForm({ next, initialEmail = '', notice = null }: LoginFormP
         {noticeVisible && notice && <FormNotice tone="info">{notice}</FormNotice>}
         {formError && <FormNotice tone="error">{formError}</FormNotice>}
         {locked && (
-          <FormNotice tone="error">
-            요청이 너무 잦아요. <span className="font-mono tabular-nums">{lockSeconds}</span>초 후
-            다시 시도할 수 있어요
-          </FormNotice>
+          <LockNotice seconds={lockSeconds}>
+            요청이 너무 잦아요.{' '}
+            <span key={lockSeconds} className="fg-au-lock__n">
+              {lockSeconds}
+            </span>
+            초 후 다시 시도할 수 있어요
+          </LockNotice>
         )}
 
-        <Button type="submit" size="lg" disabled={submitting || locked} className="mt-1 h-10 w-full">
-          {submitting ? (
-            <>
-              <LoaderCircle className="animate-spin" />
-              로그인 중…
-            </>
-          ) : (
-            '로그인'
-          )}
-        </Button>
+        <button
+          type="submit"
+          disabled={submitting || locked}
+          aria-busy={submitting || undefined}
+          className="fg-au-go"
+        >
+          <span key={submitting ? 'busy' : 'idle'} className="fg-au-go__in">
+            {submitting ? (
+              <>
+                <span aria-hidden className="fg-au-spin" />
+                로그인 중…
+              </>
+            ) : (
+              '로그인'
+            )}
+          </span>
+        </button>
       </form>
 
       <KakaoSignIn next={next} disabled={submitting} />

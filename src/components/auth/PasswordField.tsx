@@ -1,20 +1,21 @@
+// Lucian UX/UI Prompt #062 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#062
+// Lucian UX/UI Prompt #036 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#036
 import { useState, type ComponentProps } from 'react'
-import { Circle, CircleCheck, Eye, EyeOff } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { PASSWORD_RULES } from '@/lib/authValidation'
 import { cn } from '@/lib/utils'
 
-type PasswordFieldProps = Omit<ComponentProps<typeof Input>, 'type'>
+type PasswordFieldProps = Omit<ComponentProps<'input'>, 'type'>
 
-export function PasswordField({ className, disabled, ...props }: PasswordFieldProps) {
+export function PasswordField({ className, disabled, placeholder = ' ', ...props }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false)
 
   return (
-    <div className="relative">
-      <Input
+    <>
+      <input
         type={visible ? 'text' : 'password'}
-        className={cn('pr-9', className)}
+        className={cn('fg-af__in', className)}
         disabled={disabled}
+        placeholder={placeholder}
         {...props}
       />
       <button
@@ -23,15 +24,17 @@ export function PasswordField({ className, disabled, ...props }: PasswordFieldPr
         aria-pressed={visible}
         disabled={disabled}
         onClick={() => setVisible((value) => !value)}
-        className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+        className="fg-af__eye"
       >
-        {visible ? (
-          <EyeOff className="size-3.5" strokeWidth={2} />
-        ) : (
-          <Eye className="size-3.5" strokeWidth={2} />
-        )}
+        <svg viewBox="0 0 24 24" aria-hidden>
+          <g className="fg-af__lid">
+            <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+            <circle cx="12" cy="12" r="3" />
+          </g>
+          <path className="fg-af__slash" d="M4 4l16 16" />
+        </svg>
       </button>
-    </div>
+    </>
   )
 }
 
@@ -41,35 +44,32 @@ interface PasswordRulesProps {
 }
 
 export function PasswordRules({ value, showErrors }: PasswordRulesProps) {
+  const level = PASSWORD_RULES.filter((rule) => rule.test(value)).length
   return (
-    <ul aria-label="비밀번호 조건" className="grid grid-cols-2 gap-x-4 gap-y-1">
-      {PASSWORD_RULES.map((rule) => {
-        const satisfied = rule.test(value)
-        return (
-          <li
-            key={rule.key}
-            className={cn(
-              'flex items-center gap-1.5 text-caption transition-colors',
-              satisfied
-                ? 'text-foreground'
-                : showErrors
-                  ? 'text-destructive'
-                  : 'text-muted-foreground',
-            )}
-          >
-            {satisfied ? (
-              <CircleCheck
-                key="satisfied"
-                className="size-3.5 text-primary motion-safe:auth-pop"
-                strokeWidth={2}
-              />
-            ) : (
-              <Circle key="pending" className="size-3.5" strokeWidth={1.5} />
-            )}
-            {rule.label}
-          </li>
-        )
-      })}
-    </ul>
+    <div className="fg-pw" data-level={level}>
+      <div aria-hidden className="fg-pw__meter">
+        {PASSWORD_RULES.map((rule, index) => (
+          <i key={rule.key} className={index < level ? 'is-on' : undefined} />
+        ))}
+      </div>
+      <ul aria-label="비밀번호 조건" className="fg-pw__rules">
+        {PASSWORD_RULES.map((rule) => {
+          const satisfied = rule.test(value)
+          return (
+            <li
+              key={rule.key}
+              className={cn('fg-pw__r', satisfied ? 'is-ok' : showErrors && 'is-bad')}
+            >
+              <i aria-hidden>
+                <svg viewBox="0 0 18 18">
+                  <path d="M5 9.3l2.6 2.6L13 6.5" />
+                </svg>
+              </i>
+              {rule.label}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }

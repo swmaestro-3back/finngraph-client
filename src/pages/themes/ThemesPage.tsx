@@ -1,8 +1,9 @@
-import { AlignJustify, LayoutGrid, SlidersHorizontal, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { FilterChip } from '@/components/fg/FilterChip'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { Pager } from '@/components/fg/Pager'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -56,8 +57,8 @@ import { useThemesCached } from '@/lib/queries/useThemesCached'
 import { useThemeStocks } from '@/lib/queries/useThemeStocks'
 
 const VIEW_OPTIONS: readonly TabOption<ThemeView>[] = [
-  { value: 'map', label: '지도', icon: <LayoutGrid size={16} strokeWidth={1.75} aria-hidden="true" /> },
-  { value: 'table', label: '표', icon: <AlignJustify size={16} strokeWidth={1.75} aria-hidden="true" /> },
+  { value: 'map', label: '히트맵', icon: <LucianIcon name="grid" size={16} /> },
+  { value: 'table', label: '표', icon: <LucianIcon name="list" size={16} /> },
 ]
 const SORT_OPTIONS: readonly TabOption<ThemeSort>[] = [
   { value: 'change', label: '등락률 순' },
@@ -71,7 +72,7 @@ const MOVE_OPTIONS: readonly { value: ThemeMove | null; label: string }[] = [
 const SUB = '같은 이슈로 묶인 종목 그룹이에요 · 테마 등락률은 테마 종목의 시가총액 가중 평균이에요'
 const FOOTNOTE =
   '등락률은 테마 지수 기준 · 시가총액 가중(종목당 최대 25%) · 거래대금은 테마 종목 합 · 주도주는 테마가 움직인 방향으로 오늘 가장 크게 움직인 종목이에요(추천이 아니에요)'
-const MAP_LABEL = '테마 지도. 칸 크기는 등락률 크기, 색은 오늘 등락률이에요'
+const MAP_LABEL = '테마 히트맵. 칸 크기는 등락률 크기, 색은 오늘 등락률이에요'
 
 interface ThemePick {
   id: number
@@ -433,7 +434,7 @@ export default function ThemesPage() {
                       aria-expanded={filterOpen}
                       onClick={openFilter}
                     >
-                      <SlidersHorizontal size={16} strokeWidth={1.75} aria-hidden="true" />
+                      <LucianIcon name="filter" size={16} state={filterBadge > 0 ? 'on' : 'off'} />
                       필터
                       {filterBadge > 0 && <span className="fg-tbtn__count fg-num">{filterBadge}</span>}
                     </button>

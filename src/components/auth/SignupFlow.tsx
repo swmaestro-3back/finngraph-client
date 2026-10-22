@@ -1,14 +1,15 @@
-import { useState, type FormEvent } from 'react'
-import { LoaderCircle, ShieldCheck } from 'lucide-react'
+// Lucian UX/UI Prompt #093 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#093
+import { useState, type CSSProperties, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthField } from '@/components/auth/AuthField'
+import { CodeInput } from '@/components/auth/CodeInput'
 import { ConsentStep } from '@/components/auth/ConsentStep'
 import { FormNotice } from '@/components/auth/FormNotice'
 import { KakaoSignIn } from '@/components/auth/KakaoSignIn'
+import { LockNotice } from '@/components/auth/LockNotice'
 import { PasswordField, PasswordRules } from '@/components/auth/PasswordField'
 import { StepIndicator } from '@/components/auth/StepIndicator'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { ApiError, postData } from '@/lib/api'
 import type { AuthTokenRes } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
@@ -44,6 +45,25 @@ const HEADINGS: Record<Exclude<Step, 'done'>, { title: string; body: string }> =
   account: { title: '계정 정보 입력', body: '로그인에 사용할 비밀번호와 닉네임을 정해 주세요.' },
 }
 
+const CONFETTI_COLORS = [
+  'var(--action-primary)',
+  'var(--feedback-success)',
+  'var(--feedback-warning)',
+  '#ff8fb1',
+  '#4f8dff',
+]
+
+const CONFETTI = Array.from({ length: 14 }, (_, index) => {
+  const angle = (index / 14) * Math.PI * 2 - Math.PI / 2
+  const distance = 64 + (index % 3) * 14
+  return {
+    '--dx': `${Math.round(Math.cos(angle) * distance)}px`,
+    '--dy': `${Math.round(Math.sin(angle) * distance * 0.8)}px`,
+    '--r': `${(index % 2 ? 1 : -1) * (90 + index * 23)}deg`,
+    '--c': CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+  } as CSSProperties
+})
+
 interface SignupFlowProps {
   next: string
   initialEmail?: string
@@ -73,6 +93,7 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
   const [codeDeadline, setCodeDeadline] = useState<number | null>(null)
   const [resendDeadline, setResendDeadline] = useState<number | null>(null)
   const [lockedUntil, setLockedUntil] = useState<number | null>(null)
+  const [codeShake, setCodeShake] = useState(0)
 
   const codeSeconds = useCountdown(codeDeadline)
   const resendSeconds = useCountdown(resendDeadline)
@@ -115,6 +136,7 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
       case 'VERIFICATION_CODE_MISMATCH': {
         const remaining = remainingAttempts(err.details)
         setCode('')
+        setCodeShake((value) => value + 1)
         if (remaining === 0) {
           setCodeExpired(true)
           setFormError('시도 횟수를 모두 사용했어요. 코드를 다시 받아 주세요')
@@ -229,45 +251,38 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
 
   if (step === 'done') {
     return (
-      <div className="flex flex-col items-center text-center">
-        <span className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground motion-safe:auth-pop">
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden
-            className="size-8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12.5 10 17.5 19 7" className="motion-safe:auth-draw" />
-          </svg>
-        </span>
-        <h1
-          className="mt-6 text-display font-semibold tracking-[-0.8px] text-foreground motion-safe:auth-rise"
-          style={{ animationDelay: '280ms' }}
-        >
+      <div className="fg-done">
+        <div className="fg-done__stage">
+          {CONFETTI.map((style, index) => (
+            <span key={index} aria-hidden className="fg-done__p" style={style} />
+          ))}
+          <span className="fg-done__bdg">
+            <svg viewBox="0 0 24 24" aria-hidden>
+              <path d="M5 12.5 10 17.5 19 7" />
+            </svg>
+          </span>
+        </div>
+        <h1 className="fg-au-title mt-4 motion-safe:auth-rise" style={{ animationDelay: '280ms' }}>
           가입을 완료했어요
         </h1>
         <p
-          className="mt-3 text-body leading-relaxed text-foreground-secondary break-keep [text-wrap:pretty] motion-safe:auth-rise"
+          className="fg-au-sub mt-3 max-w-[340px] [text-wrap:pretty] motion-safe:auth-rise"
           style={{ animationDelay: '360ms' }}
         >
           {nickname.trim()}님, 환영해요. 관심 종목을 등록하고 오늘 시장이 움직인 이유를 확인해
           보세요.
         </p>
         <div className="mt-8 w-full motion-safe:auth-rise" style={{ animationDelay: '440ms' }}>
-          <Button
-            size="lg"
-            className="h-10 w-full"
+          <button
+            type="button"
+            className="fg-au-go"
             onClick={() => navigate(next, { replace: true })}
           >
             finngraph 시작하기
-          </Button>
-          <Button variant="ghost" className="mt-2 w-full" asChild>
-            <Link to="/stocks">관심 종목 찾아보기</Link>
-          </Button>
+          </button>
+          <Link to="/stocks" className="fg-done__more">
+            관심 종목 찾아보기
+          </Link>
         </div>
       </div>
     )
@@ -291,10 +306,13 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
       {info && <FormNotice tone="info">{info}</FormNotice>}
       {formError && <FormNotice tone="error">{formError}</FormNotice>}
       {locked && (
-        <FormNotice tone="error">
-          요청이 너무 잦아요. <span className="font-mono tabular-nums">{lockSeconds}</span>초 후
-          다시 시도할 수 있어요
-        </FormNotice>
+        <LockNotice seconds={lockSeconds}>
+          요청이 너무 잦아요.{' '}
+          <span key={lockSeconds} className="fg-au-lock__n">
+            {lockSeconds}
+          </span>
+          초 후 다시 시도할 수 있어요
+        </LockNotice>
       )}
     </>
   )
@@ -303,10 +321,8 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
   return (
     <div>
       <StepIndicator steps={STEP_LABELS} current={STEP_ORDER.indexOf(step)} />
-      <h1 className="mt-7 text-display font-semibold tracking-[-0.8px] text-foreground">
-        {heading.title}
-      </h1>
-      <p className="mt-2 text-body text-foreground-secondary break-keep">{heading.body}</p>
+      <h1 className="fg-au-title mt-8">{heading.title}</h1>
+      <p className="fg-au-sub">{heading.body}</p>
 
       <div
         key={step}
@@ -320,9 +336,9 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
         {step === 'consent' && (
           <>
             <ConsentStep value={consent} onChange={setConsent} onNext={() => go('verify')} />
-            <p className="mt-8 text-center text-body text-muted-foreground">
+            <p className="fg-au-alt">
               이미 계정이 있으신가요?{' '}
-              <Link to="/login" state={{ next }} className="font-medium text-primary hover:underline">
+              <Link to="/login" state={{ next }}>
                 로그인
               </Link>
             </p>
@@ -344,49 +360,25 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
                 label="이메일"
                 error={fieldErrors.email}
                 hint={!sent ? '이 주소로 인증 코드가 발송돼요.' : undefined}
-              >
-                <div className="flex gap-2">
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    className="h-10 flex-1"
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                    autoFocus={!sent}
-                    value={email}
-                    onChange={(event) => {
-                      setEmail(event.target.value)
-                      if (sent) {
-                        setSent(false)
-                        setCode('')
-                        setCodeExpired(false)
-                        setCodeDeadline(null)
-                        setResendDeadline(null)
-                        resetMessages()
-                      }
-                    }}
-                    disabled={submitting || verified}
-                    aria-invalid={fieldErrors.email ? true : undefined}
-                    aria-describedby={describedBy('signup-email', fieldErrors.email, !sent)}
-                    required
-                  />
-                  {!verified && (
-                    <Button
+                ok={verified || (sent && isEmailValid(email))}
+                action={
+                  !verified && (
+                    <button
                       type="button"
-                      variant={sent ? 'outline' : 'default'}
-                      className="h-10 shrink-0 px-3.5"
+                      className={cn('fg-au-btn2', !sent && 'is-ink')}
                       disabled={submitting || locked || (sent && resendSeconds > 0)}
+                      aria-busy={busy === 'send' || undefined}
                       onClick={() => void sendCode()}
                     >
                       {busy === 'send' ? (
                         <>
-                          <LoaderCircle className="animate-spin" />
+                          <span aria-hidden className="fg-au-spin" />
                           보내는 중
                         </>
                       ) : sent ? (
                         resendSeconds > 0 ? (
                           <span>
-                            다시 받기 <span className="font-mono tabular-nums">{resendSeconds}</span>초
+                            다시 받기 <span className="tabular-nums">{resendSeconds}</span>초
                           </span>
                         ) : (
                           '다시 받기'
@@ -394,77 +386,97 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
                       ) : (
                         '인증 코드 받기'
                       )}
-                    </Button>
-                  )}
-                </div>
+                    </button>
+                  )
+                }
+              >
+                <input
+                  id="signup-email"
+                  type="email"
+                  className="fg-af__in"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  autoFocus={!sent}
+                  value={email}
+                  onChange={(event) => {
+                    setEmail(event.target.value)
+                    if (sent) {
+                      setSent(false)
+                      setCode('')
+                      setCodeExpired(false)
+                      setCodeDeadline(null)
+                      setResendDeadline(null)
+                      resetMessages()
+                    }
+                  }}
+                  disabled={submitting || verified}
+                  aria-invalid={fieldErrors.email ? true : undefined}
+                  aria-describedby={describedBy('signup-email', fieldErrors.email, !sent)}
+                  required
+                />
               </AuthField>
 
               {sent && !verified && (
                 <AuthField
                   id="signup-code"
                   label="인증 코드"
+                  variant="plain"
                   error={fieldErrors.code}
                   hint={`메일로 받은 ${CODE_LENGTH}자리 숫자를 입력하면 자동으로 확인돼요.`}
+                  trailing={
+                    <span aria-live="polite" className={cn('fg-code__timer', expired && 'is-exp')}>
+                      {expired ? '만료' : formatCountdown(codeSeconds)}
+                    </span>
+                  }
                 >
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        id="signup-code"
-                        className="h-10 pr-16 font-mono tracking-widest tabular-nums"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        pattern="[0-9]*"
-                        maxLength={CODE_LENGTH}
-                        placeholder="000000"
-                        autoFocus
-                        value={code}
-                        onChange={(event) => handleCodeChange(event.target.value)}
-                        disabled={submitting || expired || locked}
-                        aria-invalid={fieldErrors.code ? true : undefined}
-                        aria-describedby={describedBy('signup-code', fieldErrors.code, true)}
-                      />
-                      <span
-                        aria-live="polite"
-                        className={cn(
-                          'pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 font-mono text-caption tabular-nums',
-                          expired ? 'text-destructive' : 'text-muted-foreground',
-                        )}
-                      >
-                        {expired ? '만료' : formatCountdown(codeSeconds)}
-                      </span>
-                    </div>
-                    <Button
+                  <div className="fg-af__row">
+                    <CodeInput
+                      id="signup-code"
+                      length={CODE_LENGTH}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]*"
+                      placeholder="000000"
+                      autoFocus
+                      value={code}
+                      onChange={(event) => handleCodeChange(event.target.value)}
+                      disabled={submitting || expired || locked}
+                      invalid={fieldErrors.code !== undefined}
+                      checking={busy === 'confirm'}
+                      shake={codeShake}
+                      aria-invalid={fieldErrors.code ? true : undefined}
+                      aria-describedby={describedBy('signup-code', fieldErrors.code, true)}
+                    />
+                    <button
                       type="button"
-                      className="h-10 shrink-0 px-3.5"
+                      className="fg-au-btn2"
                       disabled={submitting || expired || locked || !isCodeComplete(code)}
+                      aria-busy={busy === 'confirm' || undefined}
                       onClick={() => void confirmCode(code)}
                     >
-                      {busy === 'confirm' ? <LoaderCircle className="animate-spin" /> : '확인'}
-                    </Button>
+                      {busy === 'confirm' ? <span aria-hidden className="fg-au-spin" /> : '확인'}
+                    </button>
                   </div>
                 </AuthField>
               )}
 
               {verified && (
-                <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5 motion-safe:auth-rise">
-                  <ShieldCheck
-                    className="size-4 shrink-0 text-primary motion-safe:auth-pop"
-                    strokeWidth={2}
-                  />
-                  <p className="text-body font-medium text-foreground">이메일 인증을 완료했어요</p>
+                <div className="fg-au-verified">
+                  <i aria-hidden>
+                    <LucianIcon name="verified" size={14} weight={2.4} />
+                  </i>
+                  <p>이메일 인증을 완료했어요</p>
                 </div>
               )}
 
               {notices}
 
-              <Button type="submit" size="lg" disabled={!verified} className="mt-1 h-10 w-full">
+              <button type="submit" disabled={!verified} className="fg-au-go">
                 다음
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="self-start text-muted-foreground"
+                className="fg-au-ghost"
                 disabled={submitting}
                 onClick={() => {
                   resetMessages()
@@ -472,7 +484,7 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
                 }}
               >
                 이전
-              </Button>
+              </button>
             </form>
 
             {!sent && <KakaoSignIn next={next} disabled={submitting} />}
@@ -481,16 +493,20 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
 
         {step === 'account' && (
           <form noValidate onSubmit={signup} className="flex flex-col gap-5">
-            <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5">
-              <ShieldCheck className="size-4 shrink-0 text-primary" strokeWidth={2} />
-              <p className="min-w-0 flex-1 truncate text-body font-medium text-foreground">{email}</p>
-              <span className="shrink-0 text-caption font-medium text-primary">인증 완료</span>
+            <div className="fg-au-mail">
+              <LucianIcon name="verified" size={18} weight={2} />
+              <p>{email}</p>
+              <span>인증 완료</span>
             </div>
 
-            <AuthField id="signup-password" label="비밀번호" error={fieldErrors.password}>
+            <AuthField
+              id="signup-password"
+              label="비밀번호"
+              error={fieldErrors.password}
+              after={<PasswordRules value={password} showErrors={attempted} />}
+            >
               <PasswordField
                 id="signup-password"
-                className="h-10"
                 autoComplete="new-password"
                 autoFocus
                 value={password}
@@ -500,7 +516,6 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
                 aria-describedby={describedBy('signup-password', fieldErrors.password)}
                 required
               />
-              <PasswordRules value={password} showErrors={attempted} />
             </AuthField>
 
             <AuthField
@@ -510,10 +525,10 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
                 fieldErrors.passwordConfirm ??
                 (confirmMismatch ? '비밀번호가 일치하지 않아요' : undefined)
               }
+              ok={passwordConfirm.length > 0 && !confirmMismatch}
             >
               <PasswordField
                 id="signup-password-confirm"
-                className="h-10"
                 autoComplete="new-password"
                 value={passwordConfirm}
                 onChange={(event) => setPasswordConfirm(event.target.value)}
@@ -532,15 +547,12 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
               label="닉네임"
               error={fieldErrors.nickname}
               hint="다른 사용자에게 보이는 이름이에요."
-              trailing={
-                <span className="font-mono text-caption tabular-nums text-muted-foreground">
-                  {nickname.trim().length}/{NICKNAME_MAX_LENGTH}
-                </span>
-              }
+              trailing={`${nickname.trim().length}/${NICKNAME_MAX_LENGTH}`}
             >
-              <Input
+              <input
                 id="signup-nickname"
-                className="h-10"
+                className="fg-af__in"
+                placeholder=" "
                 autoComplete="nickname"
                 maxLength={NICKNAME_MAX_LENGTH}
                 value={nickname}
@@ -554,21 +566,26 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
 
             {notices}
 
-            <Button type="submit" size="lg" disabled={submitting || locked} className="mt-1 h-10 w-full">
-              {busy === 'signup' ? (
-                <>
-                  <LoaderCircle className="animate-spin" />
-                  가입하는 중…
-                </>
-              ) : (
-                '가입하기'
-              )}
-            </Button>
-            <Button
+            <button
+              type="submit"
+              disabled={submitting || locked}
+              aria-busy={busy === 'signup' || undefined}
+              className="fg-au-go"
+            >
+              <span key={busy === 'signup' ? 'busy' : 'idle'} className="fg-au-go__in">
+                {busy === 'signup' ? (
+                  <>
+                    <span aria-hidden className="fg-au-spin" />
+                    가입하는 중…
+                  </>
+                ) : (
+                  '가입하기'
+                )}
+              </span>
+            </button>
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="self-start text-muted-foreground"
+              className="fg-au-ghost"
               disabled={submitting}
               onClick={() => {
                 resetMessages()
@@ -576,7 +593,7 @@ export function SignupFlow({ next, initialEmail = '', onCompleted }: SignupFlowP
               }}
             >
               이전
-            </Button>
+            </button>
           </form>
         )}
       </div>

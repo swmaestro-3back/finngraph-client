@@ -1,7 +1,10 @@
 import { useMemo, useState, type PointerEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+// Lucian UX/UI Prompt #096 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#096
+// Lucian UX/UI Prompt #299 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#299
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { ShareBar } from '@/components/fg/ShareBar'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { RetryNote } from '@/components/fg/RetryText'
 import { getData } from '@/lib/api'
@@ -119,6 +122,10 @@ function ReturnPlot({ data, name, period, scope }: ReturnPlotProps) {
   const basketNow = day === null ? total : (data.points[hover ?? 0]?.value ?? null)
   const counted = day === null ? data.stocks.length : data.stocks.filter((stock) => valueOn(stock.points, day) !== null).length
   const lead = data.stocks[0]
+  const end = data.points[data.points.length - 1]?.value ?? null
+  const valueOf = (stock: MemberReturnRes) => (day === null ? stock.total : valueOn(stock.points, day))
+  const valueMax = Math.max(0, ...data.stocks.map((stock) => Math.abs(valueOf(stock) ?? 0)))
+  const tagAt = hover === null ? 0 : hover / geometry.last
   const weak = data.stocks[data.stocks.length - 1]
 
   const track = (event: PointerEvent<HTMLDivElement>) => {
@@ -130,7 +137,7 @@ function ReturnPlot({ data, name, period, scope }: ReturnPlotProps) {
   const lineState = (ticker: string) => (focus === null ? undefined : focus === ticker ? 'is-on' : 'is-dim')
 
   const row = (stock: MemberReturnRes) => {
-    const value = day === null ? stock.total : valueOn(stock.points, day)
+    const value = valueOf(stock)
     const part = value === null || counted === 0 ? null : value / counted
     const clear = () => setFocus(null)
     return (
@@ -148,7 +155,12 @@ function ReturnPlot({ data, name, period, scope }: ReturnPlotProps) {
           <CompanyLogo name={stock.name} ticker={stock.ticker} size={20} />
           <span className="fg-mine__movername">{stock.name}</span>
           <b className={cn('fg-mine__moverchg fg-num', toneClass(value))}>{value === null ? '–' : formatChange(value)}</b>
-          <span className="fg-mine__moverpart fg-num">{part === null ? '' : `기여 ${formatChange(part)}p`}</span>
+          <span className="fg-mine__moverpart fg-num">
+            {part === null ? '' : `기여 ${formatChange(part)}p`}
+            {value !== null && valueMax > 0 && (
+              <ShareBar value={Math.abs(value) / valueMax} tone={value >= 0 ? 'up' : 'down'} className="fg-mine__partbar" />
+            )}
+          </span>
         </Link>
       </li>
     )
@@ -210,6 +222,23 @@ function ReturnPlot({ data, name, period, scope }: ReturnPlotProps) {
                 }}
                 aria-hidden="true"
               />
+            )}
+            {hover === null && end !== null && (
+              <span
+                className={cn('fg-mine__chartdot', `fg-mine__chartdot--${tone}`, 'fg-mine__chartdot--end')}
+                style={{ left: '100%', top: `${((geometry.y(end) / VIEW_H) * 100).toFixed(2)}%` }}
+                aria-hidden="true"
+              />
+            )}
+            {hover !== null && basketNow !== null && (
+              <span
+                className="fg-mine__charttag fg-num"
+                data-edge={tagAt < 0.12 ? 'start' : tagAt > 0.88 ? 'end' : undefined}
+                style={{ left: `${(tagAt * 100).toFixed(2)}%` }}
+                aria-hidden="true"
+              >
+                {formatChange(basketNow)}
+              </span>
             )}
           </div>
           <div className="fg-mine__chartx fg-num" aria-hidden="true">

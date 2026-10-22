@@ -25,6 +25,7 @@ import {
   RowSkeleton,
   Section,
 } from '@/components/graph/DetailParts'
+import { CALM_PRIMARY } from '@/components/graph/glass'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -95,7 +96,7 @@ export function EventDetail({
 
       {onShowSharing && (
         <div className="mb-5">
-          <Button size="sm" className="w-full" onClick={onShowSharing}>
+          <Button size="sm" className={cn(CALM_PRIMARY, 'w-full')} onClick={onShowSharing}>
             <Share2 data-icon="inline-start" />
             이 이벤트를 공유하는 기업
           </Button>
@@ -121,7 +122,7 @@ export function EventDetail({
                     <div className="font-mono text-caption text-muted-foreground">
                       {formatShortDateTime(a.publishedAt)}
                       {a.id === representativeId && (
-                        <span className="ml-1.5 font-sans font-semibold text-foreground">대표 기사</span>
+                        <span className="fg-badge fg-gtag ml-1.5">대표 기사</span>
                       )}
                     </div>
                     {a.id === representativeId && issueHref ? (

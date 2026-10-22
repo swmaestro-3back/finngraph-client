@@ -1,5 +1,6 @@
 import { Lock } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { SEG_ITEM } from '@/components/graph/glass'
 import { HOP_VALUES, type Hop } from '@/lib/graphRoute'
 import { cn } from '@/lib/utils'
 
@@ -24,13 +25,13 @@ export function HopSelector({ value, onChange, labels, lockedFrom, onLockedSelec
   const isLocked = (hop: Hop) => lockedFrom !== undefined && hop >= lockedFrom
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur">
+    <div className="fg-glass flex items-center gap-2 py-1 pr-1 pl-3">
       <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground">
         Hop
       </span>
       <ToggleGroup
         type="single"
-        slidingMark="rounded-md bg-primary"
+        slidingMark="fg-gmark"
         size="sm"
         spacing={0}
         value={String(value)}
@@ -58,7 +59,8 @@ export function HopSelector({ value, onChange, labels, lockedFrom, onLockedSelec
               title={locked ? '로그인하면 열려요' : undefined}
               // 켜짐 = 채운 배경 (그래프 관계 필터 칩과 같은 규칙)
               className={cn(
-                'rounded-md px-2.5 font-mono text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
+                SEG_ITEM,
+                'font-mono',
                 itemClassName,
               )}
             >

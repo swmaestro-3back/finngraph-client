@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { Star } from 'lucide-react'
 import { Button, ButtonLink } from '@/components/fg/Button'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
 import { useMemberGate } from '@/lib/memberGate'
@@ -11,7 +11,7 @@ function Strip({ children, action, className }: { children: string; action: Reac
     <div className={cn('fg-section fg-cal-banner', className)}>
       <p className="fg-cal-banner__text">
         <span className="fg-cal-banner__icon" aria-hidden="true">
-          <Star size={16} strokeWidth={1.75} />
+          <LucianIcon name="star" size={16} />
         </span>
         {children}
       </p>

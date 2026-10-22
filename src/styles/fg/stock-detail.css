@@ -661,22 +661,6 @@
   font: 500 13px/19px var(--font-sans);
   color: var(--text-secondary);
 }
-.fg-stp__bar {
-  position: relative;
-  height: 4px;
-  border-radius: var(--radius-chip);
-  background: var(--border-default);
-}
-.fg-stp__mid {
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  width: 2px;
-  height: 12px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--text-tertiary);
-}
 .fg-sks__flow {
   margin: 0;
   font: 400 14px/21px var(--font-sans);

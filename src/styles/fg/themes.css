@@ -56,7 +56,7 @@
 .fg-ttools__active {
   flex-basis: 100%;
 }
-.fg-ttools .fg-seg button:has(> svg) {
+.fg-ttools .fg-seg button:has(> svg, > .fg-li) {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);

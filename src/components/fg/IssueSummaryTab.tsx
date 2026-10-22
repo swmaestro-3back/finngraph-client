@@ -7,6 +7,7 @@ import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { EvidenceSheet } from '@/components/fg/EvidenceSheet'
 import { IssueTreeGraph } from '@/components/fg/IssueTreeGraph'
+import { LogoStack } from '@/components/fg/LogoStack'
 import { MemberGate } from '@/components/fg/MemberGate'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { QuoteRetryNote, RetryText } from '@/components/fg/RetryText'
@@ -438,6 +439,11 @@ function StocksRail({ issue, linked, onRetryQuotes }: StocksRailProps) {
       <div className="fg-irail__news">
         <span className="fg-irail__label fg-num">
           <span>뉴스에 나온 종목</span>
+          {rail.stocks.length > 0 && (
+            <span className="fg-irail__stack" aria-hidden="true">
+              <LogoStack items={rail.stocks} />
+            </span>
+          )}
           <span className="fg-irail__count">{`${rail.stocks.length}개`}</span>
         </span>
         {rail.stocks.length > 0 ? (

@@ -2,6 +2,7 @@ import { useId } from 'react'
 import { ChevronRight, FileText, Layers, Lock, Search, Share2 } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { GraphBackdrop } from '@/components/graph/GraphBackdrop'
+import { CALM_OUTLINE, CALM_PRIMARY } from '@/components/graph/glass'
 import { Button } from '@/components/ui/button'
 import type { GraphFocus } from '@/data/graphTypes'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -36,7 +37,7 @@ export function GraphLocked({ focus, ready }: Props) {
         type="button"
         onClick={() => navigate('/graph')}
         aria-label={`${name} — 다른 기업 고르기`}
-        className="absolute top-3 left-3 z-10 flex h-10.5 max-w-[calc(100%-1.5rem)] cursor-pointer items-center gap-2 rounded-lg border border-border bg-background/90 pr-3 pl-3 shadow-soft backdrop-blur hover:border-border-strong md:h-11.5 md:pr-3.5"
+        className="absolute top-3 left-3 z-10 flex h-10.5 max-w-[calc(100%-1.5rem)] cursor-pointer items-center gap-2 fg-glass fg-gorigin pr-3.5 pl-4 md:h-11.5 md:pr-4"
       >
         <span className="min-w-0 truncate text-body font-semibold text-foreground md:text-[15px]">{name}</span>
         <span className="shrink-0 font-mono text-caption text-muted-foreground">
@@ -51,7 +52,7 @@ export function GraphLocked({ focus, ready }: Props) {
             'absolute z-10 flex flex-col gap-4 bg-background text-foreground',
             isMobile
               ? 'inset-x-0 bottom-0 rounded-t-2xl px-4 pt-5 pb-5 shadow-[0_-12px_28px_-8px_rgb(0_0_0/0.25)] animate-in fade-in-0 slide-in-from-bottom-6 duration-300 motion-reduce:animate-none'
-              : 'top-1/2 left-1/2 w-[min(26rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-[0_24px_48px_-12px_rgb(0_0_0/0.3)] animate-in fade-in-0 zoom-in-95 duration-200 motion-reduce:animate-none',
+              : 'fg-gcard top-1/2 left-1/2 w-[min(26rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] p-6 shadow-[0_0_0_1px_var(--border-divider),0_30px_60px_-30px_var(--shadow-strong-color)]',
           )}
         >
           <div className="flex flex-col gap-1.5">
@@ -67,7 +68,7 @@ export function GraphLocked({ focus, ready }: Props) {
                 : '이 기업과 공급·투자·이벤트로 이어진 곳을 한 화면에 모아 보여 드려요.'}
             </p>
           </div>
-          <ul className="m-0 flex list-none flex-col gap-2.5 rounded-xl bg-muted px-3.5 py-3">
+          <ul className="m-0 flex list-none flex-col gap-2.5 rounded-[18px] bg-muted px-3.5 py-3">
             {PERKS.map(({ Icon, title, text }) => (
               <li key={title} className="flex items-start gap-2.5">
                 <Icon className="mt-0.5 size-4 shrink-0 text-primary" strokeWidth={2} />
@@ -79,10 +80,10 @@ export function GraphLocked({ focus, ready }: Props) {
             ))}
           </ul>
           <div className="grid grid-cols-2 gap-2">
-            <Button size="lg" onClick={() => navigate('/login', { state: { next } })}>
+            <Button size="lg" className={cn(CALM_PRIMARY, 'h-10')} onClick={() => navigate('/login', { state: { next } })}>
               로그인하고 보기
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/signup', { state: { next } })}>
+            <Button size="lg" variant="outline" className={cn(CALM_OUTLINE, 'h-10')} onClick={() => navigate('/signup', { state: { next } })}>
               회원가입
             </Button>
           </div>

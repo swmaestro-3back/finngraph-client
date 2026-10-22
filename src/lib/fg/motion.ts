@@ -1,7 +1,12 @@
+// Lucian UX/UI Prompt #048 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#048
 export const MOTION_FAST_MS = 120
 export const MOTION_BASE_MS = 200
 export const MOTION_SLOW_MS = 320
 export const MOTION_EASE = 'cubic-bezier(0.2, 0, 0, 1)'
+export const MOTION_SPRING_MS = 500
+export const MOTION_SPRING = 'cubic-bezier(0.34, 1.45, 0.64, 1)'
+export const MOTION_STRETCH_MS = 550
+export const MOTION_EASE_OUT = 'cubic-bezier(0.2, 0.8, 0.2, 1)'
 
 export const ROUTE_ENTER: Keyframe[] = [
   { opacity: 0, transform: 'translateY(8px)' },
@@ -31,6 +36,16 @@ export function spanTransform(span: Span): string {
 export function slideFrom(prev: Span, next: Span): string {
   const scale = next.width > 0 ? prev.width / next.width : 1
   return `translateX(${prev.left}px) scaleX(${Number(scale.toFixed(4))})`
+}
+
+export function stretchFrames(prev: Span, next: Span): Keyframe[] {
+  const left = Math.min(prev.left, next.left)
+  const right = Math.max(prev.left + prev.width, next.left + next.width)
+  return [
+    { transform: slideFrom(prev, next), offset: 0 },
+    { transform: slideFrom({ left, width: right - left }, next), offset: 0.45 },
+    { transform: spanTransform(next), offset: 1 },
+  ]
 }
 
 export function sameSpan(a: Span | null, b: Span): boolean {

@@ -103,13 +103,15 @@ export interface PositionRow {
   lowFirst: boolean
   rank: number | null
   count: number
-  position: number | null
+  topPct: number | null
   note: string | null
 }
 
-function positionOf(metric: Pick<PeerMetricRes, 'rank' | 'count'>): number | null {
-  if (metric.rank === null) return null
-  return metric.count <= 1 ? 0 : (metric.rank - 1) / (metric.count - 1)
+export const POSITION_TOP_TIER = 25
+
+function topPctOf(metric: Pick<PeerMetricRes, 'rank' | 'count'>): number | null {
+  if (metric.rank === null || metric.count < 1) return null
+  return Math.max(1, Math.round((metric.rank / metric.count) * 100))
 }
 
 export function positionRows(metrics: StockThemeCompareRes['metrics']): PositionRow[] {
@@ -121,7 +123,7 @@ export function positionRows(metrics: StockThemeCompareRes['metrics']): Position
       lowFirst,
       rank: metric.rank,
       count: metric.count,
-      position: positionOf(metric),
+      topPct: topPctOf(metric),
       note: metric.rank !== null ? null : metric.value === null ? '값이 없어요' : '견줄 종목이 적어요',
     }
   })

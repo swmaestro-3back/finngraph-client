@@ -9,6 +9,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { GLASS_BUTTON, SEG_ITEM } from '@/components/graph/glass'
 import { INDEX_SCOPES, MARKET_SCOPES, SCOPE_LABELS, type Scope } from '@/lib/graphRoute'
 import { cn } from '@/lib/utils'
 
@@ -19,8 +20,7 @@ interface Props {
   compact?: boolean
 }
 
-const ITEM =
-  'rounded-md px-2.5 font-mono text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground md:h-8 md:px-3 md:text-body'
+const ITEM = cn(SEG_ITEM, 'font-mono md:h-8 md:px-3 md:text-body')
 
 /**
  * 시장·지수를 한 그룹의 단일 선택으로 묶은 토글.
@@ -30,7 +30,7 @@ function ScopeToggle({ value, onChange, wrap = false }: Props & { wrap?: boolean
   return (
     <ToggleGroup
       type="single"
-        slidingMark="rounded-md bg-primary"
+      slidingMark="fg-gmark"
       size="sm"
       spacing={0}
       value={value}
@@ -72,7 +72,7 @@ export function ScopeSelector({ value, onChange, compact = false }: Props) {
           size="icon-lg"
           onClick={() => setOpen(true)}
           aria-label="탐색 범위"
-          className="relative bg-background/90 shadow-soft backdrop-blur"
+          className={cn(GLASS_BUTTON, 'relative')}
         >
           <SlidersHorizontal className="size-[18px]" strokeWidth={2} />
           {/* 전체가 아니면 점을 찍어 필터가 걸려 있음을 알린다 */}
@@ -103,7 +103,7 @@ export function ScopeSelector({ value, onChange, compact = false }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-background/90 py-1.5 pr-1.5 pl-2.5 shadow-soft backdrop-blur">
+    <div className="fg-glass flex items-center gap-2 py-1 pr-1 pl-3">
       <span className="text-caption font-semibold tracking-[0.5px] text-muted-foreground md:text-xs">
         범위
       </span>

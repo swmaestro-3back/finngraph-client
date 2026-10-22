@@ -1,11 +1,29 @@
+// Lucian UX/UI Prompt #048 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#048
+// Lucian UX/UI Prompt #096 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#096
 import { useLayoutEffect, useRef, type RefObject } from 'react'
-import { MOTION_BASE_MS, MOTION_EASE, motionAllowed, sameSpan, slideFrom, spanTransform, type Span } from '@/lib/fg/motion'
+import {
+  MOTION_BASE_MS,
+  MOTION_EASE,
+  MOTION_EASE_OUT,
+  MOTION_SPRING,
+  MOTION_SPRING_MS,
+  MOTION_STRETCH_MS,
+  motionAllowed,
+  sameSpan,
+  slideFrom,
+  spanTransform,
+  stretchFrames,
+  type Span,
+} from '@/lib/fg/motion'
+
+export type MarkMotion = 'base' | 'spring' | 'stretch'
 
 interface SlidingMarkOptions {
   items?: string
   active?: string
   memory?: string
   fit?: boolean
+  motion?: MarkMotion
 }
 
 const remembered = new Map<string, Span>()
@@ -20,7 +38,7 @@ export function useSlidingMark(
   listRef: RefObject<HTMLElement | null>,
   markRef: RefObject<HTMLElement | null>,
   selection: number | string | null,
-  { items = '[role="tab"]', active, memory, fit = false }: SlidingMarkOptions = {},
+  { items = '[role="tab"]', active, memory, fit = false, motion = 'base' }: SlidingMarkOptions = {},
 ): void {
   const shown = useRef<Span | null>(null)
   const row = useRef<number | null>(null)
@@ -60,9 +78,14 @@ export function useSlidingMark(
       mark.style.width = `${next.width}px`
       mark.style.transform = spanTransform(next)
       if (!slide || moved || prev === null || sameSpan(prev, next) || !motionAllowed()) return
+      if (motion === 'stretch') {
+        mark.animate(stretchFrames(prev, next), { duration: MOTION_STRETCH_MS, easing: MOTION_EASE_OUT })
+        return
+      }
+      const spring = motion === 'spring'
       mark.animate([{ transform: slideFrom(prev, next) }, { transform: spanTransform(next) }], {
-        duration: MOTION_BASE_MS,
-        easing: MOTION_EASE,
+        duration: spring ? MOTION_SPRING_MS : MOTION_BASE_MS,
+        easing: spring ? MOTION_SPRING : MOTION_EASE,
       })
     }
     place(true)
@@ -70,5 +93,5 @@ export function useSlidingMark(
     observer.observe(list)
     tabsOf().forEach((tab) => observer.observe(tab))
     return () => observer.disconnect()
-  }, [listRef, markRef, selection, items, active, memory, fit])
+  }, [listRef, markRef, selection, items, active, memory, fit, motion])
 }

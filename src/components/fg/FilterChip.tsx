@@ -1,3 +1,5 @@
+// Lucian UX/UI Prompt #019 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#019
+import { Check } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -9,6 +11,9 @@ interface FilterChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function FilterChip({ pressed, count = null, className, children, type = 'button', ...rest }: FilterChipProps) {
   return (
     <button type={type} className={cn('fg-filter', className)} aria-pressed={pressed} {...rest}>
+      <span className="fg-filter__check" aria-hidden="true">
+        <Check size={14} strokeWidth={2.6} />
+      </span>
       {children}
       {count !== null && <span className="fg-filter__count fg-num">{count}</span>}
     </button>

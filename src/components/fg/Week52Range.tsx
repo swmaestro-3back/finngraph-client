@@ -1,3 +1,5 @@
+// Lucian UX/UI Prompt #017 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#017
+import type { CSSProperties } from 'react'
 import { Badge } from '@/components/fg/Badge'
 import { formatGapPct, formatPriceWon } from '@/lib/fg/format'
 import { monthDayLabel } from '@/lib/fg/themeCharts'
@@ -55,8 +57,14 @@ export function Week52Range({
         aria-valuemax={high}
         aria-valuenow={Math.min(high, Math.max(low, price))}
         aria-valuetext={week52ValueText({ price, high, low })}
+        style={{ '--v': position.toFixed(3) } as CSSProperties}
       >
-        <span className="fg-w52__dot" style={{ left: `${(position * 100).toFixed(1)}%` }} />
+        {variant === 'full' && (
+          <span className="fg-w52__bub" aria-hidden="true">
+            <span>{formatPriceWon(price)}</span>
+          </span>
+        )}
+        <span className="fg-w52__dot" />
       </div>
     )
   const groupProps = { role: 'group', 'aria-label': week52GroupLabel(name, basis, asOf) } as const
@@ -127,5 +135,29 @@ export function Week52Range({
         </span>
       </div>
     </div>
+  )
+}
+
+interface Week52GaugeProps {
+  position: number
+  high?: boolean
+  barClassName: string
+}
+
+export function Week52Gauge({ position, high = false, barClassName }: Week52GaugeProps) {
+  const text = `지금 가격은 52주 최저~최고 사이 ${Math.round(position * 100)}% 위치예요`
+  return (
+    <span className="fg-w52g" title={text}>
+      <span className="fg-w52g__end" aria-hidden="true">
+        최저
+      </span>
+      <span className={barClassName} style={{ '--v': position.toFixed(3) } as CSSProperties} aria-hidden="true">
+        <i className={cn(high && 'is-high')} />
+      </span>
+      <span className="fg-w52g__end" aria-hidden="true">
+        최고
+      </span>
+      <span className="fg-sr">{text}</span>
+    </span>
   )
 }

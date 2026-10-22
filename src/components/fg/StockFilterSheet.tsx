@@ -1,6 +1,8 @@
-import { Search, X } from 'lucide-react'
+// Lucian UX/UI Prompt #305 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#305
+import { X } from 'lucide-react'
 import { useEffect, useMemo, useState, type RefObject } from 'react'
 import { Button } from '@/components/fg/Button'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { SideSheet } from '@/components/fg/SideSheet'
 import type { StockRowRes, ThemeRes } from '@/lib/apiTypes'
 import { filterStocks, themeTickerSet, type StockMarket, type ThemeFilter } from '@/lib/fg/stocks'
@@ -119,7 +121,7 @@ function ThemePicker({
   return (
     <>
       <label className="fg-sfilter__search">
-        <Search size={16} strokeWidth={1.75} aria-hidden="true" />
+        <LucianIcon name="search" size={16} />
         <span className="fg-sr">테마 이름 검색</span>
         <input
           type="text"
@@ -277,7 +279,7 @@ export function StockFilterSheet({
         <div className="fg-sfilter__name">
           <span className="fg-sfilter__label">종목 이름</span>
           <label className="fg-sfilter__search">
-            <Search size={16} strokeWidth={1.75} aria-hidden="true" />
+            <LucianIcon name="search" size={16} />
             <span className="fg-sr">종목 이름이나 종목코드</span>
             <input
               type="text"
@@ -321,14 +323,30 @@ export function StockFilterSheet({
           />
         </div>
         <p className="fg-sfilter__result" aria-live="polite">
-          {themeLoading ? '테마 종목을 불러오는 중이에요' : `조건에 맞는 종목 ${previewCount.toLocaleString('ko-KR')}개`}
+          {themeLoading ? (
+            '테마 종목을 불러오는 중이에요'
+          ) : (
+            <>
+              조건에 맞는 종목{' '}
+              <b key={previewCount} className="fg-roll fg-num">
+                {previewCount.toLocaleString('ko-KR')}
+              </b>
+              개
+            </>
+          )}
         </p>
         <div className="fg-sfilter__acts">
           <Button variant="tertiary" onClick={resetDraft}>
             초기화
           </Button>
           <Button variant="primary" onClick={apply} disabled={themeLoading} busy={themeLoading}>
-            결과 {previewCount.toLocaleString('ko-KR')}개 보기
+            <span>
+              결과{' '}
+              <span key={previewCount} className="fg-roll fg-num">
+                {previewCount.toLocaleString('ko-KR')}
+              </span>
+              개 보기
+            </span>
           </Button>
         </div>
       </div>

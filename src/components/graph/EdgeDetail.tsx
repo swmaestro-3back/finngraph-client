@@ -122,7 +122,7 @@ export function EdgeDetail({
           </span>
           <span className="flex items-center gap-1 text-caption text-muted-foreground">
             <ArrowDown className="size-3.5" strokeWidth={2} />
-            <span className="font-semibold text-foreground">{PREDICATE_LABELS[link.type]}</span>
+            <span className="fg-badge fg-gtag">{PREDICATE_LABELS[link.type]}</span>
             {countMeta && <span>{countMeta}</span>}
           </span>
         </div>

@@ -1,5 +1,7 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { SEG_ITEM } from '@/components/graph/glass'
 import { LENS_LABELS, LENS_VALUES, type Lens } from '@/lib/graphRoute'
+import { cn } from '@/lib/utils'
 
 interface Props {
   value: Lens
@@ -12,10 +14,10 @@ interface Props {
  */
 export function LensSelector({ value, onChange }: Props) {
   return (
-    <div data-guide="lens" className="flex items-center rounded-lg border border-border bg-background/90 p-1.5 shadow-soft backdrop-blur">
+    <div data-guide="lens" className="fg-glass flex items-center p-1">
       <ToggleGroup
         type="single"
-        slidingMark="rounded-md bg-primary"
+        slidingMark="fg-gmark"
         size="sm"
         spacing={0}
         value={value}
@@ -30,7 +32,7 @@ export function LensSelector({ value, onChange }: Props) {
           <ToggleGroupItem
             key={lens}
             value={lens}
-            className="rounded-md px-2.5 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground md:h-8 md:px-3 md:text-body"
+            className={cn(SEG_ITEM, 'md:h-8 md:px-3 md:text-body')}
           >
             {LENS_LABELS[lens]}
           </ToggleGroupItem>

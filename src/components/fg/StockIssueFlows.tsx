@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
@@ -6,6 +6,7 @@ import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { FilterChipGroup } from '@/components/fg/FilterChip'
 import { FlowMiniChart } from '@/components/fg/FlowMiniChart'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
@@ -380,7 +381,7 @@ export function StockIssueFlows({ stockName, ticker, flows: found, candles, toda
         <div className="fg-sfl__tools">
           <FilterChipGroup label="기간" options={FLOW_PERIODS} value={period} onChange={pickPeriod} />
           <label className="fg-sfl__search">
-            <Search size={18} strokeWidth={1.75} aria-hidden="true" />
+            <LucianIcon name="search" size={18} />
             <span className="fg-sr">흐름 찾기</span>
             <input type="search" placeholder="흐름 찾기" value={query} onChange={(e) => changeQuery(e.target.value)} />
           </label>

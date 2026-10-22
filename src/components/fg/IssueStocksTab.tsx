@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Lock, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
@@ -8,6 +8,7 @@ import { EvidenceSheet } from '@/components/fg/EvidenceSheet'
 import { FilterChip, FilterChipGroup } from '@/components/fg/FilterChip'
 import { GapBar, HiddenLinkHead, HiddenLinkRow, LINK_LIST_PAGE, STRENGTH_NOTE } from '@/components/fg/HiddenLinkList'
 import { IssueStockSheet } from '@/components/fg/IssueStockSheet'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { MemberGate } from '@/components/fg/MemberGate'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { QuoteRetryNote, RetryText } from '@/components/fg/RetryText'
@@ -72,7 +73,7 @@ function StockCard({ card, member, locked, on, onPick, onOpen, onRetryQuotes }: 
   if (card.links === null) {
     links = locked ? (
       <span className="fg-ics__locked">
-        <Lock size={14} strokeWidth={1.75} aria-hidden="true" />
+        <LucianIcon name="lock" size={14} />
         이어진 기업
       </span>
     ) : (
@@ -98,7 +99,7 @@ function StockCard({ card, member, locked, on, onPick, onOpen, onRetryQuotes }: 
   } else {
     links = (
       <span className="fg-ics__locked">
-        {locked && <Lock size={14} strokeWidth={1.75} aria-hidden="true" />}
+        {locked && <LucianIcon name="lock" size={14} />}
         {`이어진 기업 ${card.links}곳`}
       </span>
     )

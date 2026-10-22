@@ -1,3 +1,4 @@
+// Lucian UX/UI Prompt #152 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#152
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { hierarchy, treemap, treemapSquarify } from 'd3-hierarchy'
 import { formatChange } from '@/lib/format'
@@ -235,15 +236,18 @@ export function ThemeTreemap({ tiles, selectedId, onSelect, label, layoutKey }: 
             aria-label={tile.label}
             title={tile.label}
             onClick={() => onSelect(tile.id)}
-            style={{
-              left,
-              top,
-              width,
-              height,
-              background: colors?.background,
-              color: colors?.color,
-              animationDelay: entering ? `${tileEnterDelay(index)}ms` : undefined,
-            }}
+            style={
+              {
+                left,
+                top,
+                width,
+                height,
+                background: colors?.background,
+                color: colors?.color,
+                animationDelay: entering ? `${tileEnterDelay(index)}ms` : undefined,
+                '--fg-i': index,
+              } as CSSProperties
+            }
           >
             {text && <TileLabel text={text} change={change} detail={tile.detail} />}
           </button>

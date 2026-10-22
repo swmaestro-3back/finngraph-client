@@ -79,7 +79,8 @@
 .fg-tbtn:hover {
   background: var(--bg-subtle);
 }
-.fg-tbtn > svg {
+.fg-tbtn > svg,
+.fg-tbtn > .fg-li {
   color: var(--text-secondary);
 }
 .fg-tbtn[aria-pressed='true'] {
@@ -87,7 +88,8 @@
   box-shadow: none;
   color: var(--action-primary);
 }
-.fg-tbtn[aria-pressed='true'] > svg {
+.fg-tbtn[aria-pressed='true'] > svg,
+.fg-tbtn[aria-pressed='true'] > .fg-li {
   color: var(--action-primary);
 }
 .fg-tbtn__count {

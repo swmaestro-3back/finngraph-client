@@ -1,8 +1,10 @@
+// Lucian UX/UI Prompt #027 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#027
 import { useEffect, useRef, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { Logo } from '@/components/brand/Logo'
 import { ColorThemeToggle } from '@/components/fg/ColorThemeToggle'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { SearchBox } from '@/components/fg/SearchBox'
 import { UserMenu } from '@/components/fg/UserMenu'
 import { activeMenu, MAIN_MENU, SIDE_LINKS } from '@/lib/fg/nav'
@@ -12,15 +14,24 @@ import { cn } from '@/lib/utils'
 
 const WIDE_SEARCH = '(min-width: 1024px)'
 
+function markSearchShift(header: HTMLElement | null, button: HTMLElement | null) {
+  const row = button?.parentElement
+  if (!header || !button || !row) return
+  const pad = parseFloat(getComputedStyle(row).paddingRight) || 0
+  const shift = row.getBoundingClientRect().right - pad - button.getBoundingClientRect().right
+  header.style.setProperty('--fg-gh-shift', `${Math.max(0, Math.round(shift))}px`)
+}
+
 export function AppHeader() {
   const { pathname } = useLocation()
   const active = activeMenu(pathname)
   const [overlayOpen, setOverlayOpen] = useState(false)
+  const header = useRef<HTMLElement>(null)
   const deskInput = useRef<HTMLInputElement>(null)
   const searchToggle = useRef<HTMLButtonElement>(null)
   const nav = useRef<HTMLElement>(null)
   const navMark = useRef<HTMLSpanElement>(null)
-  useSlidingMark(nav, navMark, MAIN_MENU.findIndex((item) => item.key === active), { items: 'a' })
+  useSlidingMark(nav, navMark, MAIN_MENU.findIndex((item) => item.key === active), { items: 'a', motion: 'spring' })
 
   useEffect(() => {
     setOverlayOpen(false)
@@ -32,14 +43,17 @@ export function AppHeader() {
       if (!isSearchShortcut(event, target)) return
       event.preventDefault()
       if (window.matchMedia(WIDE_SEARCH).matches) deskInput.current?.focus()
-      else setOverlayOpen(true)
+      else {
+        markSearchShift(header.current, searchToggle.current)
+        setOverlayOpen(true)
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
   return (
-    <header className="fg-gh">
+    <header ref={header} className="fg-gh" data-search={overlayOpen || undefined}>
       <div className="fg-wrap fg-gh__in">
         <Link to="/" className="fg-gh__logo" aria-label="Finngraph 홈">
           <Logo height={24} />
@@ -59,12 +73,15 @@ export function AppHeader() {
           className="fg-gh__icon fg-gh__searchbtn"
           aria-label={overlayOpen ? '검색 닫기' : '검색'}
           aria-expanded={overlayOpen}
-          onClick={() => setOverlayOpen((open) => !open)}
+          onClick={() => {
+            if (!overlayOpen) markSearchShift(header.current, searchToggle.current)
+            setOverlayOpen((open) => !open)
+          }}
         >
           {overlayOpen ? (
             <X size={20} strokeWidth={1.75} aria-hidden="true" />
           ) : (
-            <Search size={20} strokeWidth={1.75} aria-hidden="true" />
+            <LucianIcon name="search" size={20} />
           )}
         </button>
         <div className="fg-gh__right">

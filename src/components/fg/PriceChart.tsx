@@ -1,4 +1,4 @@
-import { ChartSpline, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import {
   CandlestickSeries,
   ColorType,
@@ -30,6 +30,7 @@ import { Button } from '@/components/fg/Button'
 import { IssueMarkerLayer, type MarkerSpot } from '@/components/fg/IssueMarkerLayer'
 import { Segment } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
+import { ToggleSwitch } from '@/components/fg/ToggleSwitch'
 import type { CandlePeriod, CandleRes } from '@/lib/apiTypes'
 import { formatChange } from '@/lib/format'
 import { useColorScheme } from '@/lib/fg/colorTheme'
@@ -587,27 +588,27 @@ export function PriceChart({
           {(markers !== null || kind === 'D') && (
             <div className="fg-pc__toggles">
               {markers !== null && (
-                <button
-                  type="button"
+                <ToggleSwitch
+                  tone="warm"
                   className="fg-pc__toggle"
-                  aria-pressed={kind === 'D' && showMarkers}
+                  checked={kind === 'D' && showMarkers}
                   disabled={kind !== 'D'}
-                  onClick={kind === 'D' ? onToggleMarkers : undefined}
+                  onChange={() => {
+                    if (kind === 'D') onToggleMarkers()
+                  }}
                 >
-                  <i className="fg-dia" aria-hidden="true" />
                   {kind === 'D' ? `${markerLabel} 표시` : `${markerLabel} 표시는 일봉에서 볼 수 있어요`}
-                </button>
+                </ToggleSwitch>
               )}
               {kind === 'D' && (
-                <button
-                  type="button"
+                <ToggleSwitch
+                  tone="violet"
                   className="fg-pc__toggle fg-pc__toggle--avg"
-                  aria-pressed={showAverages}
-                  onClick={toggleAverages}
+                  checked={showAverages}
+                  onChange={toggleAverages}
                 >
-                  <ChartSpline size={16} strokeWidth={1.75} aria-hidden="true" />
                   이동평균선 표시
-                </button>
+                </ToggleSwitch>
               )}
             </div>
           )}
@@ -646,19 +647,14 @@ export function PriceChart({
             const on = averageOn.includes(line.days)
             const value = on ? (averageValues[i][shownIndex] ?? null) : null
             return (
-              <button
-                key={line.days}
-                type="button"
-                className="fg-pc__avg"
-                aria-pressed={on}
-                aria-label={`${line.days}일 이동평균선`}
-                style={{ '--fg-pc-avg': `var(${line.color})` } as CSSProperties}
-                onClick={() => toggleAverage(line.days)}
-              >
-                <i className="fg-pc__avg-line" aria-hidden="true" />
-                <span aria-hidden="true">{line.days}일</span>
-                {value !== null && <b aria-hidden="true">{formatChartPrice(value, format.decimals)}</b>}
-              </button>
+              <span key={line.days} className="fg-pc__avg" style={{ '--fg-pc-avg': `var(${line.color})` } as CSSProperties}>
+                <ToggleSwitch checked={on} onChange={() => toggleAverage(line.days)}>
+                  <em>
+                    {line.days}일<span className="fg-sr"> 이동평균선</span>
+                  </em>
+                  {value !== null && <b aria-hidden="true">{formatChartPrice(value, format.decimals)}</b>}
+                </ToggleSwitch>
+              </span>
             )
           })}
         </div>

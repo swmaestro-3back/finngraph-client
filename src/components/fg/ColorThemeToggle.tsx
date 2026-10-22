@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { otherScheme, setColorScheme, useColorScheme } from '@/lib/fg/colorTheme'
 
 export function ColorThemeToggle() {
@@ -14,9 +14,9 @@ export function ColorThemeToggle() {
       onClick={() => setColorScheme(otherScheme(scheme))}
     >
       {dark ? (
-        <Sun size={20} strokeWidth={1.75} aria-hidden="true" />
+        <LucianIcon name="sun" size={20} />
       ) : (
-        <Moon size={20} strokeWidth={1.75} aria-hidden="true" />
+        <LucianIcon name="moon" size={20} />
       )}
     </button>
   )

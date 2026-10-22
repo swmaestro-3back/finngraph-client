@@ -1,3 +1,4 @@
+// Lucian UX/UI Prompt #171 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#171
 import { ArrowRight, Crosshair, ExternalLink, Lock, Network, Newspaper } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import {
@@ -19,6 +20,8 @@ import {
   Section,
 } from '@/components/graph/DetailParts'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
+import { SplitBar } from '@/components/fg/SplitBar'
+import { CALM_OUTLINE, CALM_PRIMARY } from '@/components/graph/glass'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -162,7 +165,7 @@ export function NodeDetail({
               </span>
             )}
             {n.node.id === centerId && (
-              <span className="shrink-0 text-micro font-semibold text-primary">중심</span>
+              <span className="fg-badge fg-gtag fg-gtag--accent shrink-0">중심</span>
             )}
             <ChangeText value={n.node.data.quote?.change} className="shrink-0 text-caption" />
             <span className="ml-auto shrink-0 font-mono text-caption text-muted-foreground">
@@ -195,14 +198,16 @@ export function NodeDetail({
           </h2>
           {/* 테마는 패널 맨 윗줄이 이미 "테마"라고 말한다 — 기업만 티커·시장·지수 줄을 둔다 */}
           {!isTheme && (
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 font-mono text-caption text-muted-foreground">
+            <div className="fg-gflags mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-caption text-muted-foreground">
               {ticker && <span>{ticker}</span>}
               <span className="inline-flex items-center gap-1">
                 <CategoryDot node={node} />
                 {CATEGORY_LABELS[nodeCategory(node)]}
               </span>
               {indexFlags.map((f) => (
-                <span key={f.key}>{f.label}</span>
+                <span key={f.key} className="fg-badge fg-gtag">
+                  {f.label}
+                </span>
               ))}
             </div>
           )}
@@ -242,13 +247,13 @@ export function NodeDetail({
 
       <div className={cn('flex flex-wrap gap-2', showDetailNotice ? 'mb-1.5' : actionsMargin)}>
         {isCenter ? (
-          <Button size="sm" className="flex-1" disabled>
+          <Button size="sm" className={cn(CALM_PRIMARY, 'flex-1')} disabled>
             <Crosshair data-icon="inline-start" />
             현재 중심
           </Button>
         ) : (
           onRecenter && (
-            <Button size="sm" className="flex-1" onClick={() => (onLogin ? onLogin() : onRecenter(node))}>
+            <Button size="sm" className={cn(CALM_PRIMARY, 'flex-1')} onClick={() => (onLogin ? onLogin() : onRecenter(node))}>
               {onLogin ? <Lock data-icon="inline-start" /> : <Crosshair data-icon="inline-start" />}
               {isTheme ? '이 테마 중심으로 탐색' : '이 기업 중심으로 탐색'}
             </Button>
@@ -256,14 +261,14 @@ export function NodeDetail({
         )}
         {detailPath &&
           (detailAvailable ? (
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" className={CALM_OUTLINE} asChild>
               <Link to={detailPath} state={fromState(`${pathname}${search}`)}>
                 {isTheme ? '테마 상세' : '종목 상세'}
                 <ExternalLink data-icon="inline-end" />
               </Link>
             </Button>
           ) : isMobile ? (
-            <Button variant="outline" size="sm" disabled>
+            <Button variant="outline" size="sm" className={CALM_OUTLINE} disabled>
               종목 상세
               <ExternalLink data-icon="inline-end" />
             </Button>
@@ -273,7 +278,7 @@ export function NodeDetail({
                 {/* 비활성 버튼은 포인터 이벤트를 받지 않으므로 감싼 span이 hover·focus를 대신 받는다 */}
                 <TooltipTrigger asChild>
                   <span tabIndex={0} className="inline-flex rounded-lg outline-none">
-                    <Button variant="outline" size="sm" disabled>
+                    <Button variant="outline" size="sm" className={CALM_OUTLINE} disabled>
                       종목 상세
                       <ExternalLink data-icon="inline-end" />
                     </Button>
@@ -291,7 +296,7 @@ export function NodeDetail({
       {/* 개요에서 더 깊이 — 공급망은 hop·범위로, 이벤트는 공유 기업으로 이어진다 */}
       {isCenter && centerShortcuts && (
         <div className="mb-5 flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={centerShortcuts.onOpenSupply}>
+          <Button variant="outline" size="sm" className={cn(CALM_OUTLINE, 'flex-1')} onClick={centerShortcuts.onOpenSupply}>
             <Network data-icon="inline-start" />
             공급망 펼치기
           </Button>
@@ -302,7 +307,7 @@ export function NodeDetail({
             <Button
               variant="outline"
               size="sm"
-              className="w-full"
+              className={cn(CALM_OUTLINE, 'w-full')}
               disabled={centerShortcuts.eventCount === 0}
               onClick={centerShortcuts.onOpenEvents}
             >
@@ -350,12 +355,21 @@ export function NodeDetail({
           {/* 공급 관계는 공급자 → 수요자 방향이다. 들어오는 기업이 공급처, 나가는 기업이 납품처 — 띠가 그 방향을 그린다 */}
           {hasSupply && (
             <div className="mb-5">
-              <div className="grid grid-cols-[1fr_auto_1.4fr_auto_1fr] items-center gap-1.5 rounded-md bg-surface-inset px-3 py-2.5 text-center">
-                <FlowEnd count={suppliers.length} label="공급처" />
-                <ArrowRight className="size-3.5 text-muted-foreground" strokeWidth={2} />
-                <span className="truncate text-caption font-semibold text-foreground">{node.label}</span>
-                <ArrowRight className="size-3.5 text-muted-foreground" strokeWidth={2} />
-                <FlowEnd count={customers.length} label="납품처" />
+              <div className="fg-gflow rounded-[18px] bg-muted px-3.5 pt-3 pb-2.5">
+                <SplitBar
+                  parts={[
+                    { value: suppliers.length, tone: 'accent' },
+                    { value: customers.length, tone: 'flat' },
+                  ]}
+                  className="mb-2.5"
+                />
+                <div className="grid grid-cols-[1fr_auto_1.4fr_auto_1fr] items-center gap-1.5 text-center">
+                  <FlowEnd count={suppliers.length} label="공급처" />
+                  <ArrowRight className="size-3.5 text-muted-foreground" strokeWidth={2} />
+                  <span className="truncate text-caption font-semibold text-foreground">{node.label}</span>
+                  <ArrowRight className="size-3.5 text-muted-foreground" strokeWidth={2} />
+                  <FlowEnd count={customers.length} label="납품처" />
+                </div>
               </div>
               {/* 중심이 아닌 기업은 이웃 일부만 화면에 있다 — 반쪽 숫자를 전부인 것처럼 읽지 않도록 */}
               {!isCenter && (
@@ -457,7 +471,7 @@ export function NodeDetail({
 function FlowEnd({ count, label }: { count: number; label: string }) {
   return (
     <div className={cn(count === 0 && 'text-muted-foreground')}>
-      <div className="font-mono text-base leading-tight font-semibold">{count}</div>
+      <div className="font-mono text-xl leading-tight font-bold tracking-tight">{count}</div>
       <div className="text-caption text-muted-foreground">{label}</div>
     </div>
   )

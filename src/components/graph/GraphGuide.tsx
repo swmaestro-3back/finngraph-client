@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from 'react'
+import { CALM_OUTLINE, CALM_PRIMARY } from '@/components/graph/glass'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -158,22 +159,22 @@ export function GraphGuide({ steps, containerRef, isMobile, onClose, onStepChang
           {steps.map((_, i) => (
             <span
               key={i}
-              className={cn('h-1.5 rounded-full', i === index ? 'w-4 bg-primary' : 'w-1.5 bg-border')}
+              className={cn('fg-gdot h-1.5 rounded-full', i === index ? 'w-4 bg-foreground' : 'w-1.5 bg-border')}
             />
           ))}
         </div>
         <div className="flex gap-1.5">
           {!last && (
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-muted-foreground">
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 rounded-full px-3 text-muted-foreground">
               건너뛰기
             </Button>
           )}
           {index > 0 && (
-            <Button variant="outline" size="sm" onClick={() => setIndex(index - 1)}>
+            <Button variant="outline" size="sm" className={CALM_OUTLINE} onClick={() => setIndex(index - 1)}>
               이전
             </Button>
           )}
-          <Button ref={nextRef} size="sm" onClick={() => (last ? onClose() : setIndex(index + 1))}>
+          <Button ref={nextRef} size="sm" className={CALM_PRIMARY} onClick={() => (last ? onClose() : setIndex(index + 1))}>
             {last ? '시작하기' : '다음'}
           </Button>
         </div>
@@ -217,7 +218,7 @@ export function GraphGuide({ steps, containerRef, isMobile, onClose, onStepChang
         <span
           key={i}
           aria-hidden
-          className="pointer-events-none absolute z-40 size-7 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full border-2 border-white motion-reduce:animate-none"
+          className="fg-gping pointer-events-none absolute z-40 size-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white"
           style={{ left: point.x, top: point.y }}
         />
       ))}
@@ -225,7 +226,7 @@ export function GraphGuide({ steps, containerRef, isMobile, onClose, onStepChang
         <div
           role="dialog"
           aria-labelledby={titleId}
-          className="absolute inset-x-0 bottom-0 z-50 rounded-t-2xl bg-background px-4 pt-3 pb-4 shadow-[0_-12px_28px_-8px_rgb(0_0_0/0.25)] animate-in fade-in-0 slide-in-from-bottom-4 duration-200 motion-reduce:animate-none"
+          className="absolute inset-x-0 bottom-0 z-50 rounded-t-[28px] bg-background px-4 pt-3 pb-4 shadow-[0_-12px_28px_-8px_rgb(0_0_0/0.25)] animate-in fade-in-0 slide-in-from-bottom-4 duration-200 motion-reduce:animate-none"
         >
           <span aria-hidden className="mx-auto mb-2.5 block h-1 w-9 rounded-full bg-border" />
           {body}
@@ -236,7 +237,7 @@ export function GraphGuide({ steps, containerRef, isMobile, onClose, onStepChang
           role="dialog"
           aria-labelledby={titleId}
           className={cn(
-            'absolute z-50 w-[min(300px,calc(100%-24px))] rounded-xl bg-background px-4 pt-3.5 pb-3 shadow-[0_16px_32px_-6px_rgb(0_0_0/0.22)]',
+            'fg-gcard absolute z-50 w-[min(300px,calc(100%-24px))] rounded-[22px] bg-background px-4.5 pt-4 pb-3.5 shadow-[0_0_0_1px_var(--border-divider),0_30px_60px_-30px_var(--shadow-strong-color)]',
             !layout && 'bottom-6 left-1/2 -translate-x-1/2',
             layout && !position && 'invisible',
           )}

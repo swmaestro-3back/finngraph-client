@@ -1,6 +1,8 @@
-import { Plus } from 'lucide-react'
+// Lucian UX/UI Prompt #210 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#210
+// Lucian UX/UI Prompt #228 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#228
 import { Link } from 'react-router-dom'
-import { CompanyLogo } from '@/components/fg/CompanyLogo'
+import { LogoStack } from '@/components/fg/LogoStack'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import type { FavoriteItemRes, FolderSummaryRes } from '@/lib/apiTypes'
 import { KIND_LABELS, daysBetween } from '@/lib/calendar'
 import { formatChange } from '@/lib/format'
@@ -14,6 +16,7 @@ import {
   type StockSignal,
 } from '@/lib/fg/folders'
 import { toneClass, toneOf } from '@/lib/fg/format'
+import { useCursorGlow } from '@/lib/fg/useCursorGlow'
 import { cn } from '@/lib/utils'
 
 const SPARK_W = 96
@@ -59,6 +62,7 @@ interface FolderCardsProps {
 }
 
 export function FolderCards({ folders, items, view, signals, today, canCreate, folderLimit, onCreate }: FolderCardsProps) {
+  const glow = useCursorGlow<HTMLAnchorElement>()
   return (
     <ul className="fg-mine__cards" aria-label="내가 만든 테마">
       {folders.map((folder) => {
@@ -74,7 +78,9 @@ export function FolderCards({ folders, items, view, signals, today, canCreate, f
               replace
               aria-current={selected ? 'true' : undefined}
               title={selected ? '다시 누르면 전체 관심으로 돌아가요' : undefined}
-              className="fg-mine__card"
+              className="fg-mine__card fg-glow"
+              onPointerMove={glow.onPointerMove}
+              onPointerLeave={glow.onPointerLeave}
             >
               <span className="fg-mine__cardtop">
                 <span className="fg-mine__cardname">{folder.name}</span>
@@ -97,9 +103,7 @@ export function FolderCards({ folders, items, view, signals, today, canCreate, f
               <span className="fg-mine__cardfoot">
                 {logos.length > 0 && (
                   <span className="fg-mine__avatars" aria-hidden="true">
-                    {logos.map((member) => (
-                      <CompanyLogo key={member.key} name={itemName(member)} ticker={member.key} size={24} className="fg-mine__avatar" />
-                    ))}
+                    <LogoStack items={logos.map((member) => ({ name: itemName(member), ticker: member.key }))} max={AVATAR_LIMIT} />
                   </span>
                 )}
                 <span className="fg-mine__cardwho">{memberLine(members)}</span>
@@ -111,7 +115,7 @@ export function FolderCards({ folders, items, view, signals, today, canCreate, f
       <li>
         <button type="button" className="fg-mine__card fg-mine__card--new" onClick={onCreate} disabled={!canCreate}>
           <span className="fg-mine__newtitle">
-            <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
+            <LucianIcon name="plus" size={18} />
             새 테마 만들기
           </span>
           <span className="fg-mine__newsub">

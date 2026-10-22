@@ -1,8 +1,13 @@
-import { Check, ChevronRight, Plus } from 'lucide-react'
+// Lucian UX/UI Prompt #077 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#077
+// Lucian UX/UI Prompt #252 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#252
+import { Check, ChevronRight } from 'lucide-react'
 import { Popover } from 'radix-ui'
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { FolderCheck } from '@/components/favorite/FolderCheck'
 import { Button } from '@/components/fg/Button'
+import { LucianIcon } from '@/components/fg/LucianIcon'
+import { NotchField } from '@/components/fg/NotchField'
 import { SideSheet } from '@/components/fg/SideSheet'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { getData } from '@/lib/api'
@@ -120,10 +125,12 @@ function SaveBody({ prompt, narrow, onClose }: SaveBodyProps) {
         <>
           {(picks.length > 0 || (themeName && canCreate)) && (
             <div className="fg-fsave__group">
-              <p className="fg-fsave__label">추천</p>
+              <p className="fg-fsave__label">
+                <span className="fg-fsave__pick">추천</span>
+              </p>
               {picks.map((folder) => (
                 <label key={folder.id} className={cn('fg-fsave__opt fg-fsave__opt--pick', joined.has(folder.id) && 'is-on')}>
-                  <input type="checkbox" checked={joined.has(folder.id)} onChange={() => flip(folder.id)} />
+                  <FolderCheck checked={joined.has(folder.id)} onChange={() => flip(folder.id)} />
                   <span className="fg-fsave__optbody">
                     <span className="fg-fsave__optname">{folder.name}</span>
                     {folder.theme && <span className="fg-fsave__why">{matchedText(folder.theme.name, folder.matched)}</span>}
@@ -132,7 +139,7 @@ function SaveBody({ prompt, narrow, onClose }: SaveBodyProps) {
               ))}
               {themeName && canCreate && (
                 <button type="button" className="fg-fsave__new" disabled={busy} onClick={() => void createWith(themeName)}>
-                  <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
+                  <LucianIcon name="plus" size={18} />
                   <span className="fg-fsave__optbody">
                     <span className="fg-fsave__optname">{`'${themeName}' 테마 새로 만들기`}</span>
                     <span className="fg-fsave__why">이 종목이 속한 테마 이름으로 바로 만들어요</span>
@@ -151,7 +158,7 @@ function SaveBody({ prompt, narrow, onClose }: SaveBodyProps) {
                 {others.map((folder) => (
                   <li key={folder.id}>
                     <label className="fg-fsave__row">
-                      <input type="checkbox" checked={joined.has(folder.id)} onChange={() => flip(folder.id)} />
+                      <FolderCheck checked={joined.has(folder.id)} onChange={() => flip(folder.id)} />
                       <span className="fg-fsave__rowname">{folder.name}</span>
                       <span className="fg-fsave__count fg-num">{`${folder.count}개`}</span>
                     </label>
@@ -169,17 +176,17 @@ function SaveBody({ prompt, narrow, onClose }: SaveBodyProps) {
 
       {canCreate ? (
         <form className="fg-fsave__form" onSubmit={submit}>
-          <label className="fg-fsave__field">
-            <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
-            <span className="fg-sr">새 테마 이름</span>
-            <input
-              type="text"
-              value={draft}
-              maxLength={FOLDER_NAME_MAX}
-              placeholder="직접 이름 짓기 (예: 2차전지)"
-              onChange={(event) => setDraft(event.target.value)}
-            />
-          </label>
+          <NotchField
+            className="fg-fsave__notch"
+            label="직접 이름 짓기 (예: 2차전지)"
+            srLabel="새 테마 이름"
+            icon={<LucianIcon name="plus" size={18} />}
+            type="text"
+            value={draft}
+            maxLength={FOLDER_NAME_MAX}
+            placeholder="직접 이름 짓기 (예: 2차전지)"
+            onChange={(event) => setDraft(event.target.value)}
+          />
           <Button type="submit" size="sm" disabled={busy || draft.trim() === ''}>
             만들기
           </Button>
@@ -243,6 +250,7 @@ function PromptPopover({ prompt, onClose }: { prompt: SavePrompt; onClose: () =>
           }}
         >
           <SaveBody prompt={prompt} narrow={false} onClose={onClose} />
+          <Popover.Arrow className="fg-fsave__arrow" width={16} height={8} />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
