@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { FolderCheck } from '@/components/favorite/FolderCheck'
 import { Button } from '@/components/fg/Button'
+import { NotchField } from '@/components/fg/NotchField'
 import { SideSheet } from '@/components/fg/SideSheet'
 import type { FavoriteItemRes } from '@/lib/apiTypes'
 import { useFavorites } from '@/lib/favorites'
@@ -66,19 +68,21 @@ export function FolderNameDialog({ mode, folder, onClose, onCreated }: FolderNam
       closeLabel="닫기"
     >
       <form className="fg-fname" onSubmit={submit}>
-        <label className="fg-fname__label">
-          <span>테마 이름</span>
-          <input
-            className="fg-fname__input"
-            type="text"
-            value={name}
-            maxLength={NAME_MAX}
-            autoFocus
-            placeholder="예: 반도체 관찰, 배당 모으기"
-            onChange={(event) => setName(event.target.value)}
-          />
-          <span className="fg-fname__count fg-num">{`${trimmed.length}/${NAME_MAX}`}</span>
-        </label>
+        <NotchField
+          className="fg-fname__notch"
+          label="테마 이름"
+          type="text"
+          value={name}
+          maxLength={NAME_MAX}
+          autoFocus
+          placeholder="예: 반도체 관찰, 배당 모으기"
+          onChange={(event) => setName(event.target.value)}
+          trailing={
+            <span className="fg-fname__count fg-num" data-full={trimmed.length >= NAME_MAX || undefined}>
+              {`${trimmed.length}/${NAME_MAX}`}
+            </span>
+          }
+        />
         {mode === 'create' && choices.length > 0 && (
           <fieldset className="fg-fname__pick">
             <legend className="fg-fname__legend">{`담을 관심 고르기 · ${picked.size}개`}</legend>
@@ -86,7 +90,7 @@ export function FolderNameDialog({ mode, folder, onClose, onCreated }: FolderNam
               {choices.map((item) => (
                 <li key={pickKey(item)}>
                   <label className="fg-fsave__row">
-                    <input type="checkbox" checked={picked.has(pickKey(item))} onChange={() => flip(item)} />
+                    <FolderCheck checked={picked.has(pickKey(item))} onChange={() => flip(item)} />
                     <span className="fg-fsave__rowname">{itemName(item)}</span>
                   </label>
                 </li>
