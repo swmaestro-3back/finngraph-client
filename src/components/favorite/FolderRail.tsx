@@ -1,5 +1,5 @@
 import { ArrowRight, ChevronRight } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
@@ -9,7 +9,7 @@ import { ChangeText } from '@/components/fg/PriceChange'
 import { RetryNote } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { useFavorites } from '@/lib/favorites'
-import { FIT_POOL, fitCandidates, fitCompanies, fitQuote, fitReason, innerLinks, linkArrow } from '@/lib/fg/folders'
+import { fitCandidates, fitCompanies, fitPoolSize, fitQuote, fitReason, innerLinks, linkArrow } from '@/lib/fg/folders'
 import { marketLabel } from '@/lib/fg/format'
 import { shortDay } from '@/lib/fg/hub'
 import { buildLinkedCompanies, EMPTY_LINK_GRAPH, ISSUE_LINK_SOURCES } from '@/lib/fg/linkedCompanies'
@@ -19,6 +19,7 @@ import { fromState } from '@/lib/navigation'
 import { useIssueLinks, useLinkGraphs } from '@/lib/queries/useLinkedCompanies'
 
 const FIT_LIMIT = 3
+const SPIN_MS = 600
 
 const randomSeed = () => Math.floor(Math.random() * 2 ** 31)
 
@@ -54,7 +55,17 @@ export function FolderRail({ members, folder }: FolderRailProps) {
     return fitCandidates(links.links.filter((link) => link.company.code === null || !held.has(link.company.code)))
   }, [links.links, members])
   const fits = useMemo(() => (pool ? fitCompanies(pool, FIT_LIMIT, seed) : null), [pool, seed])
-  const canShuffle = pool !== null && Math.min(pool.length, FIT_POOL) > FIT_LIMIT
+  const canShuffle = pool !== null && fitPoolSize(pool) > FIT_LIMIT
+  const [spinning, setSpinning] = useState(false)
+  useEffect(() => {
+    if (!spinning) return
+    const timer = window.setTimeout(() => setSpinning(false), SPIN_MS)
+    return () => window.clearTimeout(timer)
+  }, [spinning, seed])
+  const shuffle = () => {
+    setSeed(randomSeed())
+    setSpinning(true)
+  }
 
   if (members.length === 0) return null
 
@@ -125,8 +136,8 @@ export function FolderRail({ members, folder }: FolderRailProps) {
           </h2>
           <p className="fg-mine__rsub">아직 담지 않았지만 관계로 이어진 기업이에요</p>
           {canShuffle && (
-            <button type="button" className="fg-mine__shuffle" onClick={() => setSeed(randomSeed())}>
-              <LucianIcon name="refresh" size={14} />
+            <button type="button" className="fg-mine__shuffle" onClick={shuffle}>
+              <LucianIcon name="refresh" size={14} state={spinning ? 'loading' : 'idle'} />
               다른 기업
             </button>
           )}

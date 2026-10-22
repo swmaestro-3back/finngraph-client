@@ -220,7 +220,8 @@ export function folderEvent(
   return best
 }
 
-export const FIT_POOL = 12
+const FIT_POOL = 12
+const FIT_MIN_PER_SOURCE = 4
 
 function shuffleKey(seed: number, id: string): number {
   let hash = 2166136261 ^ seed
@@ -243,16 +244,35 @@ export function fitQuote(company: Pick<LinkedCompany, 'evidence'>): LinkedCompan
   )
 }
 
+function fitBuckets(eligible: readonly FitCompany[]): FitCompany[][] {
+  const groups = new Map<string, FitCompany[]>()
+  for (const link of eligible) {
+    const group = groups.get(link.from)
+    if (group) group.push(link)
+    else groups.set(link.from, [link])
+  }
+  const perSource = Math.max(FIT_MIN_PER_SOURCE, Math.ceil(FIT_POOL / Math.max(1, groups.size)))
+  return [...groups.values()].map((group) => group.slice(0, perSource))
+}
+
+export function fitPoolSize(links: readonly FitCompany[]): number {
+  return fitBuckets(fitCandidates(links)).reduce((sum, group) => sum + group.length, 0)
+}
+
 export function fitCompanies(links: readonly FitCompany[], limit: number, seed: number | null = null): FitCompany[] {
   const eligible = fitCandidates(links)
   if (seed === null) return eligible.slice(0, limit)
-  const pool = eligible.slice(0, FIT_POOL)
-  const chosen = new Set(
-    [...pool]
-      .sort((a, b) => shuffleKey(seed, a.company.id) - shuffleKey(seed, b.company.id))
-      .slice(0, limit),
-  )
-  return pool.filter((link) => chosen.has(link))
+  const byKey = (a: string, b: string) => shuffleKey(seed, a) - shuffleKey(seed, b)
+  const buckets = fitBuckets(eligible)
+    .map((group) => [...group].sort((a, b) => byKey(a.company.id, b.company.id)))
+    .sort((a, b) => byKey(a[0].from, b[0].from))
+  const picked: FitCompany[] = []
+  for (let round = 0; picked.length < limit; round++) {
+    const layer = buckets.filter((group) => round < group.length)
+    if (layer.length === 0) break
+    for (const group of layer) if (picked.length < limit) picked.push(group[round])
+  }
+  return picked
 }
 
 export function fitReason(company: Pick<LinkedCompany, 'name' | 'title'>): string {
