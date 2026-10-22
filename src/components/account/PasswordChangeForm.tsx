@@ -1,9 +1,10 @@
+// Lucian UX/UI Prompt #023 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#023
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { AuthField } from '@/components/auth/AuthField'
 import { FormNotice } from '@/components/auth/FormNotice'
+import { LockNotice } from '@/components/auth/LockNotice'
 import { PasswordField, PasswordRules } from '@/components/auth/PasswordField'
-import { Button } from '@/components/ui/button'
 import {
   describeAccountError,
   lockMessage,
@@ -77,39 +78,64 @@ export function PasswordChangeForm({ onClose }: PasswordChangeFormProps) {
   }
 
   return (
-    <form
-      noValidate
-      className="flex max-w-sm flex-col gap-4 pt-1"
-      onSubmit={(event) => {
-        event.preventDefault()
-        void submit()
-      }}
-    >
-      {FIELDS.map(({ field, id, label, autoComplete }) => (
-        <AuthField key={field} id={id} label={label} error={errorFor(field)}>
-          <PasswordField
-            id={id}
-            autoComplete={autoComplete}
-            autoFocus={field === 'current'}
-            value={values[field]}
-            onChange={(event) => update(field, event.target.value)}
-            disabled={submitting}
-            aria-invalid={errorFor(field) ? true : undefined}
-            aria-describedby={describedBy(id, errorFor(field))}
-          />
-          {field === 'next' && <PasswordRules value={values.next} showErrors={attempted} />}
-        </AuthField>
-      ))}
-      {locked && <FormNotice tone="error">{lockMessage(lockSeconds)}</FormNotice>}
-      {formError && <FormNotice tone="error">{formError}</FormNotice>}
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={submitting}>
-          취소
-        </Button>
-        <Button type="submit" size="sm" disabled={submitting || locked}>
-          {submitting ? '변경 중…' : '변경하기'}
-        </Button>
+    <div className="fg-acct-fold">
+      <div>
+        <form
+          noValidate
+          className="fg-acct-pw"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void submit()
+          }}
+        >
+          {FIELDS.map(({ field, id, label, autoComplete }) => (
+            <AuthField
+              key={field}
+              id={id}
+              label={label}
+              error={errorFor(field)}
+              ok={field === 'confirm' && values.confirm.length > 0 && values.confirm === values.next}
+              after={
+                field === 'next' ? (
+                  <PasswordRules value={values.next} showErrors={attempted} />
+                ) : undefined
+              }
+            >
+              <PasswordField
+                id={id}
+                autoComplete={autoComplete}
+                autoFocus={field === 'current'}
+                value={values[field]}
+                onChange={(event) => update(field, event.target.value)}
+                disabled={submitting}
+                aria-invalid={errorFor(field) ? true : undefined}
+                aria-describedby={describedBy(id, errorFor(field))}
+              />
+            </AuthField>
+          ))}
+          {locked && <LockNotice seconds={lockSeconds}>{lockMessage(lockSeconds)}</LockNotice>}
+          {formError && <FormNotice tone="error">{formError}</FormNotice>}
+          <div className="fg-acct__acts">
+            <button
+              type="button"
+              className="fg-btn fg-btn--tertiary fg-btn--sm"
+              onClick={onClose}
+              disabled={submitting}
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="fg-btn fg-btn--primary fg-btn--sm"
+              disabled={submitting || locked}
+              aria-busy={submitting || undefined}
+            >
+              {submitting && <span aria-hidden className="fg-au-spin size-3.5" />}
+              {submitting ? '변경 중…' : '변경하기'}
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   )
 }

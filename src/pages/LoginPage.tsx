@@ -36,8 +36,8 @@ export default function LoginPage({ mode = 'login' }: LoginPageProps) {
 
   return (
     <>
-      <h1 className="text-display font-semibold tracking-[-0.8px] text-foreground">로그인</h1>
-      <p className="mt-2 text-body text-foreground-secondary break-keep">
+      <h1 className="fg-au-title">로그인</h1>
+      <p className="fg-au-sub">
         {continuing ? '로그인하면 보던 화면으로 돌아가요.' : '이메일 또는 카카오 계정으로 로그인하세요.'}
       </p>
 
@@ -45,9 +45,9 @@ export default function LoginPage({ mode = 'login' }: LoginPageProps) {
         <LoginForm next={next} initialEmail={state.email} notice={state.notice} />
       </div>
 
-      <p className="mt-8 text-center text-body text-muted-foreground">
+      <p className="fg-au-alt">
         아직 계정이 없으신가요?{' '}
-        <Link to="/signup" state={{ next }} className="font-medium text-primary hover:underline">
+        <Link to="/signup" state={{ next }}>
           회원가입
         </Link>
       </p>

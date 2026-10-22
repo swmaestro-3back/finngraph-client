@@ -1,13 +1,14 @@
-import { startTransition, useState } from 'react'
+// Lucian UX/UI Prompt #269 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#269
+import { startTransition, useState, type CSSProperties } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { AuthCheck } from '@/components/auth/AuthCheck'
 import { AuthField } from '@/components/auth/AuthField'
 import { FormNotice } from '@/components/auth/FormNotice'
+import { LockNotice } from '@/components/auth/LockNotice'
 import { PasswordField } from '@/components/auth/PasswordField'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import {
   WITHDRAW_PHRASE,
   canSubmitWithdrawal,
@@ -20,6 +21,25 @@ import { useAuth } from '@/lib/auth'
 import { describedBy } from '@/lib/authValidation'
 import { useFavorites } from '@/lib/favorites'
 import { useCountdown } from '@/lib/useCountdown'
+import { cn } from '@/lib/utils'
+import type { LucianIconName } from '@/vendor/lucian-icons'
+
+interface DeletedItem {
+  label: string
+  icon: LucianIconName
+  tint: CSSProperties
+}
+
+const TINT_ACCOUNT = { '--g': 'linear-gradient(140deg, #8b6cff, #4f8dff)' } as CSSProperties
+const TINT_FAVORITE = { '--g': 'linear-gradient(140deg, #ffb547, #ff7a45)' } as CSSProperties
+const TINT_KAKAO = { '--g': '#fee500', '--g-ink': '#191919' } as CSSProperties
+
+function matchedLength(typed: string): number {
+  const value = typed.trimStart()
+  let length = 0
+  while (length < WITHDRAW_PHRASE.length && value[length] === WITHDRAW_PHRASE[length]) length += 1
+  return length
+}
 
 export default function WithdrawPage() {
   const { user, logout } = useAuth()
@@ -41,11 +61,12 @@ export default function WithdrawPage() {
   const fieldError = error?.field === 'password' ? error.message : undefined
   const formError =
     error && !error.field && error.retryAfterSeconds === undefined ? error.message : null
+  const matched = matchedLength(phrase)
 
-  const deleted = [
-    '계정과 로그인 정보',
-    ready ? `담아둔 관심 ${count}건` : '담아둔 관심',
-    ...(isEmail ? [] : ['카카오 계정 연결']),
+  const deleted: DeletedItem[] = [
+    { label: '계정과 로그인 정보', icon: 'user', tint: TINT_ACCOUNT },
+    { label: ready ? `담아둔 관심 ${count}건` : '담아둔 관심', icon: 'star', tint: TINT_FAVORITE },
+    ...(isEmail ? [] : [{ label: '카카오 계정 연결', icon: 'link' as const, tint: TINT_KAKAO }]),
   ]
 
   const submit = async () => {
@@ -70,49 +91,43 @@ export default function WithdrawPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="fg-wd">
       <div>
-        <Link
-          to="/me/account"
-          className="inline-flex items-center gap-1 text-caption text-muted-foreground hover:text-foreground"
-        >
+        <Link to="/me/account" className="fg-wd__back">
           <ChevronLeft className="size-3.5" />
           계정 설정
         </Link>
-        <h2 className="mt-2 text-lg font-medium tracking-[-0.4px] text-foreground">회원 탈퇴</h2>
+        <h2 className="fg-wd__title">회원 탈퇴</h2>
       </div>
 
-      <section aria-labelledby="withdraw-deleted" className="card-surface p-5">
-        <h3 id="withdraw-deleted" className="text-body font-semibold text-foreground">
+      <section aria-labelledby="withdraw-deleted" className="fg-wd-info">
+        <h3 id="withdraw-deleted" className="fg-wd-info__h">
           탈퇴하면 삭제되는 정보
         </h3>
-        <ul className="mt-3 flex flex-col gap-1.5">
-          {deleted.map((item) => (
-            <li key={item} className="flex items-center gap-2 text-body text-foreground-secondary">
-              <span aria-hidden className="size-1 shrink-0 rounded-full bg-foreground-tertiary" />
-              {item}
+        <ul className="fg-wd-list">
+          {deleted.map(({ label, icon, tint }, index) => (
+            <li key={label} style={{ '--i': index } as CSSProperties}>
+              <span aria-hidden className="fg-wd-ic" style={tint}>
+                <LucianIcon name={icon} size={14} weight={2.2} />
+              </span>
+              {label}
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-caption font-medium text-destructive">삭제된 정보는 복구할 수 없어요.</p>
+        <p className="fg-wd-warn">삭제된 정보는 복구할 수 없어요.</p>
       </section>
 
       <form
         noValidate
-        className="card-surface flex flex-col gap-5 p-5"
+        className="fg-section fg-wd-form"
         onSubmit={(event) => {
           event.preventDefault()
           void submit()
         }}
       >
-        <label className="flex cursor-pointer items-start gap-3">
-          <Checkbox
-            checked={agreed}
-            onCheckedChange={(checked) => setAgreed(checked === true)}
-            disabled={submitting}
-            className="mt-0.5"
-          />
-          <span className="text-body text-foreground">위 내용을 확인했고 탈퇴에 동의합니다</span>
+        <label className="fg-wd-ck">
+          <AuthCheck tone="ink" checked={agreed} onCheckedChange={setAgreed} disabled={submitting} />
+          <span>위 내용을 확인했고 탈퇴에 동의합니다</span>
         </label>
 
         {isEmail ? (
@@ -121,6 +136,7 @@ export default function WithdrawPage() {
             label="비밀번호"
             error={fieldError}
             hint="본인 확인을 위해 비밀번호를 입력해 주세요."
+            className="fg-wd-field"
           >
             <PasswordField
               id="withdraw-password"
@@ -140,9 +156,21 @@ export default function WithdrawPage() {
             id="withdraw-phrase"
             label={`'${WITHDRAW_PHRASE}'를 입력해 주세요`}
             hint="카카오 계정은 확인 문구로 탈퇴 의사를 확인해요."
+            variant="plain"
+            className="fg-wd-field"
+            trailing={
+              <span aria-hidden className="fg-wd-nm">
+                {Array.from(WITHDRAW_PHRASE, (char, index) => (
+                  <span key={index} className={index < matched ? 'is-ok' : undefined}>
+                    {char}
+                  </span>
+                ))}
+              </span>
+            }
           >
-            <Input
+            <input
               id="withdraw-phrase"
+              className="fg-wd-ph"
               value={phrase}
               onChange={(event) => setPhrase(event.target.value)}
               placeholder={WITHDRAW_PHRASE}
@@ -153,16 +181,24 @@ export default function WithdrawPage() {
           </AuthField>
         )}
 
-        {locked && <FormNotice tone="error">{lockMessage(lockSeconds)}</FormNotice>}
+        {locked && <LockNotice seconds={lockSeconds}>{lockMessage(lockSeconds)}</LockNotice>}
         {formError && <FormNotice tone="error">{formError}</FormNotice>}
 
-        <div className="flex justify-end gap-2">
-          <Button asChild variant="outline">
-            <Link to="/me/account">취소</Link>
-          </Button>
-          <Button type="submit" variant="destructive" disabled={!submittable || submitting || locked}>
-            {submitting ? '처리 중…' : '탈퇴하기'}
-          </Button>
+        <div className="fg-wd-acts">
+          <Link to="/me/account" className="fg-btn fg-btn--tertiary">
+            취소
+          </Link>
+          <button
+            type="submit"
+            className={cn('fg-wd-go', submittable && !locked && 'is-armed')}
+            disabled={!submittable || submitting || locked}
+            aria-busy={submitting || undefined}
+          >
+            <span>
+              {submitting && <span aria-hidden className="fg-au-spin size-3.5" />}
+              {submitting ? '처리 중…' : '탈퇴하기'}
+            </span>
+          </button>
         </div>
       </form>
     </div>

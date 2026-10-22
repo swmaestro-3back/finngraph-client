@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+// Lucian UX/UI Prompt #042 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#042
 import { cn } from '@/lib/utils'
 
 interface StepIndicatorProps {
@@ -8,44 +8,32 @@ interface StepIndicatorProps {
 
 export function StepIndicator({ steps, current }: StepIndicatorProps) {
   return (
-    <ol aria-label="가입 단계" className="flex items-center gap-2">
+    <ol aria-label="가입 단계" className="fg-step">
       {steps.map((label, index) => {
         const state = index < current ? 'done' : index === current ? 'current' : 'todo'
         const last = index === steps.length - 1
         return (
           <li
             key={label}
+            data-state={state}
             aria-current={state === 'current' ? 'step' : undefined}
-            className={cn('flex items-center gap-2', !last && 'flex-1')}
+            className={cn('fg-step__it', !last && 'is-grow')}
           >
-            <span
-              key={state}
-              className={cn(
-                'flex size-5 shrink-0 items-center justify-center rounded-full border font-mono text-micro font-semibold tabular-nums transition-colors duration-300',
-                state === 'done' &&
-                  'border-primary bg-primary text-primary-foreground motion-safe:auth-pop',
-                state === 'current' && 'border-primary text-primary',
-                state === 'todo' && 'border-border text-muted-foreground',
+            <span key={state} className="fg-step__dot">
+              {state === 'done' ? (
+                <svg viewBox="0 0 14 14" aria-hidden>
+                  <path d="M3 7.3l2.7 2.7L11 4.5" />
+                </svg>
+              ) : (
+                index + 1
               )}
-            >
-              {state === 'done' ? <Check className="size-3" strokeWidth={2.5} /> : index + 1}
             </span>
-            <span
-              className={cn(
-                'text-caption font-medium whitespace-nowrap transition-colors duration-300',
-                state === 'current' ? 'text-foreground' : 'text-muted-foreground max-sm:sr-only',
-              )}
-            >
+            <span className={cn('fg-step__lab', state !== 'current' && 'max-sm:sr-only')}>
               {label}
             </span>
             {!last && (
-              <span aria-hidden className="relative h-px min-w-3 flex-1 overflow-hidden bg-border">
-                <span
-                  className={cn(
-                    'absolute inset-0 origin-left bg-primary transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
-                    index < current ? 'scale-x-100' : 'scale-x-0',
-                  )}
-                />
+              <span aria-hidden className="fg-step__seg">
+                <span />
               </span>
             )}
           </li>
