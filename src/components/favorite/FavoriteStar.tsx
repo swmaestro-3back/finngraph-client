@@ -1,15 +1,15 @@
+// Lucian UX/UI Prompt #022 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#022
 // 관심 등록 토글 별표 — 종목 상세·테마 상세·목록 행·트리맵이 공유한다
 //
 // 비회원에게도 별표를 보여주는 이유: 로그인하면 무엇이 생기는지 알려주는 자리가
 // 여기뿐이다. 숨기면 기능의 존재 자체가 전달되지 않는다.
-import { Star } from 'lucide-react'
-import { useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { BurstStar } from '@/components/fg/BurstStar'
 import type { FavoriteKind } from '@/lib/apiTypes'
 import { useAuth } from '@/lib/auth'
 import { useFavorites } from '@/lib/favorites'
-import { MOTION_BASE_MS, MOTION_EASE, STAR_POP, motionAllowed } from '@/lib/fg/motion'
+import { useBurst } from '@/lib/fg/useBurst'
 import { cn } from '@/lib/utils'
 
 interface FavoriteStarProps {
@@ -22,9 +22,9 @@ interface FavoriteStarProps {
   className?: string
 }
 
-const SIZE_CLASS = {
-  sm: 'size-4',
-  md: 'size-5',
+const SIZE_PX = {
+  sm: 16,
+  md: 20,
 } as const
 
 export function FavoriteStar({
@@ -38,7 +38,7 @@ export function FavoriteStar({
   const { has, isFull, toggle, limit } = useFavorites()
   const navigate = useNavigate()
   const location = useLocation()
-  const icon = useRef<SVGSVGElement>(null)
+  const [pop, fire] = useBurst()
 
   const active = status === 'authenticated' && has(type, targetKey)
 
@@ -56,7 +56,7 @@ export function FavoriteStar({
       toast.error(`관심 목록은 ${limit}개까지예요`)
       return
     }
-    if (!active && motionAllowed()) icon.current?.animate(STAR_POP, { duration: MOTION_BASE_MS, easing: MOTION_EASE })
+    if (!active) fire()
     void toggle(type, targetKey, { label, anchor: event.currentTarget as HTMLElement })
   }
 
@@ -76,7 +76,7 @@ export function FavoriteStar({
         className,
       )}
     >
-      <Star ref={icon} className={cn(SIZE_CLASS[size], active && 'fill-current')} />
+      <BurstStar on={active} pop={pop} size={SIZE_PX[size]} />
     </button>
   )
 }

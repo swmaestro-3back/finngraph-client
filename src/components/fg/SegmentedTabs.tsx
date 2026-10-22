@@ -1,3 +1,5 @@
+// Lucian UX/UI Prompt #048 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#048
+// Lucian UX/UI Prompt #096 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#096
 import { useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { nextTabIndex } from '@/lib/fg/tabs'
@@ -77,7 +79,7 @@ export function UnderlineTabs<T extends string>({ label, className, options, val
 export function Segment<T extends string>({ label, className, options, value, onChange }: TabListProps<T>) {
   const list = useRef<HTMLDivElement>(null)
   const mark = useRef<HTMLSpanElement>(null)
-  useSlidingMark(list, mark, options.findIndex((option) => option.value === value))
+  useSlidingMark(list, mark, options.findIndex((option) => option.value === value), { motion: 'spring' })
   return (
     <div ref={list} className={cn('fg-seg', className)} role="tablist" aria-label={label}>
       <span ref={mark} className="fg-seg__mark" aria-hidden="true" />
@@ -105,6 +107,7 @@ export function HeadingTabs({ label, options, current, className }: HeadingTabsP
   useSlidingMark(list, mark, options.findIndex((option) => option.key === current), {
     items: '.fg-htab',
     memory: `htabs:${label}`,
+    motion: 'stretch',
   })
   return (
     <nav ref={list} className={cn('fg-htabs', className)} aria-label={label}>

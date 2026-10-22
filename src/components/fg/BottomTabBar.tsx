@@ -1,32 +1,40 @@
-import { CalendarDays, ChartLine, House, LayoutGrid, Share2, Star, type LucideIcon } from 'lucide-react'
-import { useRef } from 'react'
+// Lucian UX/UI Prompt #041 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#041
+import type { CSSProperties } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { activeMenu, BOTTOM_TABS, type MenuKey } from '@/lib/fg/nav'
-import { useSlidingMark } from '@/lib/fg/useSlidingMark'
+import type { LucianIconName } from '@/vendor/lucian-icons'
 
-const ICONS: Record<MenuKey, LucideIcon> = {
-  home: House,
-  themes: LayoutGrid,
-  stocks: ChartLine,
-  graph: Share2,
-  calendar: CalendarDays,
-  favorites: Star,
+const ICONS: Record<MenuKey, LucianIconName> = {
+  home: 'home',
+  themes: 'grid',
+  stocks: 'linechart',
+  graph: 'share',
+  calendar: 'calendar',
+  favorites: 'star',
 }
 
 export function BottomTabBar() {
   const { pathname } = useLocation()
   const active = activeMenu(pathname)
-  const nav = useRef<HTMLElement>(null)
-  const mark = useRef<HTMLSpanElement>(null)
-  useSlidingMark(nav, mark, BOTTOM_TABS.findIndex((item) => item.key === active), { items: 'a' })
+  const index = BOTTOM_TABS.findIndex((item) => item.key === active)
+  const notch =
+    index >= 0 ? ({ '--fg-btab-x': `${((index + 0.5) * 100) / BOTTOM_TABS.length}%` } as CSSProperties) : undefined
   return (
-    <nav ref={nav} className="fg-btabs" aria-label="주 메뉴(하단)">
-      <span ref={mark} className="fg-btabs__mark" aria-hidden="true" />
+    <nav
+      className="fg-btabs fg-btabs--notch"
+      aria-label="주 메뉴(하단)"
+      data-active={index >= 0 ? '' : undefined}
+      style={notch}
+    >
+      <span className="fg-btabs__bar" aria-hidden="true" />
+      <span className="fg-btabs__bub" aria-hidden="true" />
       {BOTTOM_TABS.map((item) => {
-        const Icon = ICONS[item.key]
         return (
           <Link key={item.key} to={item.to} aria-current={active === item.key ? 'page' : undefined}>
-            <Icon size={22} strokeWidth={1.75} aria-hidden="true" />
+            <span className="fg-btabs__ic">
+              <LucianIcon name={ICONS[item.key]} size={22} />
+            </span>
             {item.label}
           </Link>
         )

@@ -1,11 +1,12 @@
-import { ChevronRight, Star } from 'lucide-react'
-import { useRef } from 'react'
+// Lucian UX/UI Prompt #022 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#022
+import { ChevronRight } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
+import { BurstStar } from '@/components/fg/BurstStar'
 import { Button, ButtonLink } from '@/components/fg/Button'
 import type { StockRowRes } from '@/lib/apiTypes'
-import { MOTION_BASE_MS, MOTION_EASE, STAR_POP, motionAllowed } from '@/lib/fg/motion'
 import { stockPath, themePath } from '@/lib/fg/paths'
+import { useBurst } from '@/lib/fg/useBurst'
 import { useFavoriteToggle } from '@/lib/fg/useFavoriteToggle'
 import { fromState } from '@/lib/navigation'
 
@@ -17,13 +18,13 @@ export function StockStar({ stock, className }: { stock: StockRef; className?: s
 
 export function StockWatchButton({ stock, className }: { stock: StockRef; className?: string }) {
   const { active, press } = useFavoriteToggle('STOCK', stock.ticker)
-  const icon = useRef<SVGSVGElement>(null)
+  const [pop, fire] = useBurst()
   const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (press({ label: stock.name, anchor: event.currentTarget }) && motionAllowed()) icon.current?.animate(STAR_POP, { duration: MOTION_BASE_MS, easing: MOTION_EASE })
+    if (press({ label: stock.name, anchor: event.currentTarget })) fire()
   }
   return (
     <Button aria-pressed={active} onClick={onClick} className={className}>
-      <Star ref={icon} size={18} strokeWidth={1.75} fill={active ? 'currentColor' : 'none'} aria-hidden="true" />
+      <BurstStar on={active} pop={pop} size={18} />
       {active ? '관심 종목' : '관심 추가'}
     </Button>
   )
