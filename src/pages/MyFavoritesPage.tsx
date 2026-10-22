@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, ChevronLeft, CircleHelp, Pencil } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
+import { EmptyFolderArt } from '@/components/favorite/EmptyFolderArt'
 import { FavoriteRow } from '@/components/favorite/FavoriteRow'
 import { FolderCards } from '@/components/favorite/FolderCards'
 import { FolderMenu } from '@/components/favorite/FolderMenu'
@@ -12,6 +13,8 @@ import { ThemeCards } from '@/components/favorite/ThemeCards'
 import { Button, ButtonLink } from '@/components/fg/Button'
 import { FilterChip } from '@/components/fg/FilterChip'
 import { IconButton } from '@/components/fg/IconButton'
+import { ListSelect } from '@/components/fg/ListSelect'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { getData } from '@/lib/api'
@@ -51,6 +54,7 @@ import {
 import { motionAllowed } from '@/lib/fg/motion'
 import { themeBasisLabel } from '@/lib/fg/themes'
 import { useContentSwap } from '@/lib/fg/useContentSwap'
+import { useFlipRows } from '@/lib/fg/useFlipRows'
 import { formatChange } from '@/lib/format'
 import { useKeyed } from '@/lib/queries/useKeyed'
 import { loadLatestIssues } from '@/lib/queries/useStockIssues'
@@ -222,6 +226,7 @@ export default function MyFavoritesPage() {
     return stockItems
   }, [stockItems, view, signals])
   const sorted = useMemo(() => sortItems(viewItems, sort), [viewItems, sort])
+  const flip = useFlipRows<HTMLUListElement>(sorted.map((item) => `${item.type}:${item.key}`).join())
   const members = useMemo(() => memberStocks(viewItems), [viewItems])
   const memberKey = useMemo(() => members.map((member) => member.ticker).sort().join(','), [members])
 
@@ -272,6 +277,7 @@ export default function MyFavoritesPage() {
       <section className="fg-section">
         <StateBlock
           kind="empty"
+          art={<EmptyFolderArt />}
           title="아직 담은 관심이 없어요"
           description="종목이나 테마의 별표를 누르면 여기에 모이고, 나만의 테마로 묶을 수 있어요"
           action={
@@ -399,24 +405,14 @@ export default function MyFavoritesPage() {
                     onClick={() => setEditingView(editing ? null : viewKey)}
                   >
                     {editing ? (
-                      <Check size={16} strokeWidth={2} aria-hidden="true" />
+                      <LucianIcon name="check" size={16} weight={2} />
                     ) : (
-                      <Pencil size={16} strokeWidth={1.75} aria-hidden="true" />
+                      <LucianIcon name="edit" size={16} />
                     )}
                     {editing ? '완료' : '편집'}
                   </Button>
                 )}
-                <label className="fg-tsort">
-                  <span className="fg-sr">정렬</span>
-                  <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
-                    {ITEM_SORTS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
-                </label>
+                <ListSelect label="정렬" value={sort} options={ITEM_SORTS} onChange={setSort} className="fg-mine__sort" />
               </div>
             </div>
 
@@ -454,7 +450,7 @@ export default function MyFavoritesPage() {
                 }
               />
             ) : (
-              <ul className="fg-mine__list">
+              <ul ref={flip} className="fg-mine__list">
                 {sorted.map((item) => (
                   <FavoriteRow
                     key={`${item.type}:${item.key}`}
@@ -486,7 +482,7 @@ export default function MyFavoritesPage() {
             <h1 className="fg-pagehead__title">나만의 테마</h1>
             {ready && !showGuide && (
               <IconButton label="시작 안내 보기" title="시작 안내 보기" className="fg-mine__help" onClick={askGuide}>
-                <CircleHelp size={18} strokeWidth={1.75} aria-hidden="true" />
+                <LucianIcon name="help" size={18} />
               </IconButton>
             )}
           </div>

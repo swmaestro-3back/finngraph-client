@@ -1,8 +1,9 @@
-import { FolderPlus, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { FavoriteStar } from '@/components/favorite/FavoriteStar'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { IconButton } from '@/components/fg/IconButton'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { ChangeText } from '@/components/fg/PriceChange'
 import type { FavoriteItemRes, FolderSummaryRes } from '@/lib/apiTypes'
 import { KIND_SHORT_LABELS, daysBetween } from '@/lib/calendar'
@@ -42,7 +43,7 @@ export function FavoriteRow({ item, signal, today, folder, editing, onOrganize, 
   const gap = signal?.gap ?? null
 
   return (
-    <li className="fg-mine__row">
+    <li className="fg-mine__row" data-flip={`${item.type}:${item.key}`}>
       <FavoriteStar type={item.type} targetKey={item.key} label={name} className="fg-mine__star" />
       <CompanyLogo name={name} ticker={item.key} size={32} className="fg-mine__logo" />
       <div className="fg-mine__id">
@@ -73,7 +74,7 @@ export function FavoriteRow({ item, signal, today, folder, editing, onOrganize, 
       {editing && (
         <div className="fg-mine__acts">
           <IconButton label={`${name} 테마에 담기`} title="테마에 담기" onClick={(event) => onOrganize(item, event.currentTarget)}>
-            <FolderPlus size={18} strokeWidth={1.75} aria-hidden="true" />
+            <LucianIcon name="folder" size={18} />
           </IconButton>
           {folder && (
             <IconButton label={`${name} ${folder.name}에서 빼기`} title="이 테마에서 빼기" onClick={() => onTakeOut(item)}>
