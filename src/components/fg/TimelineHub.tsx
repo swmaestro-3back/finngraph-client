@@ -1,11 +1,15 @@
-import { ChevronRight, Clock, Pause, Play } from 'lucide-react'
+// Lucian UX/UI Prompt #017 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#017
+// Lucian UX/UI Prompt #044 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#044
+import { ChevronRight } from 'lucide-react'
 import type { FocusEventHandler, MouseEventHandler, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { HeadingTabs } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
+import { Week52Gauge } from '@/components/fg/Week52Range'
 import type { GapId } from '@/lib/dataGaps'
 import { formatGapPct, formatPriceWon, marketLabel, toneClass } from '@/lib/fg/format'
 import { nodeDate, shortDay, type HubIssueNode, type HubQuoteExt, type HubTab, type MarketBreadth } from '@/lib/fg/hub'
@@ -124,10 +128,9 @@ interface AutoButtonProps {
 }
 
 export function AutoButton({ running, onToggle }: AutoButtonProps) {
-  const Icon = running ? Pause : Play
   return (
     <button type="button" className="fg-hubc__auto" onClick={onToggle}>
-      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
+      <LucianIcon name="play" size={16} state={running ? 'playing' : 'paused'} />
       {running ? '자동 넘김 멈추기' : '자동 넘김 켜기'}
     </button>
   )
@@ -174,7 +177,7 @@ export function HubItem({ open, bodyId, head, onPick, children = null, progress 
     <li className={cn('fg-acc__item', open && 'is-open')}>
       <button type="button" className="fg-acc__head" aria-expanded={open} aria-controls={bodyId} onClick={onPick}>
         {head}
-        <ChevronRight className="fg-acc__chev" size={18} strokeWidth={1.75} aria-hidden="true" />
+        <span className="fg-acc__pm" aria-hidden="true" />
       </button>
       <div className="fg-acc__body" id={bodyId}>
         <div className="fg-acc__inner">
@@ -303,7 +306,7 @@ export function HubMore({ to, state, children }: HubMoreProps) {
 export function HubSoon({ gap, text }: { gap: GapId; text: string }) {
   return (
     <p className="fg-hubsoon" data-gap={gap}>
-      <Clock size={16} strokeWidth={1.75} aria-hidden="true" />
+      <LucianIcon name="clock" size={16} />
       <span>{text}</span>
     </p>
   )
@@ -375,11 +378,7 @@ export function HubGapLine({ ext, extra = null }: HubGapLineProps) {
       <span className="fg-hq__gap">
         {ext?.high ? '52주 최고' : '52주 최고 대비'} {value ?? '—'}
       </span>
-      {ext && ext.position !== null && (
-        <span className="fg-hq__bar" aria-hidden="true">
-          <i className={cn(ext.high && 'is-high')} style={{ left: `${(ext.position * 100).toFixed(1)}%` }} />
-        </span>
-      )}
+      {ext && ext.position !== null && <Week52Gauge position={ext.position} high={ext.high} barClassName="fg-hq__bar" />}
       {extra}
     </span>
   )

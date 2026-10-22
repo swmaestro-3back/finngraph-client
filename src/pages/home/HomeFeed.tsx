@@ -1,16 +1,19 @@
+// Lucian UX/UI Prompt #076 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#076
 import { ChevronDown } from 'lucide-react'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { FilterChip } from '@/components/fg/FilterChip'
 import { GapValue } from '@/components/fg/Gap'
+import { ChangeText } from '@/components/fg/PriceChange'
 import { QuoteRetryNote, RetryText } from '@/components/fg/RetryText'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import { StockChip } from '@/components/fg/StockChip'
 import type { IssueSummaryRes, ThemeRes } from '@/lib/apiTypes'
 import { useFavorites } from '@/lib/favorites'
+import { formatPriceWon, marketLabel } from '@/lib/fg/format'
 import { formatRelativeTime } from '@/lib/format'
 import {
   ALL_FILTER,
@@ -37,10 +40,45 @@ import { fromState } from '@/lib/navigation'
 import { useHubFixture, type HubSlot } from '@/lib/queries/useHubSlots'
 import { useIssueFeed } from '@/lib/queries/useIssueFeed'
 import { useIssueQuotes } from '@/lib/queries/useIssue'
+import { cn } from '@/lib/utils'
 
 const CAPTION = '같은 소식을 다룬 기사를 하나로 묶었어요'
 
 type Quotes = ReadonlyMap<string, IssueQuote> | null
+
+interface ChipTip {
+  ticker: string
+  name: string
+  x: number
+  y: number
+  on: boolean
+  glide: boolean
+}
+
+interface ChipTipHandlers {
+  show: (ticker: string, name: string, el: HTMLElement) => void
+  hide: () => void
+}
+
+function ChipTipView({ tip, quote }: { tip: ChipTip; quote: IssueQuote | null }) {
+  return (
+    <div
+      className={cn('fg-ctip', tip.on && 'is-on', tip.glide && 'is-glide')}
+      style={{ '--x': `${tip.x}px`, '--y': `${tip.y}px` } as CSSProperties}
+      aria-hidden="true"
+    >
+      <div className="fg-ctip__box">
+        <b>{tip.name}</b>
+        <span className="fg-ctip__px fg-num">
+          {quote?.price != null ? formatPriceWon(quote.price) : '—'}
+          {quote?.change != null && <ChangeText value={quote.change} />}
+        </span>
+        {quote?.market && <small>{marketLabel(quote.market)}</small>}
+        <i className="fg-ctip__arr" />
+      </div>
+    </div>
+  )
+}
 
 interface IssueCardProps {
   issue: IssueSummaryRes
@@ -48,9 +86,10 @@ interface IssueCardProps {
   quotes: Quotes
   linked: HubFixture | null
   from: string
+  tip: ChipTipHandlers
 }
 
-function IssueCard({ issue, index, quotes, linked, from }: IssueCardProps) {
+function IssueCard({ issue, index, quotes, linked, from, tip }: IssueCardProps) {
   const state = fromState(from)
   const title = issue.title?.trim() || '제목 없는 이슈'
   const summary = issue.summary?.trim() || null
@@ -94,6 +133,10 @@ function IssueCard({ issue, index, quotes, linked, from }: IssueCardProps) {
                 withLogo
                 state={state}
                 className="fg-hcard__chip"
+                onMouseEnter={(e) => tip.show(company.ticker, company.name, e.currentTarget)}
+                onMouseLeave={tip.hide}
+                onFocus={(e) => tip.show(company.ticker, company.name, e.currentTarget)}
+                onBlur={tip.hide}
               />
             ))}
             {extra > 0 && (
@@ -164,6 +207,26 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
   const linked = useHubFixture('linked-companies')
   const skeleton = useDelayed(feed.chunks.length === 0 && feed.pending !== null)
   const from = `${pathname}${search}`
+  const hostRef = useRef<HTMLDivElement>(null)
+  const tipTimer = useRef<number | undefined>(undefined)
+  const [tip, setTip] = useState<ChipTip | null>(null)
+  useEffect(() => () => window.clearTimeout(tipTimer.current), [])
+  const tipHandlers: ChipTipHandlers = {
+    show: (ticker, name, el) => {
+      const host = hostRef.current
+      if (!host) return
+      window.clearTimeout(tipTimer.current)
+      const chip = el.getBoundingClientRect()
+      const box = host.getBoundingClientRect()
+      const x = chip.left - box.left + chip.width / 2
+      const y = chip.top - box.top
+      setTip((prev) => ({ ticker, name, x, y, on: true, glide: prev?.on === true }))
+    },
+    hide: () => {
+      window.clearTimeout(tipTimer.current)
+      tipTimer.current = window.setTimeout(() => setTip((prev) => (prev ? { ...prev, on: false, glide: false } : prev)), 90)
+    },
+  }
 
   const loaded = feed.chunks.length > 0
   const primaryDate = feed.chunks[0]?.date ?? null
@@ -249,6 +312,7 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
               quotes={quotes}
               linked={linked}
               from={from}
+              tip={tipHandlers}
             />
           ))}
         </ol>
@@ -280,8 +344,9 @@ export function HomeFeed({ hot, themeIssues, today }: HomeFeedProps) {
         </div>
       )}
       {scope && loaded && shownGroups.length > 0 && <p className="fg-hfeed__scope">{scope}</p>}
-      <div className="fg-hfeed__list" aria-busy={feed.pending !== null || undefined}>
+      <div ref={hostRef} className="fg-hfeed__list" aria-busy={feed.pending !== null || undefined}>
         {body}
+        {tip && <ChipTipView tip={tip} quote={quotes?.get(tip.ticker) ?? null} />}
       </div>
       {retryQuotes && shownGroups.length > 0 && <QuoteRetryNote onRetry={retryQuotes} />}
       {loaded && feed.error && (
