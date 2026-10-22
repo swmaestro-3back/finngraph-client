@@ -1,8 +1,9 @@
-import { ChevronRight, ExternalLink, Lock } from 'lucide-react'
+import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { FilterChip } from '@/components/fg/FilterChip'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import type { CandleRes } from '@/lib/apiTypes'
@@ -179,7 +180,7 @@ export function StockNewsList({ ticker, candles, today, refreshKey, onOpenNews }
         {view.gated && (
           <div className="fg-tnw__gate">
             <span className="fg-tnw__lock" aria-hidden="true">
-              <Lock size={20} strokeWidth={1.75} />
+              <LucianIcon name="lock" size={20} />
             </span>
             <span className="fg-tnw__gtxt">
               <b>{`${GATE_SUBJECT}${josa(GATE_SUBJECT, '은/는')} 로그인하면 볼 수 있어요`}</b>

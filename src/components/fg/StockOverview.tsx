@@ -1,10 +1,11 @@
-import { Lock, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip } from '@/components/fg/FilterChip'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { PriceChart, type ChartMarker } from '@/components/fg/PriceChart'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
@@ -459,7 +460,7 @@ function newsView({
         {gated && (
           <div className="fg-tnw__gate">
             <span className="fg-tnw__lock" aria-hidden="true">
-              <Lock size={20} strokeWidth={1.75} />
+              <LucianIcon name="lock" size={20} />
             </span>
             <span className="fg-tnw__gtxt">
               <b>{`${NEWS_GATE_SUBJECT}${josa(NEWS_GATE_SUBJECT, '은/는')} 로그인하면 볼 수 있어요`}</b>

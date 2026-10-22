@@ -1,7 +1,7 @@
-import { Lock } from 'lucide-react'
 import { useCallback, useId, useMemo, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import type { GraphEdge, GraphNode, GraphNodeKind, IssueGraphModel } from '@/lib/fg/issuePage'
 import type { IssueLink } from '@/lib/fg/issueRecords'
 import { stockPath } from '@/lib/fg/paths'
@@ -249,7 +249,7 @@ export function IssueTreeGraph({ graph, locked, links, onOpenLink }: IssueTreeGr
         {gated && (
           <div className="fg-igraph__gate">
             <span className="fg-igraph__lock" aria-hidden="true">
-              <Lock size={16} strokeWidth={1.75} />
+              <LucianIcon name="lock" size={16} />
             </span>
             <p className="fg-igraph__gtext">
               {graph.inferred > 0

@@ -1,5 +1,5 @@
-import { Lock } from 'lucide-react'
 import { Button } from '@/components/fg/Button'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { josa } from '@/lib/josa'
 import { useMemberGate } from '@/lib/memberGate'
 import { cn } from '@/lib/utils'
@@ -41,7 +41,7 @@ export function MemberGate({ subject, scope = null, variant = 'block', className
       </div>
       <div className="fg-gate__over">
         <span className="fg-gate__lock" aria-hidden="true">
-          <Lock size={20} strokeWidth={1.75} />
+          <LucianIcon name="lock" size={20} />
         </span>
         <p className={cn('fg-gate__title', variant === 'compact' && 'fg-gate__title--compact')}>
           {`${subject}${josa(subject, '은/는')} 로그인하면 볼 수 있어요`}
