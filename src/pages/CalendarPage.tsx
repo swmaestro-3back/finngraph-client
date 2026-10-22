@@ -1,3 +1,4 @@
+// Lucian UX/UI Prompt #030 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#030
 import { useCallback, useMemo, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocation, useSearchParams } from 'react-router-dom'
@@ -152,7 +153,9 @@ export default function CalendarPage() {
               <div className="fg-cal-month__nav">
                 <MonthStep direction="prev" target={shiftMonth(month, -1)} onStep={stepMonth} />
                 <h2 id="calendar-month-title" aria-live="polite" className="fg-section__title fg-cal-month__title fg-num">
-                  {monthTitle}
+                  <span key={monthTitle} className="fg-cal-month__label">
+                    {monthTitle}
+                  </span>
                 </h2>
                 <MonthStep direction="next" target={shiftMonth(month, 1)} onStep={stepMonth} />
                 <Button size="sm" className="fg-cal-month__today" onClick={goToday} disabled={onCurrentMonth}>

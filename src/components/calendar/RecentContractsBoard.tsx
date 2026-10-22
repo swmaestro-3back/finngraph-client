@@ -1,8 +1,10 @@
+// Lucian UX/UI Prompt #299 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#299
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { FilterChipGroup } from '@/components/fg/FilterChip'
+import { ShareBar, type ShareTone } from '@/components/fg/ShareBar'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import type { RecentContractRes } from '@/lib/apiTypes'
@@ -24,6 +26,8 @@ const SORTS: readonly { value: RecentContractSort; label: string }[] = [
 const DAYS = 7
 const PREVIEW = 5
 const HIGH_RATIO = 50
+const MAX_RATIO = 100
+const BAR_SCALE = 400
 const LIST_ID = 'recent-contracts-list'
 
 function counterpartyOf(row: RecentContractRes): string {
@@ -47,6 +51,12 @@ function Filer({ row, from }: { row: RecentContractRes; from: string }) {
       {row.filerMarket && <span className="fg-cal-ctr__mkt">{marketLabel(row.filerMarket)}</span>}
     </span>
   )
+}
+
+function ratioTone(ratio: number): ShareTone {
+  if (ratio >= MAX_RATIO) return 'danger'
+  if (ratio >= HIGH_RATIO) return 'warn'
+  return 'grad'
 }
 
 function ContractCard({ row, from }: { row: RecentContractRes; from: string }) {
@@ -76,6 +86,14 @@ function ContractCard({ row, from }: { row: RecentContractRes; from: string }) {
           <ExternalLink size={12} strokeWidth={1.75} aria-hidden="true" />
         </a>
       </span>
+      {row.salesRatio !== null && (
+        <ShareBar
+          value={row.salesRatio / BAR_SCALE}
+          tone={ratioTone(row.salesRatio)}
+          tip={formatSalesRatio(row.salesRatio)}
+          className="fg-cal-ctr__bar"
+        />
+      )}
     </li>
   )
 }
@@ -141,7 +159,7 @@ export function RecentContractsBoard({ from, className }: RecentContractsBoardPr
 
       {!pending && !error && rows.length > 0 && (
         <>
-          <ul id={LIST_ID} className="fg-cal-ctr__list">
+          <ul key={sort} id={LIST_ID} className="fg-cal-ctr__list">
             {shown.map((row) => (
               <ContractCard key={row.rceptNo} row={row} from={from} />
             ))}

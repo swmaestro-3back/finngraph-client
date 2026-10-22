@@ -225,7 +225,7 @@ export function IpoBoard({ today, from, className }: IpoBoardProps) {
           className="fg-cal-ipo__tabs"
         />
         {group.note && <p className="fg-cal-ipo__gnote">{group.note}</p>}
-        <div id={listId}>
+        <div key={group.status} id={listId}>
           {narrow ? (
             <ul className="fg-cal-ipo__list">
               {items.map((item) => (
