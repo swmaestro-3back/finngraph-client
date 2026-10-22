@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+// Lucian UX/UI Prompt #095 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#095
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Segment, type TabOption } from '@/components/fg/SegmentedTabs'
 import {
   resultColumnLabel,
@@ -9,6 +10,7 @@ import {
   type ResultPeriod,
   type ResultPoint,
 } from '@/lib/fg/financials'
+import { cn } from '@/lib/utils'
 
 export const RESULTS_TITLE_ID = 'fg-sf-results'
 
@@ -92,18 +94,29 @@ export function ResultsChart({ shown, all, period, periods, basis, notice, onPer
           </span>
           {shown.map((point, k) => (
             <button
-              key={point.key}
+              key={`slot-${count - 1 - k}`}
               type="button"
               className="fg-rcx__col fg-num"
               data-on={k === on}
+              style={{ '--d': k } as CSSProperties}
               aria-label={resultColumnLabel(point, all)}
               onMouseEnter={() => setHover(k)}
               onFocus={() => setHover(k)}
               onBlur={clear}
             >
               <span className="fg-rcx__bars" aria-hidden="true">
-                {point.sales !== null && <i className="fg-rcx__bar fg-rcx__bar--sales" style={boxStyle(scale.box(point.sales))} />}
-                {point.op !== null && <i className="fg-rcx__bar fg-rcx__bar--op" style={boxStyle(scale.box(point.op))} />}
+                {point.sales !== null && (
+                  <i
+                    className={cn('fg-rcx__bar fg-rcx__bar--sales', point.sales < 0 && 'fg-rcx__bar--neg')}
+                    style={boxStyle(scale.box(point.sales))}
+                  />
+                )}
+                {point.op !== null && (
+                  <i
+                    className={cn('fg-rcx__bar fg-rcx__bar--op', point.op < 0 && 'fg-rcx__bar--neg')}
+                    style={boxStyle(scale.box(point.op))}
+                  />
+                )}
               </span>
               <span className="fg-rcx__x" aria-hidden="true">
                 <span>{point.label}</span>

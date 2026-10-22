@@ -1,10 +1,11 @@
-import { ChevronDown } from 'lucide-react'
+import { ListSelect } from '@/components/fg/ListSelect'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { ThemeIndexRetry } from '@/components/fg/ThemeIndexRetry'
 import type { StockThemeCompareRes, StockThemeRes } from '@/lib/apiTypes'
-import { positionRows } from '@/lib/fg/stockDetail'
+import { POSITION_TOP_TIER, positionRows } from '@/lib/fg/stockDetail'
 import { monthDayLabel } from '@/lib/fg/themeCharts'
 import { josa } from '@/lib/josa'
+import { cn } from '@/lib/utils'
 
 const SKELETON_ROWS = 7
 
@@ -15,18 +16,15 @@ interface ThemePickerProps {
 }
 
 function ThemePicker({ themes, themeId, onPick }: ThemePickerProps) {
+  const options = themes.map((theme) => ({ value: String(theme.id), label: theme.name, hint: `${theme.stockCount}종목` }))
   return (
-    <label className="fg-stp__pick">
-      <span className="fg-sr">비교 테마</span>
-      <select value={themeId} onChange={(event) => onPick(Number(event.target.value))}>
-        {themes.map((theme) => (
-          <option key={theme.id} value={theme.id}>
-            {`${theme.name} · ${theme.stockCount}종목`}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
-    </label>
+    <ListSelect<string>
+      label="비교 테마"
+      value={String(themeId)}
+      options={options}
+      onChange={(value) => onPick(Number(value))}
+      className="fg-stp__pick"
+    />
   )
 }
 
@@ -55,24 +53,20 @@ function PositionList({ compare }: { compare: StockThemeCompareRes }) {
               <>
                 <span className="fg-stp__rank fg-num">
                   <span className="fg-sr">{`${row.count}종목 중 ${row.rank}위`}</span>
-                  <span aria-hidden="true">
-                    <b>{`${row.rank}위`}</b>
-                    {`/${row.count}`}
+                  <b aria-hidden="true">{`${row.rank}위`}</b>
+                </span>
+                {row.topPct !== null && (
+                  <span className={cn('fg-stp__pct fg-num', row.topPct <= POSITION_TOP_TIER && 'is-top')}>
+                    {`상위 ${row.topPct}%`}
                   </span>
-                </span>
-                <span className="fg-stp__bar" aria-hidden="true">
-                  <span className="fg-stp__mid" />
-                  {row.position !== null && (
-                    <span className="fg-w52__dot" style={{ left: `${(row.position * 100).toFixed(1)}%` }} />
-                  )}
-                </span>
+                )}
               </>
             )}
           </li>
         ))}
       </ul>
       <span className="fg-stp__cap">
-        {`${compare.themeName} ${compare.memberCount}종목 안 순위예요 · 왼쪽일수록 앞이고 가운데 선이 중앙값이에요 · 값이 없는 종목은 빼고 셌어요`}
+        {`${compare.themeName} ${compare.memberCount}종목 안 순위예요 · 진한 칩은 상위 ${POSITION_TOP_TIER}% 안이에요 · 값이 없는 종목은 빼고 셌어요`}
         {basisDate && ` · ${monthDayLabel(basisDate, Number(basisDate.slice(0, 4)))} 기준`}
       </span>
     </>

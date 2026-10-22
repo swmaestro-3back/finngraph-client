@@ -16,7 +16,7 @@ export function IssueTabs({ current, counts, ref }: IssueTabsProps) {
   const { pathname, search, state } = useLocation()
   const list = useRef<HTMLUListElement>(null)
   const mark = useRef<HTMLLIElement>(null)
-  useSlidingMark(list, mark, ISSUE_TABS.findIndex((tab) => tab.value === current), { items: '.fg-ptab' })
+  useSlidingMark(list, mark, ISSUE_TABS.findIndex((tab) => tab.value === current), { items: '.fg-ptab', motion: 'stretch' })
   return (
     <nav ref={ref} className="fg-sdtabs fg-ish__tabs" aria-label="이슈 보기">
       <ul ref={list} className="fg-ptabs">

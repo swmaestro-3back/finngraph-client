@@ -14,6 +14,7 @@ import {
 } from 'lightweight-charts'
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { ShareBar } from '@/components/fg/ShareBar'
 import { formatChartPrice, isoOfTime, keyboardIndex, withAlpha } from '@/lib/fg/priceChart'
 import { toneClass } from '@/lib/fg/format'
 import {
@@ -278,6 +279,9 @@ export function InvestorFlowChart({ days, streaks }: InvestorFlowChartProps) {
   }
 
   const reading = flowReading({ window: rows, totals, hover, mode, streaks, refYear })
+  const at = hover === null ? count - 1 : Math.max(0, Math.min(count - 1, hover))
+  const amounts = reading.items.map((item) => Math.abs(mode === 'cum' ? totals[at][item.key] : (rows[at][item.key] ?? 0)))
+  const peak = Math.max(0, ...amounts)
   const lead = flowLead(streaks)
   const tail = flowTail(rows)
   const holding = holdingText(foreignHolding(rows), count)
@@ -306,10 +310,13 @@ export function InvestorFlowChart({ days, streaks }: InvestorFlowChartProps) {
         {reading.when}
       </p>
       <dl className="fg-sff__read fg-num">
-        {reading.items.map((item) => (
+        {reading.items.map((item, i) => (
           <div key={item.key}>
             <dt>{item.who}</dt>
-            <dd className={`fg-${item.tone}`}>{item.value}</dd>
+            <dd className={`fg-${item.tone}`}>
+              {item.value}
+              <ShareBar value={peak > 0 ? amounts[i] / peak : 0} tone={item.tone === 'down' ? 'down' : 'up'} className="fg-sff__share" />
+            </dd>
             <small>{item.note || ' '}</small>
           </div>
         ))}

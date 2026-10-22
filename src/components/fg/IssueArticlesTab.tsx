@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { ShareBar } from '@/components/fg/ShareBar'
 import {
   ARTICLE_LIMIT,
   ARTICLE_SORTS,
@@ -120,9 +121,7 @@ export function IssueArticlesTab({ issue, onOpenNews }: IssueArticlesTabProps) {
               {tally.rows.map((row) => (
                 <li key={row.key}>
                   <b>{row.name}</b>
-                  <span className="fg-cov__bar" aria-hidden="true">
-                    <span className="fg-cov__fill" style={{ width: `${row.pct}%` }} />
-                  </span>
+                  <ShareBar value={row.pct / 100} tone="grad" className="fg-iar__share" />
                   <span className="fg-num">{`${row.count}건`}</span>
                 </li>
               ))}

@@ -1,12 +1,15 @@
-import { ChevronDown, Star } from 'lucide-react'
-import { useRef, useState } from 'react'
+// Lucian UX/UI Prompt #022 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#022
+import { ChevronDown } from 'lucide-react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { BurstStar } from '@/components/fg/BurstStar'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChipGroup } from '@/components/fg/FilterChip'
 import { IconButton } from '@/components/fg/IconButton'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { useBurstOnRise } from '@/lib/fg/useBurst'
 import { useContentSwap } from '@/lib/fg/useContentSwap'
 import { formatChange } from '@/lib/format'
 import { formatGapPct, formatPriceWon, marketLabel, toneClass } from '@/lib/fg/format'
@@ -46,8 +49,8 @@ export function StrengthBars({ strength }: { strength: LinkedCompany['strength']
 
 export function GapBar({ position }: { position: number }) {
   return (
-    <span className="fg-gbar" aria-hidden="true">
-      <i style={{ left: `${(Math.min(1, Math.max(0, position)) * 100).toFixed(1)}%` }} />
+    <span className="fg-gbar" aria-hidden="true" style={{ '--v': Math.min(1, Math.max(0, position)).toFixed(3) } as CSSProperties}>
+      <i />
     </span>
   )
 }
@@ -92,6 +95,7 @@ function GapCell({ company }: { company: LinkedCompany }) {
 
 export function HiddenLinkRow({ company, meta, openLabel, watched, onToggleWatch, onOpen }: HiddenLinkRowProps) {
   const { pathname, search } = useLocation()
+  const [pop, arm] = useBurstOnRise(watched)
   return (
     <li className="fg-hlist__row">
       <div className="fg-hlist__name">
@@ -136,8 +140,15 @@ export function HiddenLinkRow({ company, meta, openLabel, watched, onToggleWatch
           {openLabel}
         </Button>
         {watched !== null && (
-          <IconButton label={watchLabel(company.name, watched)} aria-pressed={watched} onClick={onToggleWatch}>
-            <Star size={20} strokeWidth={1.75} fill={watched ? 'currentColor' : 'none'} aria-hidden="true" />
+          <IconButton
+            label={watchLabel(company.name, watched)}
+            aria-pressed={watched}
+            onClick={() => {
+              arm()
+              onToggleWatch()
+            }}
+          >
+            <BurstStar on={watched} pop={pop} size={20} />
           </IconButton>
         )}
       </div>

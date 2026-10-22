@@ -1,4 +1,5 @@
-import type { RefObject } from 'react'
+// Lucian UX/UI Prompt #008 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#008
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/fg/Badge'
 import { Button, ButtonLink } from '@/components/fg/Button'
@@ -11,6 +12,8 @@ import { issuePath } from '@/lib/fg/paths'
 import { issueBadge, reportedLabel, shortDate, tradingDayLabel, type PlacedIssue } from '@/lib/fg/stockIssues'
 
 const SHEET_NOTE = '요약은 묶인 기사로 만든 참고 자료이며 투자 권유가 아니에요.'
+const COPIED_MS = 1800
+const FAILED_MS = 500
 
 interface IssuePreviewSheetProps {
   stockName: string
@@ -33,11 +36,23 @@ export function IssuePreviewSheet({
   onPick,
   onClose,
 }: IssuePreviewSheetProps) {
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const copyTimer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(copyTimer.current), [])
+
+  const flash = (next: 'copied' | 'failed', ms: number) => {
+    window.clearTimeout(copyTimer.current)
+    setCopyState(next)
+    copyTimer.current = window.setTimeout(() => setCopyState('idle'), ms)
+  }
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}${sharePath}`)
+      flash('copied', COPIED_MS)
       toast.success('링크를 복사했어요', { description: sharePath })
     } catch {
+      flash('failed', FAILED_MS)
       toast.error('링크를 복사하지 못했어요')
     }
   }
@@ -111,7 +126,18 @@ export function IssuePreviewSheet({
             <ButtonLink to={issuePath(issue.key)} variant="primary">
               이슈 페이지에서 보기
             </ButtonLink>
-            <Button onClick={copy}>링크 복사</Button>
+            <Button className="fg-copylink" data-state={copyState} onClick={copy}>
+              <span className="fg-copylink__ic" aria-hidden="true">
+                <svg className="fg-copylink__cp" viewBox="0 0 24 24">
+                  <rect x="8.5" y="8.5" width="11" height="11" rx="2.5" />
+                  <path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2" />
+                </svg>
+                <svg className="fg-copylink__ok" viewBox="0 0 24 24">
+                  <path d="M5.5 12.5l4.2 4.2L18.5 8" />
+                </svg>
+              </span>
+              링크 복사
+            </Button>
           </div>
           <Disclaimer text={SHEET_NOTE} className="fg-isheet__note" />
         </>

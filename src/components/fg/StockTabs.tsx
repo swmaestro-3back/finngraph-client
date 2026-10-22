@@ -25,7 +25,7 @@ export function StockTabs({ label, current, counts, className, ref }: StockTabsP
   const { pathname, search, state } = useLocation()
   const list = useRef<HTMLUListElement>(null)
   const mark = useRef<HTMLLIElement>(null)
-  useSlidingMark(list, mark, STOCK_TABS.findIndex((tab) => tab.value === current), { items: '.fg-ptab' })
+  useSlidingMark(list, mark, STOCK_TABS.findIndex((tab) => tab.value === current), { items: '.fg-ptab', motion: 'stretch' })
   return (
     <nav ref={ref} className={cn('fg-sdtabs', className)} aria-label={label}>
       <ul ref={list} className="fg-ptabs">
