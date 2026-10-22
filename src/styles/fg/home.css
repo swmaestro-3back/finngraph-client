@@ -364,7 +364,8 @@
   font: 500 14px/20px var(--font-sans);
   color: var(--text-secondary);
 }
-.fg-hubsoon > svg {
+.fg-hubsoon > svg,
+.fg-hubsoon > .fg-li {
   flex-shrink: 0;
 }
 

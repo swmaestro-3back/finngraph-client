@@ -17,6 +17,13 @@
 @import "./styles/fg/home.css" layer(components);
 @import "./styles/fg/calendar.css" layer(components);
 @import "./styles/fg/favorites.css" layer(components);
+@import "./styles/fg/lucian.css" layer(components);
+@import "./styles/fg/lucian-kit.css" layer(components);
+@import "./styles/fg/lucian-markets.css" layer(components);
+@import "./styles/fg/lucian-detail.css" layer(components);
+@import "./styles/fg/lucian-pages.css" layer(components);
+@import "./styles/fg/lucian-auth.css" layer(components);
+@import "./styles/fg/lucian-feedback.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
@@ -80,7 +87,7 @@
   --market-open-ink: #c2414d;
 
   /* JS 리터럴로만 색을 받는 곳(d3 그래프·recharts 커서)이 var()로 참조하는 값 — 색의 정본을 CSS 한 곳에 둔다 */
-  --graph-canvas: #f3f1f1;
+  --graph-canvas: #f5f3ef;
   --graph-edge: #a6a2a2;
   --chart-cursor: rgba(32, 29, 29, 0.04);
 }
@@ -107,7 +114,7 @@
   --market-open: #ff8a95;
   --market-open-soft: #3a1a1e;
   --market-open-ink: #ff9aa3;
-  --graph-canvas: #101214;
+  --graph-canvas: #0c0d13;
   --graph-edge: #5b626b;
   --chart-cursor: rgba(255, 255, 255, 0.06);
 }

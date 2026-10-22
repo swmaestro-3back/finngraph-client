@@ -393,7 +393,8 @@
   font: 500 12px/17px var(--font-sans);
   color: var(--text-secondary);
 }
-.fg-note svg {
+.fg-note svg,
+.fg-note .fg-li {
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -724,7 +725,8 @@
   position: absolute;
   inset: -10px -8px;
 }
-.fg-retry > svg {
+.fg-retry > svg,
+.fg-retry > .fg-li {
   flex-shrink: 0;
   color: var(--feedback-error);
 }
@@ -1230,7 +1232,7 @@ a.fg-tnw__row:active::before,
   :is(.fg-col, .fg-rail, .fg-home__col, .fg-home__rail, .fg-hubc) :is(.fg-chip, .fg-badge) {
     animation: fg-pop-in var(--fg-motion-fast) var(--fg-ease) backwards;
   }
-  .fg-btabs a[aria-current='page'] svg {
+  .fg-btabs a[aria-current='page'] .fg-li {
     animation: fg-pop var(--fg-motion-base) var(--fg-ease);
   }
 }
