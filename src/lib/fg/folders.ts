@@ -275,9 +275,8 @@ export function fitCompanies(links: readonly FitCompany[], limit: number, seed: 
   return picked
 }
 
-export function fitReason(company: Pick<LinkedCompany, 'name' | 'title'>): string {
-  const subject = `${company.name}${josa(company.name, '은/는')} `
-  return company.title.startsWith(subject) ? company.title.slice(subject.length) : company.title
+export function fitReason(from: string): string {
+  return `${from}${josa(from, '와/과')} 연결되어 있어요`
 }
 
 export interface ReturnPath {

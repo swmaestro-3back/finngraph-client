@@ -150,7 +150,7 @@ export function FolderRail({ members, folder }: FolderRailProps) {
           <p className="fg-mine__rempty">관계로 이어진 상장 기업을 아직 찾지 못했어요</p>
         ) : (
           <ul className="fg-mine__fits">
-            {fits.map(({ company }) => {
+            {fits.map(({ company, from }) => {
               const ticker = company.code ?? ''
               const held = has('STOCK', ticker)
               const evidence = linkEvidenceCount(company)
@@ -167,7 +167,7 @@ export function FolderRail({ members, folder }: FolderRailProps) {
                     {company.change !== null && <ChangeText value={company.change} className="fg-mine__fitchg" />}
                   </span>
                   <span className="fg-mine__fitwhy" title={company.title}>
-                    {fitReason(company)}
+                    {fitReason(from)}
                   </span>
                   {quote && (
                     <span className="fg-mine__fitquote">
