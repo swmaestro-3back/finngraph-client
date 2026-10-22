@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react'
+// Lucian UX/UI Prompt #317 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#317
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/fg/Badge'
 import { Button, ButtonLink } from '@/components/fg/Button'
@@ -12,6 +13,7 @@ import type { ThemeStockRes } from '@/lib/apiTypes'
 import { formatCompactKrw } from '@/lib/format'
 import { formatPriceWon, marketLabel } from '@/lib/fg/format'
 import { stockPath } from '@/lib/fg/paths'
+import { useFlipRows } from '@/lib/fg/useFlipRows'
 import {
   DEFAULT_MEMBER_SORT,
   MEMBER_TABLE_LIMIT,
@@ -88,6 +90,7 @@ export function ThemeConstituents({ stocks, loading, error, onRetry, themeCap, f
   const scope = useMemo(() => sortMembers(filterMarket(stocks ?? [], market), sort), [stocks, market, sort])
   const rows = visibleMembers(scope, showAll)
   const tableLabel = `구성 종목, ${memberSortLabel(sort)}`
+  const flip = useFlipRows<HTMLDivElement>(rows.map((stock) => stock.ticker).join())
 
   const pickMarket = (next: MarketFilter) => {
     setMarket(next)
@@ -139,7 +142,7 @@ export function ThemeConstituents({ stocks, loading, error, onRetry, themeCap, f
           ))}
         </div>
         <div className="fg-table-wrap fg-tcm__wrap fg-reveal" role="region" aria-label="구성 종목 표" tabIndex={0}>
-          <div className="fg-tcm" role="table" aria-label={tableLabel}>
+          <div ref={flip} className="fg-tcm" role="table" aria-label={tableLabel}>
             <div className="fg-tcm__row fg-tcm__row--head" role="row">
               <span role="columnheader">종목</span>
               {COLUMNS.map(({ key, label }) => (
@@ -152,8 +155,14 @@ export function ThemeConstituents({ stocks, loading, error, onRetry, themeCap, f
               ))}
               <span role="columnheader">테마 포함 사유</span>
             </div>
-            {rows.map((stock) => (
-              <div key={stock.ticker} className="fg-tcm__row" role="row">
+            {rows.map((stock, index) => (
+              <div
+                key={stock.ticker}
+                className="fg-tcm__row"
+                role="row"
+                data-flip={stock.ticker}
+                style={{ '--fg-i': index } as CSSProperties}
+              >
                 <span role="cell" className="fg-tcm__name">
                   <CompanyLogo name={stock.name} ticker={stock.ticker} />
                   <span>

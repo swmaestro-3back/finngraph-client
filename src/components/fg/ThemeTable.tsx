@@ -1,4 +1,5 @@
-import { Fragment, type ReactNode, type Ref } from 'react'
+// Lucian UX/UI Prompt #317 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#317
+import { Fragment, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { RowExpansion } from '@/components/fg/RowExpansion'
@@ -8,6 +9,7 @@ import type { ThemeRes } from '@/lib/apiTypes'
 import { formatChange, formatCompactKrw } from '@/lib/format'
 import { toneClass } from '@/lib/fg/format'
 import { themeLeader, type ChangeOf, type IssueOf } from '@/lib/fg/themes'
+import { useFlipRows } from '@/lib/fg/useFlipRows'
 import { useRowFold } from '@/lib/fg/useRowFold'
 
 interface ThemeTableProps {
@@ -34,6 +36,7 @@ export function ThemeTable({
     selectedId,
     expanded,
   )
+  const flip = useFlipRows<HTMLDivElement>(themes.map((theme) => theme.id).join())
   const pick = (id: number, el: HTMLElement) => {
     hold(id, el)
     onSelect(id)
@@ -41,7 +44,7 @@ export function ThemeTable({
   return (
     <>
       <div className="fg-table-wrap fg-reveal" role="region" aria-label="테마 표" tabIndex={0}>
-        <div className="fg-ttable" role="table">
+        <div ref={flip} className="fg-ttable" role="table">
           <div className="fg-trow fg-trow--head" role="row">
             <span role="columnheader">테마 · 거래대금</span>
             <span role="columnheader" className="fg-trow__num">등락률</span>
@@ -49,7 +52,7 @@ export function ThemeTable({
             <span role="columnheader">주도주</span>
             <span role="columnheader">대표 이슈</span>
           </div>
-          {themes.map((theme) => {
+          {themes.map((theme, index) => {
             const selected = theme.id === selectedId
             const change = changeOf(theme)
             const leader = themeLeader(theme)
@@ -62,6 +65,8 @@ export function ThemeTable({
                   className="fg-trow"
                   role="row"
                   data-selected={selected ? 'true' : undefined}
+                  data-flip={theme.id}
+                  style={{ '--fg-i': index } as CSSProperties}
                 >
                   <span role="cell">
                     <button

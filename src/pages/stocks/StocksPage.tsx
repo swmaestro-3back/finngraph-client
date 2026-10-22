@@ -1,9 +1,12 @@
-import { ChevronDown, SlidersHorizontal, X } from 'lucide-react'
+// Lucian UX/UI Prompt #031 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#031
+import { X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { Disclaimer } from '@/components/fg/Disclaimer'
 import { FilterChip } from '@/components/fg/FilterChip'
+import { ListSelect } from '@/components/fg/ListSelect'
+import { LucianIcon } from '@/components/fg/LucianIcon'
 import { Pager } from '@/components/fg/Pager'
 import type { TabOption } from '@/components/fg/SegmentedTabs'
 import { Skeleton } from '@/components/fg/Skeleton'
@@ -529,17 +532,13 @@ export default function StocksPage() {
                     </FilterChip>
                   </div>
                   <div className="fg-ttools__r">
-                    <label className="fg-tsort">
-                      <span className="fg-sr">정렬</span>
-                      <select value={sort} onChange={(e) => setSort(e.target.value as StockSort)}>
-                        {sortOptions(valueReady).map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
-                    </label>
+                    <ListSelect
+                      label="정렬"
+                      value={sort}
+                      options={sortOptions(valueReady)}
+                      onChange={setSort}
+                      className="fg-tsort-list"
+                    />
                     <button
                       type="button"
                       className="fg-tbtn"
@@ -548,7 +547,7 @@ export default function StocksPage() {
                       aria-expanded={filterOpen}
                       onClick={openFilter}
                     >
-                      <SlidersHorizontal size={16} strokeWidth={1.75} aria-hidden="true" />
+                      <LucianIcon name="filter" size={16} state={filterBadge > 0 ? 'on' : 'off'} />
                       필터
                       {filterBadge > 0 && <span className="fg-tbtn__count fg-num">{filterBadge}</span>}
                     </button>

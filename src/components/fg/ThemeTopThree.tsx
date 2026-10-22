@@ -1,9 +1,11 @@
+// Lucian UX/UI Prompt #299 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#299
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/fg/Button'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { ChangeText } from '@/components/fg/PriceChange'
 import { Segment } from '@/components/fg/SegmentedTabs'
+import { ShareBar } from '@/components/fg/ShareBar'
 import { Skeleton } from '@/components/fg/Skeleton'
 import { StateBlock } from '@/components/fg/StateBlock'
 import type { ThemeRes, ThemeStockRes } from '@/lib/apiTypes'
@@ -159,9 +161,7 @@ export function ThemeTopThree({ theme, stocks, from, refreshKey, className }: Th
                   테마 내 비중 <b>{formatWeight(row.weight)}</b>
                 </span>
               </span>
-              <span className="fg-t3__bar" aria-hidden="true">
-                <i style={{ width: `${Math.min(Math.max(row.weight ?? 0, 0), 100).toFixed(1)}%` }} />
-              </span>
+              <ShareBar value={(row.weight ?? 0) / 100} className="fg-t3__share" />
             </Link>
           </li>
         ))}

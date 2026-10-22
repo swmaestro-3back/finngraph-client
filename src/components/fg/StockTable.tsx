@@ -1,4 +1,5 @@
-import { Fragment, type ReactNode, type Ref } from 'react'
+// Lucian UX/UI Prompt #317 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#317
+import { Fragment, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { Badge } from '@/components/fg/Badge'
 import { CompanyLogo } from '@/components/fg/CompanyLogo'
 import { SortButton } from '@/components/fg/DataTable'
@@ -10,6 +11,7 @@ import { formatCompactKrw } from '@/lib/format'
 import { formatGapPct, formatPriceWon, marketLabel } from '@/lib/fg/format'
 import { week52Mark, week52Of, type StockStatus } from '@/lib/fg/stockQuote'
 import { columnSort, nextColumnSort, type StockColumn, type StockSort } from '@/lib/fg/stocks'
+import { useFlipRows } from '@/lib/fg/useFlipRows'
 import { useRowFold } from '@/lib/fg/useRowFold'
 import { gapFromHigh } from '@/lib/fg/week52'
 import { useOverflowFade } from '@/lib/useOverflowFade'
@@ -51,6 +53,7 @@ export function StockTable({
     selectedCode,
     expanded,
   )
+  const flip = useFlipRows<HTMLDivElement>(rows.map((stock) => stock.ticker).join())
   const pick = (code: string, el: HTMLElement) => {
     hold(code, el)
     onSelect(code)
@@ -74,7 +77,7 @@ export function StockTable({
       tabIndex={0}
       data-fade={fade}
     >
-      <div className="fg-ttable fg-ttable--stock" role="table" data-gap-cols={gapCols} data-sort={sort}>
+      <div ref={flip} className="fg-ttable fg-ttable--stock" role="table" data-gap-cols={gapCols} data-sort={sort}>
         <div className="fg-trow fg-trow--head fg-trow--stock" role="row">
           <span role="columnheader">종목</span>
           <span role="columnheader" className="fg-trow__num">
@@ -96,7 +99,7 @@ export function StockTable({
           )}
           {head('cap', '시가총액')}
         </div>
-        {rows.map((stock) => {
+        {rows.map((stock, index) => {
           const selected = stock.ticker === selectedCode
           const range = week52Of(stock)
           const mark = stock.price !== null ? week52Mark(stock, baseDate) : 'normal'
@@ -108,6 +111,8 @@ export function StockTable({
                 className="fg-trow fg-trow--stock"
                 role="row"
                 data-selected={selected ? 'true' : undefined}
+                data-flip={stock.ticker}
+                style={{ '--fg-i': index } as CSSProperties}
               >
                 <span role="cell">
                   <button
