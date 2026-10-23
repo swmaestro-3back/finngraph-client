@@ -7,12 +7,23 @@ import {
   lensDefaultCategories,
   lensHasEvents,
   parseGraphQuery,
+  scopeToKgOptions,
 } from '@/lib/graphRoute'
 
 describe('graphRoute', () => {
-  it('빈 쿼리는 기본값(hop 1, 전체, 개요, 자동 기간)', () => {
+  it('빈 쿼리는 기본값(hop 1, KRX300, 개요, 자동 기간)', () => {
     expect(parseGraphQuery(new URLSearchParams(''))).toEqual(DEFAULT_GRAPH_QUERY)
-    expect(DEFAULT_GRAPH_QUERY).toEqual({ hop: 1, scope: 'all', lens: 'overview', period: null })
+    expect(DEFAULT_GRAPH_QUERY).toEqual({ hop: 1, scope: 'krx300', lens: 'overview', period: null })
+  })
+
+  it('범위에 전체는 없다 — 기본 KRX300은 생략하고, 다른 지수·시장은 적고 왕복한다', () => {
+    expect(graphSearch({ ...DEFAULT_GRAPH_QUERY, lens: 'supply' })).toBe('?lens=supply')
+    expect(parseGraphQuery(new URLSearchParams('lens=supply')).scope).toBe('krx300')
+    expect(graphSearch({ ...DEFAULT_GRAPH_QUERY, lens: 'supply', scope: 'krx100' })).toBe('?lens=supply&index=krx100')
+    expect(parseGraphQuery(new URLSearchParams('lens=supply&index=krx100')).scope).toBe('krx100')
+    expect(parseGraphQuery(new URLSearchParams('index=nope')).scope).toBe('krx300')
+    expect(scopeToKgOptions('krx300')).toEqual({ index: 'krx300' })
+    expect(scopeToKgOptions('KOSPI')).toEqual({ market: 'KOSPI' })
   })
 
   it('이벤트 기간은 직접 고른 값만 적고 왕복한다 — 전체도 적고, 모르는 값은 자동으로', () => {

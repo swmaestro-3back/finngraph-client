@@ -37,6 +37,7 @@ import {
   type Predicate,
 } from '@/data/graphTypes'
 import {
+  DEFAULT_SCOPE,
   SCOPE_LABELS,
   graphPath,
   lensControls,
@@ -59,6 +60,11 @@ interface Props {
   /** 그래프의 원점 — 기업(공급망) 또는 테마(소속 기업) */
   focus: GraphFocus
   example?: boolean
+  /**
+   * 시작 모달 뒤에 흐리게 깔리는 용도 — 화면은 실제 페이지와 같지만 "봤다"는 흔적은 남기지 않는다:
+   * 최근 본 기업에 적지 않고, 첫 방문 가이드도 띄우거나 소진하지 않는다.
+   */
+  backdrop?: boolean
 }
 
 /** 패널 안 이동 이력 상한 — 되돌아가기는 몇 걸음이면 충분하다 */
@@ -90,7 +96,7 @@ interface GraphNavState {
  * 지식그래프 통합 뷰 — 그래프 캔버스 + 상세 패널. 왼쪽 사이드바는 없다: 컨트롤은 전부 캔버스 위에 뜬다.
  * 위쪽(원점·렌즈·범위·Hop)은 무엇을 가져올지, 아래쪽(범례)은 가져온 것 중 무엇을 볼지다.
  */
-export function GraphView({ focus, example = false }: Props) {
+export function GraphView({ focus, example = false, backdrop = false }: Props) {
   const isTheme = focus.kind === 'theme'
   const focusKey = focus.kind === 'theme' ? focus.name : focus.ticker
   const noun = isTheme ? '테마' : '종목'
@@ -206,14 +212,14 @@ export function GraphView({ focus, example = false }: Props) {
   )
 
   useEffect(() => {
-    if (example || !data || !centerId || locked) return
+    if (example || backdrop || !data || !centerId || locked) return
     const center = nodeById.get(centerId)
     if (!center) return
     rememberPick({
       focus: isTheme ? { kind: 'theme', name: focusKey } : { kind: 'company', ticker: focusKey },
       label: center.label,
     })
-  }, [example, data, centerId, nodeById, isTheme, focusKey, locked])
+  }, [example, backdrop, data, centerId, nodeById, isTheme, focusKey, locked])
 
   const companyNeighbors = useMemo(() => {
     if (!data || !centerId) return []
@@ -233,7 +239,7 @@ export function GraphView({ focus, example = false }: Props) {
   }, [data, centerId, nodeById])
 
   useEffect(() => {
-    if (guideTried.current || !open || loading || isTheme || companyNeighbors.length === 0) return
+    if (backdrop || guideTried.current || !open || loading || isTheme || companyNeighbors.length === 0) return
     const timer = window.setTimeout(() => {
       guideTried.current = true
       if (guideSeen()) return
@@ -242,7 +248,7 @@ export function GraphView({ focus, example = false }: Props) {
       setGuide('auto')
     }, GUIDE_DELAY_MS)
     return () => window.clearTimeout(timer)
-  }, [open, loading, isTheme, companyNeighbors])
+  }, [backdrop, open, loading, isTheme, companyNeighbors])
 
   useEffect(() => {
     if (!helpHint) return
@@ -589,7 +595,7 @@ export function GraphView({ focus, example = false }: Props) {
     clearSelection()
     setSelectedCategories(lensDefaultCategories('overview'))
     setSelectedPredicates(new Set(ALL_PREDICATES))
-    updateQuery({ hop: 1, scope: 'all', lens: 'overview' })
+    updateQuery({ hop: 1, scope: DEFAULT_SCOPE, lens: 'overview' })
   }
 
   if ((loading || pending) && !data) {
@@ -636,7 +642,8 @@ export function GraphView({ focus, example = false }: Props) {
 
   if (!data) return null
 
-  const scoped = controls.scope && scope !== 'all'
+  // 공급망은 항상 범위 하나가 걸려 있다 — 빈 결과 안내에 그 범위 이름을 적는다
+  const scoped = controls.scope
 
   // 데스크톱은 캔버스 옆 칸, 모바일은 바텀시트 — 자리만 다르고 내용은 같다
   const detailPanel = selection && open && (
@@ -718,7 +725,7 @@ export function GraphView({ focus, example = false }: Props) {
                     : lens === 'themes'
                       ? '공급망에서 연결된 기업을 살펴보세요.'
                       : scoped
-                        ? '범위를 전체로 넓히거나 홉을 늘려 보세요.'
+                        ? '다른 범위를 고르거나 홉을 늘려 보세요.'
                         : lens === 'overview'
                           ? '관계가 많은 기업부터 둘러보세요.'
                           : '다른 종목을 검색하거나 홉을 넓혀 보세요.'}
@@ -733,17 +740,7 @@ export function GraphView({ focus, example = false }: Props) {
                   공급망 보기
                 </Button>
               )}
-              {scoped && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(CALM_OUTLINE, 'pointer-events-auto mt-2')}
-                  onClick={() => updateQuery({ scope: 'all' })}
-                >
-                  범위를 전체로
-                </Button>
-              )}
-              {!isTheme && !scoped && lens !== 'events' && lens !== 'themes' && (
+              {!isTheme && lens !== 'events' && lens !== 'themes' && (
                 <div className="pointer-events-auto mt-2 flex flex-wrap justify-center gap-1.5">
                   {STARTER_PICKS.filter((pick) => pickKey(pick.focus) !== `company:${focusKey}`).map((pick) => (
                     <Button
@@ -793,7 +790,7 @@ export function GraphView({ focus, example = false }: Props) {
               <div className="flex flex-wrap items-center gap-2">
                 {controls.scope && (
                   <>
-                    {/* 캔버스가 42rem보다 좁으면 6칸 세그먼트가 한 줄을 넘기므로 아이콘+시트로 접는다 */}
+                    {/* 캔버스가 42rem보다 좁으면 5칸 세그먼트가 한 줄을 넘기므로 아이콘+시트로 접는다 */}
                     <div className="@2xl:hidden">
                       <ScopeSelector value={scope} onChange={(next) => updateQuery({ scope: next })} compact />
                     </div>

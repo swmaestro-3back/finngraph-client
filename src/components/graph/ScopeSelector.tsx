@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sheet'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { GLASS_BUTTON, SEG_ITEM } from '@/components/graph/glass'
-import { INDEX_SCOPES, MARKET_SCOPES, SCOPE_LABELS, type Scope } from '@/lib/graphRoute'
+import { DEFAULT_SCOPE, INDEX_SCOPES, MARKET_SCOPES, SCOPE_LABELS, type Scope } from '@/lib/graphRoute'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -41,9 +41,6 @@ function ScopeToggle({ value, onChange, wrap = false }: Props & { wrap?: boolean
       aria-label="탐색 범위"
       className={cn('gap-0.5', wrap && 'flex-wrap gap-1')}
     >
-      <ToggleGroupItem value="all" className={ITEM}>
-        {SCOPE_LABELS.all}
-      </ToggleGroupItem>
       {MARKET_SCOPES.map((scope) => (
         <ToggleGroupItem key={scope} value={scope} className={ITEM}>
           {SCOPE_LABELS[scope]}
@@ -75,8 +72,8 @@ export function ScopeSelector({ value, onChange, compact = false }: Props) {
           className={cn(GLASS_BUTTON, 'relative')}
         >
           <SlidersHorizontal className="size-[18px]" strokeWidth={2} />
-          {/* 전체가 아니면 점을 찍어 필터가 걸려 있음을 알린다 */}
-          {value !== 'all' && (
+          {/* 기본 범위(KRX300)가 아니면 점을 찍어 범위를 바꿔 뒀음을 알린다 */}
+          {value !== DEFAULT_SCOPE && (
             <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
           )}
         </Button>

@@ -10,16 +10,18 @@ export type Hop = 1 | 2 | 3
 export const HOP_VALUES: Hop[] = [1, 2, 3]
 
 /**
- * 탐색 범위 — 시장 하나 또는 지수 하나, 아니면 전체.
+ * 탐색 범위 — 시장 하나 또는 지수 하나. "전체"는 없다: 공급망은 항상 범위 하나를 걸고 본다.
  * 서버가 market과 index를 함께 받지 않으므로(400) 값 하나로 모델링해 동시 선택을 원천 차단한다.
  */
-export type Scope = 'all' | KgMarket | KgMarketIndex
+export type Scope = KgMarket | KgMarketIndex
 
 export const MARKET_SCOPES: KgMarket[] = ['KOSPI', 'KOSDAQ']
 export const INDEX_SCOPES: KgMarketIndex[] = ['krx100', 'krx300', 'kosdaq150']
 
+/** 기본 범위 — 공급망에 처음 들어오면 KRX300으로 본다. URL에 범위가 없으면 이 값이다 */
+export const DEFAULT_SCOPE: Scope = 'krx300'
+
 export const SCOPE_LABELS: Record<Scope, string> = {
-  all: '전체',
   KOSPI: 'KOSPI',
   KOSDAQ: 'KOSDAQ',
   krx100: 'KRX100',
@@ -84,7 +86,7 @@ export interface GraphQuery {
   period: EventPeriod | null
 }
 
-export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: 'all', lens: 'overview', period: null }
+export const DEFAULT_GRAPH_QUERY: GraphQuery = { hop: 1, scope: DEFAULT_SCOPE, lens: 'overview', period: null }
 
 export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   const hopRaw = Number(params.get('hop'))
@@ -92,7 +94,7 @@ export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   // 손으로 고친 URL에 둘이 함께 있으면 market을 우선한다 — 서버는 둘을 같이 받지 않는다
   const market = params.get('market')
   const index = params.get('index')
-  const scope: Scope = isMarket(market) ? market : isIndex(index) ? index : 'all'
+  const scope: Scope = isMarket(market) ? market : isIndex(index) ? index : DEFAULT_SCOPE
   const lensRaw = params.get('lens')
   const lens: Lens = isLens(lensRaw) ? lensRaw : 'overview'
   const periodRaw = params.get('period')
@@ -100,13 +102,13 @@ export function parseGraphQuery(params: URLSearchParams): GraphQuery {
   return { hop, scope, lens, period }
 }
 
-/** 기본값(개요·hop 1·전체 범위·전체 기간)은 쿼리에서 생략해 URL을 짧게 유지한다 */
+/** 기본값(개요·hop 1·KRX300 범위·전체 기간)은 쿼리에서 생략해 URL을 짧게 유지한다 */
 export function graphSearch(query: GraphQuery): string {
   const params = new URLSearchParams()
   if (query.lens !== 'overview') params.set('lens', query.lens)
   if (query.hop !== 1) params.set('hop', String(query.hop))
   if (isMarket(query.scope)) params.set('market', query.scope)
-  else if (isIndex(query.scope)) params.set('index', query.scope)
+  else if (query.scope !== DEFAULT_SCOPE) params.set('index', query.scope)
   if (query.period !== null) params.set('period', query.period)
   const s = params.toString()
   return s ? `?${s}` : ''
@@ -121,11 +123,10 @@ export function graphPath(focus: GraphFocus, query: GraphQuery = DEFAULT_GRAPH_Q
   return base + graphSearch(query)
 }
 
-/** 범위 → kg-api 공급망 쿼리 파라미터 */
-export function scopeToKgOptions(scope: Scope): { market?: KgMarket; index?: KgMarketIndex } {
+/** 범위 → kg-api 공급망 쿼리 파라미터. 항상 둘 중 하나가 실린다 — 둘 다 없으면 서버는 전체로 보는데, 화면에는 그 선택지가 없다 */
+export function scopeToKgOptions(scope: Scope): { market: KgMarket } | { index: KgMarketIndex } {
   if (isMarket(scope)) return { market: scope }
-  if (isIndex(scope)) return { index: scope }
-  return {}
+  return { index: scope }
 }
 
 /**
