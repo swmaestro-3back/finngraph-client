@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { kgGraphKey, kgGraphRequest } from '@/lib/queries/useKgGraph'
 import type { GraphQuery } from '@/lib/graphRoute'
 
-const q = (patch: Partial<GraphQuery>): GraphQuery => ({ hop: 1, scope: 'krx300', lens: 'overview', period: 'all', ...patch })
+const q = (patch: Partial<GraphQuery>): GraphQuery => ({ hop: 1, scope: 'all', lens: 'overview', period: 'all', ...patch })
 const company = { kind: 'company' as const, ticker: '005930' }
 
 describe('kgGraphRequest', () => {
@@ -27,9 +27,8 @@ describe('kgGraphRequest', () => {
     expect(kgGraphRequest(company, q({ lens: 'events', hop: 3, scope: 'KOSDAQ' }))).toEqual({
       path: '/v1/companies/005930/events', params: { hop: 3 },
     })
-    // 기본 범위(KRX300)도 서버에는 반드시 실어 보낸다 — 비우면 서버가 전체로 본다
     expect(kgGraphKey(kgGraphRequest(company, q({ lens: 'supply', hop: 2 })))).toBe(
-      '/v1/companies/005930/supplychain?hop=2&index=krx300',
+      '/v1/companies/005930/supplychain?hop=2',
     )
   })
 })
