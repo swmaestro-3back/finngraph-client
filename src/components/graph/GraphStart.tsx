@@ -94,7 +94,7 @@ export function GraphStart({ ready, guest, onSelect, onExample }: Props) {
   }, [recent, items, stocks])
 
   return (
-    <GraphBackdrop dim>
+    <GraphBackdrop dim live={ready && !guest}>
       {ready && (
         <div
           role="dialog"

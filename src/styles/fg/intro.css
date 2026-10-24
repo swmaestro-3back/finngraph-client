@@ -1,0 +1,235 @@
+/* 소개(랜딩) 페이지
+   - 캡처는 자르지 않는다. 원본 비율 그대로, 가로폭만 열에 맞춘다.
+   - 캡처 뒤에 색 패널을 두지 않는다. 1px 테두리 + 낮은 그림자로만 지면에서 살짝 띄운다.
+   - 섹션은 내용 높이대로, 큰 여백으로 리듬을 만든다. 문구는 왼쪽 정렬, 섹션 제목과 마지막 CTA만 가운데. */
+.fg-intro {
+  --fg-intro-gap: clamp(96px, 12vw, 160px);
+  --fg-intro-shot-hero: 520px;  /* 히어로 캡처 최대 폭 */
+  --fg-intro-shot-row: 540px;   /* 문구+캡처 행의 캡처 최대 폭 */
+  --fg-intro-row-max: 1120px;   /* 행을 컨테이너보다 조금 좁혀 문구와 캡처를 붙인다 */
+  --fg-intro-shot-radius: 14px;
+  --fg-intro-shot-shadow:
+    0 1px 2px rgba(22, 21, 27, 0.04),
+    0 12px 32px -16px var(--shadow-soft-color),
+    0 32px 64px -40px var(--shadow-strong-color);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  word-break: keep-all;
+}
+
+/* 타입 스케일 */
+.fg-intro__h1 {
+  margin: 0;
+  font: 800 clamp(34px, 3.6vw, 50px) / 1.18 var(--font-sans);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.fg-intro__h2 {
+  margin: 0;
+  font: 800 clamp(26px, 2.8vw, 40px) / 1.22 var(--font-sans);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.fg-intro__h2--section {
+  text-align: center;
+  margin: 0 auto;
+  max-width: 24em;
+}
+.fg-intro__h2--section + .fg-intro__row,
+.fg-intro__h2--section + .fg-intro__compare {
+  margin-top: clamp(40px, 5vw, 64px);
+}
+/* 가운데 섹션 제목 아래 행은 위쪽 margin 외에 auto 가운데 정렬을 그대로 쓴다 */
+.fg-intro__lead {
+  margin: var(--space-5) 0 0;
+  max-width: 28em;
+  font: 400 clamp(17px, 1.4vw, 20px) / 1.6 var(--font-sans);
+  color: var(--text-secondary);
+}
+.fg-intro__desc {
+  margin: var(--space-4) 0 0;
+  max-width: 30em;
+  font: 400 18px/1.65 var(--font-sans);
+  color: var(--text-secondary);
+}
+.fg-intro__caption {
+  margin: var(--space-6) 0 0;
+  font: 700 clamp(18px, 1.5vw, 21px) / 1.45 var(--font-sans);
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  text-align: center;
+  text-wrap: balance;
+}
+.fg-intro__more {
+  margin-top: var(--space-8);
+}
+
+/* 캡처: 원본 비율 그대로, 얇은 테두리 */
+.fg-intro__shot {
+  position: relative;
+  background: #fff;
+  border-radius: var(--fg-intro-shot-radius);
+  border: 1px solid var(--border-divider);
+  overflow: hidden;
+  box-shadow: var(--fg-intro-shot-shadow);
+}
+.fg-intro__shot img,
+.fg-intro__shot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 히어로: 왼쪽 문구, 오른쪽 그래프 캡처(자르지 않음) */
+.fg-intro__hero {
+  padding: clamp(40px, 6vw, 88px) 0 0;
+}
+.fg-intro__hero-in {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--fg-intro-shot-hero));
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+.fg-intro__cta {
+  margin-top: var(--space-10);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.fg-intro__cta .fg-btn--lg {
+  height: 52px;
+  padding: 0 var(--space-6);
+  font-size: 16px;
+}
+.fg-intro__hero-art {
+  min-width: 0;
+}
+
+/* 섹션 리듬 */
+.fg-intro__section {
+  margin-top: var(--fg-intro-gap);
+}
+
+/* 핵심 이슈: 기존 앱(다이어그램) 대 Finngraph(캡처) */
+.fg-intro__compare {
+  max-width: var(--fg-intro-row-max);
+  margin-inline: auto;
+  display: grid;
+  /* 두 캡처의 비율이 거의 같으므로(0.88) 같은 폭이면 높이도 맞는다 */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: clamp(20px, 2.5vw, 32px);
+  align-items: stretch;
+}
+/* 두 화면 사이의 VS 배지: 캡처 높이의 가운데에 둔다 */
+.fg-intro__vs {
+  align-self: center;
+  justify-self: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 800 15px/1 var(--font-sans);
+  letter-spacing: 0.02em;
+  color: var(--action-on-primary);
+  background: var(--text-primary);
+  box-shadow: 0 0 0 6px var(--bg-surface), 0 10px 24px -12px var(--shadow-strong-color);
+}
+/* 캡처 높이가 달라도 캡션은 두 쪽이 같은 줄에 오도록 아래에 붙인다 */
+.fg-intro__figure {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fg-intro__figure .fg-intro__shot {
+  flex: 1 1 auto;
+  margin-bottom: auto;
+}
+.fg-intro__figure .fg-intro__shot img {
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 0;
+}
+.fg-intro__shot--before {
+  background: var(--bg-surface);
+}
+.fg-intro__shot--before svg {
+  aspect-ratio: 520 / 560;
+}
+
+/* 문구 + 캡처 행 */
+.fg-intro__row {
+  max-width: var(--fg-intro-row-max);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--fg-intro-shot-row));
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+.fg-intro__row--flip {
+  grid-template-columns: minmax(0, var(--fg-intro-shot-row)) minmax(0, 1fr);
+}
+.fg-intro__text,
+.fg-intro__art {
+  min-width: 0;
+}
+.fg-intro__text .fg-intro__h2 {
+  font-size: clamp(24px, 2.5vw, 36px);
+}
+
+/* 이슈에서 출발: 캡처 두 장을 살짝 겹쳐 쌓는다 */
+.fg-intro__stack {
+  display: grid;
+  gap: var(--space-5);
+}
+.fg-intro__stack .fg-intro__shot:last-child {
+  width: 88%;
+  margin-left: auto;
+}
+
+/* 마무리 띠 */
+.fg-intro__closing {
+  margin-top: var(--fg-intro-gap);
+  padding: clamp(72px, 9vw, 120px) 0;
+  text-align: center;
+  border-top: 1px solid var(--border-divider);
+  background: var(--bg-subtle);
+}
+.fg-intro__closing .fg-intro__lead {
+  margin-left: auto;
+  margin-right: auto;
+}
+.fg-intro__closing-btn {
+  margin-top: var(--space-8);
+  height: 52px;
+  padding: 0 var(--space-8);
+  font-size: 16px;
+}
+
+@media (max-width: 900px) {
+  .fg-intro {
+    --fg-intro-gap: 72px;
+  }
+  .fg-intro__hero {
+    padding-top: var(--space-10);
+  }
+  .fg-intro__hero-in,
+  .fg-intro__row,
+  .fg-intro__row--flip,
+  .fg-intro__compare {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+  .fg-intro__row--flip .fg-intro__text {
+    order: -1;
+  }
+  .fg-intro__vs {
+    width: 44px;
+    height: 44px;
+    font-size: 13px;
+  }
+  .fg-intro__stack .fg-intro__shot:last-child {
+    width: 100%;
+  }
+}

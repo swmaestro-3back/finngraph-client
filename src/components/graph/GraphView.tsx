@@ -59,6 +59,11 @@ interface Props {
   /** 그래프의 원점 — 기업(공급망) 또는 테마(소속 기업) */
   focus: GraphFocus
   example?: boolean
+  /**
+   * 시작 모달 뒤에 흐리게 깔리는 용도 — 화면은 실제 페이지와 같지만 "봤다"는 흔적은 남기지 않는다:
+   * 최근 본 기업에 적지 않고, 첫 방문 가이드도 띄우거나 소진하지 않는다.
+   */
+  backdrop?: boolean
 }
 
 /** 패널 안 이동 이력 상한 — 되돌아가기는 몇 걸음이면 충분하다 */
@@ -90,7 +95,7 @@ interface GraphNavState {
  * 지식그래프 통합 뷰 — 그래프 캔버스 + 상세 패널. 왼쪽 사이드바는 없다: 컨트롤은 전부 캔버스 위에 뜬다.
  * 위쪽(원점·렌즈·범위·Hop)은 무엇을 가져올지, 아래쪽(범례)은 가져온 것 중 무엇을 볼지다.
  */
-export function GraphView({ focus, example = false }: Props) {
+export function GraphView({ focus, example = false, backdrop = false }: Props) {
   const isTheme = focus.kind === 'theme'
   const focusKey = focus.kind === 'theme' ? focus.name : focus.ticker
   const noun = isTheme ? '테마' : '종목'
@@ -206,14 +211,14 @@ export function GraphView({ focus, example = false }: Props) {
   )
 
   useEffect(() => {
-    if (example || !data || !centerId || locked) return
+    if (example || backdrop || !data || !centerId || locked) return
     const center = nodeById.get(centerId)
     if (!center) return
     rememberPick({
       focus: isTheme ? { kind: 'theme', name: focusKey } : { kind: 'company', ticker: focusKey },
       label: center.label,
     })
-  }, [example, data, centerId, nodeById, isTheme, focusKey, locked])
+  }, [example, backdrop, data, centerId, nodeById, isTheme, focusKey, locked])
 
   const companyNeighbors = useMemo(() => {
     if (!data || !centerId) return []
@@ -233,7 +238,7 @@ export function GraphView({ focus, example = false }: Props) {
   }, [data, centerId, nodeById])
 
   useEffect(() => {
-    if (guideTried.current || !open || loading || isTheme || companyNeighbors.length === 0) return
+    if (backdrop || guideTried.current || !open || loading || isTheme || companyNeighbors.length === 0) return
     const timer = window.setTimeout(() => {
       guideTried.current = true
       if (guideSeen()) return
@@ -242,7 +247,7 @@ export function GraphView({ focus, example = false }: Props) {
       setGuide('auto')
     }, GUIDE_DELAY_MS)
     return () => window.clearTimeout(timer)
-  }, [open, loading, isTheme, companyNeighbors])
+  }, [backdrop, open, loading, isTheme, companyNeighbors])
 
   useEffect(() => {
     if (!helpHint) return

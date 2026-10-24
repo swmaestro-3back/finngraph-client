@@ -15,6 +15,7 @@
 @import "./styles/fg/stock-finance.css" layer(components);
 @import "./styles/fg/issue.css" layer(components);
 @import "./styles/fg/home.css" layer(components);
+@import "./styles/fg/intro.css" layer(components);
 @import "./styles/fg/calendar.css" layer(components);
 @import "./styles/fg/favorites.css" layer(components);
 @import "./styles/fg/lucian.css" layer(components);
