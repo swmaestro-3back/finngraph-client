@@ -1,6 +1,5 @@
 import { ButtonLink } from "@/components/fg/Button";
 import { useAuth } from "@/lib/auth";
-import { features } from "@/lib/features";
 import NoisyNewsFigure from "./intro/NoisyNewsFigure";
 
 const START = { authenticated: "/", other: "/signup" } as const;
@@ -9,7 +8,6 @@ const GRAPH = "/graph";
 export default function IntroPage() {
   const { status } = useAuth();
   const start = status === "authenticated" ? START.authenticated : START.other;
-  const explore = features.ripple ? "/ripple" : GRAPH;
 
   return (
     <div className="fg-intro">
@@ -189,7 +187,7 @@ export default function IntroPage() {
                 꽁꽁 숨어있던 종목을 확인해보세요!
               </h3>
               <ButtonLink
-                to={explore}
+                to={GRAPH}
                 variant="tertiary"
                 className="fg-intro__more"
               >
