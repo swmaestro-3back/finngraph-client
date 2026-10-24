@@ -12,6 +12,7 @@ import AccountSettingsPage from '@/pages/AccountSettingsPage'
 import MyFavoritesPage from '@/pages/MyFavoritesPage'
 import WithdrawPage from '@/pages/WithdrawPage'
 import HomePage from '@/pages/home/HomePage'
+import IntroPage from '@/pages/IntroPage'
 import CorpGraphPage from '@/pages/CorpGraphPage'
 import ThemesPage from '@/pages/themes/ThemesPage'
 import ThemeDetailPage from '@/pages/themes/ThemeDetailPage'
@@ -65,6 +66,7 @@ function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/intro" element={<IntroPage />} />
         <Route path="/issues/:issueId" element={<IssuePage />} />
         <Route path="/news" element={<Navigate to="/" replace />} />
         <Route path="/news/:issueId" element={<LegacyIssueRedirect />} />
